@@ -12,3 +12,6 @@ export type { ParsedRoomTemplates } from './room-templates';
 
 export { gearSchema } from './gear';
 export type { ParsedGear, ParsedGearItem } from './gear';
+
+export { runEventSchema, saveEnvelopeSchema, SAVE_VERSION, parseSaveEnvelope, safeParseSaveEnvelope } from './save';
+export type { SaveEnvelope } from './save';
