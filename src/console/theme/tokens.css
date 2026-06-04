@@ -1,0 +1,44 @@
+/* Design-token skeleton — dark "van" aesthetic placeholder.
+ * Full cinematic polish is scheduled for E10. These variables are scaffolding
+ * so later epics theme against named tokens instead of hardcoded hex values. */
+
+:root {
+  /* ── Backgrounds ─────────────────────────────────────── */
+  --color-bg: #0e0e10;
+  --color-surface: #1a1a1f;
+  --color-surface-raised: #22222a;
+
+  /* ── Foreground / text ───────────────────────────────── */
+  --color-fg: #e8e5de;
+  --color-fg-muted: #6e6b62;
+
+  /* ── Accent — amber/gold for the "van screen" glow ───── */
+  --color-accent: #d4a843;
+  --color-accent-muted: #7a5f22;
+
+  /* ── Danger / Heat ───────────────────────────────────── */
+  --color-danger: #c0392b;
+  --color-danger-muted: #7a2218;
+
+  /* ── Spacing ─────────────────────────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* ── Radius ──────────────────────────────────────────── */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+
+  /* ── Typography ──────────────────────────────────────── */
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-mono: 'Courier New', Courier, monospace;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+}
