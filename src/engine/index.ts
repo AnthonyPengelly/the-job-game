@@ -29,6 +29,8 @@ export { applyGear, profileFor, isResting, applyExhaustion } from './crew';
 
 export { obstacleCommitRange, resolveGameVariant, computeDial } from './scaling';
 
+export { applyOverride } from './overrides';
+
 export { reduce } from './reduce';
 
 export type {
@@ -52,5 +54,6 @@ export type {
   MansionDressing,
   RunState,
   RunEvent,
+  OverrideEvent,
   Skill,
 } from './types';

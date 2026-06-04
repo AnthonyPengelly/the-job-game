@@ -8,6 +8,7 @@ import type { RunState, RunEvent } from './types';
 import { startRun } from './run';
 import { applyGear, applyExhaustion } from './crew';
 import { generateRoom } from './generation';
+import { applyOverride } from './overrides';
 import {
   obstacleDrip,
   greedySurcharge,
@@ -170,6 +171,20 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
 
     case 'CALL_GETAWAY': {
       return { ...state, phase: 'getaway' };
+    }
+
+    case 'OVERRIDE_SET_HEAT':
+    case 'OVERRIDE_ADJUST_HEAT':
+    case 'OVERRIDE_SET_LOOT':
+    case 'OVERRIDE_ADJUST_LOOT':
+    case 'OVERRIDE_SET_STAT':
+    case 'OVERRIDE_ADJUST_STAT':
+    case 'OVERRIDE_SET_POWERUP':
+    case 'OVERRIDE_SET_RESTING':
+    case 'OVERRIDE_REROLL_ROOM':
+    case 'OVERRIDE_SKIP_ROOM':
+    case 'OVERRIDE_SET_PHASE': {
+      return applyOverride(state, event, cfg);
     }
 
     case 'RESOLVE_GETAWAY': {
