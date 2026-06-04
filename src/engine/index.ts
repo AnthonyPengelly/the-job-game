@@ -27,6 +27,8 @@ export { generateRoom, tickCarriedEffects } from './generation';
 
 export { applyGear, profileFor, isResting, applyExhaustion } from './crew';
 
+export { obstacleCommitRange, resolveGameVariant, computeDial } from './scaling';
+
 export { reduce } from './reduce';
 
 export type {
