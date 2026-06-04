@@ -29,6 +29,12 @@ export interface GameStoreState {
   startRun: (setup: PlayerSetup[], seed?: number) => void;
   goAgain: () => void;
   hydrate: () => void;
+  /**
+   * Acknowledge the resumable-save prompt: clears `hasResumableSave` so the
+   * app routes to the active phase screen instead of the Setup screen.
+   * Call when the GM chooses "Resume the job".
+   */
+  acceptResume: () => void;
 }
 
 // ── Factory options ───────────────────────────────────────────────────────────
@@ -98,6 +104,10 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         hasResumableSave: false,
         staleSaveNotice: false,
       });
+    },
+
+    acceptResume(): void {
+      set({ hasResumableSave: false });
     },
 
     hydrate(): void {
