@@ -1,0 +1,355 @@
+import { describe, it, expect } from 'vitest';
+import { generateRoom, tickCarriedEffects } from '@/engine/generation';
+import { initialState } from '@/engine/run';
+import type { EngineConfig } from '@/engine/config';
+import type { RunState, CarriedEffect } from '@/engine/types';
+
+// ─── Inline test config — no platform dependency ─────────────────────────────
+// Mirror of tuning numbers; roomTemplates has enough entries for no-repeat tests.
+
+const cfg: EngineConfig = {
+  heat: { hMax: 20, runAtFraction: 0.55 },
+  escalation: { onsetRoom: 5, rampPerObstacle: 0.2 },
+  obstacleHeat: { safe: 1, greedy: 2, greedyBelowFraction: 0.5 },
+  outcomeHeat: { clean: 0, complication: 1, botched: 2 },
+  scenarioSwing: { small: 2, big: 4 },
+  getaway: { exponent: 1.3, skillTerm: 0.5, skillPivot: 0.65, headcountTerm: 0.8, clamp: [0.04, 0.97] },
+  scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
+  scaling: {
+    profiles: { '4': { getawayBonus: 0.0 } },
+    minCommit: { alpha: 1, bravo: 1, charlie: 1, delta: 2 },
+  },
+  generation: { obstacleRatio: 0.6 },
+  roomTemplates: {
+    obstacles: [
+      {
+        id: 'obs-alpha',
+        gameId: 'alpha',
+        lane: 'tech',
+        options: [
+          { id: 'alpha-safe',   greedy: false, heatCost: 1, reward: 1 },
+          { id: 'alpha-greedy', greedy: true,  heatCost: 2, reward: 2 },
+        ],
+      },
+      {
+        id: 'obs-bravo',
+        gameId: 'bravo',
+        lane: 'physical',
+        options: [
+          { id: 'bravo-safe',   greedy: false, heatCost: 1, reward: 1 },
+          { id: 'bravo-greedy', greedy: true,  heatCost: 2, reward: 2 },
+        ],
+      },
+      {
+        id: 'obs-charlie',
+        gameId: 'charlie',
+        lane: 'stealth',
+        options: [
+          { id: 'charlie-safe',   greedy: false, heatCost: 1, reward: 1 },
+          { id: 'charlie-greedy', greedy: true,  heatCost: 2, reward: 2 },
+        ],
+      },
+      {
+        id: 'obs-delta',
+        gameId: 'delta',
+        lane: 'charm',
+        options: [
+          { id: 'delta-safe',   greedy: false, heatCost: 1, reward: 1 },
+          { id: 'delta-greedy', greedy: true,  heatCost: 2, reward: 2 },
+        ],
+      },
+    ],
+    scenarios: [
+      {
+        id: 'scen-1',
+        choices: [
+          { id: 's1-a', label: 'Choice A', heatDelta: -2, lootDelta: 0 },
+          { id: 's1-b', label: 'Choice B', heatDelta:  0, lootDelta: 1 },
+        ],
+      },
+      {
+        id: 'scen-2',
+        choices: [
+          { id: 's2-a', label: 'Option A', heatDelta:  2, lootDelta: 0 },
+          { id: 's2-b', label: 'Option B', heatDelta: -4, lootDelta: 0 },
+        ],
+      },
+      {
+        id: 'scen-3',
+        choices: [
+          { id: 's3-a', label: 'Take it', heatDelta: 0, lootDelta: 2 },
+          { id: 's3-b', label: 'Leave it', heatDelta: -2, lootDelta: 0 },
+        ],
+      },
+    ],
+  },
+};
+
+function makeState(seed: number, overrides: Partial<RunState> = {}): RunState {
+  return { ...initialState(seed), ...overrides };
+}
+
+// ─── tickCarriedEffects ──────────────────────────────────────────────────────
+
+describe('tickCarriedEffects', () => {
+  it('decrements roomsLeft by 1 on each tick', () => {
+    const effects: CarriedEffect[] = [
+      { id: 'e1', kind: 'briefcase', roomsLeft: 3 },
+    ];
+    const result = tickCarriedEffects(effects);
+    expect(result[0]?.roomsLeft).toBe(2);
+  });
+
+  it('removes effects when roomsLeft reaches 0 after tick', () => {
+    const effects: CarriedEffect[] = [
+      { id: 'expiring', kind: 'briefcase', roomsLeft: 1 },
+    ];
+    expect(tickCarriedEffects(effects)).toHaveLength(0);
+  });
+
+  it('removes effects already at roomsLeft <= 0', () => {
+    const effects: CarriedEffect[] = [
+      { id: 'already-expired', kind: 'briefcase', roomsLeft: 0 },
+    ];
+    expect(tickCarriedEffects(effects)).toHaveLength(0);
+  });
+
+  it('fires an effect with roomsLeft=1, keeps roomsLeft=2 alive', () => {
+    const effects: CarriedEffect[] = [
+      { id: 'a', kind: 'x', roomsLeft: 2 },
+      { id: 'b', kind: 'y', roomsLeft: 1 },
+    ];
+    const result = tickCarriedEffects(effects);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.id).toBe('a');
+    expect(result[0]!.roomsLeft).toBe(1);
+  });
+
+  it('returns empty array for empty input', () => {
+    expect(tickCarriedEffects([])).toEqual([]);
+  });
+
+  it('does not mutate the input array', () => {
+    const effects: CarriedEffect[] = [{ id: 'x', kind: 'k', roomsLeft: 5 }];
+    tickCarriedEffects(effects);
+    expect(effects[0]!.roomsLeft).toBe(5);
+  });
+});
+
+// ─── generateRoom — determinism ───────────────────────────────────────────────
+
+describe('generateRoom — determinism', () => {
+  it('returns the same room for the same seed', () => {
+    const s1 = makeState(1312);
+    const s2 = makeState(1312);
+    expect(generateRoom(s1, cfg).currentRoom).toEqual(generateRoom(s2, cfg).currentRoom);
+  });
+
+  it('same seed yields same rngState afterward', () => {
+    const s1 = makeState(1312);
+    const s2 = makeState(1312);
+    expect(generateRoom(s1, cfg).rngState).toBe(generateRoom(s2, cfg).rngState);
+  });
+
+  it('different seeds (usually) yield different rooms', () => {
+    // Pick seeds we know diverge based on the fixed RNG stream.
+    const ids = [1312, 9999, 42, 777, 2024, 314].map(seed =>
+      generateRoom(makeState(seed), cfg).currentRoom?.templateId,
+    );
+    const allSame = ids.every(id => id === ids[0]);
+    expect(allSame).toBe(false);
+  });
+
+  it('does not mutate the input state', () => {
+    const s = makeState(1312);
+    const original = { ...s };
+    generateRoom(s, cfg);
+    expect(s.rngState).toBe(original.rngState);
+    expect(s.currentRoom).toBeNull();
+  });
+
+  it('sequential draws advance rngState each time', () => {
+    const s = makeState(1312);
+    const r1 = generateRoom(s, cfg);
+    const r2 = generateRoom({ ...s, rngState: r1.rngState }, cfg);
+    expect(r1.rngState).not.toBe(s.rngState);
+    expect(r2.rngState).not.toBe(r1.rngState);
+  });
+});
+
+// ─── generateRoom — room shapes ───────────────────────────────────────────────
+
+describe('generateRoom — obstacle room shape', () => {
+  // Find a seed that yields an obstacle room with the inline cfg.
+  function findObstacleRoom(): ReturnType<typeof generateRoom> {
+    for (let seed = 0; seed < 50; seed++) {
+      const result = generateRoom(makeState(seed), cfg);
+      if (result.currentRoom?.kind === 'obstacle') return result;
+    }
+    throw new Error('No obstacle room found in 50 seeds');
+  }
+
+  it('obstacle rooms have exactly two options', () => {
+    const { currentRoom } = findObstacleRoom();
+    expect(currentRoom?.kind).toBe('obstacle');
+    if (currentRoom?.kind === 'obstacle') {
+      expect(currentRoom.options).toHaveLength(2);
+    }
+  });
+
+  it('options are [safe, greedy] — first greedy:false, second greedy:true', () => {
+    const { currentRoom } = findObstacleRoom();
+    if (currentRoom?.kind === 'obstacle') {
+      expect(currentRoom.options[0]!.greedy).toBe(false);
+      expect(currentRoom.options[1]!.greedy).toBe(true);
+    }
+  });
+
+  it('safe option has reward 1, greedy option has reward 2', () => {
+    const { currentRoom } = findObstacleRoom();
+    if (currentRoom?.kind === 'obstacle') {
+      expect(currentRoom.options[0]!.reward).toBe(1);
+      expect(currentRoom.options[1]!.reward).toBe(2);
+    }
+  });
+
+  it('obstacle room has a templateId from the obstacle pool', () => {
+    const { currentRoom } = findObstacleRoom();
+    const knownIds = cfg.roomTemplates.obstacles.map(t => t.id);
+    expect(knownIds).toContain(currentRoom?.templateId);
+  });
+});
+
+describe('generateRoom — scenario room shape', () => {
+  function findScenarioRoom(): ReturnType<typeof generateRoom> {
+    for (let seed = 0; seed < 50; seed++) {
+      const result = generateRoom(makeState(seed), cfg);
+      if (result.currentRoom?.kind === 'scenario') return result;
+    }
+    throw new Error('No scenario room found in 50 seeds');
+  }
+
+  it('scenario rooms have exactly two choices', () => {
+    const { currentRoom } = findScenarioRoom();
+    if (currentRoom?.kind === 'scenario') {
+      expect(currentRoom.choices).toHaveLength(2);
+    }
+  });
+
+  it('scenario choices have non-empty labels', () => {
+    const { currentRoom } = findScenarioRoom();
+    if (currentRoom?.kind === 'scenario') {
+      expect(currentRoom.choices[0]!.label.length).toBeGreaterThan(0);
+      expect(currentRoom.choices[1]!.label.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('scenario room has a templateId from the scenario pool', () => {
+    const { currentRoom } = findScenarioRoom();
+    const knownIds = cfg.roomTemplates.scenarios.map(t => t.id);
+    expect(knownIds).toContain(currentRoom?.templateId);
+  });
+});
+
+// ─── generateRoom — no-repeat draw ───────────────────────────────────────────
+
+describe('generateRoom — no-repeat until pool exhausted', () => {
+  it('obstacle draws never repeat a templateId until all are used', () => {
+    const totalObstacles = cfg.roomTemplates.obstacles.length; // 4
+    expect(totalObstacles).toBeGreaterThanOrEqual(3);
+
+    // Exhaust the obstacle pool by simulating many draws.
+    const seen: string[] = [];
+    let state = makeState(42);
+
+    for (let i = 0; i < totalObstacles * 30 && seen.length < totalObstacles; i++) {
+      const next = generateRoom(state, cfg);
+      state = { ...state, ...next, roomIndex: state.roomIndex + 1 };
+      if (next.currentRoom?.kind === 'obstacle') {
+        const tid = next.currentRoom.templateId;
+        expect(seen).not.toContain(tid);
+        seen.push(tid);
+      }
+    }
+
+    expect(seen.length).toBe(totalObstacles);
+  });
+
+  it('scenario draws never repeat a templateId until all are used', () => {
+    const totalScenarios = cfg.roomTemplates.scenarios.length; // 3
+    expect(totalScenarios).toBeGreaterThanOrEqual(3);
+
+    const seen: string[] = [];
+    let state = makeState(99);
+
+    for (let i = 0; i < totalScenarios * 30 && seen.length < totalScenarios; i++) {
+      const next = generateRoom(state, cfg);
+      state = { ...state, ...next, roomIndex: state.roomIndex + 1 };
+      if (next.currentRoom?.kind === 'scenario') {
+        const tid = next.currentRoom.templateId;
+        expect(seen).not.toContain(tid);
+        seen.push(tid);
+      }
+    }
+
+    expect(seen.length).toBe(totalScenarios);
+  });
+
+  it('pool resets after exhaustion — the next draw succeeds and starts a fresh used list', () => {
+    const allIds = cfg.roomTemplates.obstacles.map(t => t.id);
+    // Pre-fill usedObstacleTemplateIds with all obstacle IDs to simulate exhaustion.
+    const exhaustedState = makeState(7, { usedObstacleTemplateIds: [...allIds] });
+
+    let state = exhaustedState;
+    for (let i = 0; i < 30; i++) {
+      const next = generateRoom(state, cfg);
+      state = { ...state, ...next, roomIndex: state.roomIndex + 1 };
+      if (next.currentRoom?.kind === 'obstacle') {
+        // After reset the used list should contain exactly this one ID.
+        expect(state.usedObstacleTemplateIds).toHaveLength(1);
+        expect(allIds).toContain(state.usedObstacleTemplateIds[0]);
+        return;
+      }
+    }
+    throw new Error('No obstacle room drawn after pool exhaustion reset test');
+  });
+});
+
+// ─── generateRoom — carried effects ticking ──────────────────────────────────
+
+describe('generateRoom — carried effects', () => {
+  it('ticks carried effects when generating a room', () => {
+    const effects: CarriedEffect[] = [
+      { id: 'e1', kind: 'briefcase', roomsLeft: 3 },
+      { id: 'e2', kind: 'unlock',    roomsLeft: 1 },
+    ];
+    const state = makeState(1312, { carried: effects });
+    const result = generateRoom(state, cfg);
+
+    expect(result.carried.find(e => e.id === 'e2')).toBeUndefined();
+    expect(result.carried.find(e => e.id === 'e1')?.roomsLeft).toBe(2);
+  });
+
+  it('expired effects do not appear in next state', () => {
+    const state = makeState(42, {
+      carried: [{ id: 'dying', kind: 'x', roomsLeft: 1 }],
+    });
+    expect(generateRoom(state, cfg).carried).toHaveLength(0);
+  });
+
+  it('carry effects with 3-room countdown fire on the correct tick', () => {
+    const state = makeState(1, {
+      carried: [{ id: 'timer', kind: 'countdown', roomsLeft: 3 }],
+    });
+    let s = state;
+    for (let tick = 0; tick < 3; tick++) {
+      const next = generateRoom(s, cfg);
+      s = { ...s, ...next, roomIndex: s.roomIndex + 1 };
+      if (tick < 2) {
+        expect(s.carried.find(e => e.id === 'timer')).toBeDefined();
+      }
+    }
+    // After 3 ticks the effect should be gone.
+    expect(s.carried.find(e => e.id === 'timer')).toBeUndefined();
+  });
+});

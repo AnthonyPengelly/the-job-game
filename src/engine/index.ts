@@ -23,6 +23,8 @@ export { getawayOdds, resolveGetawayOutcome } from './getaway';
 
 export { scoreRun } from './scoring';
 
+export { generateRoom, tickCarriedEffects } from './generation';
+
 export type {
   Lane,
   Outcome,

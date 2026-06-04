@@ -18,6 +18,8 @@ const cfg: EngineConfig = {
   },
   scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
   scaling: { profiles: {}, minCommit: {} },
+  generation: { obstacleRatio: 0.6 },
+  roomTemplates: { obstacles: [], scenarios: [] },
 };
 
 // Python reference: win → loot*(1.0+0.5*(1-H/HMAX)); bust → loot*0.4

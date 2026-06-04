@@ -43,6 +43,9 @@ export const tuningSchema = z.object({
     lowHeatStyleBonus: z.number().nonnegative(),
     bustMultiplier: z.number().gt(0).lt(1),
   }).strict(),
+  generation: z.object({
+    obstacleRatio: z.number().gt(0).lt(1),
+  }).strict(),
 }).strict();
 
 export type ParsedTuning = z.infer<typeof tuningSchema>;

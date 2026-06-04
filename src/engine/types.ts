@@ -119,6 +119,10 @@ export interface RunState {
   mansion: MansionDressing;
   finalScore?: number;
   win?: boolean;
+  /** Obstacle template IDs drawn this run — reset when the pool is exhausted. */
+  usedObstacleTemplateIds: string[];
+  /** Scenario template IDs drawn this run — reset when the pool is exhausted. */
+  usedScenarioTemplateIds: string[];
 }
 
 // ── E1 RunEvent union ─────────────────────────────────────────────────────────

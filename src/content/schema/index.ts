@@ -6,3 +6,6 @@ export type { ParsedScaling } from './scaling';
 
 export { metaSchema } from './meta';
 export type { ParsedMeta } from './meta';
+
+export { roomTemplatesSchema } from './room-templates';
+export type { ParsedRoomTemplates } from './room-templates';

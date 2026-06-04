@@ -16,7 +16,8 @@
       "scenarioSwing.big": "big scenario cool/heat = +/- this many Heat",
       "getaway.*": "terms of the Heat->odds Getaway curve; see CONTENT-AND-TUNING.md mapping table",
       "scoring.lowHeatStyleBonus": "Loot multiplier earned at Heat 0 on a win (scales to 0 at hMax)",
-      "scoring.bustMultiplier": "fraction of Loot banked on a bust"
+      "scoring.bustMultiplier": "fraction of Loot banked on a bust",
+      "generation.obstacleRatio": "probability [0,1] of drawing an obstacle room vs a scenario room (Python ref: 0.6)"
     }
   },
 
@@ -59,5 +60,9 @@
     "winBaseMultiplier": 1.0,
     "lowHeatStyleBonus": 0.5,
     "bustMultiplier": 0.4
+  },
+
+  "generation": {
+    "obstacleRatio": 0.6
   }
 }

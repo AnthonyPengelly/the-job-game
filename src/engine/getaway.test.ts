@@ -28,6 +28,8 @@ const cfg: EngineConfig = {
     },
     minCommit: {},
   },
+  generation: { obstacleRatio: 0.6 },
+  roomTemplates: { obstacles: [], scenarios: [] },
 };
 
 // Helper: reproduce the Python getaway() formula for comparison.

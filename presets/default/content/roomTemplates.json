@@ -1,0 +1,145 @@
+{
+  "_meta": {
+    "pack": "roomTemplates",
+    "version": 1,
+    "source": "heist-game-design.md mini-games grid + heat-model-simulation.py scenario branch"
+  },
+
+  "obstacles": [
+    {
+      "id": "tumblers-entry",
+      "gameId": "crackTheTumblers",
+      "lane": "tech",
+      "options": [
+        { "id": "tumblers-careful", "greedy": false, "heatCost": 1, "reward": 1 },
+        { "id": "tumblers-bold",    "greedy": true,  "heatCost": 2, "reward": 2 }
+      ]
+    },
+    {
+      "id": "beat16-corridor",
+      "gameId": "beat16",
+      "lane": "physical",
+      "options": [
+        { "id": "beat16-steady",  "greedy": false, "heatCost": 1, "reward": 1 },
+        { "id": "beat16-rushed",  "greedy": true,  "heatCost": 2, "reward": 2 }
+      ]
+    },
+    {
+      "id": "categories-lobby",
+      "gameId": "categories",
+      "lane": "charm",
+      "options": [
+        { "id": "categories-quiet",  "greedy": false, "heatCost": 1, "reward": 1 },
+        { "id": "categories-brash",  "greedy": true,  "heatCost": 2, "reward": 2 }
+      ]
+    },
+    {
+      "id": "onceover-gallery",
+      "gameId": "theOnceOver",
+      "lane": "stealth",
+      "options": [
+        { "id": "onceover-patient",  "greedy": false, "heatCost": 1, "reward": 1 },
+        { "id": "onceover-hasty",    "greedy": true,  "heatCost": 2, "reward": 2 }
+      ]
+    },
+    {
+      "id": "circuit-server-room",
+      "gameId": "followTheCircuit",
+      "lane": "tech",
+      "options": [
+        { "id": "circuit-methodical", "greedy": false, "heatCost": 1, "reward": 1 },
+        { "id": "circuit-shortcut",   "greedy": true,  "heatCost": 2, "reward": 2 }
+      ]
+    },
+    {
+      "id": "knowledge-archive",
+      "gameId": "insideKnowledge",
+      "lane": "tech",
+      "options": [
+        { "id": "knowledge-careful",  "greedy": false, "heatCost": 1, "reward": 1 },
+        { "id": "knowledge-thorough", "greedy": true,  "heatCost": 2, "reward": 2 }
+      ]
+    },
+    {
+      "id": "safecrack-vault",
+      "gameId": "safeCrack",
+      "lane": "tech",
+      "options": [
+        { "id": "safe-patient",  "greedy": false, "heatCost": 1, "reward": 1 },
+        { "id": "safe-speedy",   "greedy": true,  "heatCost": 2, "reward": 2 }
+      ]
+    },
+    {
+      "id": "steadyhands-display",
+      "gameId": "steadyHands",
+      "lane": "physical",
+      "options": [
+        { "id": "steady-slow",   "greedy": false, "heatCost": 1, "reward": 1 },
+        { "id": "steady-daring", "greedy": true,  "heatCost": 2, "reward": 2 }
+      ]
+    },
+    {
+      "id": "assembly-storeroom",
+      "gameId": "assemblyLine",
+      "lane": "physical",
+      "options": [
+        { "id": "assembly-quiet", "greedy": false, "heatCost": 1, "reward": 1 },
+        { "id": "assembly-fast",  "greedy": true,  "heatCost": 2, "reward": 2 }
+      ]
+    },
+    {
+      "id": "defuse-security-panel",
+      "gameId": "defuseTheAlarm",
+      "lane": "charm",
+      "options": [
+        { "id": "defuse-careful",  "greedy": false, "heatCost": 1, "reward": 1 },
+        { "id": "defuse-rushing",  "greedy": true,  "heatCost": 2, "reward": 2 }
+      ]
+    }
+  ],
+
+  "scenarios": [
+    {
+      "id": "found-a-document",
+      "choices": [
+        { "id": "pocket-it",   "label": "Pocket the document",  "heatDelta": 0,  "lootDelta": 2 },
+        { "id": "leave-it",    "label": "Leave it — stay cool", "heatDelta": -2, "lootDelta": 0 }
+      ]
+    },
+    {
+      "id": "unexpected-visitor",
+      "choices": [
+        { "id": "bluff-past",  "label": "Bluff past them",      "heatDelta": 2,  "lootDelta": 1 },
+        { "id": "hide-it-out", "label": "Hide and wait",        "heatDelta": -2, "lootDelta": 0 }
+      ]
+    },
+    {
+      "id": "shortcut-through-kitchen",
+      "choices": [
+        { "id": "take-shortcut",  "label": "Take the shortcut",   "heatDelta": -4, "lootDelta": 0 },
+        { "id": "stick-to-plan",  "label": "Stick to the plan",   "heatDelta": 0,  "lootDelta": 1 }
+      ]
+    },
+    {
+      "id": "dropped-radio",
+      "choices": [
+        { "id": "retrieve-radio",  "label": "Retrieve the radio",  "heatDelta": 4,  "lootDelta": 0 },
+        { "id": "abandon-radio",   "label": "Leave it and move",   "heatDelta": -2, "lootDelta": 0 }
+      ]
+    },
+    {
+      "id": "bonus-safe",
+      "choices": [
+        { "id": "crack-it",        "label": "Crack it open",        "heatDelta": 0,  "lootDelta": 2 },
+        { "id": "skip-the-safe",   "label": "Skip — not worth it",  "heatDelta": -2, "lootDelta": 0 }
+      ]
+    },
+    {
+      "id": "lobby-encounter",
+      "choices": [
+        { "id": "chat-your-way",   "label": "Chat your way through", "heatDelta": 2,  "lootDelta": 1 },
+        { "id": "slip-around",     "label": "Slip around unseen",    "heatDelta": -2, "lootDelta": 0 }
+      ]
+    }
+  ]
+}
