@@ -14,7 +14,8 @@ log "==== EPIC $EPIC ===="
 # ---- 1. PLAN (once per epic, strongest model) -----------------------------
 PLAN_FILE="plans/${EPIC}.md"
 # Check origin/main first (survives container restarts; local clone may be stale).
-if ! git fetch origin main && git show "origin/main:${PLAN_FILE}" >"$PLAN_FILE" 2>/dev/null; then
+mkdir -p "$(dirname "$PLAN_FILE")"
+if ! git fetch origin main || ! git show "origin/main:${PLAN_FILE}" >"$PLAN_FILE" 2>/dev/null; then
   prompt="$(render_prompt planner.md EPIC="$EPIC")"
   out="$(run_agent "plan-${EPIC}" "$MODEL_PLAN" "$prompt")"
   if has_blocked "$out"; then err "planner blocked: $(extract_marker "$out" PIPELINE_BLOCKED)"; exit 2; fi
