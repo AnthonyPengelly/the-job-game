@@ -41,8 +41,7 @@ function drawWithoutRepeat(
   const available = allIds.filter(id => !usedIds.includes(id));
   const pool = available.length > 0 ? available : [...allIds];
 
-  // rng.pick requires a non-empty array; allIds emptiness is a schema error caught at load time.
-  const chosen = rng.pick(pool as [string, ...string[]]);
+  const chosen = rng.pick(pool);
   const newUsed = available.length > 0 ? [...usedIds, chosen] : [chosen];
   return [chosen, newUsed];
 }
