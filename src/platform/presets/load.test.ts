@@ -65,9 +65,13 @@ describe('loadPreset', () => {
       expect(cfg.scaling.minCommit['assemblyLine']).toBe(2);
     });
 
-    it('returns a frozen object (top-level)', () => {
+    it('returns a deeply frozen object (top-level and nested)', () => {
       const cfg = loadPreset('default');
       expect(Object.isFrozen(cfg)).toBe(true);
+      expect(Object.isFrozen(cfg.heat)).toBe(true);
+      expect(Object.isFrozen(cfg.getaway)).toBe(true);
+      expect(Object.isFrozen(cfg.scaling)).toBe(true);
+      expect(Object.isFrozen(cfg.scaling.profiles['2'])).toBe(true);
     });
 
     it('is deterministic — repeated calls return equal configs', () => {

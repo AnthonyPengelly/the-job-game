@@ -9,6 +9,16 @@ function readJson(dir: string, file: string): unknown {
   return JSON.parse(readFileSync(resolve(dir, file), 'utf-8'));
 }
 
+function deepFreeze<T extends object>(obj: T): T {
+  Object.freeze(obj);
+  for (const value of Object.values(obj)) {
+    if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
+      deepFreeze(value as object);
+    }
+  }
+  return obj;
+}
+
 /**
  * Reads tuning.json, scaling.json, and _meta.json from presets/<id>/,
  * Zod-parses each one (fails loudly on any malformed field), and returns a
@@ -51,5 +61,5 @@ export function loadPreset(id = 'default'): EngineConfig {
     },
   };
 
-  return Object.freeze(config);
+  return deepFreeze(config);
 }
