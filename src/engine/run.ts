@@ -35,6 +35,8 @@ export function initialState(seed: number): RunState {
     history: [],
     escapeSignal: false,
     mansion: { type: 'villa' },
+    usedObstacleTemplateIds: [],
+    usedScenarioTemplateIds: [],
   };
 }
 
@@ -69,5 +71,7 @@ export function startRun(
     history: [],
     escapeSignal: false,
     mansion: { type: mansionType },
+    usedObstacleTemplateIds: [],
+    usedScenarioTemplateIds: [],
   };
 }

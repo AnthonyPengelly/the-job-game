@@ -20,6 +20,8 @@ const cfg: EngineConfig = {
   getaway: { exponent: 1.3, skillTerm: 0.5, skillPivot: 0.65, headcountTerm: 0.8, clamp: [0.04, 0.97] },
   scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
   scaling: { profiles: {}, minCommit: {} },
+  generation: { obstacleRatio: 0.6 },
+  roomTemplates: { obstacles: [], scenarios: [] },
 };
 
 describe('obstacleDrip', () => {

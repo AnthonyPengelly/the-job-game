@@ -83,6 +83,39 @@ describe('loadPreset', () => {
     });
   });
 
+  describe('roomTemplates', () => {
+    it('loads roomTemplates with at least one obstacle and one scenario', () => {
+      const cfg = loadPreset('default');
+      expect(cfg.roomTemplates.obstacles.length).toBeGreaterThanOrEqual(1);
+      expect(cfg.roomTemplates.scenarios.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('all obstacle gameIds are keys in scaling.minCommit', () => {
+      const cfg = loadPreset('default');
+      for (const t of cfg.roomTemplates.obstacles) {
+        expect(cfg.scaling.minCommit[t.gameId]).toBeDefined();
+      }
+    });
+
+    it('obstacle options are ordered [safe, greedy]', () => {
+      const cfg = loadPreset('default');
+      for (const t of cfg.roomTemplates.obstacles) {
+        expect(t.options[0].greedy).toBe(false);
+        expect(t.options[1].greedy).toBe(true);
+      }
+    });
+
+    it('generation.obstacleRatio matches tuning.json (0.6)', () => {
+      const cfg = loadPreset('default');
+      expect(cfg.generation.obstacleRatio).toBe(0.6);
+    });
+
+    it('roomTemplates config is frozen', () => {
+      const cfg = loadPreset('default');
+      expect(Object.isFrozen(cfg.roomTemplates)).toBe(true);
+    });
+  });
+
   describe('malformed fixture', () => {
     it('throws a ZodError when a required field has the wrong type', () => {
       expect(() => loadPreset('test-malformed')).toThrow(ZodError);
