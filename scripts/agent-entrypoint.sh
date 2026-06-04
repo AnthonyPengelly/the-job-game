@@ -25,6 +25,9 @@ rm -rf /workspace/repo
 git clone "https://github.com/${GITHUB_REPO}.git" /workspace/repo
 cd /workspace/repo
 
+# Pull again to catch anything pushed between clone and now (harness fixes etc).
+git pull --ff-only origin main 2>/dev/null || true
+
 # Make claude resolve to the auth shim.
 export CLAUDE_BIN="claude-agent"
 
