@@ -5,17 +5,41 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
 
+// Relative-path patterns that match cross-layer climbs at depths 1–3.
+// minimatch's ** skips dot-prefixed segments (e.g. ".."), so explicit depths
+// are the only reliable way to catch ../content, ../../content, etc.
+function relPats(layerName) {
+  return [
+    `../${layerName}`,
+    `../${layerName}/**`,
+    `../../${layerName}`,
+    `../../${layerName}/**`,
+    `../../../${layerName}`,
+    `../../../${layerName}/**`,
+  ];
+}
+
 export default tseslint.config(
   // ── Ignores ─────────────────────────────────────────────────────────
   { ignores: ['dist/**', 'node_modules/**'] },
 
-  // ── Base: TypeScript + React for all source files ───────────────────
+  // ── Base: TypeScript for all source files (no React plugins) ────────
   {
     files: ['src/**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     languageOptions: {
       globals: globals.browser,
     },
+  },
+
+  // ── React surfaces: hooks + refresh rules for UI layers only ────────
+  {
+    files: [
+      'src/console/**/*.{ts,tsx}',
+      'src/player-view/**/*.{ts,tsx}',
+      'src/minigames/**/*.{ts,tsx}',
+      'src/main.tsx',
+    ],
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
@@ -27,14 +51,33 @@ export default tseslint.config(
     },
   },
 
-  // ── Engine: pure TS — no React, no DOM, no other layers, no Math.random ─
+  // ── Engine: pure TS — no React, no DOM, no timers, no other layers ──
   {
     files: ['src/engine/**/*.{ts,tsx}'],
     rules: {
+      // Timer and DOM globals are forbidden in the engine (architecture §3).
+      'no-restricted-globals': [
+        'error',
+        { name: 'setTimeout', message: 'Engine must not use timers — pass time explicitly.' },
+        { name: 'setInterval', message: 'Engine must not use timers — pass time explicitly.' },
+        { name: 'clearTimeout', message: 'Engine must not use timers — pass time explicitly.' },
+        { name: 'clearInterval', message: 'Engine must not use timers — pass time explicitly.' },
+        {
+          name: 'requestAnimationFrame',
+          message: 'Engine must not use requestAnimationFrame (DOM only).',
+        },
+        {
+          name: 'cancelAnimationFrame',
+          message: 'Engine must not use cancelAnimationFrame (DOM only).',
+        },
+        { name: 'document', message: 'Engine must not access the DOM.' },
+        { name: 'window', message: 'Engine must not access the global window object.' },
+      ],
       'no-restricted-imports': [
         'error',
         {
           patterns: [
+            // ── Bare-package / @/-alias blocks ───────────────────────
             {
               group: ['react', 'react/*', 'react-dom', 'react-dom/*'],
               message: 'Engine must not import React (engine is pure TS, no DOM).',
@@ -59,6 +102,15 @@ export default tseslint.config(
               group: ['@/platform', '@/platform/**'],
               message: 'Engine must not import the platform layer.',
             },
+            // ── Relative cross-layer climbs ───────────────────────────
+            { group: relPats('content'), message: 'Engine must not import the content layer.' },
+            { group: relPats('minigames'), message: 'Engine must not import the minigames layer.' },
+            { group: relPats('console'), message: 'Engine must not import the console layer.' },
+            {
+              group: relPats('player-view'),
+              message: 'Engine must not import the player-view layer.',
+            },
+            { group: relPats('platform'), message: 'Engine must not import the platform layer.' },
           ],
         },
       ],
@@ -66,8 +118,7 @@ export default tseslint.config(
         'error',
         {
           selector: 'MemberExpression[object.name="Math"][property.name="random"]',
-          message:
-            'Engine must not use Math.random — use the seeded RNG (src/engine/rng.ts).',
+          message: 'Engine must not use Math.random — use the seeded RNG (src/engine/rng.ts).',
         },
         {
           selector: 'MemberExpression[object.name="Date"][property.name="now"]',
@@ -105,6 +156,13 @@ export default tseslint.config(
               group: ['@/platform', '@/platform/**'],
               message: 'Content must not import the platform layer.',
             },
+            { group: relPats('minigames'), message: 'Content must not import the minigames layer.' },
+            { group: relPats('console'), message: 'Content must not import the console layer.' },
+            {
+              group: relPats('player-view'),
+              message: 'Content must not import the player-view layer.',
+            },
+            { group: relPats('platform'), message: 'Content must not import the platform layer.' },
           ],
         },
       ],
@@ -127,6 +185,11 @@ export default tseslint.config(
               group: ['@/player-view', '@/player-view/**'],
               message: 'Minigames must not import the player-view layer.',
             },
+            { group: relPats('console'), message: 'Minigames must not import the console layer.' },
+            {
+              group: relPats('player-view'),
+              message: 'Minigames must not import the player-view layer.',
+            },
           ],
         },
       ],
@@ -145,6 +208,10 @@ export default tseslint.config(
               group: ['@/player-view', '@/player-view/**'],
               message: 'Console must not import the player-view layer.',
             },
+            {
+              group: relPats('player-view'),
+              message: 'Console must not import the player-view layer.',
+            },
           ],
         },
       ],
@@ -161,6 +228,10 @@ export default tseslint.config(
           patterns: [
             {
               group: ['@/console', '@/console/**'],
+              message: 'Player-view must not import the console layer.',
+            },
+            {
+              group: relPats('console'),
               message: 'Player-view must not import the console layer.',
             },
           ],
@@ -187,6 +258,15 @@ export default tseslint.config(
             },
             {
               group: ['@/minigames', '@/minigames/**'],
+              message: 'Platform must not import the minigames layer.',
+            },
+            { group: relPats('console'), message: 'Platform must not import the console layer.' },
+            {
+              group: relPats('player-view'),
+              message: 'Platform must not import the player-view layer.',
+            },
+            {
+              group: relPats('minigames'),
               message: 'Platform must not import the minigames layer.',
             },
           ],
