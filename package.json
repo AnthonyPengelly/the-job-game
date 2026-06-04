@@ -7,7 +7,7 @@
   "scripts": {
     "comment:gates": "check:full, sim:check and content:validate start as no-op stubs so the pipeline can bootstrap. Epic E0 replaces check:full; E1 replaces sim:check; E7/E10 replace content:validate. Do NOT leave them as stubs once the relevant epic lands.",
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "vite build",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'stub: E0.4 wires eslint' && exit 0",
     "test": "echo 'stub: E0.2 wires vitest' && exit 0",
