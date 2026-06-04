@@ -11,99 +11,8 @@ import { describe, it, expect } from 'vitest';
 import { reduceSession, initialSession } from '@/engine/history';
 import { reduce } from '@/engine/reduce';
 import { initialState } from '@/engine/run';
-import type { EngineConfig } from '@/engine/config';
-import type { Lane, PlayerId, RunPhase, RunState } from '@/engine/types';
-
-// ─── Shared test config ───────────────────────────────────────────────────────
-// Includes all headcounts and enough room templates for generateRoom to work.
-
-const cfg: EngineConfig = {
-  heat: { hMax: 20, runAtFraction: 0.55 },
-  escalation: { onsetRoom: 5, rampPerObstacle: 0.2 },
-  obstacleHeat: { safe: 1, greedy: 2, greedyBelowFraction: 0.5 },
-  outcomeHeat: { clean: 0, complication: 1, botched: 2 },
-  outcomeLoot: { complication: 1, botched: 0 },
-  scenarioSwing: { small: 2, big: 4 },
-  getaway: { exponent: 1.3, skillTerm: 0.5, skillPivot: 0.65, headcountTerm: 0.8, clamp: [0.04, 0.97] },
-  scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
-  scaling: {
-    profiles: {
-      '2': { getawayBonus: -0.03, crewPerOption: [1, 2] as [number, number], exhaustion: 'tired' as const },
-      '3': { getawayBonus: -0.02, crewPerOption: [1, 2] as [number, number], exhaustion: 'tired' as const },
-      '4': { getawayBonus: 0.0,   crewPerOption: [1, 2] as [number, number], exhaustion: 'light' as const },
-      '5': { getawayBonus: 0.02,  crewPerOption: [2, 3] as [number, number], exhaustion: 'full' as const },
-      '6': { getawayBonus: 0.035, crewPerOption: [2, 3] as [number, number], exhaustion: 'full' as const },
-      '7': { getawayBonus: 0.06,  crewPerOption: [2, 3] as [number, number], exhaustion: 'full' as const },
-    },
-    exhaustionRest: { full: 1, light: 1, tired: 0 },
-    minCommit: { alpha: 1, bravo: 1, charlie: 1 },
-    variant: {},
-    excludedFromSolo: [],
-    soloEligibleMinPool: 8,
-    dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
-  },
-  generation: { obstacleRatio: 0.7 },
-  gear: {},
-  roomTemplates: {
-    obstacles: [
-      {
-        id: 'obs-alpha',
-        gameId: 'alpha',
-        lane: 'tech',
-        options: [
-          { id: 'alpha-safe',   greedy: false, heatCost: 1, reward: 1 },
-          { id: 'alpha-greedy', greedy: true,  heatCost: 2, reward: 2 },
-        ],
-      },
-      {
-        id: 'obs-bravo',
-        gameId: 'bravo',
-        lane: 'physical',
-        options: [
-          { id: 'bravo-safe',   greedy: false, heatCost: 1, reward: 1 },
-          { id: 'bravo-greedy', greedy: true,  heatCost: 2, reward: 2 },
-        ],
-      },
-      {
-        id: 'obs-charlie',
-        gameId: 'charlie',
-        lane: 'stealth',
-        options: [
-          { id: 'charlie-safe',   greedy: false, heatCost: 1, reward: 1 },
-          { id: 'charlie-greedy', greedy: true,  heatCost: 2, reward: 2 },
-        ],
-      },
-    ],
-    scenarios: [
-      {
-        id: 'scen-1',
-        choices: [
-          { id: 's1-a', label: 'A', heatDelta: -1, lootDelta: 0 },
-          { id: 's1-b', label: 'B', heatDelta:  0, lootDelta: 1 },
-        ],
-      },
-      {
-        id: 'scen-2',
-        choices: [
-          { id: 's2-a', label: 'A', heatDelta: 2, lootDelta: 0 },
-          { id: 's2-b', label: 'B', heatDelta: -1, lootDelta: 1 },
-        ],
-      },
-    ],
-  },
-};
-
-// ─── State generator ──────────────────────────────────────────────────────────
-
-/**
- * Build a reachable RunState by replaying a deterministic event sequence.
- * START_RUN with the given seed and crew size, leaving state in 'room' phase.
- */
-function buildState(seed: number, crewSize: number): RunState {
-  const names = ['Alice', 'Bob', 'Carol', 'Dave', 'Eve', 'Frank', 'Grace'];
-  const crew = names.slice(0, Math.min(crewSize, 7)).map(name => ({ name }));
-  return reduce(initialState(seed), { t: 'START_RUN', crew, seed }, cfg);
-}
+import { testCfg as cfg } from '@/engine/test-config';
+import type { Lane, RunPhase, RunState } from '@/engine/types';
 
 // ─── Domain constants ─────────────────────────────────────────────────────────
 
@@ -114,17 +23,82 @@ const PHASES: RunPhase[] = ['briefing', 'room', 'minigame', 'offer', 'getaway', 
 const SEEDS = [1, 42, 1312, 7777, 99999];
 const CREW_SIZES = [2, 3, 4, 5, 7];
 
+// ─── State generators ─────────────────────────────────────────────────────────
+
+/** Build a reachable RunState by replaying START_RUN with the given seed and crew. */
+function buildState(seed: number, crewSize: number): RunState {
+  const names = ['Alice', 'Bob', 'Carol', 'Dave', 'Eve', 'Frank', 'Grace'];
+  const crew = names.slice(0, Math.min(crewSize, 7)).map(name => ({ name }));
+  return reduce(initialState(seed), { t: 'START_RUN', crew, seed }, cfg);
+}
+
+/**
+ * Advance one room from the current state by resolving whatever room is active
+ * (obstacle → safe option + clean outcome; scenario → first choice), then PUSH_ON.
+ * Returns the state unchanged if phase is not 'room' or there is no current room.
+ */
+function advanceOneRoom(state: RunState): RunState {
+  if (state.phase !== 'room' || state.currentRoom === null) return state;
+  const room = state.currentRoom;
+
+  let inOffer: RunState;
+  if (room.kind === 'obstacle') {
+    // Commit the first player to the safe option, then resolve clean.
+    const chosen = reduce(
+      state,
+      { t: 'CHOOSE_OPTION', optionId: room.options[0]!.id, committed: [state.crew[0]!.id] },
+      cfg,
+    );
+    inOffer = reduce(chosen, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+  } else {
+    inOffer = reduce(state, { t: 'CHOOSE_SCENARIO', choiceId: room.choices[0].id }, cfg);
+  }
+
+  return reduce(inOffer, { t: 'PUSH_ON' }, cfg);
+}
+
+/**
+ * Return a diverse array of reachable RunStates for the given seed/crewSize:
+ *   [0] initial state (phase 'room', roomIndex 0)
+ *   [1] after 1 room resolved (non-zero history, possible restingUntilRoom for crew ≥ 4)
+ *   [2] after 2 rooms resolved (accumulated heat/loot)
+ *   [3] getaway-phase variant (any GM can jump phase at any time)
+ *
+ * Stops advancing early if heat forces an emergency getaway (rare in tests; heat
+ * rises by ~1/room from the safe option so this won't happen within 2 rooms at
+ * the default hMax of 20).
+ */
+function buildStateVariants(seed: number, crewSize: number): RunState[] {
+  const initial = buildState(seed, crewSize);
+  const variants: RunState[] = [initial];
+
+  let state = initial;
+  for (let i = 0; i < 2 && state.phase === 'room'; i++) {
+    state = advanceOneRoom(state);
+    variants.push(state);
+  }
+
+  // Always add a getaway-phase variant (the GM can jump phase at any time).
+  const last = variants[variants.length - 1]!;
+  if (last.phase !== 'getaway') {
+    variants.push({ ...last, phase: 'getaway' as const });
+  }
+
+  return variants;
+}
+
 // ─── Property: no dead-ends ───────────────────────────────────────────────────
 
 describe('no-dead-end: every tracked field can be driven to any legal value', () => {
   it('heat can be set to 0, mid-range, and hMax from any state', () => {
     for (const seed of SEEDS) {
       for (const crewSize of CREW_SIZES) {
-        const state = buildState(seed, crewSize);
-        for (const target of [0, 7, cfg.heat.hMax]) {
-          const session = initialSession(state);
-          const after = reduceSession(session, { t: 'OVERRIDE_SET_HEAT', value: target }, cfg);
-          expect(after.present.heat).toBe(target);
+        for (const state of buildStateVariants(seed, crewSize)) {
+          for (const target of [0, 7, cfg.heat.hMax]) {
+            const session = initialSession(state);
+            const after = reduceSession(session, { t: 'OVERRIDE_SET_HEAT', value: target }, cfg);
+            expect(after.present.heat).toBe(target);
+          }
         }
       }
     }
@@ -132,38 +106,41 @@ describe('no-dead-end: every tracked field can be driven to any legal value', ()
 
   it('loot can be set to 0 and an arbitrarily large value from any state', () => {
     for (const seed of SEEDS) {
-      const state = buildState(seed, 3);
-      for (const target of [0, 25, 100]) {
-        const session = initialSession(state);
-        const after = reduceSession(session, { t: 'OVERRIDE_SET_LOOT', value: target }, cfg);
-        expect(after.present.loot).toBe(target);
+      for (const state of buildStateVariants(seed, 3)) {
+        for (const target of [0, 25, 100]) {
+          const session = initialSession(state);
+          const after = reduceSession(session, { t: 'OVERRIDE_SET_LOOT', value: target }, cfg);
+          expect(after.present.loot).toBe(target);
+        }
       }
     }
   });
 
   it('phase can be jumped to any RunPhase from any state', () => {
     for (const seed of SEEDS) {
-      const state = buildState(seed, 2);
-      for (const phase of PHASES) {
-        const session = initialSession(state);
-        const after = reduceSession(session, { t: 'OVERRIDE_SET_PHASE', phase }, cfg);
-        expect(after.present.phase).toBe(phase);
+      for (const state of buildStateVariants(seed, 2)) {
+        for (const phase of PHASES) {
+          const session = initialSession(state);
+          const after = reduceSession(session, { t: 'OVERRIDE_SET_PHASE', phase }, cfg);
+          expect(after.present.phase).toBe(phase);
+        }
       }
     }
   });
 
   it('stats[lane] can be set to any value for every player in every state', () => {
     for (const seed of SEEDS) {
-      const state = buildState(seed, 3);
-      for (const player of state.crew) {
-        for (const lane of LANES) {
-          const session = initialSession(state);
-          const after = reduceSession(
-            session,
-            { t: 'OVERRIDE_SET_STAT', player: player.id, lane, value: 5 },
-            cfg,
-          );
-          expect(after.present.crew.find(p => p.id === player.id)!.stats[lane]).toBe(5);
+      for (const state of buildStateVariants(seed, 3)) {
+        for (const player of state.crew) {
+          for (const lane of LANES) {
+            const session = initialSession(state);
+            const after = reduceSession(
+              session,
+              { t: 'OVERRIDE_SET_STAT', player: player.id, lane, value: 5 },
+              cfg,
+            );
+            expect(after.present.crew.find(p => p.id === player.id)!.stats[lane]).toBe(5);
+          }
         }
       }
     }
@@ -171,16 +148,17 @@ describe('no-dead-end: every tracked field can be driven to any legal value', ()
 
   it('powerUps[lane] can be granted (true) for every player × lane', () => {
     for (const seed of SEEDS) {
-      const state = buildState(seed, 2);
-      for (const player of state.crew) {
-        for (const lane of LANES) {
-          const session = initialSession(state);
-          const after = reduceSession(
-            session,
-            { t: 'OVERRIDE_SET_POWERUP', player: player.id, lane, held: true },
-            cfg,
-          );
-          expect(after.present.crew.find(p => p.id === player.id)!.powerUps[lane]).toBe(true);
+      for (const state of buildStateVariants(seed, 2)) {
+        for (const player of state.crew) {
+          for (const lane of LANES) {
+            const session = initialSession(state);
+            const after = reduceSession(
+              session,
+              { t: 'OVERRIDE_SET_POWERUP', player: player.id, lane, held: true },
+              cfg,
+            );
+            expect(after.present.crew.find(p => p.id === player.id)!.powerUps[lane]).toBe(true);
+          }
         }
       }
     }
@@ -189,22 +167,24 @@ describe('no-dead-end: every tracked field can be driven to any legal value', ()
   it('powerUps[lane] can be removed (false) for every player × lane', () => {
     // Start from a state where all power-ups are held so removal is non-trivial.
     for (const seed of SEEDS) {
-      let state = buildState(seed, 2);
-      // Grant all power-ups first
-      for (const player of state.crew) {
-        for (const lane of LANES) {
-          state = reduce(state, { t: 'OVERRIDE_SET_POWERUP', player: player.id as PlayerId, lane, held: true }, cfg);
+      for (const baseVariant of buildStateVariants(seed, 2)) {
+        let state = baseVariant;
+        // Grant all power-ups first
+        for (const player of state.crew) {
+          for (const lane of LANES) {
+            state = reduce(state, { t: 'OVERRIDE_SET_POWERUP', player: player.id, lane, held: true }, cfg);
+          }
         }
-      }
-      for (const player of state.crew) {
-        for (const lane of LANES) {
-          const session = initialSession(state);
-          const after = reduceSession(
-            session,
-            { t: 'OVERRIDE_SET_POWERUP', player: player.id, lane, held: false },
-            cfg,
-          );
-          expect(after.present.crew.find(p => p.id === player.id)!.powerUps[lane]).toBeUndefined();
+        for (const player of state.crew) {
+          for (const lane of LANES) {
+            const session = initialSession(state);
+            const after = reduceSession(
+              session,
+              { t: 'OVERRIDE_SET_POWERUP', player: player.id, lane, held: false },
+              cfg,
+            );
+            expect(after.present.crew.find(p => p.id === player.id)!.powerUps[lane]).toBeUndefined();
+          }
         }
       }
     }
@@ -212,24 +192,25 @@ describe('no-dead-end: every tracked field can be driven to any legal value', ()
 
   it('restingUntilRoom can be set and cleared for every player', () => {
     for (const seed of SEEDS) {
-      const state = buildState(seed, 3);
-      for (const player of state.crew) {
-        // Set restingUntilRoom
-        const session = initialSession(state);
-        const after = reduceSession(
-          session,
-          { t: 'OVERRIDE_SET_RESTING', player: player.id, untilRoom: 5 },
-          cfg,
-        );
-        expect(after.present.crew.find(p => p.id === player.id)!.restingUntilRoom).toBe(5);
+      for (const state of buildStateVariants(seed, 3)) {
+        for (const player of state.crew) {
+          // Set restingUntilRoom
+          const session = initialSession(state);
+          const after = reduceSession(
+            session,
+            { t: 'OVERRIDE_SET_RESTING', player: player.id, untilRoom: 5 },
+            cfg,
+          );
+          expect(after.present.crew.find(p => p.id === player.id)!.restingUntilRoom).toBe(5);
 
-        // Clear restingUntilRoom (omit untilRoom)
-        const cleared = reduceSession(
-          after,
-          { t: 'OVERRIDE_SET_RESTING', player: player.id },
-          cfg,
-        );
-        expect(cleared.present.crew.find(p => p.id === player.id)!.restingUntilRoom).toBeUndefined();
+          // Clear restingUntilRoom (omit untilRoom)
+          const cleared = reduceSession(
+            after,
+            { t: 'OVERRIDE_SET_RESTING', player: player.id },
+            cfg,
+          );
+          expect(cleared.present.crew.find(p => p.id === player.id)!.restingUntilRoom).toBeUndefined();
+        }
       }
     }
   });
@@ -279,9 +260,11 @@ describe('undo-restores-prior-state: UNDO_LAST after any override deep-equals th
 
   for (const seed of SEEDS) {
     for (const crewSize of [2, 3, 5]) {
-      it(`seed=${seed}, crew=${crewSize}: every override undoes cleanly`, () => {
-        assertUndoRestores(buildState(seed, crewSize));
-      });
+      for (const [vi, state] of buildStateVariants(seed, crewSize).entries()) {
+        it(`seed=${seed}, crew=${crewSize}, variant=${vi}: every override undoes cleanly`, () => {
+          assertUndoRestores(state);
+        });
+      }
     }
   }
 });
