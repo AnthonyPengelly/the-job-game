@@ -1,3 +1,4 @@
-// Platform layer — audio engine, persistence, preset loader, player-view channel.
-// Placeholder: E2+ implements platform services.
-export type PlatformLayer = 'platform';
+export { loadPreset } from './presets/load';
+export { loadDefaultConfig } from './presets/browser';
+export { buildConfig } from './presets/build-config';
+export type { PresetBundle } from './presets/build-config';
