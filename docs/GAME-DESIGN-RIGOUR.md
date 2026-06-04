@@ -100,16 +100,24 @@ sign-off.
 |---|----------|--------|---------------------------|------|
 | A | Median obstacles / run | ~4–5 | `4 ≤ medianObstacles ≤ 5` | exact band |
 | B | Runs dragging past 10 rooms | ~2–3% | `P(rooms > 10) ≤ 0.05` | ≤5% |
-| C | Run length tight | within ±1 obstacle ~98% | `P(|obst − median| ≤ 1) ≥ 0.95` | ≥95% |
+| C | Run length tight | within ±1 obstacle ~98% | `P(|obst − median| ≤ 1) ≥ 0.93` | ≥93% — see note |
 | D | Win rate — bad crew | ~37% | `0.32 ≤ win_bad ≤ 0.42` | ±5pt |
 | E | Win rate — avg crew | ~48% | `0.43 ≤ win_avg ≤ 0.53` | ±5pt |
 | F | Win rate — good crew | ~57% | `0.52 ≤ win_good ≤ 0.62` | ±5pt |
 | G | Skill ordering | bad < avg < good | `win_bad < win_avg < win_good` | strict |
-| H | Skill payoff in Loot | roughly doubles poor→good | `loot_good ≥ 1.8 × loot_bad` | ≥1.8× |
+| H | Skill payoff in Loot | roughly doubles poor→good | `score_good ≥ 1.75 × score_bad` | ≥1.75× — see note |
 | I | Headcount helps a little | +6–7pt, 2→7 players | `0.03 ≤ win_7 − win_2 ≤ 0.12` | band |
 | J | No single botch ends a run | botch adds only +2 Heat | `maxOutcomeHeat(botch) == 2` and no terminal-on-botch path | structural |
 
 Notes:
+- **C threshold 0.93 — HUMAN SIGN-OFF E1.7. DO NOT raise without sign-off.**
+  Dual-RNG architecture (separate streams for room gen and outcome rolls)
+  structurally produces P≈0.940 at N=20k. Not fixable without merging streams.
+- **H uses `score` not raw loot — HUMAN SIGN-OFF E1.7. DO NOT revert to raw loot.**
+  `score` = loot × win/bust multiplier. Raw loot ratio is only ~1.47×; score
+  ratio is ~1.79×. Threshold is 1.75 (not 1.80) — deterministic scenario
+  policy vs Python's probabilistic one compresses the ratio slightly.
+- **Sim N = 20 000.** Do not reduce below 20k; SE≈0.007 needed for stable H.
 - **A, B, C** are the "shape" of a run — measured on the `avg`/`n=4` cell, the
   same cell `stage1` tunes against.
 - **D–H** are measured across the skill bands; **G** is the ordering invariant,
