@@ -127,8 +127,26 @@ export interface RunState {
   usedScenarioTemplateIds: string[];
 }
 
-// ── E1 RunEvent union ─────────────────────────────────────────────────────────
-// Exactly the in-run subset for E1. GM-override events and UNDO_LAST are E2.
+// ── GM-override events (E2.5) ─────────────────────────────────────────────────
+// The GM can drive any tracked field to any legal value at any time (no dead-ends).
+// All overrides are handled in overrides.ts and delegated to from reduce's switch.
+
+export type OverrideEvent =
+  | { t: 'OVERRIDE_SET_HEAT'; value: number }
+  | { t: 'OVERRIDE_ADJUST_HEAT'; delta: number }
+  | { t: 'OVERRIDE_SET_LOOT'; value: number }
+  | { t: 'OVERRIDE_ADJUST_LOOT'; delta: number }
+  | { t: 'OVERRIDE_SET_STAT'; player: PlayerId; lane: Lane; value: number }
+  | { t: 'OVERRIDE_ADJUST_STAT'; player: PlayerId; lane: Lane; delta: number }
+  | { t: 'OVERRIDE_SET_POWERUP'; player: PlayerId; lane: Lane; held: boolean }
+  /** untilRoom absent ⇒ clear the rest (un-rest the player). */
+  | { t: 'OVERRIDE_SET_RESTING'; player: PlayerId; untilRoom?: number }
+  | { t: 'OVERRIDE_REROLL_ROOM' }
+  | { t: 'OVERRIDE_SKIP_ROOM' }
+  | { t: 'OVERRIDE_SET_PHASE'; phase: RunPhase };
+
+// ── RunEvent union ────────────────────────────────────────────────────────────
+// E1 core events plus E2.5 GM-override events.
 // The reducer's default: never assert enforces exhaustiveness — adding an
 // unhandled event type is a compile error.
 
@@ -140,7 +158,8 @@ export type RunEvent =
   | { t: 'ASSIGN_GEAR'; gear: GearId; to: PlayerId }
   | { t: 'PUSH_ON' }
   | { t: 'CALL_GETAWAY' }
-  | { t: 'RESOLVE_GETAWAY'; win?: boolean };
+  | { t: 'RESOLVE_GETAWAY'; win?: boolean }
+  | OverrideEvent;
 
 // ── Harness-facing skill type ─────────────────────────────────────────────────
 // Shared vocabulary for the balance harness (sim/). Carries no tunable numbers
