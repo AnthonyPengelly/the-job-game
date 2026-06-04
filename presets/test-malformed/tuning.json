@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "pack": "tuning",
+    "version": 1,
+    "source": "test fixture",
+    "units": {}
+  },
+  "heat": {
+    "hMax": "twenty",
+    "runAtFraction": 0.55
+  },
+  "escalation": {
+    "onsetRoom": 5,
+    "rampPerObstacle": 0.2
+  },
+  "obstacleHeat": {
+    "safe": 1,
+    "greedy": 2,
+    "greedyBelowFraction": 0.5
+  },
+  "outcomeHeat": {
+    "clean": 0,
+    "complication": 1,
+    "botched": 2
+  },
+  "scenarioSwing": {
+    "small": 2,
+    "big": 4
+  },
+  "getaway": {
+    "exponent": 1.3,
+    "skillTerm": 0.5,
+    "skillPivot": 0.65,
+    "headcountTerm": 0.8,
+    "clamp": [0.04, 0.97]
+  },
+  "scoring": {
+    "winBaseMultiplier": 1.0,
+    "lowHeatStyleBonus": 0.5,
+    "bustMultiplier": 0.4
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "pack": "scaling",
+    "version": 1,
+    "source": "test fixture",
+    "units": {}
+  },
+  "profiles": {
+    "2": { "exhaustion": "tired", "crewPerOption": [1, 2], "getawayBonus": -0.04 },
+    "4": { "exhaustion": "light", "crewPerOption": [1, 2], "getawayBonus": 0.0 },
+    "7": { "exhaustion": "full",  "crewPerOption": [2, 3], "getawayBonus": 0.05 }
+  },
+  "minCommit": {
+    "crackTheTumblers": 1
+  },
+  "variant": {},
+  "excludedFromSolo": [],
+  "soloEligibleMinPool": 8,
+  "dialCurve": {
+    "_default": { "base": 1.0, "perLanePoint": -0.15, "tightenPerExtraCrew": 0.1 }
+  }
+}

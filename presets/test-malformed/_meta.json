@@ -1,0 +1,10 @@
+{
+  "id": "test-malformed",
+  "name": "Test Malformed",
+  "version": 1,
+  "contentVersion": "test",
+  "description": "Deliberately malformed fixture for E1.2 loader tests.",
+  "extends": null,
+  "assert": "off",
+  "contentPacks": {}
+}
