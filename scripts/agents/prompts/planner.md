@@ -27,7 +27,7 @@ Format of `plans/{{EPIC}}.md` — use this exact heading shape so the runner can
 ## Task {{EPIC}}.2 — ...
 ```
 
-When finished, commit `plans/{{EPIC}}.md` and emit on the final line EITHER:
+When finished, commit `plans/{{EPIC}}.md` directly to `main` and push (`git push origin main`). Do NOT use a feature branch — the plan must land on main so builder agents cloning the repo fresh can find it. Then emit on the final line EITHER:
 PIPELINE_PLAN_DONE: {{EPIC}}
 or, if blocked:
 PIPELINE_BLOCKED: <the specific decision you need from a human>
