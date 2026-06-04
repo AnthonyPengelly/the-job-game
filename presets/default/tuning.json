@@ -12,6 +12,7 @@
       "obstacleHeat.greedy": "Heat added by a greedy obstacle approach (replaces safe; greedy is the higher value)",
       "obstacleHeat.greedyBelowFraction": "the crew may still play greedy while Heat < this fraction of hMax",
       "outcomeHeat.*": "Heat added on top of the obstacle cost by the mini-game result",
+      "outcomeLoot.*": "Loot awarded by outcome (clean uses option.reward; complication and botched are fixed scalars here)",
       "scenarioSwing.small": "small scenario cool/heat = +/- this many Heat",
       "scenarioSwing.big": "big scenario cool/heat = +/- this many Heat",
       "getaway.*": "terms of the Heat->odds Getaway curve; see CONTENT-AND-TUNING.md mapping table",
@@ -41,6 +42,11 @@
     "clean": 0,
     "complication": 1,
     "botched": 2
+  },
+
+  "outcomeLoot": {
+    "complication": 1,
+    "botched": 0
   },
 
   "scenarioSwing": {

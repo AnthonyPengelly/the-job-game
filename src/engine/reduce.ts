@@ -68,11 +68,11 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
       const heatDelta = drip + surcharge + outHeat;
       const newHeat = Math.max(0, state.heat + heatDelta);
 
-      // Loot per reference: clean → option reward; complication → 1; botched → 0.
+      // Loot per reference: clean → option reward; complication/botched → tuning.outcomeLoot.
       const lootGained =
         event.outcome === 'clean' ? option.reward :
-        event.outcome === 'complication' ? 1 :
-        0;
+        event.outcome === 'complication' ? cfg.outcomeLoot.complication :
+        cfg.outcomeLoot.botched;
 
       const intermediate: RunState = {
         ...state,

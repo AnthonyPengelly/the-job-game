@@ -11,6 +11,7 @@ const cfg: EngineConfig = {
   escalation: { onsetRoom: 5, rampPerObstacle: 0.2 },
   obstacleHeat: { safe: 1, greedy: 2, greedyBelowFraction: 0.5 },
   outcomeHeat: { clean: 0, complication: 1, botched: 2 },
+  outcomeLoot: { complication: 1, botched: 0 },
   scenarioSwing: { small: 2, big: 4 },
   getaway: { exponent: 1.3, skillTerm: 0.5, skillPivot: 0.65, headcountTerm: 0.8, clamp: [0.04, 0.97] },
   scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
@@ -634,13 +635,20 @@ describe('RESOLVE_GETAWAY — seeded roll', () => {
   });
 
   it('win=false at high heat (near hMax)', () => {
-    // At heat=19 (near hMax), odds are very low — with many seeds we should see busts.
+    // At heat=19 (near hMax), odds are very low — drive rngState from seed so draws vary.
     const seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     const busts = seeds.filter(seed => {
-      const s = getawayState(5, 19, { seed });
+      const s = getawayState(5, 19, { rngState: seed >>> 0 });
       return reduce(s, { t: 'RESOLVE_GETAWAY' }, cfg).win === false;
     });
     expect(busts.length).toBeGreaterThan(0);
+  });
+
+  it('win=true at low heat (heat 0 → odds clamp to 0.97)', () => {
+    // At heat=0, odds clamp to 0.97 — a seeded roll should win.
+    const s = getawayState(5, 0);
+    const next = reduce(s, { t: 'RESOLVE_GETAWAY' }, cfg);
+    expect(next.win).toBe(true);
   });
 });
 

@@ -63,6 +63,10 @@ export interface EngineConfig {
     complication: number;
     botched: number;
   };
+  outcomeLoot: {
+    complication: number;
+    botched: number;
+  };
   scenarioSwing: {
     small: number;
     big: number;
