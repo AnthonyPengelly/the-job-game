@@ -31,6 +31,11 @@ RUN printf '%s\n' '#!/usr/bin/env bash' \
 
 RUN useradd -m -s /bin/bash agent
 
+# Suppress npm update notifier and other noise in non-interactive container runs.
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_AUDIT=false
+
 WORKDIR /workspace
 RUN chown agent:agent /workspace
 COPY --chmod=755 scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh
