@@ -9,6 +9,16 @@ export type { Rng } from './rng';
 
 export { initialState, startRun } from './run';
 
+export {
+  obstacleDrip,
+  greedyAvailable,
+  greedySurcharge,
+  outcomeHeat,
+  applyScenarioSwing,
+  escapeSignal,
+  forcedGetaway,
+} from './heat';
+
 export type {
   Lane,
   Outcome,
