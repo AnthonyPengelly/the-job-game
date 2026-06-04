@@ -33,10 +33,35 @@ export CLAUDE_BIN="claude-agent"
 
 echo "__PIPELINE_AGENT_START__"
 
+ntfy_notify() {
+  local title="$1" msg="$2" tags="$3"
+  [ -z "${NTFY_URL:-}" ] && return 0
+  curl -s --max-time 10 \
+    -H "Title: $title" \
+    -H "Tags: $tags" \
+    -d "$msg" \
+    "$NTFY_URL" > /dev/null || true
+}
+
 RUN="${RUN:-orchestrate}"
+exit_code=0
 case "$RUN" in
-  preflight)  SMOKE="${SMOKE:-0}" ./scripts/agents/preflight.sh ;;
-  epic\ *)    ./scripts/agents/run-epic.sh "${RUN#epic }" ;;
-  orchestrate) ./scripts/agents/orchestrate.sh ;;
-  *)          ./scripts/agents/orchestrate.sh ;;
+  preflight)   SMOKE="${SMOKE:-0}" ./scripts/agents/preflight.sh  || exit_code=$? ;;
+  epic\ *)     ./scripts/agents/run-epic.sh "${RUN#epic }"        || exit_code=$? ;;
+  orchestrate) ./scripts/agents/orchestrate.sh                    || exit_code=$? ;;
+  *)           ./scripts/agents/orchestrate.sh                    || exit_code=$? ;;
 esac
+
+if [ "$exit_code" -eq 0 ]; then
+  ntfy_notify \
+    "The Job: build complete" \
+    "All epics built and merged successfully. Ready for human playtest." \
+    "white_check_mark,tada"
+else
+  ntfy_notify \
+    "The Job: build failed" \
+    "Pipeline exited with code $exit_code (RUN=$RUN). Check pipeline-logs/ for details." \
+    "x,rotating_light"
+fi
+
+exit "$exit_code"

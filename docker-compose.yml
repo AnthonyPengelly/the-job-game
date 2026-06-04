@@ -32,6 +32,8 @@ services:
       RUN: "${RUN:-orchestrate}"
       SMOKE: "${SMOKE:-0}"
       PIPELINE_LOG_DIR: "/workspace/artifacts"
+      # --- notifications (optional) ---
+      NTFY_URL: "${NTFY_URL:-}"
     # Persist logs & QA screenshots to the host so they survive the container.
     volumes:
       - ./pipeline-logs:/workspace/artifacts
