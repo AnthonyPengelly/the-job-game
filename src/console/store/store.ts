@@ -65,15 +65,16 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
 
     undo(): void {
       const { session, eventLog, cfg: c, runSeed } = get();
+      if (eventLog.length === 0) return;
       const newSession = reduceSession(session, { t: 'UNDO_LAST' }, c);
-      const newLog = eventLog.length > 0 ? eventLog.slice(0, -1) : [];
+      const newLog = eventLog.slice(0, -1);
       writeThrough(runSeed, newLog);
       set({ session: newSession, eventLog: newLog });
     },
 
     startRun(setup: PlayerSetup[], seed?: number): void {
       const { cfg: c } = get();
-      const startSeed = (seed !== undefined ? seed : 0) >>> 0;
+      const startSeed = (seed ?? 0) >>> 0;
       const startEvent: RunEvent = { t: 'START_RUN', crew: setup, seed: startSeed };
       const baseSession = initialSession(initialState(startSeed));
       const newSession = reduceSession(baseSession, startEvent, c);
@@ -84,6 +85,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         eventLog: newLog,
         runSeed: startSeed,
         hasResumableSave: false,
+        staleSaveNotice: false,
       });
     },
 

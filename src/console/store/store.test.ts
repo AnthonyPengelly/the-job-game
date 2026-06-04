@@ -27,6 +27,20 @@ function seedStore(storage: StorageLike, seed = 42) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('startRun', () => {
+  it('clears staleSaveNotice left by a prior stale hydrate', () => {
+    const storage = makeStorage();
+    storage.setItem(
+      'the-job:run-save',
+      JSON.stringify({ version: 999, seed: 42, eventLog: [] }),
+    );
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().hydrate();
+    expect(store.getState().staleSaveNotice).toBe(true);
+
+    store.getState().startRun([{ name: 'Alice' }], 1);
+    expect(store.getState().staleSaveNotice).toBe(false);
+  });
+
   it('advances to room phase and records a single START_RUN event', () => {
     const storage = makeStorage();
     const store = createGameStore({ cfg: testCfg, storage });
@@ -127,6 +141,13 @@ describe('undo', () => {
     // undo with no history should not throw
     expect(() => store.getState().undo()).not.toThrow();
     expect(store.getState().eventLog).toHaveLength(0);
+  });
+
+  it('does not write a phantom save when there is nothing to undo', () => {
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().undo();
+    // No save should have been written — storage must stay empty
+    expect(storage.getItem('the-job:run-save')).toBeNull();
   });
 });
 
