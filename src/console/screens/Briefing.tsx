@@ -1,6 +1,7 @@
 import { useGameStore } from '@/console/store';
+import type { MansionType } from '@/engine';
 
-const MANSION_LABELS: Record<string, string> = {
+const MANSION_LABELS: Record<MansionType, string> = {
   villa: 'A lavish villa on the coast',
   estate: 'A sprawling country estate',
   penthouse: 'A sky-high penthouse suite',

@@ -87,7 +87,7 @@ describe('Setup — new run', () => {
     expect(session.present.phase).toBe('room');
   });
 
-  it('dispatches START_RUN with seed=0 (default) when seed field is empty', () => {
+  it('dispatches START_RUN with a random non-negative seed when seed field is empty', () => {
     const storage = makeStorage();
     const store = renderSetup(storage);
 
@@ -100,8 +100,10 @@ describe('Setup — new run', () => {
     const startEvent = eventLog[0];
     expect(startEvent?.t).toBe('START_RUN');
     if (startEvent?.t === 'START_RUN') {
-      // Empty seed field passes undefined to startRun; store defaults it to 0
-      expect(startEvent.seed).toBe(0);
+      // Empty seed field triggers random seed generation (Math.random >>> 0)
+      expect(typeof startEvent.seed).toBe('number');
+      expect(startEvent.seed).toBeGreaterThanOrEqual(0);
+      expect(startEvent.seed).toBeLessThanOrEqual(0xFFFF_FFFF);
     }
   });
 });

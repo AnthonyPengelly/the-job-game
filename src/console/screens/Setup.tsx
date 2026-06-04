@@ -42,7 +42,11 @@ export function Setup() {
 
   function handleNewJob() {
     const parsedSeed = seedInput.trim() !== '' ? parseInt(seedInput, 10) : undefined;
-    const validSeed = parsedSeed !== undefined && !isNaN(parsedSeed) ? parsedSeed : undefined;
+    // Generate a random seed when none is supplied so each blank-field run differs.
+    // Math.random is permitted outside the engine; the engine receives the resolved seed.
+    const validSeed = parsedSeed !== undefined && !isNaN(parsedSeed)
+      ? parsedSeed
+      : (Math.random() * 0xFFFF_FFFF) >>> 0;
     const crew = rows.map(r => ({
       name: r.name.trim() || 'Player',
       ...(r.quirk.trim() !== '' && { quirk: r.quirk.trim() as QuirkId }),
@@ -130,7 +134,7 @@ export function Setup() {
           type="number"
           value={seedInput}
           onChange={e => setSeedInput(e.target.value)}
-          placeholder="Random"
+          placeholder="(random)"
         />
       </div>
       <button

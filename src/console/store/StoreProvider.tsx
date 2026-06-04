@@ -19,17 +19,12 @@ interface StoreProviderProps {
    * In production the defaults (loadDefaultConfig + window.localStorage) are used.
    */
   options?: Partial<CreateGameStoreOptions>;
-  /**
-   * Skip store creation and use a pre-built store directly.
-   * Takes precedence over `options`. Used in tests that create the store manually.
-   */
-  storeApi?: StoreApi<GameStoreState>;
 }
 
-export function StoreProvider({ children, options, storeApi }: StoreProviderProps) {
+export function StoreProvider({ children, options }: StoreProviderProps) {
   const storeRef = useRef<StoreApi<GameStoreState> | undefined>(undefined);
   if (storeRef.current === undefined) {
-    storeRef.current = storeApi ?? createGameStore({
+    storeRef.current = createGameStore({
       cfg: options?.cfg ?? loadDefaultConfig(),
       storage: options?.storage ?? window.localStorage,
     });
