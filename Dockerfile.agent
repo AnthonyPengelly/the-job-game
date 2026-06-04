@@ -29,8 +29,12 @@ RUN printf '%s\n' '#!/usr/bin/env bash' \
   'fi' > /usr/local/bin/claude-agent \
   && chmod +x /usr/local/bin/claude-agent
 
+RUN useradd -m -s /bin/bash agent
+
 WORKDIR /workspace
+RUN chown agent:agent /workspace
 COPY scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh
 RUN chmod +x /usr/local/bin/agent-entrypoint.sh
 
+USER agent
 ENTRYPOINT ["/usr/local/bin/agent-entrypoint.sh"]
