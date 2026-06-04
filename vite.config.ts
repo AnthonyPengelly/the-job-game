@@ -16,6 +16,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    setupFiles: ['./src/test-setup-jsdom.ts'],
     exclude: ['node_modules/**', 'sim/**'],
   },
 });
