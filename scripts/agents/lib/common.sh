@@ -67,8 +67,10 @@ $(cat "$file")"
 _sidecar_get() {  # _sidecar_get <txt-file> <KEY> — read one key from sidecar JSON
   local sidecar="${1}.markers.json"
   [ -f "$sidecar" ] || return 1
-  # Simple sed extraction — avoids a jq dependency
-  sed -n "s/.*\"${2}\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p" "$sidecar" | head -n1
+  # Simple sed extraction — avoids a jq dependency.
+  # `|| true`: head -n1 can SIGPIPE sed under pipefail when there are multiple
+  # matches; the value is still captured, so don't let that fail the function.
+  sed -n "s/.*\"${2}\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p" "$sidecar" | head -n1 || true
 }
 
 extract_marker() {  # extract_marker <file> <MARKER_NAME>
@@ -196,5 +198,9 @@ merge_branch() {  # merge_branch <branch> <into>
 # Does the diff touch design-bearing code? (decides whether game-design review runs)
 touches_design() {  # touches_design <branch> <base>
   local branch="$1" base="${2:-main}"
-  git diff --name-only "${base}...${branch}" | grep -Eq '^(src/engine|src/content|src/minigames|presets)/' || return 1
+  # Capture first — do NOT pipe into `grep -Eq`. Under `set -o pipefail`, grep -q
+  # SIGPIPEs git diff (exit 141) and pipefail reports the pipeline as failed,
+  # which would silently skip the game-design review even when design changed.
+  local changed; changed="$(git diff --name-only "${base}...${branch}" 2>/dev/null || true)"
+  grep -Eq '^(src/engine|src/content|src/minigames|presets)/' <<<"$changed"
 }

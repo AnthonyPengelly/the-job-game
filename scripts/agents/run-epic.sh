@@ -43,7 +43,12 @@ for TASK in "${TASKS[@]}"; do
   # against both "Merge branch 'X'" and "Merge remote-tracking branch 'origin/X'"
   # formats, and unaffected by the builder pushing new commits to the branch
   # after a human merge (which breaks --is-ancestor checks).
-  if git log --merges --format="%s" origin/main 2>/dev/null | grep -qF "${BRANCH}"; then
+  # NB: capture to a var first — do NOT pipe `git log ... | grep -q`. Under
+  # `set -o pipefail`, grep -q exits on first match and SIGPIPEs git log (exit
+  # 141), which pipefail reports as pipeline failure → every task looks unmerged
+  # and gets rebuilt. (This is what was re-building E1.1 in the container.)
+  merged_subjects="$(git log --merges --format="%s" origin/main 2>/dev/null || true)"
+  if grep -qF "${BRANCH}" <<<"$merged_subjects"; then
     log "task $TASK already merged; skipping"; continue
   fi
 
