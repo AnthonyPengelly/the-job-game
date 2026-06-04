@@ -98,7 +98,18 @@ while [ "$qa_round" -lt "$MAX_QA_ROUNDS" ]; do
   qa_round=$((qa_round+1))
   qp="$(render_prompt qa.md EPIC="$EPIC" ROUND="$qa_round")"
   qo="$(run_agent "qa-${EPIC}-${qa_round}" "$MODEL_QA" "$qp")"
-  if has_status_lgtm "$qo"; then log "EPIC $EPIC QA: LGTM"; exit 0; fi
+  if has_status_lgtm "$qo"; then
+    log "EPIC $EPIC QA: LGTM"
+    # Write the orchestrator done marker so orchestrate.sh skips this epic
+    # even when run-epic.sh was invoked directly (e.g. RUN="epic E1").
+    local done_dir=".orchestrator/done"
+    mkdir -p "$done_dir"
+    date -u +"%Y-%m-%dT%H:%M:%SZ" >"${done_dir}/${EPIC}"
+    git add "${done_dir}/${EPIC}" && git commit -m "chore(orchestrator): $EPIC complete" \
+      && { git push origin main || (git pull --rebase origin main && git push origin main); } \
+      || true  # marker is best-effort; don't fail the epic if push is flaky
+    exit 0
+  fi
   if has_blocked "$qo"; then err "QA blocked: $(extract_marker "$qo" PIPELINE_BLOCKED)"; exit 5; fi
   # QA found issues -> a fix task on a branch, then re-QA
   warn "EPIC $EPIC QA round $qa_round: issues; dispatching fixer"
