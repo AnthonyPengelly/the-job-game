@@ -9,3 +9,6 @@ export type { ParsedMeta } from './meta';
 
 export { roomTemplatesSchema } from './room-templates';
 export type { ParsedRoomTemplates } from './room-templates';
+
+export { gearSchema } from './gear';
+export type { ParsedGear, ParsedGearItem } from './gear';

@@ -2,7 +2,7 @@
 // EngineLayer kept for backward-compat with the E0 smoke test.
 export type EngineLayer = 'engine';
 
-export type { EngineConfig } from './config';
+export type { EngineConfig, GearDef } from './config';
 
 export { mulberry32, rngFromState } from './rng';
 export type { Rng } from './rng';
@@ -24,6 +24,8 @@ export { getawayOdds, resolveGetawayOutcome } from './getaway';
 export { scoreRun } from './scoring';
 
 export { generateRoom, tickCarriedEffects } from './generation';
+
+export { applyGear } from './crew';
 
 export { reduce } from './reduce';
 

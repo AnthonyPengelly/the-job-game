@@ -6,6 +6,7 @@ import { rngFromState } from './rng';
 import type { EngineConfig } from './config';
 import type { RunState, RunEvent } from './types';
 import { startRun } from './run';
+import { applyGear } from './crew';
 import { generateRoom } from './generation';
 import {
   obstacleDrip,
@@ -142,6 +143,22 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
       // generateRoom ticks carried effects and advances rngState.
       const next = generateRoom(intermediate, cfg);
       return { ...next, phase: 'room' };
+    }
+
+    case 'ASSIGN_GEAR': {
+      const def = cfg.gear[event.gear];
+      if (def === undefined) {
+        throw new Error(`Unknown gear id "${event.gear}"`);
+      }
+      const playerIndex = state.crew.findIndex(p => p.id === event.to);
+      if (playerIndex === -1) {
+        throw new Error(`Unknown player id "${event.to}"`);
+      }
+      const updatedPlayer = applyGear(state.crew[playerIndex]!, def);
+      return {
+        ...state,
+        crew: state.crew.map((p, i) => (i === playerIndex ? updatedPlayer : p)),
+      };
     }
 
     case 'CALL_GETAWAY': {
