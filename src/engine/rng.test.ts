@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mulberry32 } from '@/engine/rng';
+import { mulberry32, rngFromState } from '@/engine/rng';
 
 describe('mulberry32', () => {
   it('same seed produces the same sequence', () => {
@@ -93,5 +93,49 @@ describe('mulberry32', () => {
   it('int() throws when min > max', () => {
     const rng = mulberry32(0);
     expect(() => rng.int(6, 1)).toThrow(RangeError);
+  });
+});
+
+describe('Rng.state() + resume', () => {
+  it('state() returns the current internal state before the next draw', () => {
+    const rng = mulberry32(1312);
+    // Advance a few steps
+    rng.next();
+    rng.next();
+    const captured = rng.state();
+    // The next draw from the original…
+    const fromOriginal = rng.next();
+    // …must equal the first draw from a resumed RNG
+    const resumed = mulberry32(captured);
+    expect(resumed.next()).toBe(fromOriginal);
+  });
+
+  it('mulberry32(capturedState) reproduces the exact continuing stream', () => {
+    const rng = mulberry32(42);
+    for (let i = 0; i < 5; i++) rng.next();
+    const captured = rng.state();
+    const tail = Array.from({ length: 10 }, () => rng.next());
+
+    const resumed = mulberry32(captured);
+    const replay = Array.from({ length: 10 }, () => resumed.next());
+    expect(replay).toEqual(tail);
+  });
+
+  it('rngFromState is an alias that produces the same stream as mulberry32', () => {
+    const s = 0xdeadbeef;
+    const a = mulberry32(s);
+    const b = rngFromState(s);
+    for (let i = 0; i < 20; i++) {
+      expect(b.next()).toBe(a.next());
+    }
+  });
+
+  it('capturing state at position 0 (before any draw) resumes identically', () => {
+    const rng = mulberry32(999);
+    const s0 = rng.state();
+    const fullStream = Array.from({ length: 15 }, () => rng.next());
+    const resumed = mulberry32(s0);
+    const replayStream = Array.from({ length: 15 }, () => resumed.next());
+    expect(replayStream).toEqual(fullStream);
   });
 });

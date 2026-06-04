@@ -15,6 +15,9 @@ export interface Rng {
   int(min: number, max: number): number;
   /** Picks a random element from a non-empty array. */
   pick<T>(arr: readonly [T, ...T[]] | T[]): T;
+  /** Returns the current internal state word. Passing this to mulberry32()
+   *  (or rngFromState()) resumes the identical stream from this point. */
+  state(): number;
 }
 
 export function mulberry32(seed: number): Rng {
@@ -38,5 +41,10 @@ export function mulberry32(seed: number): Rng {
     return arr[int(0, arr.length - 1)] as T;
   }
 
-  return { next, int, pick };
+  return { next, int, pick, state: () => s };
+}
+
+/** Alias for mulberry32 — resume an RNG stream from a captured state word. */
+export function rngFromState(s: number): Rng {
+  return mulberry32(s);
 }
