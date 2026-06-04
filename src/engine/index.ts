@@ -19,6 +19,10 @@ export {
   forcedGetaway,
 } from './heat';
 
+export { getawayOdds, resolveGetawayOutcome } from './getaway';
+
+export { scoreRun } from './scoring';
+
 export type {
   Lane,
   Outcome,
