@@ -80,7 +80,18 @@ describe('mulberry32', () => {
   it('produces a known fixed sequence for seed 1312 (regression anchor)', () => {
     const rng = mulberry32(1312);
     const first5 = Array.from({ length: 5 }, () => rng.next());
-    // Values are fixed by the algorithm; if this test breaks, the PRNG changed.
-    expect(first5).toMatchSnapshot();
+    // Inline literals catch accidental PRNG changes; do not update without justification.
+    expect(first5).toEqual([
+      0.9590687416493893,
+      0.6893134724814445,
+      0.3788896659389138,
+      0.3436102077830583,
+      0.41180735221132636,
+    ]);
+  });
+
+  it('int() throws when min > max', () => {
+    const rng = mulberry32(0);
+    expect(() => rng.int(6, 1)).toThrow(RangeError);
   });
 });
