@@ -4,6 +4,8 @@ Read, in order: `CLAUDE.md`, `docs/EPICS.md` (find epic {{EPIC}}), `docs/ARCHITE
 
 Your job: decompose epic {{EPIC}} into a sequence of small, PR-sized, dependency-ordered TASKS and write them to `plans/{{EPIC}}.md`. Do NOT write any application code.
 
+**Important — plan only what is missing.** Before writing tasks, inspect the current state of `main` (read the relevant source files, run `npm run check:full` if helpful) and check which acceptance criteria from `docs/EPICS.md` are already satisfied by code already merged. Only create tasks for work that is genuinely absent. If all acceptance criteria are already met, write a plan with a single no-op task that says so. This matters because a previous partial plan may have already merged some tasks — the new plan must pick up from where that left off, not redo completed work.
+
 Rules for good tasks:
 - Each task is independently buildable and reviewable — roughly one module or one cohesive file-set, the kind of change one builder can do and one reviewer can read in a sitting.
 - Order tasks so each only depends on earlier ones (or already-merged epics).
