@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
@@ -13,5 +13,8 @@ export default defineConfig({
       '@/player-view': resolve(__dirname, 'src/player-view'),
       '@/platform': resolve(__dirname, 'src/platform'),
     },
+  },
+  test: {
+    environment: 'node',
   },
 });
