@@ -10,7 +10,7 @@ Verify the epic's acceptance gate, and always these cross-cutting invariants (th
 - **Player-view isolation:** if a player-facing surface is reachable, confirm it shows no GM-only data (odds, hidden effects, upcoming rooms).
 - **HUD correctness:** Heat/Loot/gear holdings always match the engine.
 
-Stay on rails: verify the listed acceptance criteria and invariants. Do not free-explore beyond them. Take screenshots of each key state and save them under `pipeline-logs/qa/{{EPIC}}/`.
+Stay on rails: verify the listed acceptance criteria and invariants. Do not free-explore beyond them. Take screenshots of each key state and save them under `${PIPELINE_LOG_DIR:-pipeline-logs}/qa/{{EPIC}}/`.
 
 If everything passes, emit `PIPELINE_STATUS: LGTM`.
 If you find problems, write a numbered findings list — each with exact reproduction steps (seed, clicks), the expected vs actual, and the screenshot path — then emit `PIPELINE_STATUS: ISSUES`.

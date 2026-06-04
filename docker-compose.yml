@@ -30,8 +30,9 @@ services:
       # --- what to run: orchestrate (default) | "epic E5" | preflight ---
       RUN: "${RUN:-orchestrate}"
       SMOKE: "${SMOKE:-0}"
+      PIPELINE_LOG_DIR: "/workspace/artifacts"
     # Persist logs & QA screenshots to the host so they survive the container.
     volumes:
-      - ./pipeline-logs:/workspace/repo/pipeline-logs
+      - ./pipeline-logs:/workspace/artifacts
     # Playwright/chromium needs a bit of shared memory.
     shm_size: "1gb"
