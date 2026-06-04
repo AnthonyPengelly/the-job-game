@@ -1,0 +1,87 @@
+import { describe, it, expect } from 'vitest';
+import { ZodError } from 'zod';
+import { loadDefaultConfig } from './browser';
+import { loadPreset } from './load';
+import { buildConfig } from './build-config';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, gearSchema } from '@/content/schema';
+
+import metaJson from '../../../presets/default/_meta.json';
+import tuningJson from '../../../presets/default/tuning.json';
+import scalingJson from '../../../presets/default/scaling.json';
+import roomTemplatesJson from '../../../presets/default/content/roomTemplates.json';
+import gearJson from '../../../presets/default/content/gear.json';
+
+describe('loadDefaultConfig', () => {
+  it('deep-equals the Node loadPreset("default") output', () => {
+    const browserCfg = loadDefaultConfig();
+    const nodeCfg = loadPreset('default');
+
+    expect(browserCfg.heat).toEqual(nodeCfg.heat);
+    expect(browserCfg.escalation).toEqual(nodeCfg.escalation);
+    expect(browserCfg.obstacleHeat).toEqual(nodeCfg.obstacleHeat);
+    expect(browserCfg.outcomeHeat).toEqual(nodeCfg.outcomeHeat);
+    expect(browserCfg.outcomeLoot).toEqual(nodeCfg.outcomeLoot);
+    expect(browserCfg.scenarioSwing).toEqual(nodeCfg.scenarioSwing);
+    expect(browserCfg.getaway).toEqual(nodeCfg.getaway);
+    expect(browserCfg.scoring).toEqual(nodeCfg.scoring);
+    expect(browserCfg.scaling).toEqual(nodeCfg.scaling);
+    expect(browserCfg.generation).toEqual(nodeCfg.generation);
+    expect(browserCfg.roomTemplates).toEqual(nodeCfg.roomTemplates);
+    expect(browserCfg.gear).toEqual(nodeCfg.gear);
+  });
+
+  it('returns a deeply frozen EngineConfig', () => {
+    const cfg = loadDefaultConfig();
+    expect(Object.isFrozen(cfg)).toBe(true);
+    expect(Object.isFrozen(cfg.heat)).toBe(true);
+    expect(Object.isFrozen(cfg.scaling)).toBe(true);
+    expect(Object.isFrozen(cfg.gear)).toBe(true);
+  });
+});
+
+describe('buildConfig with malformed input', () => {
+  it('throws ZodError when tuning has wrong type for hMax', () => {
+    const malformedTuning = { ...tuningJson, heat: { hMax: 'not-a-number', runAtFraction: 0.55 } };
+    expect(() => {
+      const meta = metaSchema.parse(metaJson);
+      const tuning = tuningSchema.parse(malformedTuning);
+      const scaling = scalingSchema.parse(scalingJson);
+      const roomTemplates = roomTemplatesSchema.parse(roomTemplatesJson);
+      const gear = gearSchema.parse(gearJson);
+      buildConfig({ meta, tuning, scaling, roomTemplates, gear });
+    }).toThrow(ZodError);
+  });
+
+  it('throws ZodError when scaling has an invalid exhaustion class', () => {
+    const malformedScaling = {
+      ...scalingJson,
+      profiles: {
+        ...scalingJson.profiles,
+        '2': { ...scalingJson.profiles['2'], exhaustion: 'extreme' },
+      },
+    };
+    expect(() => {
+      const meta = metaSchema.parse(metaJson);
+      const tuning = tuningSchema.parse(tuningJson);
+      const scaling = scalingSchema.parse(malformedScaling);
+      const roomTemplates = roomTemplatesSchema.parse(roomTemplatesJson);
+      const gear = gearSchema.parse(gearJson);
+      buildConfig({ meta, tuning, scaling, roomTemplates, gear });
+    }).toThrow(ZodError);
+  });
+
+  it('throws ZodError when gear has an unknown kind', () => {
+    const malformedGear = {
+      ...gearJson,
+      items: [{ id: 'bad-item', kind: 'unknown', lane: 'tech' }],
+    };
+    expect(() => {
+      const meta = metaSchema.parse(metaJson);
+      const tuning = tuningSchema.parse(tuningJson);
+      const scaling = scalingSchema.parse(scalingJson);
+      const roomTemplates = roomTemplatesSchema.parse(roomTemplatesJson);
+      const gear = gearSchema.parse(malformedGear);
+      buildConfig({ meta, tuning, scaling, roomTemplates, gear });
+    }).toThrow(ZodError);
+  });
+});
