@@ -36,6 +36,8 @@ for EPIC in "${ORDER[@]}"; do
   fi
 
   log "################  BUILDING $EPIC  ################"
+  # Pull latest before each epic so harness fixes pushed mid-run are picked up.
+  git pull --ff-only origin main 2>/dev/null || true
   if scripts/agents/run-epic.sh "$EPIC"; then
     date -u +"%Y-%m-%dT%H:%M:%SZ" >"${DONE_DIR}/${EPIC}"
     git add "${DONE_DIR}/${EPIC}" && git commit -m "chore(orchestrator): $EPIC complete"
