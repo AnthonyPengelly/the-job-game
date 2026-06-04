@@ -13,6 +13,6 @@ Leniency by round: on round 1 raise everything. From round 3 onward, raise ONLY 
 
 Be specific: cite file:line and say what to change. Do not edit code yourself.
 
-Emit findings (if any) as a numbered list, then on the final line EXACTLY ONE of:
-`PIPELINE_STATUS: LGTM`
-`PIPELINE_STATUS: ISSUES`
+Emit findings (if any) as a numbered list, then on the final line EXACTLY ONE of (bare, no backticks or markdown — the orchestrator parses with grep):
+PIPELINE_STATUS: LGTM
+PIPELINE_STATUS: ISSUES

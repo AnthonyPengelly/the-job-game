@@ -12,8 +12,7 @@ Verify the epic's acceptance gate, and always these cross-cutting invariants (th
 
 Stay on rails: verify the listed acceptance criteria and invariants. Do not free-explore beyond them. Take screenshots of each key state and save them under `${PIPELINE_LOG_DIR:-pipeline-logs}/qa/{{EPIC}}/`.
 
-If everything passes, emit `PIPELINE_STATUS: LGTM`.
-If you find problems, write a numbered findings list — each with exact reproduction steps (seed, clicks), the expected vs actual, and the screenshot path — then emit `PIPELINE_STATUS: ISSUES`.
-If you cannot run the app at all (infra), emit `PIPELINE_BLOCKED: <reason>`.
-
-Final line must be exactly one of those three markers.
+Final line must be exactly one of these, bare — no backticks or markdown (the orchestrator parses with grep):
+PIPELINE_STATUS: LGTM
+PIPELINE_STATUS: ISSUES
+PIPELINE_BLOCKED: <reason>

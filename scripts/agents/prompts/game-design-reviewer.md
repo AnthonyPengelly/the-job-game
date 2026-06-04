@@ -13,6 +13,6 @@ Leniency by round: round 1 thorough; round 3+ only hard design contradictions an
 
 Cite specifics (file:line, which design rule). Do not edit code.
 
-Final line, exactly one of:
-`PIPELINE_STATUS: LGTM`
-`PIPELINE_STATUS: ISSUES`
+Final line, exactly one of (bare, no backticks or markdown — the orchestrator parses with grep):
+PIPELINE_STATUS: LGTM
+PIPELINE_STATUS: ISSUES

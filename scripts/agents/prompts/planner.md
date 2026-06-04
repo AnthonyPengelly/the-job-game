@@ -28,6 +28,8 @@ Format of `plans/{{EPIC}}.md` — use this exact heading shape so the runner can
 ```
 
 When finished, commit `plans/{{EPIC}}.md` and emit on the final line EITHER:
-`PIPELINE_PLAN_DONE: {{EPIC}}`
+PIPELINE_PLAN_DONE: {{EPIC}}
 or, if blocked:
-`PIPELINE_BLOCKED: <the specific decision you need from a human>`
+PIPELINE_BLOCKED: <the specific decision you need from a human>
+
+These must be bare lines — no backticks, no markdown formatting. The orchestrator parses them with grep.

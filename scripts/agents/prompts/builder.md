@@ -17,6 +17,8 @@ Workflow:
 If the task cannot be done as specified without a decision not covered by the docs, do NOT guess — push what is safe and BLOCK with the precise question.
 
 Emit on the final line EITHER:
-`PIPELINE_BRANCH: {{BRANCH}}`
+PIPELINE_BRANCH: {{BRANCH}}
 or:
-`PIPELINE_BLOCKED: <the specific blocker>`
+PIPELINE_BLOCKED: <the specific blocker>
+
+These must be bare lines — no backticks, no markdown formatting. The orchestrator parses them with grep.

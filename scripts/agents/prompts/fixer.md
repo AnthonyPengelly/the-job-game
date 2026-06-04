@@ -13,6 +13,6 @@ Workflow:
 3. Run `npm run check:full` (and `sim:check` / `content:validate` if design-bearing) until green.
 4. `git push origin {{BRANCH}}`.
 
-Final line, exactly one of:
-`PIPELINE_BRANCH: {{BRANCH}}`
-`PIPELINE_BLOCKED: <conflict or missing decision>`
+Final line, exactly one of (bare, no backticks or markdown — the orchestrator parses with grep):
+PIPELINE_BRANCH: {{BRANCH}}
+PIPELINE_BLOCKED: <conflict or missing decision>
