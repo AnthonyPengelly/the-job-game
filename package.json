@@ -17,6 +17,7 @@
     "content:validate": "echo 'stub: preset/content schema validation. E7/E10 wire this.' && exit 0",
     "agent:preflight": "./scripts/agents/preflight.sh",
     "agent:orchestrate": "./scripts/agents/orchestrate.sh",
-    "agent:epic": "./scripts/agents/run-epic.sh"
+    "agent:epic": "./scripts/agents/run-epic.sh",
+    "agent:shell": "docker compose run --rm agent /bin/bash"
   }
 }
