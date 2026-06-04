@@ -1,21 +1,21 @@
+// Dedicated vitest config for the balance harness (npm run sim:check).
+// Only runs sim/**/*.sim.ts — excluded from the normal test/check glob.
 import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [react()],
   resolve: {
     alias: {
       '@/engine': resolve(__dirname, 'src/engine'),
       '@/content': resolve(__dirname, 'src/content'),
-      '@/minigames': resolve(__dirname, 'src/minigames'),
-      '@/console': resolve(__dirname, 'src/console'),
-      '@/player-view': resolve(__dirname, 'src/player-view'),
       '@/platform': resolve(__dirname, 'src/platform'),
     },
   },
   test: {
     environment: 'node',
-    exclude: ['node_modules/**', 'sim/**'],
+    include: ['sim/**/*.sim.ts'],
+    // Allow up to 5 minutes — 12k×5 cells of Monte Carlo is slow but deterministic.
+    testTimeout: 300_000,
+    hookTimeout: 300_000,
   },
 });
