@@ -106,7 +106,9 @@ while [ "$qa_round" -lt "$MAX_QA_ROUNDS" ]; do
     log "EPIC $EPIC QA: LGTM"
     # Write the orchestrator done marker so orchestrate.sh skips this epic
     # even when run-epic.sh was invoked directly (e.g. RUN="epic E1").
-    local done_dir=".orchestrator/done"
+    # NB: no `local` here — this is top-level script scope, not a function;
+    # `local` outside a function aborts the script under `set -e`.
+    done_dir=".orchestrator/done"
     mkdir -p "$done_dir"
     date -u +"%Y-%m-%dT%H:%M:%SZ" >"${done_dir}/${EPIC}"
     git add "${done_dir}/${EPIC}" && git commit -m "chore(orchestrator): $EPIC complete" \
