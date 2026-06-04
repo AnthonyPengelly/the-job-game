@@ -12,12 +12,9 @@ import { nextModelEvent } from './model-crew';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const PRESET_ID: string = (process.env['PRESET'] as string | undefined) ?? 'default';
+const PRESET_ID: string = process.env['PRESET'] ?? 'default';
 const BASE_SEED = 1312;
 const N = 20_000; // 20k: stable SE≈0.007 for H threshold 1.75 — do not reduce
-
-const SKILLS = ['bad', 'avg', 'good'] as const;
-const HEADCOUNTS = [2, 4, 7] as const;
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -229,43 +226,25 @@ describe(`balance assertions — preset:${PRESET_ID} seed:${BASE_SEED} N:${N}`, 
   });
 
   it('J: botch never terminates a run — routes to offer (structural)', () => {
-    // Build a minimal minigame state with a committed safe option, apply botch.
-    // Phase must transition to 'offer', never 'result'.
-    const { initialState: mkState, reduce: eng } = { initialState, reduce };
-    const base = mkState(999);
-    const option = cfg.roomTemplates.obstacles[0]?.options[0];
-    if (option === undefined) throw new Error('no obstacle template in cfg');
-    const obstacleTemplate = cfg.roomTemplates.obstacles[0];
-    if (obstacleTemplate === undefined) throw new Error('no obstacle template');
+    // Drive through the engine's own path to reach minigame phase — avoids
+    // hand-casting branded GameId. Scan seeds until we land on an obstacle room.
+    let state = reduce(initialState(999), { t: 'START_RUN', crew: [{ name: 'P0' }], seed: 999 }, cfg);
+    for (let s = 1; state.currentRoom?.kind !== 'obstacle' && s <= 100; s++) {
+      state = reduce(initialState(999 + s), { t: 'START_RUN', crew: [{ name: 'P0' }], seed: 999 + s }, cfg);
+    }
+    const { currentRoom } = state;
+    if (currentRoom === null || currentRoom.kind !== 'obstacle') {
+      throw new Error('J: no obstacle room found in first 101 seeds');
+    }
+    const firstOption = currentRoom.options[0];
+    if (firstOption === undefined) throw new Error('J: obstacle room has no options');
 
-    const minigameState: RunState = {
-      ...base,
-      phase: 'minigame',
-      heat: 5,
-      roomIndex: 2,
-      currentRoom: {
-        kind: 'obstacle',
-        templateId: obstacleTemplate.id,
-        options: [
-          {
-            id: obstacleTemplate.options[0].id,
-            gameId: obstacleTemplate.gameId as import('@/engine/types').GameId,
-            greedy: obstacleTemplate.options[0].greedy,
-            heatCost: obstacleTemplate.options[0].heatCost,
-            reward: obstacleTemplate.options[0].reward,
-          },
-          {
-            id: obstacleTemplate.options[1].id,
-            gameId: obstacleTemplate.gameId as import('@/engine/types').GameId,
-            greedy: obstacleTemplate.options[1].greedy,
-            heatCost: obstacleTemplate.options[1].heatCost,
-            reward: obstacleTemplate.options[1].reward,
-          },
-        ],
-        committedOptionId: obstacleTemplate.options[0].id,
-      },
-    };
-    const next = eng(minigameState, { t: 'RESOLVE_MINIGAME', outcome: 'botched' }, cfg);
+    const minigameState = reduce(
+      state,
+      { t: 'CHOOSE_OPTION', optionId: firstOption.id, committed: state.crew.map(p => p.id) },
+      cfg,
+    );
+    const next = reduce(minigameState, { t: 'RESOLVE_MINIGAME', outcome: 'botched' }, cfg);
     expect(
       next.phase,
       'J: a botched outcome must route to offer, not terminate the run',

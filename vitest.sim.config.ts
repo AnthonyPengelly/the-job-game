@@ -14,7 +14,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['sim/**/*.sim.ts'],
-    // Allow up to 5 minutes — 12k×5 cells of Monte Carlo is slow but deterministic.
+    // Allow up to 5 minutes — 20k×5 cells of Monte Carlo is slow but deterministic.
     testTimeout: 300_000,
     hookTimeout: 300_000,
   },

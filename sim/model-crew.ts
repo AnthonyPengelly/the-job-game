@@ -5,7 +5,7 @@ import { greedyAvailable, forcedGetaway } from '@/engine/heat';
 import { getawayOdds } from '@/engine/getaway';
 import type { Rng } from '@/engine/rng';
 import type { EngineConfig } from '@/engine/config';
-import type { RunState, RunEvent, Skill, ObstacleRoom } from '@/engine/types';
+import type { RunState, RunEvent, Skill } from '@/engine/types';
 
 // Python: SKILL = {'bad': 0.45, 'avg': 0.65, 'good': 0.82}
 export const SKILL_VALUES: Record<Skill, number> = {
@@ -121,7 +121,10 @@ export function nextModelEvent(
 
     case 'minigame': {
       // In minigame phase, currentRoom is always an obstacle with committedOptionId set.
-      const room = state.currentRoom as ObstacleRoom;
+      if (state.currentRoom === null || state.currentRoom.kind !== 'obstacle') {
+        throw new Error('nextModelEvent: minigame phase but no obstacle room');
+      }
+      const room = state.currentRoom;
       const option = room.options.find(o => o.id === room.committedOptionId);
       if (option === undefined) throw new Error('nextModelEvent: committed option not found');
       const outcome = rollOutcome(rng, p - (option.greedy ? 0.1 : 0));

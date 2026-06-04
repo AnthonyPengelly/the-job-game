@@ -32,6 +32,15 @@ export default tseslint.config(
     },
   },
 
+  // ── Sim: balance harness — pure TypeScript, Node.js context ─────────
+  {
+    files: ['sim/**/*.ts'],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+
   // ── React surfaces: hooks + refresh rules for UI layers only ────────
   {
     files: [
