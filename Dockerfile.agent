@@ -1,0 +1,36 @@
+# Dockerfile.agent — the isolated box the build pipeline runs in.
+# Bypass-permissions is safe here precisely because this container is throwaway,
+# has no host mounts of your real machine, and only ships work out via pushed
+# branches that survive the review gates. See docs/ORCHESTRATION.md §6.
+
+FROM node:20-bookworm-slim
+
+# System deps: git, plus chromium libs for Playwright MCP.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git ca-certificates curl bash python3 make g++ \
+      # chromium runtime libs (Playwright downloads the browser itself)
+      libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 \
+      libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2 \
+      libpango-1.0-0 libcairo2 \
+  && rm -rf /var/lib/apt/lists/*
+
+# Claude Code CLI.
+RUN npm install -g @anthropic-ai/claude-code
+
+# Auth shim: prefer an OAuth token (subscription) if provided, else API key.
+# This keeps the build's spend separable from your interactive usage.
+RUN printf '%s\n' '#!/usr/bin/env bash' \
+  'if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then' \
+  '  exec claude "$@"' \
+  'elif [ -n "${ANTHROPIC_API_KEY:-}" ]; then' \
+  '  exec claude "$@"' \
+  'else' \
+  '  echo "no CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY set" >&2; exit 1' \
+  'fi' > /usr/local/bin/claude-agent \
+  && chmod +x /usr/local/bin/claude-agent
+
+WORKDIR /workspace
+COPY scripts/agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh
+RUN chmod +x /usr/local/bin/agent-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/agent-entrypoint.sh"]

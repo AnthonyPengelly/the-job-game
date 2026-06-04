@@ -1,0 +1,37 @@
+# docker-compose.yml — the agent build box. The app itself needs no services
+# (it's an offline SPA), so this only defines the autonomous build container.
+# See docs/ORCHESTRATION.md.
+
+services:
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    image: the-job-agent
+    environment:
+      # --- source of truth ---
+      GITHUB_REPO: "${GITHUB_REPO}"
+      GITHUB_TOKEN: "${GITHUB_TOKEN:-}"
+      GIT_USER_NAME: "${GIT_USER_NAME:-the-job-agent}"
+      GIT_USER_EMAIL: "${GIT_USER_EMAIL:-agent@thejob.local}"
+      USE_GH: "${USE_GH:-0}"
+      # --- auth (one of these) ---
+      CLAUDE_CODE_OAUTH_TOKEN: "${CLAUDE_CODE_OAUTH_TOKEN:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      # --- model tiers (see docs/ORCHESTRATION.md §1) ---
+      MODEL_PLAN: "${MODEL_PLAN:-}"
+      MODEL_BUILD: "${MODEL_BUILD:-}"
+      MODEL_REVIEW: "${MODEL_REVIEW:-}"
+      MODEL_QA: "${MODEL_QA:-}"
+      # --- loop bounds ---
+      MAX_REVIEW_ROUNDS: "${MAX_REVIEW_ROUNDS:-5}"
+      MAX_QA_ROUNDS: "${MAX_QA_ROUNDS:-3}"
+      RATE_LIMIT_DEFAULT_SLEEP: "${RATE_LIMIT_DEFAULT_SLEEP:-900}"
+      # --- what to run: orchestrate (default) | "epic E5" | preflight ---
+      RUN: "${RUN:-orchestrate}"
+      SMOKE: "${SMOKE:-0}"
+    # Persist logs & QA screenshots to the host so they survive the container.
+    volumes:
+      - ./pipeline-logs:/workspace/repo/pipeline-logs
+    # Playwright/chromium needs a bit of shared memory.
+    shm_size: "1gb"

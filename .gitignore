@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vite/
+pipeline-logs/
+.orchestrator/*
+!.orchestrator/done/
+plans/archive/
+*.local
+.env
+.DS_Store

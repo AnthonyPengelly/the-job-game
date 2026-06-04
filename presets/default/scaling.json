@@ -1,0 +1,50 @@
+{
+  "_meta": {
+    "pack": "scaling",
+    "version": 1,
+    "source": "heist-game-design.md \"Scaling 2-7\" + the-job-app-design.md §10.5; getawayBonus from heat-model-simulation.py player_bonus(n)",
+    "units": {
+      "profiles.<n>.exhaustion": "rotation strength: full (5-7), light (4), tired (2-3 small next-room penalty)",
+      "profiles.<n>.crewPerOption": "[min,max] crew an obstacle option demands at this headcount",
+      "profiles.<n>.getawayBonus": "odds bonus by headcount (sim player_bonus(n)); the getaway.headcountTerm in tuning.json multiplies it",
+      "minCommit.<gameId>": "hard floor of committed crew before the dial is applied; the generator filters on this first",
+      "variant.<gameId>": "id of a replacement game module used at certain commit sizes (silentSync collapses, no-trade, asymmetric-info)",
+      "dialCurve.<gameId>": "how committed-crew lane ratings map to difficulty; tightenPerExtra eases the dial as headcount grows"
+    }
+  },
+
+  "profiles": {
+    "2": { "exhaustion": "tired", "crewPerOption": [1, 2], "getawayBonus": -0.04 },
+    "3": { "exhaustion": "tired", "crewPerOption": [1, 2], "getawayBonus": -0.02 },
+    "4": { "exhaustion": "light", "crewPerOption": [1, 2], "getawayBonus": 0.0 },
+    "5": { "exhaustion": "full",  "crewPerOption": [2, 3], "getawayBonus": 0.02 },
+    "6": { "exhaustion": "full",  "crewPerOption": [2, 3], "getawayBonus": 0.035 },
+    "7": { "exhaustion": "full",  "crewPerOption": [2, 3], "getawayBonus": 0.05 }
+  },
+
+  "minCommit": {
+    "crackTheTumblers": 1,
+    "beat16": 1,
+    "categories": 1,
+    "theOnceOver": 1,
+    "followTheCircuit": 1,
+    "insideKnowledge": 1,
+    "safeCrack": 1,
+    "steadyHands": 1,
+    "assemblyLine": 2,
+    "defuseTheAlarm": 2
+  },
+
+  "variant": {
+    "crackTheTumblers": { "soloVariantId": "crackTheTumblersSolo", "appliesAt": [1] },
+    "assemblyLine":     { "variantId": "assemblyLineNegotiated", "appliesAt": [2] }
+  },
+
+  "excludedFromSolo": ["assemblyLine", "defuseTheAlarm"],
+
+  "soloEligibleMinPool": 8,
+
+  "dialCurve": {
+    "_default": { "base": 1.0, "perLanePoint": -0.15, "tightenPerExtraCrew": 0.1 }
+  }
+}

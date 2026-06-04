@@ -1,0 +1,63 @@
+{
+  "_meta": {
+    "pack": "tuning",
+    "version": 1,
+    "source": "heat-model-simulation.py Config (HMAX=20, run@=0.55, ramp=0.2, exp=1.3) + heist-game-design.md \"The numbers (tuned by simulation)\"",
+    "units": {
+      "heat.hMax": "Heat points; forced emergency Getaway at this value",
+      "heat.runAtFraction": "fraction of hMax; escape signal fires here (0.55 * 20 = Heat 11)",
+      "escalation.onsetRoom": "room index from which the ramp applies (~5th room on)",
+      "escalation.rampPerObstacle": "extra Heat per obstacle, scaled by room (sim: int(room*rampPerObstacle))",
+      "obstacleHeat.safe": "Heat added by a safe obstacle approach",
+      "obstacleHeat.greedy": "Heat added by a greedy obstacle approach (replaces safe; greedy is the higher value)",
+      "obstacleHeat.greedyBelowFraction": "the crew may still play greedy while Heat < this fraction of hMax",
+      "outcomeHeat.*": "Heat added on top of the obstacle cost by the mini-game result",
+      "scenarioSwing.small": "small scenario cool/heat = +/- this many Heat",
+      "scenarioSwing.big": "big scenario cool/heat = +/- this many Heat",
+      "getaway.*": "terms of the Heat->odds Getaway curve; see CONTENT-AND-TUNING.md mapping table",
+      "scoring.lowHeatStyleBonus": "Loot multiplier earned at Heat 0 on a win (scales to 0 at hMax)",
+      "scoring.bustMultiplier": "fraction of Loot banked on a bust"
+    }
+  },
+
+  "heat": {
+    "hMax": 20,
+    "runAtFraction": 0.55
+  },
+
+  "escalation": {
+    "onsetRoom": 5,
+    "rampPerObstacle": 0.2
+  },
+
+  "obstacleHeat": {
+    "safe": 1,
+    "greedy": 2,
+    "greedyBelowFraction": 0.5
+  },
+
+  "outcomeHeat": {
+    "clean": 0,
+    "complication": 1,
+    "botched": 2
+  },
+
+  "scenarioSwing": {
+    "small": 2,
+    "big": 4
+  },
+
+  "getaway": {
+    "exponent": 1.3,
+    "skillTerm": 0.5,
+    "skillPivot": 0.65,
+    "headcountTerm": 0.8,
+    "clamp": [0.04, 0.97]
+  },
+
+  "scoring": {
+    "winBaseMultiplier": 1.0,
+    "lowHeatStyleBonus": 0.5,
+    "bustMultiplier": 0.4
+  }
+}

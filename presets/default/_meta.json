@@ -1,0 +1,24 @@
+{
+  "id": "default",
+  "name": "Default",
+  "version": 1,
+  "contentVersion": "2026.06",
+  "description": "The shipped, balance-asserted ruleset. Numbers come straight from the Monte Carlo (heat-model-simulation.py) and heist-game-design.md. The balance harness (npm run sim:check) holds this preset to the design targets; it must stay green.",
+  "extends": null,
+  "assert": "on",
+  "contentPacks": {
+    "scenarios": "content/scenarios.json",
+    "gear": "content/gear.json",
+    "narration": "content/narration.json",
+    "banks": "content/banks.json",
+    "sound": "content/sound.json",
+    "roomTemplates": "content/roomTemplates.json"
+  },
+  "units": {
+    "heat": "Heat points on the 0..hMax track, shown as face-down cards",
+    "fraction": "a fraction of hMax (e.g. runAtFraction 0.55 * hMax 20 = Heat 11)",
+    "odds": "a probability in 0..1",
+    "loot": "abstract Loot units; score is derived from these"
+  },
+  "_note": "Content packs listed above are authored in later epics (E2/E5/E7/E8/E9). Until they exist, this preset inherits nothing for them and content:validate will report them missing — expected before those epics land. tuning.json and scaling.json are complete now and drive the engine + sim harness."
+}

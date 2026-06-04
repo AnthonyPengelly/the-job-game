@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# run-epic.sh — run the full pipeline for a single epic.
+# Usage: ./scripts/agents/run-epic.sh E3
+# Stages: plan -> per-task (build -> gates -> reviews -> fix loop -> merge) -> epic QA.
+# See docs/ORCHESTRATION.md.
+
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+source scripts/agents/lib/common.sh
+
+EPIC="${1:?usage: run-epic.sh <EPIC e.g. E3>}"
+log "==== EPIC $EPIC ===="
+
+# ---- 1. PLAN (once per epic, strongest model) -----------------------------
+PLAN_FILE="plans/${EPIC}.md"
+if [ ! -f "$PLAN_FILE" ]; then
+  prompt="$(render_prompt planner.md EPIC="$EPIC")"
+  out="$(run_agent "plan-${EPIC}" "$MODEL_PLAN" "$prompt")"
+  if has_blocked "$out"; then err "planner blocked: $(extract_marker "$out" PIPELINE_BLOCKED)"; exit 2; fi
+  [ -f "$PLAN_FILE" ] || { err "planner did not write $PLAN_FILE"; exit 2; }
+  log "plan written: $PLAN_FILE"
+fi
+
+# ---- 2. Extract task ids (E<n>.<k>) from the plan --------------------------
+mapfile -t TASKS < <(grep -oE "^#+[[:space:]]*Task[[:space:]]+${EPIC}\.[0-9]+" "$PLAN_FILE" \
+                     | grep -oE "${EPIC}\.[0-9]+" | sort -u -t. -k2 -n)
+[ "${#TASKS[@]}" -gt 0 ] || { err "no tasks found in $PLAN_FILE"; exit 2; }
+log "tasks: ${TASKS[*]}"
+
+# ---- 3. Per-task build/review/merge loop ----------------------------------
+for TASK in "${TASKS[@]}"; do
+  BRANCH="epic/${TASK}"
+  log "---- task $TASK (branch $BRANCH) ----"
+
+  # already merged? skip (resumability)
+  if git merge-base --is-ancestor "origin/${BRANCH}" main 2>/dev/null; then
+    log "task $TASK already merged; skipping"; continue
+  fi
+
+  # BUILD
+  prompt="$(render_prompt builder.md EPIC="$EPIC" TASK="$TASK" PLAN_FILE="$PLAN_FILE" BRANCH="$BRANCH")"
+  out="$(run_agent "build-${TASK}-0" "$MODEL_BUILD" "$prompt")"
+  if has_blocked "$out"; then err "builder blocked on $TASK: $(extract_marker "$out" PIPELINE_BLOCKED)"; exit 3; fi
+  branch="$(extract_marker "$out" PIPELINE_BRANCH)"
+  [ -n "$branch" ] || { err "builder produced no branch for $TASK"; exit 3; }
+  git fetch origin "$branch":"$branch" 2>/dev/null || git checkout "$branch"
+
+  # REVIEW GATE (loop)
+  round=0; approved=0
+  while [ "$round" -lt "$MAX_REVIEW_ROUNDS" ]; do
+    round=$((round+1))
+    findings="${PIPELINE_LOG_DIR}/findings-${TASK}-${round}.txt"; : >"$findings"
+
+    # deterministic gates first (free)
+    if ! run_deterministic_gates "${PIPELINE_LOG_DIR}/gates-${TASK}-${round}.txt"; then
+      echo "DETERMINISTIC GATES FAILED:" >>"$findings"
+      cat "${PIPELINE_LOG_DIR}/gates-${TASK}-${round}.txt" >>"$findings"
+    else
+      # code reviewer (always)
+      cr="$(render_prompt reviewer.md TASK="$TASK" BRANCH="$branch" ROUND="$round")"
+      cro="$(run_agent "review-code-${TASK}-${round}" "$MODEL_REVIEW" "$cr")"
+      if has_status_issues "$cro"; then { echo "CODE REVIEW:"; cat "$cro"; } >>"$findings"; fi
+
+      # game-design reviewer (only if design-bearing code changed)
+      if touches_design "$branch"; then
+        gr="$(render_prompt game-design-reviewer.md TASK="$TASK" BRANCH="$branch" ROUND="$round")"
+        gro="$(run_agent "review-design-${TASK}-${round}" "$MODEL_REVIEW" "$gr")"
+        if has_status_issues "$gro"; then { echo "GAME-DESIGN REVIEW:"; cat "$gro"; } >>"$findings"; fi
+      fi
+    fi
+
+    if [ ! -s "$findings" ]; then approved=1; break; fi
+
+    # FIX
+    log "task $TASK round $round: issues found; dispatching fixer"
+    fx="$(render_prompt fixer.md TASK="$TASK" BRANCH="$branch" FINDINGS_FILE="$findings" ROUND="$round")"
+    fxo="$(run_agent "fix-${TASK}-${round}" "$MODEL_BUILD" "$fx")"
+    if has_blocked "$fxo"; then err "fixer blocked on $TASK: $(extract_marker "$fxo" PIPELINE_BLOCKED)"; exit 3; fi
+    git fetch origin "$branch":"$branch" 2>/dev/null || true
+  done
+
+  [ "$approved" -eq 1 ] || { err "task $TASK exhausted $MAX_REVIEW_ROUNDS review rounds"; exit 4; }
+
+  # MERGE (deterministic)
+  merge_branch "$branch" main
+  log "PIPELINE_DONE: $branch"
+done
+
+# ---- 4. EPIC QA (Playwright MCP, bounded fix loop) ------------------------
+qa_round=0
+while [ "$qa_round" -lt "$MAX_QA_ROUNDS" ]; do
+  qa_round=$((qa_round+1))
+  qp="$(render_prompt qa.md EPIC="$EPIC" ROUND="$qa_round")"
+  qo="$(run_agent "qa-${EPIC}-${qa_round}" "$MODEL_QA" "$qp")"
+  if has_status_lgtm "$qo"; then log "EPIC $EPIC QA: LGTM"; exit 0; fi
+  if has_blocked "$qo"; then err "QA blocked: $(extract_marker "$qo" PIPELINE_BLOCKED)"; exit 5; fi
+  # QA found issues -> a fix task on a branch, then re-QA
+  warn "EPIC $EPIC QA round $qa_round: issues; dispatching fixer"
+  fb="epic/${EPIC}-qa-fix-${qa_round}"
+  fx="$(render_prompt fixer.md TASK="${EPIC}-qa" BRANCH="$fb" FINDINGS_FILE="$qo" ROUND="$qa_round")"
+  fxo="$(run_agent "qa-fix-${EPIC}-${qa_round}" "$MODEL_BUILD" "$fx")"
+  branch="$(extract_marker "$fxo" PIPELINE_BRANCH)"
+  [ -n "$branch" ] && run_deterministic_gates "${PIPELINE_LOG_DIR}/qa-gates-${EPIC}-${qa_round}.txt" \
+    && merge_branch "$branch" main
+done
+
+err "EPIC $EPIC QA exhausted $MAX_QA_ROUNDS rounds"; exit 5
