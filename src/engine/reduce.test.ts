@@ -18,7 +18,10 @@ const cfg: EngineConfig = {
   scaling: {
     profiles: {
       '2': { getawayBonus: -0.03, crewPerOption: [1, 2] as [number, number], exhaustion: 'tired' as const },
+      '3': { getawayBonus: -0.02, crewPerOption: [1, 2] as [number, number], exhaustion: 'tired' as const },
       '4': { getawayBonus: 0.0,   crewPerOption: [1, 2] as [number, number], exhaustion: 'light' as const },
+      '5': { getawayBonus: 0.02,  crewPerOption: [2, 3] as [number, number], exhaustion: 'full' as const },
+      '6': { getawayBonus: 0.035, crewPerOption: [2, 3] as [number, number], exhaustion: 'full' as const },
       '7': { getawayBonus: 0.06,  crewPerOption: [2, 3] as [number, number], exhaustion: 'full' as const },
     },
     exhaustionRest: { full: 1, light: 1, tired: 0 },
@@ -381,6 +384,97 @@ describe('RESOLVE_MINIGAME — escalation ramp at higher roomIndex', () => {
 
   it('drip grows with roomIndex', () => {
     expect(next.heat).toBe(2); // drip(2) + outHeat(0)
+  });
+});
+
+describe('RESOLVE_MINIGAME — exhaustion applied to committed crew', () => {
+  // Helper: build a 7-player crew (exhaustion class: full → rest 1 room).
+  function makeMinigameStateWithCrew(playerCount: number, roomIndex = 2): RunState {
+    const committed: PlayerId[] = [];
+    const crew: RunState['crew'] = [];
+    for (let i = 0; i < playerCount; i++) {
+      const id = `player-${i}` as PlayerId;
+      crew.push({ id, name: `P${i}`, stats: { tech: 0, physical: 0, charm: 0, stealth: 0 }, powerUps: {} });
+      if (i === 0) committed.push(id); // only commit the first player for targeted testing
+    }
+    return {
+      ...initialState(1),
+      phase: 'minigame',
+      roomIndex,
+      crew,
+      currentRoom: {
+        kind: 'obstacle',
+        templateId: 'obs-alpha',
+        options: [
+          { id: 'alpha-safe',   gameId: 'alpha' as GameId, greedy: false, heatCost: 1, reward: 1 },
+          { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true,  heatCost: 2, reward: 2 },
+        ],
+        committedOptionId: 'alpha-safe',
+        committedBy: committed,
+      },
+    };
+  }
+
+  it('benches committed crew for next room when class is full (n=7)', () => {
+    const s = makeMinigameStateWithCrew(7, 3);
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    // exhaustionRest.full = 1; restingUntilRoom = 3 + 1 = 4
+    expect(next.crew[0]!.restingUntilRoom).toBe(4);
+    // un-committed crew members are unaffected
+    expect(next.crew[1]!.restingUntilRoom).toBeUndefined();
+  });
+
+  it('benches committed crew for next room when class is light (n=4)', () => {
+    const s = makeMinigameStateWithCrew(4, 5);
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    // exhaustionRest.light = 1; restingUntilRoom = 5 + 1 = 6
+    expect(next.crew[0]!.restingUntilRoom).toBe(6);
+  });
+
+  it('does not bench anyone when class is tired (n=2)', () => {
+    const s = makeMinigameStateWithCrew(2, 1);
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    // exhaustionRest.tired = 0 → no bench
+    expect(next.crew[0]!.restingUntilRoom).toBeUndefined();
+  });
+
+  it('does not bench anyone when class is tired (n=3)', () => {
+    const s = makeMinigameStateWithCrew(3, 0);
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'botched' }, cfg);
+    expect(next.crew.every(p => p.restingUntilRoom === undefined)).toBe(true);
+  });
+
+  it('does not bench when committedBy is absent', () => {
+    // A minigame state with no committedBy set (defensive: should be a no-op)
+    const s: RunState = {
+      ...initialState(1),
+      phase: 'minigame',
+      roomIndex: 2,
+      crew: [{ id: 'player-0' as PlayerId, name: 'A', stats: { tech: 0, physical: 0, charm: 0, stealth: 0 }, powerUps: {} }],
+      currentRoom: {
+        kind: 'obstacle',
+        templateId: 'obs-alpha',
+        options: [
+          { id: 'alpha-safe',   gameId: 'alpha' as GameId, greedy: false, heatCost: 1, reward: 1 },
+          { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true,  heatCost: 2, reward: 2 },
+        ],
+        committedOptionId: 'alpha-safe',
+        // committedBy intentionally absent
+      },
+    };
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(next.crew[0]!.restingUntilRoom).toBeUndefined();
+  });
+
+  it('does not alter heat, loot, or phase via exhaustion', () => {
+    const s = makeMinigameStateWithCrew(7, 0);
+    const baseState = { ...s, crew: [] };
+    const withCrew = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    const withoutCrew = reduce({ ...baseState, crew: [] }, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(withCrew.heat).toBe(withoutCrew.heat);
+    expect(withCrew.loot).toBe(withoutCrew.loot);
+    expect(withCrew.phase).toBe(withoutCrew.phase);
+    expect(withCrew.rngState).toBe(withoutCrew.rngState);
   });
 });
 

@@ -6,7 +6,7 @@ import { rngFromState } from './rng';
 import type { EngineConfig } from './config';
 import type { RunState, RunEvent } from './types';
 import { startRun } from './run';
-import { applyGear } from './crew';
+import { applyGear, applyExhaustion } from './crew';
 import { generateRoom } from './generation';
 import {
   obstacleDrip,
@@ -92,6 +92,13 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
           },
         ],
         phase: 'offer',
+        // Exhaustion rotation: bench committed crew for the next room (no RNG draw).
+        crew: applyExhaustion(
+          state.crew,
+          room.committedBy ?? [],
+          state.roomIndex,
+          cfg,
+        ),
       };
       return { ...intermediate, escapeSignal: computeEscapeSignal(intermediate, cfg) };
     }
