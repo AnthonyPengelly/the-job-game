@@ -25,7 +25,7 @@ export interface Player {
   name: string;
   stats: Record<Lane, number>;
   powerUps: Partial<Record<Lane, boolean>>;
-  quirk: QuirkId;
+  quirk?: QuirkId;
   restingUntilRoom?: number;
 }
 

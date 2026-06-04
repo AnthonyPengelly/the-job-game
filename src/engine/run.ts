@@ -1,5 +1,5 @@
 import { rngFromState } from './rng';
-import type { Player, PlayerSetup, PlayerId, QuirkId, RunEvent, RunState } from './types';
+import type { Player, PlayerSetup, PlayerId, RunEvent, RunState } from './types';
 
 const MANSION_TYPES = ['villa', 'estate', 'penthouse'] as const;
 
@@ -11,7 +11,7 @@ function makePlayer(setup: PlayerSetup, index: number): Player {
     name: setup.name,
     stats: { ...MEDIOCRE_STATS },
     powerUps: {},
-    quirk: setup.quirk ?? ('default' as QuirkId),
+    ...(setup.quirk !== undefined && { quirk: setup.quirk }),
   };
 }
 
@@ -49,7 +49,7 @@ export function startRun(
   event: Extract<RunEvent, { t: 'START_RUN' }>,
 ): RunState {
   const seed = event.seed !== undefined ? event.seed >>> 0 : state.seed;
-  const rng = rngFromState(state.rngState);
+  const rng = rngFromState(event.seed !== undefined ? seed : state.rngState);
 
   const mansionType = rng.pick(MANSION_TYPES);
   const crew: Player[] = event.crew.map((setup, i) => makePlayer(setup, i));

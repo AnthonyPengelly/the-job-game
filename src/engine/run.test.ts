@@ -86,13 +86,16 @@ describe('startRun', () => {
     }
   });
 
-  it('respects a supplied quirk and defaults missing quirks', () => {
+  it('stores a supplied quirk and leaves quirk undefined when absent', () => {
     const eventWithQuirk: Extract<RunEvent, { t: 'START_RUN' }> = {
       t: 'START_RUN',
       crew: [{ name: 'Zara', quirk: 'hacker' as QuirkId }],
     };
-    const state = startRun(initialState(FIXED_SEED), eventWithQuirk);
-    expect(state.crew[0]?.quirk).toBe('hacker');
+    const withQuirk = startRun(initialState(FIXED_SEED), eventWithQuirk);
+    expect(withQuirk.crew[0]?.quirk).toBe('hacker');
+
+    const withoutQuirk = startRun(initialState(FIXED_SEED), crewEvent);
+    expect(withoutQuirk.crew[0]?.quirk).toBeUndefined();
   });
 
   it('advances rngState (different from the initial seed)', () => {
@@ -122,6 +125,42 @@ describe('startRun', () => {
     };
     const state = startRun(base, eventWithSeed);
     expect(state.seed).toBe(9999 >>> 0);
+  });
+
+  it('seed override drives the RNG stream — replay via initialState(override) is identical', () => {
+    const OVERRIDE_SEED = 9999;
+    const eventWithSeed: Extract<RunEvent, { t: 'START_RUN' }> = {
+      t: 'START_RUN',
+      crew: [{ name: 'Dana' }],
+      seed: OVERRIDE_SEED,
+    };
+    // Path A: start from a different initial seed and override in the event
+    const fromOverride = startRun(initialState(FIXED_SEED), eventWithSeed);
+    // Path B: start fresh from the override seed with no seed field
+    const fromFreshSeed = startRun(initialState(OVERRIDE_SEED), crewEvent.crew.length > 0
+      ? { t: 'START_RUN', crew: [{ name: 'Dana' }] }
+      : crewEvent);
+    // Both paths must produce identical mansion and rngState — same seed → same stream
+    expect(fromOverride.mansion.type).toBe(fromFreshSeed.mansion.type);
+    expect(fromOverride.rngState).toBe(fromFreshSeed.rngState);
+    expect(fromOverride.seed).toBe(fromFreshSeed.seed);
+  });
+
+  it('seed override produces a different mansion than the base seed when seeds differ', () => {
+    const eventDefault: Extract<RunEvent, { t: 'START_RUN' }> = {
+      t: 'START_RUN',
+      crew: [{ name: 'Dana' }],
+    };
+    const eventOverride: Extract<RunEvent, { t: 'START_RUN' }> = {
+      t: 'START_RUN',
+      crew: [{ name: 'Dana' }],
+      seed: 0xdeadbeef,
+    };
+    const base = initialState(FIXED_SEED);
+    const fromBase = startRun(base, eventDefault);
+    const fromOverride = startRun(base, eventOverride);
+    // Different seeds must drive different RNG streams (rngState diverges)
+    expect(fromOverride.rngState).not.toBe(fromBase.rngState);
   });
 
   it('resets all transient state on a fresh run', () => {
