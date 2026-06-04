@@ -1,5 +1,12 @@
 // The frozen, parsed shape the pure engine reducer reads from the active preset.
 // Defined here so the engine never imports from the content or platform layers.
+import type { Lane } from './types';
+
+// ── Gear catalog types ────────────────────────────────────────────────────────
+
+export type GearDef =
+  | { id: string; kind: 'statBoost'; lane: Lane; magnitude: number }
+  | { id: string; kind: 'powerUp'; lane: Lane };
 
 // ── Room template config types ────────────────────────────────────────────────
 
@@ -108,4 +115,6 @@ export interface EngineConfig {
     obstacleRatio: number;
   };
   roomTemplates: RoomTemplatesConfig;
+  /** Gear catalog keyed by gear id. Loaded from content/gear.json. */
+  gear: Record<string, GearDef>;
 }

@@ -2,9 +2,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { cwd } from 'node:process';
-import type { EngineConfig, ObstacleOptionConfig, ObstacleTemplateConfig, ScenarioChoiceConfig, ScenarioTemplateConfig } from '@/engine/config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema } from '@/content/schema';
-import type { ParsedRoomTemplates } from '@/content/schema';
+import type { EngineConfig, GearDef, ObstacleOptionConfig, ObstacleTemplateConfig, ScenarioChoiceConfig, ScenarioTemplateConfig } from '@/engine/config';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, gearSchema } from '@/content/schema';
+import type { ParsedGear, ParsedRoomTemplates } from '@/content/schema';
 
 function readJson(dir: string, file: string): unknown {
   return JSON.parse(readFileSync(resolve(dir, file), 'utf-8'));
@@ -50,6 +50,18 @@ function buildScenarioChoice(c: ParsedRoomTemplates['scenarios'][number]['choice
   return { id: c.id, label: c.label, heatDelta: c.heatDelta, lootDelta: c.lootDelta };
 }
 
+function buildGearCatalog(raw: ParsedGear): Record<string, GearDef> {
+  const gear: Record<string, GearDef> = {};
+  for (const item of raw.items) {
+    if (item.kind === 'statBoost') {
+      gear[item.id] = { id: item.id, kind: 'statBoost', lane: item.lane, magnitude: item.magnitude };
+    } else {
+      gear[item.id] = { id: item.id, kind: 'powerUp', lane: item.lane };
+    }
+  }
+  return gear;
+}
+
 /**
  * Reads tuning.json, scaling.json, _meta.json, and content/roomTemplates.json
  * from presets/<id>/, Zod-parses each one (fails loudly on any malformed field),
@@ -68,6 +80,7 @@ export function loadPreset(id = 'default'): EngineConfig {
   const roomTemplatesRaw = roomTemplatesSchema.parse(
     readJson(resolve(dir, 'content'), 'roomTemplates.json'),
   );
+  const gearRaw = gearSchema.parse(readJson(resolve(dir, 'content'), 'gear.json'));
 
   // Build the profiles sub-map with the full per-headcount shape.
   const profiles: Record<string, { getawayBonus: number; crewPerOption: [number, number]; exhaustion: 'full' | 'light' | 'tired' }> = {};
@@ -108,6 +121,7 @@ export function loadPreset(id = 'default'): EngineConfig {
       obstacles: buildObstacleTemplates(roomTemplatesRaw),
       scenarios: buildScenarioTemplates(roomTemplatesRaw),
     },
+    gear: buildGearCatalog(gearRaw),
   };
 
   return deepFreeze(config);

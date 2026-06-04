@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { reduce } from '@/engine/reduce';
 import { initialState } from '@/engine/run';
 import type { EngineConfig } from '@/engine/config';
-import type { RunState, PlayerId, GameId } from '@/engine/types';
+import type { RunState, PlayerId, GearId, GameId } from '@/engine/types';
 
 // ─── Inline test config (no platform dependency) ─────────────────────────────
 
@@ -29,6 +29,11 @@ const cfg: EngineConfig = {
     dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
   },
   generation: { obstacleRatio: 0.6 },
+  gear: {
+    'stat-tech-1':   { id: 'stat-tech-1',   kind: 'statBoost', lane: 'tech',     magnitude: 1 },
+    'stat-tech-2':   { id: 'stat-tech-2',   kind: 'statBoost', lane: 'tech',     magnitude: 2 },
+    'powerup-charm': { id: 'powerup-charm', kind: 'powerUp',  lane: 'charm' },
+  },
   roomTemplates: {
     obstacles: [
       {
@@ -703,5 +708,100 @@ describe('reduce does not mutate input state', () => {
     reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
     expect(s.heat).toBe(0);
     expect(s.loot).toBe(0);
+  });
+});
+
+// ─── ASSIGN_GEAR ──────────────────────────────────────────────────────────────
+
+function crewState(overrides: Partial<RunState> = {}): RunState {
+  return {
+    ...initialState(42),
+    phase: 'offer' as const,
+    crew: [
+      {
+        id: 'player-0' as PlayerId,
+        name: 'Alice',
+        stats: { tech: 0, physical: 0, charm: 0, stealth: 0 },
+        powerUps: {},
+      },
+      {
+        id: 'player-1' as PlayerId,
+        name: 'Bob',
+        stats: { tech: 0, physical: 0, charm: 0, stealth: 0 },
+        powerUps: {},
+      },
+    ],
+    ...overrides,
+  };
+}
+
+describe('ASSIGN_GEAR — stat boost', () => {
+  it('applies a +1 stat boost to the targeted player', () => {
+    const s = crewState();
+    const next = reduce(s, { t: 'ASSIGN_GEAR', gear: 'stat-tech-1' as GearId, to: 'player-0' as PlayerId }, cfg);
+    expect(next.crew[0]!.stats.tech).toBe(1);
+  });
+
+  it('applies a +2 Big Score to the targeted player', () => {
+    const s = crewState();
+    const next = reduce(s, { t: 'ASSIGN_GEAR', gear: 'stat-tech-2' as GearId, to: 'player-0' as PlayerId }, cfg);
+    expect(next.crew[0]!.stats.tech).toBe(2);
+  });
+
+  it('stacks: two +1 boosts to same lane produce +2', () => {
+    const s = crewState();
+    const after1 = reduce(s, { t: 'ASSIGN_GEAR', gear: 'stat-tech-1' as GearId, to: 'player-0' as PlayerId }, cfg);
+    const after2 = reduce(after1, { t: 'ASSIGN_GEAR', gear: 'stat-tech-1' as GearId, to: 'player-0' as PlayerId }, cfg);
+    expect(after2.crew[0]!.stats.tech).toBe(2);
+  });
+
+  it('leaves other players untouched', () => {
+    const s = crewState();
+    const next = reduce(s, { t: 'ASSIGN_GEAR', gear: 'stat-tech-1' as GearId, to: 'player-0' as PlayerId }, cfg);
+    expect(next.crew[1]!.stats.tech).toBe(0);
+  });
+});
+
+describe('ASSIGN_GEAR — power-up', () => {
+  it('grants the power-up to the targeted player', () => {
+    const s = crewState();
+    const next = reduce(s, { t: 'ASSIGN_GEAR', gear: 'powerup-charm' as GearId, to: 'player-1' as PlayerId }, cfg);
+    expect(next.crew[1]!.powerUps.charm).toBe(true);
+  });
+
+  it('is idempotent: assigning the same power-up twice stays true', () => {
+    const s = crewState();
+    const after1 = reduce(s, { t: 'ASSIGN_GEAR', gear: 'powerup-charm' as GearId, to: 'player-0' as PlayerId }, cfg);
+    const after2 = reduce(after1, { t: 'ASSIGN_GEAR', gear: 'powerup-charm' as GearId, to: 'player-0' as PlayerId }, cfg);
+    expect(after2.crew[0]!.powerUps.charm).toBe(true);
+  });
+
+  it('leaves other players untouched', () => {
+    const s = crewState();
+    const next = reduce(s, { t: 'ASSIGN_GEAR', gear: 'powerup-charm' as GearId, to: 'player-0' as PlayerId }, cfg);
+    expect(next.crew[1]!.powerUps.charm).toBeUndefined();
+  });
+});
+
+describe('ASSIGN_GEAR — error cases', () => {
+  it('throws on unknown gear id', () => {
+    const s = crewState();
+    expect(() =>
+      reduce(s, { t: 'ASSIGN_GEAR', gear: 'nonexistent' as GearId, to: 'player-0' as PlayerId }, cfg),
+    ).toThrow(/Unknown gear id/);
+  });
+
+  it('throws on unknown player id', () => {
+    const s = crewState();
+    expect(() =>
+      reduce(s, { t: 'ASSIGN_GEAR', gear: 'stat-tech-1' as GearId, to: 'player-99' as PlayerId }, cfg),
+    ).toThrow(/Unknown player id/);
+  });
+
+  it('does not mutate input state', () => {
+    const s = crewState();
+    const before = s.crew[0]!.stats.tech;
+    reduce(s, { t: 'ASSIGN_GEAR', gear: 'stat-tech-1' as GearId, to: 'player-0' as PlayerId }, cfg);
+    expect(s.crew[0]!.stats.tech).toBe(before);
   });
 });

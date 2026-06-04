@@ -26,6 +26,7 @@ const cfg: EngineConfig = {
     dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
   },
   generation: { obstacleRatio: 0.6 },
+  gear: {},
   roomTemplates: {
     obstacles: [
       {

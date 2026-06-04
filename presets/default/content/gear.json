@@ -1,0 +1,93 @@
+{
+  "_meta": {
+    "pack": "gear",
+    "version": 1,
+    "source": "docs/design/heist-content.md §GEAR",
+    "units": {
+      "magnitude": "stat points added to the player's lane rating",
+      "kind": "statBoost stacks; powerUp is idempotent (one per lane per player)"
+    }
+  },
+  "items": [
+    {
+      "id": "stat-tech-1",
+      "kind": "statBoost",
+      "lane": "tech",
+      "magnitude": 1,
+      "flavour": ["Better Tools", "Burner Laptop", "Lock Picks", "Wiring Diagram"]
+    },
+    {
+      "id": "stat-physical-1",
+      "kind": "statBoost",
+      "lane": "physical",
+      "magnitude": 1,
+      "flavour": ["Hit the Gym", "Energy Drink", "Grippy Gloves", "Warmed Up"]
+    },
+    {
+      "id": "stat-charm-1",
+      "kind": "statBoost",
+      "lane": "charm",
+      "magnitude": 1,
+      "flavour": ["Did the Homework", "Tailored Suit", "Press Pass", "Knows a Guy"]
+    },
+    {
+      "id": "stat-stealth-1",
+      "kind": "statBoost",
+      "lane": "stealth",
+      "magnitude": 1,
+      "flavour": ["Soft Shoes", "Black Gloves", "Cased the Joint", "Dark Clothes"]
+    },
+    {
+      "id": "stat-tech-2",
+      "kind": "statBoost",
+      "lane": "tech",
+      "magnitude": 2,
+      "flavour": ["Crash Course", "The Masterclass"]
+    },
+    {
+      "id": "stat-physical-2",
+      "kind": "statBoost",
+      "lane": "physical",
+      "magnitude": 2,
+      "flavour": ["Crash Course", "The Masterclass"]
+    },
+    {
+      "id": "stat-charm-2",
+      "kind": "statBoost",
+      "lane": "charm",
+      "magnitude": 2,
+      "flavour": ["Crash Course", "The Masterclass"]
+    },
+    {
+      "id": "stat-stealth-2",
+      "kind": "statBoost",
+      "lane": "stealth",
+      "magnitude": 2,
+      "flavour": ["Crash Course", "The Masterclass"]
+    },
+    {
+      "id": "powerup-tech",
+      "kind": "powerUp",
+      "lane": "tech",
+      "flavour": ["Hacker's Rig", "Burner Phone", "Skeleton Key"]
+    },
+    {
+      "id": "powerup-physical",
+      "kind": "powerUp",
+      "lane": "physical",
+      "flavour": ["Iron Grip", "Second Wind", "Quick Hands"]
+    },
+    {
+      "id": "powerup-charm",
+      "kind": "powerUp",
+      "lane": "charm",
+      "flavour": ["The Favor", "Press Badge", "Silver Tongue"]
+    },
+    {
+      "id": "powerup-stealth",
+      "kind": "powerUp",
+      "lane": "stealth",
+      "flavour": ["Ghost Kit", "Dark Ops", "Soft Step"]
+    }
+  ]
+}

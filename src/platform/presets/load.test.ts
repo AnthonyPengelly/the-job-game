@@ -179,6 +179,46 @@ describe('loadPreset', () => {
     });
   });
 
+  describe('gear catalog', () => {
+    it('loads a gear catalog with at least one statBoost and one powerUp', () => {
+      const cfg = loadPreset('default');
+      const items = Object.values(cfg.gear);
+      expect(items.some(g => g.kind === 'statBoost')).toBe(true);
+      expect(items.some(g => g.kind === 'powerUp')).toBe(true);
+    });
+
+    it('stat-tech-1 has magnitude 1 and lane tech', () => {
+      const cfg = loadPreset('default');
+      const item = cfg.gear['stat-tech-1'];
+      expect(item?.kind).toBe('statBoost');
+      expect(item?.lane).toBe('tech');
+      if (item?.kind === 'statBoost') {
+        expect(item.magnitude).toBe(1);
+      }
+    });
+
+    it('stat-tech-2 (Big Score) has magnitude 2', () => {
+      const cfg = loadPreset('default');
+      const item = cfg.gear['stat-tech-2'];
+      expect(item?.kind).toBe('statBoost');
+      if (item?.kind === 'statBoost') {
+        expect(item.magnitude).toBe(2);
+      }
+    });
+
+    it('powerup-tech has kind powerUp and lane tech', () => {
+      const cfg = loadPreset('default');
+      const item = cfg.gear['powerup-tech'];
+      expect(item?.kind).toBe('powerUp');
+      expect(item?.lane).toBe('tech');
+    });
+
+    it('gear catalog is frozen', () => {
+      const cfg = loadPreset('default');
+      expect(Object.isFrozen(cfg.gear)).toBe(true);
+    });
+  });
+
   describe('malformed fixture', () => {
     it('throws a ZodError when a required field has the wrong type', () => {
       expect(() => loadPreset('test-malformed')).toThrow(ZodError);

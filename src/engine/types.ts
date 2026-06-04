@@ -135,6 +135,7 @@ export type RunEvent =
   | { t: 'CHOOSE_OPTION'; optionId: string; committed: PlayerId[] }
   | { t: 'RESOLVE_MINIGAME'; outcome: Outcome }
   | { t: 'CHOOSE_SCENARIO'; choiceId: string; attemptedBy?: PlayerId }
+  | { t: 'ASSIGN_GEAR'; gear: GearId; to: PlayerId }
   | { t: 'PUSH_ON' }
   | { t: 'CALL_GETAWAY' }
   | { t: 'RESOLVE_GETAWAY'; win?: boolean };
