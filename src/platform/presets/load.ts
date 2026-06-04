@@ -69,10 +69,14 @@ export function loadPreset(id = 'default'): EngineConfig {
     readJson(resolve(dir, 'content'), 'roomTemplates.json'),
   );
 
-  // Build the profiles sub-map with only what EngineConfig exposes.
-  const profiles: Record<string, { getawayBonus: number }> = {};
+  // Build the profiles sub-map with the full per-headcount shape.
+  const profiles: Record<string, { getawayBonus: number; crewPerOption: [number, number]; exhaustion: 'full' | 'light' | 'tired' }> = {};
   for (const [key, profile] of Object.entries(scaling.profiles)) {
-    profiles[key] = { getawayBonus: profile.getawayBonus };
+    profiles[key] = {
+      getawayBonus: profile.getawayBonus,
+      crewPerOption: profile.crewPerOption,
+      exhaustion: profile.exhaustion,
+    };
   }
 
   const config: EngineConfig = {
@@ -92,7 +96,12 @@ export function loadPreset(id = 'default'): EngineConfig {
     scoring: tuning.scoring,
     scaling: {
       profiles,
+      exhaustionRest: scaling.exhaustionRest,
       minCommit: scaling.minCommit,
+      variant: scaling.variant,
+      excludedFromSolo: scaling.excludedFromSolo,
+      soloEligibleMinPool: scaling.soloEligibleMinPool,
+      dialCurve: scaling.dialCurve,
     },
     generation: tuning.generation,
     roomTemplates: {

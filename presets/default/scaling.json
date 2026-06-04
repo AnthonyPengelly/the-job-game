@@ -4,9 +4,10 @@
     "version": 1,
     "source": "heist-game-design.md \"Scaling 2-7\" + the-job-app-design.md §10.5; getawayBonus from heat-model-simulation.py player_bonus(n)",
     "units": {
-      "profiles.<n>.exhaustion": "rotation strength: full (5-7), light (4), tired (2-3 small next-room penalty)",
+      "profiles.<n>.exhaustion": "rotation strength class: full (5-7), light (4), tired (2-3 — soft class, no bench)",
       "profiles.<n>.crewPerOption": "[min,max] crew an obstacle option demands at this headcount",
       "profiles.<n>.getawayBonus": "odds bonus by headcount (sim player_bonus(n)); the getaway.headcountTerm in tuning.json multiplies it",
+      "exhaustionRest.<class>": "rooms benched per exhaustion class after committing to an obstacle; tired=0 means no bench",
       "minCommit.<gameId>": "hard floor of committed crew before the dial is applied; the generator filters on this first",
       "variant.<gameId>": "id of a replacement game module used at certain commit sizes (silentSync collapses, no-trade, asymmetric-info)",
       "dialCurve.<gameId>": "how committed-crew lane ratings map to difficulty; tightenPerExtra eases the dial as headcount grows"
@@ -39,6 +40,8 @@
     "crackTheTumblers": { "soloVariantId": "crackTheTumblersSolo", "appliesAt": [1] },
     "assemblyLine":     { "variantId": "assemblyLineNegotiated", "appliesAt": [2] }
   },
+
+  "exhaustionRest": { "full": 1, "light": 1, "tired": 0 },
 
   "excludedFromSolo": ["assemblyLine", "defuseTheAlarm"],
 
