@@ -20,11 +20,12 @@ export function greedyAvailable(heat: number, cfg: EngineConfig): boolean {
 }
 
 /**
- * Extra heat added when the greedy option is taken.
- * Python ref: cfg.greedy_x (the surcharge applied on top of the obstacle drip).
+ * Extra heat added on top of obstacleDrip when the greedy option is taken.
+ * Python ref: cfg.greedy_x = greedy − safe = 1. The caller adds this to
+ * obstacleDrip() — total greedy cost = obstacleDrip(room) + greedySurcharge().
  */
 export function greedySurcharge(cfg: EngineConfig): number {
-  return cfg.obstacleHeat.greedy;
+  return cfg.obstacleHeat.greedy - cfg.obstacleHeat.safe;
 }
 
 /**

@@ -64,8 +64,15 @@ describe('greedyAvailable', () => {
 });
 
 describe('greedySurcharge', () => {
-  it('returns obstacleHeat.greedy = +2 (acceptance criterion)', () => {
-    expect(greedySurcharge(cfg)).toBe(2);
+  it('returns greedy − safe = +1 (the on-top surcharge; Python greedy_x)', () => {
+    expect(greedySurcharge(cfg)).toBe(1);
+  });
+
+  it('total greedy obstacle = obstacleDrip(room) + greedySurcharge() = greedy + ramp', () => {
+    // room 5: obstacleDrip = 1+1=2, greedySurcharge = 1, total = 3 = greedy(2)+ramp(1)
+    expect(obstacleDrip(5, cfg) + greedySurcharge(cfg)).toBe(3);
+    // room 0: obstacleDrip = 1, greedySurcharge = 1, total = 2 = greedy(2)+ramp(0)
+    expect(obstacleDrip(0, cfg) + greedySurcharge(cfg)).toBe(2);
   });
 });
 
