@@ -18,7 +18,15 @@ const cfg: EngineConfig = {
     clamp: [0.04, 0.97],
   },
   scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
-  scaling: { profiles: {}, minCommit: {} },
+  scaling: {
+    profiles: {},
+    exhaustionRest: { full: 1, light: 1, tired: 0 },
+    minCommit: {},
+    variant: {},
+    excludedFromSolo: [],
+    soloEligibleMinPool: 8,
+    dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
+  },
   generation: { obstacleRatio: 0.6 },
   roomTemplates: { obstacles: [], scenarios: [] },
 };

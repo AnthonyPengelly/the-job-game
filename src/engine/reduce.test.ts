@@ -17,11 +17,16 @@ const cfg: EngineConfig = {
   scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
   scaling: {
     profiles: {
-      '2': { getawayBonus: -0.03 },
-      '4': { getawayBonus: 0.0 },
-      '7': { getawayBonus: 0.06 },
+      '2': { getawayBonus: -0.03, crewPerOption: [1, 2] as [number, number], exhaustion: 'tired' as const },
+      '4': { getawayBonus: 0.0,   crewPerOption: [1, 2] as [number, number], exhaustion: 'light' as const },
+      '7': { getawayBonus: 0.06,  crewPerOption: [2, 3] as [number, number], exhaustion: 'full' as const },
     },
+    exhaustionRest: { full: 1, light: 1, tired: 0 },
     minCommit: { alpha: 1, bravo: 1, charlie: 1, delta: 2 },
+    variant: {},
+    excludedFromSolo: [],
+    soloEligibleMinPool: 8,
+    dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
   },
   generation: { obstacleRatio: 0.6 },
   roomTemplates: {

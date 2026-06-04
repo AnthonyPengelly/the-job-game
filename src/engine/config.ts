@@ -84,10 +84,24 @@ export interface EngineConfig {
     bustMultiplier: number;
   };
   scaling: {
-    /** Keyed by headcount string ("2"–"7"). Only the getawayBonus term is needed by the engine. */
-    profiles: Record<string, { getawayBonus: number }>;
+    /** Keyed by headcount string ("2"–"7"). Full per-headcount profile. */
+    profiles: Record<string, {
+      getawayBonus: number;
+      crewPerOption: [number, number];
+      exhaustion: 'full' | 'light' | 'tired';
+    }>;
+    /** Rooms benched per exhaustion class after committing to an obstacle. tired=0 means no bench. */
+    exhaustionRest: Record<'full' | 'light' | 'tired', number>;
     /** Hard per-game commit floor. Keyed by gameId string. */
     minCommit: Record<string, number>;
+    /** Replacement game variant per game, keyed by gameId. */
+    variant: Record<string, { soloVariantId?: string | undefined; variantId?: string | undefined; appliesAt: number[] }>;
+    /** Game ids that may never be offered as a solo (commit-1) obstacle. */
+    excludedFromSolo: string[];
+    /** Obstacle pool must be at least this size before a commit-1 slot is legal. */
+    soloEligibleMinPool: number;
+    /** Difficulty dial curve per game (or "_default"). */
+    dialCurve: Record<string, { base: number; perLanePoint: number; tightenPerExtraCrew: number }>;
   };
   generation: {
     /** Probability [0,1] of drawing an obstacle room vs a scenario room. */

@@ -65,10 +65,67 @@ describe('loadPreset', () => {
       expect(cfg.scaling.profiles['7']?.getawayBonus).toBe(0.05);
     });
 
+    it('returns scaling profiles with crewPerOption from scaling.json', () => {
+      const cfg = loadPreset('default');
+      expect(cfg.scaling.profiles['2']?.crewPerOption).toEqual([1, 2]);
+      expect(cfg.scaling.profiles['5']?.crewPerOption).toEqual([2, 3]);
+    });
+
+    it('returns scaling profiles with exhaustion class from scaling.json', () => {
+      const cfg = loadPreset('default');
+      expect(cfg.scaling.profiles['2']?.exhaustion).toBe('tired');
+      expect(cfg.scaling.profiles['3']?.exhaustion).toBe('tired');
+      expect(cfg.scaling.profiles['4']?.exhaustion).toBe('light');
+      expect(cfg.scaling.profiles['5']?.exhaustion).toBe('full');
+      expect(cfg.scaling.profiles['6']?.exhaustion).toBe('full');
+      expect(cfg.scaling.profiles['7']?.exhaustion).toBe('full');
+    });
+
+    it('returns exhaustionRest with correct rooms-benched values', () => {
+      const cfg = loadPreset('default');
+      expect(cfg.scaling.exhaustionRest.full).toBe(1);
+      expect(cfg.scaling.exhaustionRest.light).toBe(1);
+      expect(cfg.scaling.exhaustionRest.tired).toBe(0);
+    });
+
     it('returns scaling.minCommit keyed by gameId', () => {
       const cfg = loadPreset('default');
       expect(cfg.scaling.minCommit['crackTheTumblers']).toBe(1);
       expect(cfg.scaling.minCommit['assemblyLine']).toBe(2);
+    });
+
+    it('returns scaling.variant with appliesAt arrays', () => {
+      const cfg = loadPreset('default');
+      expect(cfg.scaling.variant['crackTheTumblers']?.appliesAt).toEqual([1]);
+      expect(cfg.scaling.variant['crackTheTumblers']?.soloVariantId).toBe('crackTheTumblersSolo');
+    });
+
+    it('returns scaling.excludedFromSolo as a string array', () => {
+      const cfg = loadPreset('default');
+      expect(cfg.scaling.excludedFromSolo).toContain('assemblyLine');
+      expect(cfg.scaling.excludedFromSolo).toContain('defuseTheAlarm');
+    });
+
+    it('returns scaling.soloEligibleMinPool as a positive integer', () => {
+      const cfg = loadPreset('default');
+      expect(cfg.scaling.soloEligibleMinPool).toBe(8);
+    });
+
+    it('returns scaling.dialCurve with _default entry', () => {
+      const cfg = loadPreset('default');
+      const def = cfg.scaling.dialCurve['_default'];
+      expect(def).toBeDefined();
+      expect(def?.base).toBe(1.0);
+      expect(def?.perLanePoint).toBe(-0.15);
+      expect(def?.tightenPerExtraCrew).toBe(0.1);
+    });
+
+    it('new scaling fields are frozen', () => {
+      const cfg = loadPreset('default');
+      expect(Object.isFrozen(cfg.scaling.exhaustionRest)).toBe(true);
+      expect(Object.isFrozen(cfg.scaling.variant)).toBe(true);
+      expect(Object.isFrozen(cfg.scaling.excludedFromSolo)).toBe(true);
+      expect(Object.isFrozen(cfg.scaling.dialCurve)).toBe(true);
     });
 
     it('returns a deeply frozen object (top-level and nested)', () => {

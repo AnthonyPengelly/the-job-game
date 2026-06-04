@@ -25,9 +25,16 @@ const dialCurveEntrySchema = z.object({
   tightenPerExtraCrew: z.number(),
 }).strict();
 
+const exhaustionRestSchema = z.object({
+  full: z.number().int().nonnegative(),
+  light: z.number().int().nonnegative(),
+  tired: z.number().int().nonnegative(),
+}).strict();
+
 export const scalingSchema = z.object({
   _meta: scalingPackMetaSchema,
   profiles: z.record(z.string(), profileSchema),
+  exhaustionRest: exhaustionRestSchema,
   minCommit: z.record(z.string(), z.number().int().positive()),
   variant: z.record(z.string(), variantEntrySchema),
   excludedFromSolo: z.array(z.string()),
