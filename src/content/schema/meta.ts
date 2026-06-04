@@ -11,6 +11,6 @@ export const metaSchema = z.object({
   contentPacks: z.record(z.string(), z.string()),
   units: z.record(z.string(), z.string()).optional(),
   _note: z.string().optional(),
-});
+}).strict();
 
 export type ParsedMeta = z.infer<typeof metaSchema>;
