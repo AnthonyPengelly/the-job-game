@@ -20,7 +20,8 @@ Each role is a separate `claude -p` invocation with its own prompt (`scripts/age
 | **Game-design reviewer** | `MODEL_REVIEW` | mid (Sonnet) | Checks the diff against the fixed design + rigour. Same tier. |
 | **QA agent** | `MODEL_QA` | mid (Sonnet) | Drives the SPA via Playwright MCP; needs reasoning over UI state. |
 | **Fixer** | `MODEL_BUILD` | mid (Sonnet) | Same as builder; addresses review/QA findings. |
-| **Merge/bookkeeping** | — | none (shell) | Deterministic git + marker parsing in `lib/common.sh`. No model. |
+| **Marker parser** | `MODEL_PARSE` | cheapest (Haiku) | Runs after every agent call to extract `PIPELINE_*` markers from free-form output into a JSON sidecar. Tolerates markdown formatting. Default: `claude-haiku-4-5-20251001`. |
+| **Merge/bookkeeping** | — | none (shell) | Deterministic git ops in `lib/common.sh`. No model. |
 | **Balance / content checks** | — | none (scripts) | `npm run sim:check`, `npm run content:validate`. Deterministic, free. |
 
 Deterministic gates (sim, content, lint, type, unit tests) are **scripts, not agents** — they're free, fast, and unambiguous. Spend model budget only on judgement.

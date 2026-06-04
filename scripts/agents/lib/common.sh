@@ -12,6 +12,7 @@ set -euo pipefail
 : "${MODEL_BUILD:=}"       # mid model (e.g. Sonnet)
 : "${MODEL_REVIEW:=}"      # mid model
 : "${MODEL_QA:=}"          # mid model
+: "${MODEL_PARSE:=claude-haiku-4-5-20251001}"  # marker extraction (cheapest capable model)
 : "${MAX_REVIEW_ROUNDS:=5}"
 : "${MAX_QA_ROUNDS:=3}"
 : "${PIPELINE_LOG_DIR:=pipeline-logs}"
@@ -54,7 +55,7 @@ PROMPT
   local full_prompt="${prompt}
 $(cat "$file")"
 
-  "$CLAUDE_BIN" --print --model claude-haiku-4-5-20251001 \
+  "$CLAUDE_BIN" --print --model "$MODEL_PARSE" \
     --permission-mode bypassPermissions \
     "$full_prompt" 2>/dev/null \
     | grep -o '{.*}' | tail -n1 > "$sidecar" || true
