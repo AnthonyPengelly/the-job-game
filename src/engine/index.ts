@@ -33,6 +33,9 @@ export { applyOverride } from './overrides';
 
 export { reduce } from './reduce';
 
+export { reduceSession, initialSession } from './history';
+export type { SessionState, SessionEvent } from './history';
+
 export type {
   Lane,
   Outcome,
