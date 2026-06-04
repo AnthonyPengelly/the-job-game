@@ -5,6 +5,7 @@
 // Force-outcome is handled by GM-supplied RESOLVE_MINIGAME + UNDO_LAST (E2.6);
 // gear grant/remove is expressed via OVERRIDE_SET_STAT / OVERRIDE_SET_POWERUP.
 import { generateRoom } from './generation';
+import { escapeSignal as computeEscapeSignal } from './heat';
 import type { EngineConfig } from './config';
 import type { OverrideEvent, Player, RunState } from './types';
 
@@ -41,14 +42,16 @@ export function applyOverride(
     // ── Heat ──────────────────────────────────────────────────────────────────
 
     case 'OVERRIDE_SET_HEAT': {
-      return { ...state, heat: Math.min(cfg.heat.hMax, Math.max(0, event.value)) };
+      const next: RunState = { ...state, heat: Math.min(cfg.heat.hMax, Math.max(0, event.value)) };
+      return { ...next, escapeSignal: computeEscapeSignal(next, cfg) };
     }
 
     case 'OVERRIDE_ADJUST_HEAT': {
-      return {
+      const next: RunState = {
         ...state,
         heat: Math.min(cfg.heat.hMax, Math.max(0, state.heat + event.delta)),
       };
+      return { ...next, escapeSignal: computeEscapeSignal(next, cfg) };
     }
 
     // ── Loot ──────────────────────────────────────────────────────────────────
@@ -88,7 +91,7 @@ export function applyOverride(
       // Rebuild powerUps: add or remove the lane entry.
       const oldPowerUps = player.powerUps;
       const newPowerUps: Player['powerUps'] = event.held
-        ? { ...oldPowerUps, [event.lane]: true as const }
+        ? { ...oldPowerUps, [event.lane]: true }
         : (() => {
             const copy = { ...oldPowerUps };
             delete copy[event.lane];
@@ -106,13 +109,11 @@ export function applyOverride(
       // exactOptionalPropertyTypes: we cannot set the key to undefined — must omit it.
       const updated: Player = event.untilRoom !== undefined
         ? { ...player, restingUntilRoom: event.untilRoom }
-        : {
-            id: player.id,
-            name: player.name,
-            stats: player.stats,
-            powerUps: player.powerUps,
-            ...(player.quirk !== undefined && { quirk: player.quirk }),
-          };
+        : (() => {
+            const { restingUntilRoom: _omit, ...rest } = player;
+            void _omit;
+            return rest;
+          })();
       return { ...state, crew: replaceCrew(state, idx, updated) };
     }
 
@@ -120,16 +121,17 @@ export function applyOverride(
 
     case 'OVERRIDE_REROLL_ROOM': {
       // Regenerate the current room in-place, advancing rngState.
-      // Balance-neutral: this is a GM action, not a sim event.
-      return generateRoom(state, cfg);
+      // Preserve carried effects — reroll does not advance roomIndex, so no tick.
+      return { ...generateRoom(state, cfg), carried: state.carried };
     }
 
     case 'OVERRIDE_SKIP_ROOM': {
       // Advance roomIndex and generate the next room without resolving the current one.
       // No forcedGetaway check — the GM is explicitly bypassing normal flow.
       const withNextIndex: RunState = { ...state, roomIndex: state.roomIndex + 1 };
-      const next = generateRoom(withNextIndex, cfg);
-      return { ...next, phase: 'room' };
+      const generated = generateRoom(withNextIndex, cfg);
+      const next: RunState = { ...generated, phase: 'room' };
+      return { ...next, escapeSignal: computeEscapeSignal(next, cfg) };
     }
 
     // ── Phase ─────────────────────────────────────────────────────────────────

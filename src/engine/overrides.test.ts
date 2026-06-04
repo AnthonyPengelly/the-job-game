@@ -135,6 +135,19 @@ describe('OVERRIDE_SET_HEAT', () => {
     expect(next.loot).toBe(7);
     expect(next.phase).toBe(s.phase);
   });
+
+  it('recomputes escapeSignal: arms when heat crosses run-at threshold', () => {
+    // threshold = runAtFraction * hMax = 0.55 * 20 = 11; need roomIndex >= 2
+    const s = baseState({ heat: 5, roomIndex: 3, escapeSignal: false });
+    const next = applyOverride(s, { t: 'OVERRIDE_SET_HEAT', value: 11 }, cfg);
+    expect(next.escapeSignal).toBe(true);
+  });
+
+  it('recomputes escapeSignal: clears when heat drops below run-at threshold', () => {
+    const s = baseState({ heat: 15, roomIndex: 3, escapeSignal: true });
+    const next = applyOverride(s, { t: 'OVERRIDE_SET_HEAT', value: 5 }, cfg);
+    expect(next.escapeSignal).toBe(false);
+  });
 });
 
 // ─── OVERRIDE_ADJUST_HEAT ─────────────────────────────────────────────────────
@@ -158,6 +171,19 @@ describe('OVERRIDE_ADJUST_HEAT', () => {
   it('clamps to hMax on overflow', () => {
     const next = applyOverride(baseState({ heat: 18 }), { t: 'OVERRIDE_ADJUST_HEAT', delta: 10 }, cfg);
     expect(next.heat).toBe(cfg.heat.hMax);
+  });
+
+  it('recomputes escapeSignal: arms when adjusted heat crosses run-at threshold', () => {
+    // threshold = 11; roomIndex must be >= 2
+    const s = baseState({ heat: 9, roomIndex: 2, escapeSignal: false });
+    const next = applyOverride(s, { t: 'OVERRIDE_ADJUST_HEAT', delta: 3 }, cfg);
+    expect(next.escapeSignal).toBe(true);
+  });
+
+  it('recomputes escapeSignal: clears when adjusted heat drops below threshold', () => {
+    const s = baseState({ heat: 15, roomIndex: 2, escapeSignal: true });
+    const next = applyOverride(s, { t: 'OVERRIDE_ADJUST_HEAT', delta: -6 }, cfg);
+    expect(next.escapeSignal).toBe(false);
   });
 });
 
@@ -453,6 +479,13 @@ describe('OVERRIDE_REROLL_ROOM', () => {
     applyOverride(s, { t: 'OVERRIDE_REROLL_ROOM' }, cfg);
     expect(s.rngState).toBe(beforeRng);
   });
+
+  it('preserves carried effects (no tick — roomIndex does not advance)', () => {
+    const carried = [{ id: 'briefcase', kind: 'countdown', roomsLeft: 2 }];
+    const s = baseState({ rngState: 100, carried });
+    const next = applyOverride(s, { t: 'OVERRIDE_REROLL_ROOM' }, cfg);
+    expect(next.carried).toEqual(carried);
+  });
 });
 
 // ─── OVERRIDE_SKIP_ROOM ───────────────────────────────────────────────────────
@@ -490,6 +523,20 @@ describe('OVERRIDE_SKIP_ROOM', () => {
     const r2 = applyOverride(s, { t: 'OVERRIDE_SKIP_ROOM' }, cfg);
     expect(r1.currentRoom).toEqual(r2.currentRoom);
     expect(r1.roomIndex).toBe(r2.roomIndex);
+  });
+
+  it('recomputes escapeSignal: arms when skip brings roomIndex to threshold with hot heat', () => {
+    // threshold: roomIndex >= 2 AND heat >= 11
+    const s = baseState({ roomIndex: 1, heat: 12, escapeSignal: false });
+    const next = applyOverride(s, { t: 'OVERRIDE_SKIP_ROOM' }, cfg);
+    expect(next.roomIndex).toBe(2);
+    expect(next.escapeSignal).toBe(true);
+  });
+
+  it('recomputes escapeSignal: stays false when heat is below threshold after skip', () => {
+    const s = baseState({ roomIndex: 1, heat: 5, escapeSignal: false });
+    const next = applyOverride(s, { t: 'OVERRIDE_SKIP_ROOM' }, cfg);
+    expect(next.escapeSignal).toBe(false);
   });
 });
 
