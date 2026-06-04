@@ -39,7 +39,10 @@ for TASK in "${TASKS[@]}"; do
   log "---- task $TASK (branch $BRANCH) ----"
 
   # already merged? skip (resumability)
-  if git merge-base --is-ancestor "origin/${BRANCH}" main 2>/dev/null; then
+  # Use origin/main not local main — local branch may be stale if main moved
+  # after the container's initial clone (e.g. a human pushed mid-run).
+  git fetch origin main --quiet 2>/dev/null || true
+  if git merge-base --is-ancestor "origin/${BRANCH}" origin/main 2>/dev/null; then
     log "task $TASK already merged; skipping"; continue
   fi
 
