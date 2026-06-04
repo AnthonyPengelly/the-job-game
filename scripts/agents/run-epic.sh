@@ -39,13 +39,11 @@ for TASK in "${TASKS[@]}"; do
   log "---- task $TASK (branch $BRANCH) ----"
 
   # already merged? skip (resumability)
-  # Check for a merge commit on origin/main rather than using --is-ancestor:
-  # the builder may push new commits to the branch after a human merges it
-  # manually, advancing the tip beyond what landed on main and breaking the
-  # ancestor check. The merge commit message is always "Merge branch '<branch>'".
-  git fetch origin main --quiet 2>/dev/null || true
-  if git log --merges --format="%s" origin/main 2>/dev/null \
-       | grep -qE "Merge (remote-tracking branch 'origin/|branch ')${BRANCH}'"; then
+  # grep the merge commit log for the branch name as a fixed string — robust
+  # against both "Merge branch 'X'" and "Merge remote-tracking branch 'origin/X'"
+  # formats, and unaffected by the builder pushing new commits to the branch
+  # after a human merge (which breaks --is-ancestor checks).
+  if git log --merges --format="%s" origin/main 2>/dev/null | grep -qF "${BRANCH}"; then
     log "task $TASK already merged; skipping"; continue
   fi
 
