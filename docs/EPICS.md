@@ -52,7 +52,7 @@ Critical path: **E0 → E1 → E2 → E3 → E4 → E5**. E6–E9 fan out from E
 - Room/scenario stream generation (procedural, seeded): obstacle option menus (game · reward · Heat cost), scenario draw without repeats, carried effects (ticking briefcase, 3-room unlock).
 - All tunable numbers read from the **active preset**, never hardcoded (depends on the preset schema — co-develop the minimal loader here, full system in E10/E11 via `docs/CONTENT-AND-TUNING.md`).
 
-**Acceptance gate:** unit tests cover every reducer branch; `npm run sim:check` runs the headless Monte Carlo over the default preset and **asserts** the design targets (median ~4–5 obstacles, runs past 10 rooms ≤ ~3%, win-rate bands by skill bad<avg<good, Loot roughly doubles poor→good). Numbers reproduce the reference model within tolerance.
+**Acceptance gate:** unit tests cover every reducer branch; `npm run sim:check` runs the headless Monte Carlo over the default preset and **asserts** the design targets (median ~4–5 obstacles, runs past 10 rooms ≤ ~3%, win-rate bands by skill bad<avg<good, skill payoff roughly doubles poor→good measured via `finalScore = loot × win/bust multiplier`). Numbers reproduce the reference model within tolerance. See `docs/GAME-DESIGN-RIGOUR.md` §3 and `HARNESS_CHANGELOG.md` 2026-06-04 entry for the sign-off on score-based H and C=0.93 thresholds.
 
 ---
 
