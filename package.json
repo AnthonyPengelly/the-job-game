@@ -10,7 +10,7 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
     "lint": "echo 'stub: E0.4 wires eslint' && exit 0",
-    "test": "echo 'stub: E0.2 wires vitest' && exit 0",
+    "test": "vitest run",
     "check": "echo 'stub: fast gate (type+lint+unit). E0.6 wires this.' && exit 0",
     "check:full": "echo 'stub: full gate. E0.6 wires this (type+lint+unit+sensors).' && exit 0",
     "sim:check": "echo 'stub: balance harness. E1 wires this (Monte Carlo asserts design targets).' && exit 0",
@@ -30,6 +30,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.5.3",
-    "vite": "^5.3.4"
+    "vite": "^5.3.4",
+    "vitest": "^4.1.8"
   }
 }
