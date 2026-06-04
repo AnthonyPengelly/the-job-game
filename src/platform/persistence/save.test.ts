@@ -76,6 +76,28 @@ describe('readSave / writeSave round-trip', () => {
   });
 });
 
+// ── writeSave error resilience ────────────────────────────────────────────────
+
+describe('writeSave error resilience', () => {
+  it('does not throw when storage.setItem throws QuotaExceededError', () => {
+    const throwingStorage: StorageLike = {
+      getItem: () => null,
+      setItem: () => { throw new Error('QuotaExceededError'); },
+      removeItem: () => {},
+    };
+    expect(() => writeSave(VALID_ENVELOPE, throwingStorage)).not.toThrow();
+  });
+
+  it('does not throw when storage.setItem throws a SecurityError', () => {
+    const throwingStorage: StorageLike = {
+      getItem: () => null,
+      setItem: () => { throw new DOMException('SecurityError', 'SecurityError'); },
+      removeItem: () => {},
+    };
+    expect(() => writeSave(VALID_ENVELOPE, throwingStorage)).not.toThrow();
+  });
+});
+
 // ── version mismatch ──────────────────────────────────────────────────────────
 
 describe('readSave version mismatch → stale', () => {
@@ -83,6 +105,20 @@ describe('readSave version mismatch → stale', () => {
     const storage = makeMemoryStorage();
     const staleEnvelope = { ...VALID_ENVELOPE, version: SAVE_VERSION + 99 };
     storage.setItem('the-job:run-save', JSON.stringify(staleEnvelope));
+    const result = readSave(storage);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('stale');
+    }
+  });
+
+  it('returns stale (not corrupt) for a future-version save with a diverged eventLog schema', () => {
+    const storage = makeMemoryStorage();
+    storage.setItem('the-job:run-save', JSON.stringify({
+      version: SAVE_VERSION + 1,
+      seed: 0,
+      eventLog: [{ t: 'FUTURE_EVENT_TYPE', unknownField: true }],
+    }));
     const result = readSave(storage);
     expect(result.ok).toBe(false);
     if (!result.ok) {

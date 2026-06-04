@@ -1,4 +1,5 @@
-import { saveEnvelopeSchema, SAVE_VERSION } from '@/content/schema/save';
+import { z } from 'zod';
+import { safeParseSaveEnvelope, SAVE_VERSION } from '@/content/schema/save';
 import type { SaveEnvelope } from '@/content/schema/save';
 
 /** Minimal storage interface — satisfied by window.localStorage and in-memory stubs. */
@@ -19,12 +20,19 @@ const RUN_SAVE_KEY = 'the-job:run-save';
 /**
  * Serialise and write the save envelope to storage.
  * Writes through immediately — the save is durable after every engine event.
+ * Swallows QuotaExceededError/SecurityError so a full or blocked localStorage
+ * never throws at the table (golden rule: app never blocks).
  */
 export function writeSave(
   env: SaveEnvelope,
   storage: StorageLike = window.localStorage,
 ): void {
-  storage.setItem(RUN_SAVE_KEY, JSON.stringify(env));
+  try {
+    storage.setItem(RUN_SAVE_KEY, JSON.stringify(env));
+  } catch {
+    // QuotaExceededError / SecurityError in private-mode or full storage.
+    // The run continues without persistence rather than crashing the GM.
+  }
 }
 
 /**
@@ -51,19 +59,19 @@ export function readSave(
     return { ok: false, reason: 'corrupt' };
   }
 
-  const result = saveEnvelopeSchema.safeParse(parsed);
+  // Extract version before full-schema validation: a future-version save whose
+  // eventLog schema has since diverged should classify as 'stale', not 'corrupt'.
+  const versionOnly = z.object({ version: z.number() }).safeParse(parsed);
+  if (versionOnly.success && versionOnly.data.version !== SAVE_VERSION) {
+    return { ok: false, reason: 'stale' };
+  }
+
+  const result = safeParseSaveEnvelope(parsed);
   if (!result.success) {
     return { ok: false, reason: 'corrupt' };
   }
 
-  if (result.data.version !== SAVE_VERSION) {
-    return { ok: false, reason: 'stale' };
-  }
-
-  // Branded types (PlayerId, GearId, QuirkId) are nominal over string and erased
-  // at runtime; the schema validates all structural constraints, so this cast is sound.
-  const save = result.data as unknown as SaveEnvelope;
-  return { ok: true, save };
+  return { ok: true, save: result.data };
 }
 
 /** Remove the run save from storage. */

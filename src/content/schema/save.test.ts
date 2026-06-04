@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { runEventSchema, saveEnvelopeSchema, SAVE_VERSION, parseSaveEnvelope } from './save';
+import { runEventSchema, saveEnvelopeSchema, SAVE_VERSION, parseSaveEnvelope, safeParseSaveEnvelope } from './save';
 
 // ── runEventSchema tests ──────────────────────────────────────────────────────
 
@@ -157,5 +157,49 @@ describe('parseSaveEnvelope', () => {
     expect(() => parseSaveEnvelope({ version: 1, seed: 'bad', eventLog: [] })).toThrow();
     expect(() => parseSaveEnvelope(null)).toThrow();
     expect(() => parseSaveEnvelope('not an object')).toThrow();
+  });
+});
+
+// ── safeParseSaveEnvelope helper tests ────────────────────────────────────────
+
+describe('safeParseSaveEnvelope', () => {
+  it('returns success: true with a typed SaveEnvelope for valid data', () => {
+    const result = safeParseSaveEnvelope({
+      version: SAVE_VERSION,
+      seed: 42,
+      eventLog: [
+        { t: 'START_RUN', crew: [{ name: 'River' }] },
+        { t: 'PUSH_ON' },
+        { t: 'RESOLVE_GETAWAY' },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.version).toBe(SAVE_VERSION);
+      expect(result.data.seed).toBe(42);
+      expect(result.data.eventLog).toHaveLength(3);
+      expect(result.data.eventLog[0]).toMatchObject({ t: 'START_RUN' });
+    }
+  });
+
+  it('returns success: false with a ZodError for a bad seed type', () => {
+    const result = safeParseSaveEnvelope({ version: 1, seed: 'not-a-number', eventLog: [] });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBeDefined();
+    }
+  });
+
+  it('returns success: false for null input', () => {
+    expect(safeParseSaveEnvelope(null).success).toBe(false);
+  });
+
+  it('returns success: false for an unknown event t in the event log', () => {
+    const result = safeParseSaveEnvelope({
+      version: SAVE_VERSION,
+      seed: 0,
+      eventLog: [{ t: 'UNKNOWN_FUTURE_EVENT', data: 42 }],
+    });
+    expect(result.success).toBe(false);
   });
 });
