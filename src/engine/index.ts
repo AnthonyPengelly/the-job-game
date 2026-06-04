@@ -25,7 +25,7 @@ export { scoreRun } from './scoring';
 
 export { generateRoom, tickCarriedEffects } from './generation';
 
-export { applyGear } from './crew';
+export { applyGear, profileFor, isResting, applyExhaustion } from './crew';
 
 export { reduce } from './reduce';
 
