@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@/engine": ["src/engine"],
+      "@/engine/*": ["src/engine/*"],
+      "@/content": ["src/content"],
+      "@/content/*": ["src/content/*"],
+      "@/minigames": ["src/minigames"],
+      "@/minigames/*": ["src/minigames/*"],
+      "@/console": ["src/console"],
+      "@/console/*": ["src/console/*"],
+      "@/player-view": ["src/player-view"],
+      "@/player-view/*": ["src/player-view/*"],
+      "@/platform": ["src/platform"],
+      "@/platform/*": ["src/platform/*"]
+    }
+  },
+  "include": ["src"]
+}

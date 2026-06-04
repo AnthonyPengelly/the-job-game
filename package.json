@@ -6,18 +6,30 @@
   "type": "module",
   "scripts": {
     "comment:gates": "check:full, sim:check and content:validate start as no-op stubs so the pipeline can bootstrap. Epic E0 replaces check:full; E1 replaces sim:check; E7/E10 replace content:validate. Do NOT leave them as stubs once the relevant epic lands.",
-    "dev": "echo 'E0 wires Vite dev server' && exit 0",
-    "build": "echo 'E0 wires Vite build' && exit 0",
-    "typecheck": "echo 'stub: E0 wires tsc --noEmit' && exit 0",
-    "lint": "echo 'stub: E0 wires eslint' && exit 0",
-    "test": "echo 'stub: E0 wires vitest' && exit 0",
-    "check": "echo 'stub: fast gate (type+lint+unit). E0 wires this.' && exit 0",
-    "check:full": "echo 'stub: full gate. E0 wires this (type+lint+unit+sensors).' && exit 0",
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "lint": "echo 'stub: E0.4 wires eslint' && exit 0",
+    "test": "echo 'stub: E0.2 wires vitest' && exit 0",
+    "check": "echo 'stub: fast gate (type+lint+unit). E0.6 wires this.' && exit 0",
+    "check:full": "echo 'stub: full gate. E0.6 wires this (type+lint+unit+sensors).' && exit 0",
     "sim:check": "echo 'stub: balance harness. E1 wires this (Monte Carlo asserts design targets).' && exit 0",
     "content:validate": "echo 'stub: preset/content schema validation. E7/E10 wire this.' && exit 0",
     "agent:preflight": "./scripts/agents/preflight.sh",
     "agent:orchestrate": "./scripts/agents/orchestrate.sh",
     "agent:epic": "./scripts/agents/run-epic.sh",
     "agent:shell": "docker compose run --rm --build --entrypoint /bin/bash agent"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.4"
   }
 }
