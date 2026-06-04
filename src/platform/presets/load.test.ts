@@ -30,6 +30,12 @@ describe('loadPreset', () => {
       expect(cfg.outcomeHeat.botched).toBe(2);
     });
 
+    it('returns outcomeLoot fields matching tuning.json', () => {
+      const cfg = loadPreset('default');
+      expect(cfg.outcomeLoot.complication).toBe(1);
+      expect(cfg.outcomeLoot.botched).toBe(0);
+    });
+
     it('returns scenarioSwing fields matching tuning.json', () => {
       const cfg = loadPreset('default');
       expect(cfg.scenarioSwing.small).toBe(2);

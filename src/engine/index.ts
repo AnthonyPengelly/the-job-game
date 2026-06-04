@@ -25,6 +25,8 @@ export { scoreRun } from './scoring';
 
 export { generateRoom, tickCarriedEffects } from './generation';
 
+export { reduce } from './reduce';
+
 export type {
   Lane,
   Outcome,

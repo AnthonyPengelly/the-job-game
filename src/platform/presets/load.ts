@@ -80,6 +80,7 @@ export function loadPreset(id = 'default'): EngineConfig {
     escalation: tuning.escalation,
     obstacleHeat: tuning.obstacleHeat,
     outcomeHeat: tuning.outcomeHeat,
+    outcomeLoot: tuning.outcomeLoot,
     scenarioSwing: tuning.scenarioSwing,
     getaway: {
       exponent: tuning.getaway.exponent,
