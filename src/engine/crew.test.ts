@@ -114,7 +114,9 @@ describe('applyGear — powerUp', () => {
 
 // ─── Scaling / exhaustion helpers ─────────────────────────────────────────────
 
-const scalingCfg: Pick<EngineConfig, 'scaling'> = {
+// satisfies verifies shape against Pick<EngineConfig,'scaling'>; single cast to EngineConfig is unavoidable
+// because profileFor/applyExhaustion take the full type (only scaling fields are accessed).
+const cfg = {
   scaling: {
     profiles: {
       '2': { getawayBonus: -0.04, crewPerOption: [1, 2] as [number, number], exhaustion: 'tired' as const },
@@ -131,10 +133,7 @@ const scalingCfg: Pick<EngineConfig, 'scaling'> = {
     soloEligibleMinPool: 8,
     dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
   },
-} as unknown as Pick<EngineConfig, 'scaling'>;
-
-// Cast to full EngineConfig — only scaling fields are accessed by the helpers under test.
-const cfg = scalingCfg as unknown as EngineConfig;
+} satisfies Pick<EngineConfig, 'scaling'> as unknown as EngineConfig;
 
 function makePlayerWithId(id: string): Player {
   return makePlayer({ id: id as PlayerId });

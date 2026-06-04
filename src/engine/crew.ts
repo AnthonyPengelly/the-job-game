@@ -14,7 +14,13 @@ export function profileFor(
   cfg: EngineConfig,
 ): EngineConfig['scaling']['profiles'][string] {
   const clamped = Math.min(7, Math.max(2, headcount));
-  return cfg.scaling.profiles[String(clamped)]!;
+  const profile = cfg.scaling.profiles[String(clamped)];
+  if (profile === undefined) {
+    throw new Error(
+      `profileFor: no scaling profile for headcount ${headcount} — key "${String(clamped)}" absent from preset`,
+    );
+  }
+  return profile;
 }
 
 /**
