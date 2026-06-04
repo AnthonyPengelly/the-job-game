@@ -189,7 +189,8 @@ merge_branch() {  # merge_branch <branch> <into>
   local branch="$1" into="${2:-main}"
   git checkout "$into"
   git merge --no-ff --no-edit "$branch"
-  git push origin "$into"
+  # Retry with a pull-rebase if another agent pushed to <into> while we were working.
+  git push origin "$into" || (git pull --rebase origin "$into" && git push origin "$into")
 }
 
 # Does the diff touch design-bearing code? (decides whether game-design review runs)
