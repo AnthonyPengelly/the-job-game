@@ -6,6 +6,11 @@
 
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
+
+# Pull latest main so harness scripts are always current, even if the
+# container was cloned before recent fixes were pushed.
+git pull --ff-only origin main 2>/dev/null || true
+
 source scripts/agents/lib/common.sh
 
 EPIC="${1:?usage: run-epic.sh <EPIC e.g. E3>}"
