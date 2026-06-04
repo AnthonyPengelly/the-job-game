@@ -43,6 +43,8 @@ export interface ObstacleOption {
   greedy: boolean;
   heatCost: number;
   reward: number;
+  /** Scaling-aware [minCrew, maxCrew] commit range for the current headcount. Set by generateRoom when crew ≥ 2. */
+  commitRange?: [number, number];
 }
 
 export interface ObstacleRoom {

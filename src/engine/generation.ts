@@ -4,6 +4,7 @@
 // 44 scenarios are later epics. E1 generation is the seeded structural stream only.
 
 import { rngFromState } from './rng';
+import { obstacleCommitRange } from './scaling';
 import type { EngineConfig } from './config';
 import type {
   RunState,
@@ -71,6 +72,12 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
     // template is always found: templateId came from the same allIds array.
     if (template === undefined) throw new Error(`obstacle template ${templateId} not found in config`);
 
+    // Annotate each option with its scaling-aware commitRange when crew is present.
+    // This is pure metadata — no RNG draw, no change to template/option selection.
+    const headcount = state.crew.length;
+    const range: [number, number] | undefined =
+      headcount >= 2 ? obstacleCommitRange(template.gameId, headcount, cfg) : undefined;
+
     const options: [ObstacleOption, ObstacleOption] = [
       {
         id: template.options[0].id,
@@ -78,6 +85,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         greedy: template.options[0].greedy,
         heatCost: template.options[0].heatCost,
         reward: template.options[0].reward,
+        ...(range !== undefined && { commitRange: range }),
       },
       {
         id: template.options[1].id,
@@ -85,6 +93,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         greedy: template.options[1].greedy,
         heatCost: template.options[1].heatCost,
         reward: template.options[1].reward,
+        ...(range !== undefined && { commitRange: range }),
       },
     ];
 
