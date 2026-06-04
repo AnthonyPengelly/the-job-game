@@ -38,7 +38,9 @@ for EPIC in "${ORDER[@]}"; do
   log "################  BUILDING $EPIC  ################"
   if scripts/agents/run-epic.sh "$EPIC"; then
     date -u +"%Y-%m-%dT%H:%M:%SZ" >"${DONE_DIR}/${EPIC}"
-    git add "${DONE_DIR}/${EPIC}" && git commit -m "chore(orchestrator): $EPIC complete" && git push origin main || true
+    git add "${DONE_DIR}/${EPIC}" && git commit -m "chore(orchestrator): $EPIC complete"
+    # Retry push with a pull-rebase in case main moved while the epic was running.
+    git push origin main || (git pull --rebase origin main && git push origin main)
     log "################  $EPIC COMPLETE  ################"
   else
     code=$?
