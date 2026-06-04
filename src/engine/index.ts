@@ -2,6 +2,8 @@
 // EngineLayer kept for backward-compat with the E0 smoke test.
 export type EngineLayer = 'engine';
 
+export type { EngineConfig } from './config';
+
 export { mulberry32, rngFromState } from './rng';
 export type { Rng } from './rng';
 
