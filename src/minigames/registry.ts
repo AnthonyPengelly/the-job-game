@@ -1,12 +1,12 @@
 import type { MiniGame } from './contract';
+import { safeCrack } from './games/safe-crack';
 
 /**
  * Single registration point for all mini-game modules.
  * To add a game: import its module and push it here (one edit).
- * Populated in E4.4 (Safe-Crack) and E5 (remaining nine games).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const games: MiniGame<any, any>[] = [];
+export const games: MiniGame<any, any>[] = [safeCrack];
 
 /** Look up a registered game by its GameId string. Returns undefined if not found. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

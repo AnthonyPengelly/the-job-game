@@ -72,8 +72,8 @@ describe('registry', () => {
   });
 
   describe('games array', () => {
-    it('starts empty (no games registered yet in E4.1)', () => {
-      expect(games.length).toBe(0);
+    it('contains at least safeCrack after E4.4 registration', () => {
+      expect(games.some(g => g.id === 'safeCrack')).toBe(true);
     });
   });
 });
