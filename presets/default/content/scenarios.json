@@ -1,0 +1,948 @@
+{
+  "_meta": {
+    "pack": "scenarios",
+    "version": 1,
+    "source": "docs/design/heist-content.md §SCENARIOS"
+  },
+  "items": [
+    {
+      "id": "inside-man",
+      "setup": "A nervous clerk offers to help — for a cut.",
+      "choices": [
+        {
+          "id": "inside-man-pay",
+          "label": "Pay him off",
+          "effect": {
+            "heatDelta": 0,
+            "lootDelta": -1,
+            "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
+          }
+        },
+        {
+          "id": "inside-man-lean",
+          "label": "Lean on him",
+          "roll": {
+            "lane": "charm",
+            "baseDifficulty": 13,
+            "success": {
+              "heatDelta": 0,
+              "lootDelta": 0,
+              "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
+            },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "unmarked-van",
+      "setup": "A van idles in the alley, keys in the ignition.",
+      "choices": [
+        {
+          "id": "unmarked-van-hotwire",
+          "label": "Hotwire it",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": -2, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "unmarked-van-leave",
+          "label": "Leave it",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "sleeping-dog",
+      "setup": "A guard dog dozes across the corridor.",
+      "choices": [
+        {
+          "id": "sleeping-dog-tiptoe",
+          "label": "Tiptoe past",
+          "roll": {
+            "lane": "stealth",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": -2, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "sleeping-dog-toss",
+          "label": "Toss it your lunch",
+          "effect": { "heatDelta": -2, "lootDelta": -1 }
+        }
+      ]
+    },
+    {
+      "id": "champagne-room",
+      "setup": "The cellar's open, full of vintages.",
+      "choices": [
+        {
+          "id": "champagne-room-pocket",
+          "label": "Pocket a bottle",
+          "effect": { "heatDelta": 2, "lootDelta": 1 }
+        },
+        {
+          "id": "champagne-room-discipline",
+          "label": "Stay disciplined",
+          "effect": { "heatDelta": -2, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "fuse-box",
+      "setup": "The building's electrics, exposed.",
+      "choices": [
+        {
+          "id": "fuse-box-cut",
+          "label": "Cut the power",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 14,
+            "success": { "heatDelta": -4, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "fuse-box-leave",
+          "label": "Leave it",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "old-friend",
+      "setup": "A former crewmate is casing the same joint.",
+      "choices": [
+        {
+          "id": "old-friend-team-up",
+          "label": "Team up",
+          "effect": { "heatDelta": 2, "lootDelta": 1 }
+        },
+        {
+          "id": "old-friend-tip-off",
+          "label": "Send them off with a tip",
+          "effect": {
+            "heatDelta": 0,
+            "lootDelta": -1,
+            "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-safe",
+      "setup": "A smaller safe in the corner, not on the plan.",
+      "choices": [
+        {
+          "id": "other-safe-crack",
+          "label": "Crack it open",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "other-safe-leave",
+          "label": "Leave it — stay on task",
+          "effect": { "heatDelta": -2, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "cleaning-crew",
+      "setup": "Real janitors, working late.",
+      "choices": [
+        {
+          "id": "cleaning-crew-uniform",
+          "label": "Grab a uniform",
+          "effect": {
+            "heatDelta": 0,
+            "lootDelta": 0,
+            "gear": { "kind": "statBoost", "lanes": ["charm", "stealth"] }
+          }
+        },
+        {
+          "id": "cleaning-crew-hide",
+          "label": "Hide and wait",
+          "effect": { "heatDelta": -2, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "dropped-wallet",
+      "setup": "A wallet on the floor.",
+      "choices": [
+        {
+          "id": "dropped-wallet-take",
+          "label": "Take the cash",
+          "effect": { "heatDelta": 0, "lootDelta": 1 }
+        },
+        {
+          "id": "dropped-wallet-leave",
+          "label": "Wipe it and leave it",
+          "effect": { "heatDelta": -2, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "the-scanner",
+      "setup": "A police frequency, crackling.",
+      "choices": [
+        {
+          "id": "the-scanner-listen",
+          "label": "Listen in",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 12,
+            "success": { "heatDelta": 0, "lootDelta": 0, "info": true },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "the-scanner-keep-moving",
+          "label": "Keep moving",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "loose-floorboard",
+      "setup": "Something's stashed beneath a loose floorboard.",
+      "choices": [
+        {
+          "id": "loose-floorboard-pry",
+          "label": "Pry it up",
+          "roll": {
+            "lane": "physical",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": 0, "lootDelta": 2 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "loose-floorboard-leave",
+          "label": "Leave it",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "cold-feet",
+      "setup": "A crew member wants out.",
+      "choices": [
+        {
+          "id": "cold-feet-talk",
+          "label": "Talk them round",
+          "roll": {
+            "lane": "charm",
+            "baseDifficulty": 13,
+            "success": {
+              "heatDelta": 0,
+              "lootDelta": 0,
+              "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
+            },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "cold-feet-cut",
+          "label": "Cut them loose",
+          "effect": { "heatDelta": -2, "lootDelta": -1 }
+        }
+      ]
+    },
+    {
+      "id": "headlights",
+      "setup": "The mark's car turns into the drive.",
+      "choices": [
+        {
+          "id": "headlights-slip-out",
+          "label": "Slip out the back",
+          "roll": {
+            "lane": "stealth",
+            "baseDifficulty": 12,
+            "success": { "heatDelta": -2, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "headlights-play-it-cool",
+          "label": "Play it cool as staff",
+          "roll": {
+            "lane": "charm",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": -2, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "forgotten-kit",
+      "setup": "A workman's tool bag, abandoned.",
+      "choices": [
+        {
+          "id": "forgotten-kit-grab",
+          "label": "Grab it",
+          "effect": {
+            "heatDelta": 0,
+            "lootDelta": 0,
+            "gear": { "kind": "statBoost", "lanes": ["tech", "physical", "charm", "stealth"] }
+          }
+        },
+        {
+          "id": "forgotten-kit-leave",
+          "label": "Leave it — might be watched",
+          "effect": { "heatDelta": -2, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "bent-cop",
+      "setup": "An officer offers to look the other way.",
+      "choices": [
+        {
+          "id": "bent-cop-bribe",
+          "label": "Bribe him",
+          "effect": { "heatDelta": -4, "lootDelta": -1 }
+        },
+        {
+          "id": "bent-cop-refuse",
+          "label": "Refuse",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "the-gallery",
+      "setup": "Priceless canvases line the hall.",
+      "choices": [
+        {
+          "id": "the-gallery-cut",
+          "label": "Cut one out",
+          "roll": {
+            "lane": "stealth",
+            "baseDifficulty": 14,
+            "success": { "heatDelta": 0, "lootDelta": 2 },
+            "failure": { "heatDelta": 4, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "the-gallery-photograph",
+          "label": "Photograph them for the fence",
+          "effect": { "heatDelta": 0, "lootDelta": 1 }
+        }
+      ]
+    },
+    {
+      "id": "server-room",
+      "setup": "The security footage, yours to wipe.",
+      "choices": [
+        {
+          "id": "server-room-wipe",
+          "label": "Wipe the footage",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": -4, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "server-room-leave",
+          "label": "Leave it",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "the-distraction",
+      "setup": "You could stage a commotion across the floor.",
+      "choices": [
+        {
+          "id": "the-distraction-pull",
+          "label": "Pull it off",
+          "roll": {
+            "lane": "charm",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": -2, "lootDelta": 1 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "the-distraction-skip",
+          "label": "Don't risk it",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "locked-briefcase",
+      "setup": "A sealed case, clearly valuable, tamper-locked. It's a bet on how long you'll stay.",
+      "choices": [
+        {
+          "id": "locked-briefcase-take",
+          "label": "Take it along",
+          "effect": {
+            "heatDelta": 2,
+            "lootDelta": 0,
+            "delayed": {
+              "kind": "briefcase",
+              "roomsLeft": 3,
+              "payoff": { "heatDelta": 0, "lootDelta": 2 }
+            }
+          }
+        },
+        {
+          "id": "locked-briefcase-leave",
+          "label": "Leave it",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "spilled-jewels",
+      "setup": "A tray of gems scatters across the marble.",
+      "choices": [
+        {
+          "id": "spilled-jewels-scramble",
+          "label": "Scramble for the lot",
+          "roll": {
+            "lane": "physical",
+            "baseDifficulty": 12,
+            "success": { "heatDelta": 0, "lootDelta": 2 },
+            "failure": { "heatDelta": 2, "lootDelta": 1 }
+          }
+        },
+        {
+          "id": "spilled-jewels-handful",
+          "label": "Grab a handful",
+          "effect": { "heatDelta": 0, "lootDelta": 1 }
+        }
+      ]
+    },
+    {
+      "id": "honest-guard",
+      "setup": "One guard who can't be bought.",
+      "choices": [
+        {
+          "id": "honest-guard-overpower",
+          "label": "Overpower him",
+          "roll": {
+            "lane": "physical",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": -2, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "honest-guard-slip-past",
+          "label": "Slip past unseen",
+          "roll": {
+            "lane": "stealth",
+            "baseDifficulty": 12,
+            "success": { "heatDelta": -2, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "blueprints",
+      "setup": "Building plans on a desk.",
+      "choices": [
+        {
+          "id": "blueprints-study",
+          "label": "Study them",
+          "effect": { "heatDelta": 2, "lootDelta": 0, "info": true }
+        },
+        {
+          "id": "blueprints-sell",
+          "label": "Pocket and sell them",
+          "effect": { "heatDelta": 0, "lootDelta": 1 }
+        }
+      ]
+    },
+    {
+      "id": "home-office",
+      "setup": "A leather-topped desk and a wall safe behind a portrait.",
+      "choices": [
+        {
+          "id": "home-office-crack",
+          "label": "Crack the wall safe",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "home-office-desk-cash",
+          "label": "Pocket the desk cash",
+          "effect": { "heatDelta": 0, "lootDelta": 1 }
+        }
+      ]
+    },
+    {
+      "id": "the-split",
+      "setup": "Unaccounted cash, found mid-job.",
+      "choices": [
+        {
+          "id": "the-split-share",
+          "label": "Share it evenly",
+          "effect": {
+            "heatDelta": 0,
+            "lootDelta": 1,
+            "gear": { "kind": "statBoost", "lanes": ["tech", "physical", "charm", "stealth"] }
+          }
+        },
+        {
+          "id": "the-split-pocket",
+          "label": "Pocket it quietly",
+          "effect": {
+            "heatDelta": 2,
+            "lootDelta": 1,
+            "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
+          }
+        }
+      ]
+    },
+    {
+      "id": "recognised",
+      "setup": "Someone clocks a crew member's face.",
+      "choices": [
+        {
+          "id": "recognised-pay",
+          "label": "Pay for silence",
+          "effect": { "heatDelta": 0, "lootDelta": -1 }
+        },
+        {
+          "id": "recognised-lean",
+          "label": "Lean on them",
+          "roll": {
+            "lane": "charm",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": 0, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "marks-study",
+      "setup": "Trophies, a humidor, a personal safe behind the portrait.",
+      "choices": [
+        {
+          "id": "marks-study-safe",
+          "label": "Go for the safe",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 14,
+            "success": {
+              "heatDelta": 0,
+              "lootDelta": 0,
+              "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
+            },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "marks-study-cigar",
+          "label": "Pocket a cigar and go",
+          "effect": { "heatDelta": 0, "lootDelta": 1 }
+        }
+      ]
+    },
+    {
+      "id": "the-tripwire",
+      "setup": "A wire glints across the doorway.",
+      "choices": [
+        {
+          "id": "the-tripwire-step-over",
+          "label": "Step over it",
+          "roll": {
+            "lane": "physical",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": 0, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "the-tripwire-disarm",
+          "label": "Disarm it",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 12,
+            "success": { "heatDelta": -2, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "charity-gala",
+      "setup": "The ballroom's hosting a black-tie party — crowds everywhere.",
+      "choices": [
+        {
+          "id": "charity-gala-work-room",
+          "label": "Work the room",
+          "roll": {
+            "lane": "charm",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "charity-gala-skirt",
+          "label": "Skirt the edges",
+          "effect": { "heatDelta": -2, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "friendly-face",
+      "setup": "A guard greets a crew member like an old colleague.",
+      "choices": [
+        {
+          "id": "friendly-face-chat",
+          "label": "Chat them up",
+          "roll": {
+            "lane": "charm",
+            "baseDifficulty": 12,
+            "success": { "heatDelta": -2, "lootDelta": 0, "info": true },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "friendly-face-avoid",
+          "label": "Avoid them",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "the-dumbwaiter",
+      "setup": "A tiny service hatch between floors.",
+      "choices": [
+        {
+          "id": "the-dumbwaiter-send",
+          "label": "Send your smallest through",
+          "roll": {
+            "lane": "stealth",
+            "baseDifficulty": 12,
+            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "the-dumbwaiter-leave",
+          "label": "Leave it",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "counterfeit-stack",
+      "setup": "Cash that looks a little too crisp.",
+      "choices": [
+        {
+          "id": "counterfeit-stack-grab",
+          "label": "Grab a bundle",
+          "roll": {
+            "lane": "stealth",
+            "baseDifficulty": 11,
+            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "failure": { "heatDelta": 0, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "counterfeit-stack-leave",
+          "label": "Leave it",
+          "effect": { "heatDelta": -2, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "wine-steward",
+      "setup": "A staffer offers a quiet tour for a tip.",
+      "choices": [
+        {
+          "id": "wine-steward-tip",
+          "label": "Tip and follow",
+          "effect": { "heatDelta": 0, "lootDelta": -1, "info": true }
+        },
+        {
+          "id": "wine-steward-decline",
+          "label": "Decline",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "pressure-plate",
+      "setup": "The floor ahead looks rigged.",
+      "choices": [
+        {
+          "id": "pressure-plate-pick",
+          "label": "Pick across it",
+          "roll": {
+            "lane": "stealth",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": 0, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "pressure-plate-disarm",
+          "label": "Wedge and disarm it",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 12,
+            "success": { "heatDelta": -2, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-intercom",
+      "setup": "It crackles — someone wants a status check.",
+      "choices": [
+        {
+          "id": "the-intercom-answer",
+          "label": "Answer it",
+          "roll": {
+            "lane": "charm",
+            "baseDifficulty": 14,
+            "success": { "heatDelta": -4, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "the-intercom-ignore",
+          "label": "Ignore it",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "collectors-cabinet",
+      "setup": "A wall of small locked drawers, each maybe holding something.",
+      "choices": [
+        {
+          "id": "collectors-cabinet-force",
+          "label": "Force a few open",
+          "roll": {
+            "lane": "physical",
+            "baseDifficulty": 12,
+            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "collectors-cabinet-ajar",
+          "label": "Take the one left ajar",
+          "effect": { "heatDelta": 0, "lootDelta": 1 }
+        }
+      ]
+    },
+    {
+      "id": "the-whistleblower",
+      "setup": "A staffer offers evidence on the mark — for cover.",
+      "choices": [
+        {
+          "id": "the-whistleblower-take",
+          "label": "Take it",
+          "effect": {
+            "heatDelta": 2,
+            "lootDelta": 0,
+            "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
+          }
+        },
+        {
+          "id": "the-whistleblower-stay-out",
+          "label": "Stay out of it",
+          "effect": { "heatDelta": 0, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "glass-display",
+      "setup": "A jewel under thick glass.",
+      "choices": [
+        {
+          "id": "glass-display-cut",
+          "label": "Cut the glass",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 15,
+            "success": { "heatDelta": 0, "lootDelta": 2 },
+            "failure": { "heatDelta": 4, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "glass-display-swap",
+          "label": "Swap it for a fake",
+          "roll": {
+            "lane": "stealth",
+            "baseDifficulty": 14,
+            "success": { "heatDelta": -2, "lootDelta": 2 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-loadout",
+      "setup": "An abandoned crew's kit bag.",
+      "choices": [
+        {
+          "id": "the-loadout-split",
+          "label": "Split it among the crew",
+          "effect": {
+            "heatDelta": 0,
+            "lootDelta": 0,
+            "gear": { "kind": "statBoost", "lanes": ["tech", "physical", "charm", "stealth"] }
+          }
+        },
+        {
+          "id": "the-loadout-whole",
+          "label": "Keep it whole for one specialist",
+          "effect": {
+            "heatDelta": 0,
+            "lootDelta": 0,
+            "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
+          }
+        }
+      ]
+    },
+    {
+      "id": "nosy-neighbour",
+      "setup": "A resident peers from a doorway.",
+      "choices": [
+        {
+          "id": "nosy-neighbour-reassure",
+          "label": "Reassure them",
+          "roll": {
+            "lane": "charm",
+            "baseDifficulty": 12,
+            "success": { "heatDelta": -2, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "nosy-neighbour-duck",
+          "label": "Duck away",
+          "effect": { "heatDelta": -2, "lootDelta": 0 }
+        }
+      ]
+    },
+    {
+      "id": "managers-keys",
+      "setup": "A ring of keys on a hook.",
+      "choices": [
+        {
+          "id": "managers-keys-pocket",
+          "label": "Pocket them",
+          "effect": { "heatDelta": 2, "lootDelta": 0, "info": true }
+        },
+        {
+          "id": "managers-keys-copy",
+          "label": "Copy and replace",
+          "roll": {
+            "lane": "tech",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": 0, "lootDelta": 0, "info": true },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hidden-compartment",
+      "setup": "A painting swings aside to reveal a recess.",
+      "choices": [
+        {
+          "id": "hidden-compartment-reach",
+          "label": "Reach in",
+          "roll": {
+            "lane": "physical",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": 0, "lootDelta": 2 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        },
+        {
+          "id": "hidden-compartment-note",
+          "label": "Note it and leave",
+          "effect": { "heatDelta": 0, "lootDelta": 1 }
+        }
+      ]
+    },
+    {
+      "id": "drivers-tip",
+      "setup": "Your driver radios a warning about the route.",
+      "choices": [
+        {
+          "id": "drivers-tip-reroute",
+          "label": "Reroute on their word",
+          "effect": { "heatDelta": -2, "lootDelta": 0 }
+        },
+        {
+          "id": "drivers-tip-stick",
+          "label": "Stick to the plan",
+          "roll": {
+            "lane": "stealth",
+            "baseDifficulty": 13,
+            "success": { "heatDelta": 0, "lootDelta": 0 },
+            "failure": { "heatDelta": 2, "lootDelta": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "vault-ledger",
+      "setup": "A book of where the real valuables sit.",
+      "choices": [
+        {
+          "id": "vault-ledger-study",
+          "label": "Study it",
+          "effect": { "heatDelta": 0, "lootDelta": 0, "info": true }
+        },
+        {
+          "id": "vault-ledger-tear",
+          "label": "Tear out a page and run",
+          "effect": { "heatDelta": 0, "lootDelta": 1 }
+        }
+      ]
+    },
+    {
+      "id": "champagne-toast",
+      "setup": "The crew's getting cocky mid-job.",
+      "choices": [
+        {
+          "id": "champagne-toast-indulge",
+          "label": "Indulge a moment",
+          "effect": {
+            "heatDelta": 2,
+            "lootDelta": 0,
+            "gear": { "kind": "statBoost", "lanes": ["tech", "physical", "charm", "stealth"] }
+          }
+        },
+        {
+          "id": "champagne-toast-focus",
+          "label": "Keep focused",
+          "effect": { "heatDelta": -2, "lootDelta": 0 }
+        }
+      ]
+    }
+  ]
+}

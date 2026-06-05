@@ -168,9 +168,9 @@ describe('loadPreset', () => {
       }
     });
 
-    it('generation.obstacleRatio matches tuning.json (0.6)', () => {
+    it('generation.obstacleRatio matches tuning.json (0.65)', () => {
       const cfg = loadPreset('default');
-      expect(cfg.generation.obstacleRatio).toBe(0.6);
+      expect(cfg.generation.obstacleRatio).toBe(0.65);
     });
 
     it('roomTemplates config is frozen', () => {

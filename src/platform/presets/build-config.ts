@@ -1,12 +1,13 @@
 import type { EngineConfig, GearDef, ObstacleOptionConfig, ObstacleTemplateConfig, TriviaItemConfig } from '@/engine/config';
 import type { ScenarioDef } from '@/engine/types';
-import type { CategoriesBank, TriviaBank, ParsedGear, ParsedMeta, ParsedRoomTemplates, ParsedScaling, ParsedTuning } from '@/content/schema';
+import type { CategoriesBank, TriviaBank, ParsedGear, ParsedMeta, ParsedRoomTemplates, ParsedScaling, ParsedTuning, ParsedScenarios } from '@/content/schema';
 
 export interface PresetBundle {
   meta: ParsedMeta;
   tuning: ParsedTuning;
   scaling: ParsedScaling;
   roomTemplates: ParsedRoomTemplates;
+  scenarios: ParsedScenarios;
   gear: ParsedGear;
   categoriesBank: CategoriesBank;
   triviaBank: TriviaBank;
@@ -39,11 +40,11 @@ function buildObstacleTemplates(raw: ParsedRoomTemplates): ObstacleTemplateConfi
 }
 
 /**
- * Pass scenario defs through unchanged — ParsedRoomTemplates already matches
- * the ScenarioDef shape validated by roomTemplatesSchema.
+ * Pass scenario defs through unchanged — ParsedScenarios items already match
+ * the ScenarioDef shape validated by scenariosSchema.
  */
-function buildScenarioDefs(raw: ParsedRoomTemplates): ScenarioDef[] {
-  return raw.scenarios as unknown as ScenarioDef[];
+function buildScenarioDefs(raw: ParsedScenarios): ScenarioDef[] {
+  return raw.items as unknown as ScenarioDef[];
 }
 
 function buildGearCatalog(raw: ParsedGear): Record<string, GearDef> {
@@ -59,7 +60,7 @@ function buildGearCatalog(raw: ParsedGear): Record<string, GearDef> {
 }
 
 export function buildConfig(bundle: PresetBundle): EngineConfig {
-  const { tuning, scaling, roomTemplates, gear, categoriesBank, triviaBank } = bundle;
+  const { tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank } = bundle;
 
   const profiles: Record<string, { getawayBonus: number; crewPerOption: [number, number]; exhaustion: 'full' | 'light' | 'tired' }> = {};
   for (const [key, profile] of Object.entries(scaling.profiles)) {
@@ -101,7 +102,7 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
     },
     roomTemplates: {
       obstacles: buildObstacleTemplates(roomTemplates),
-      scenarios: buildScenarioDefs(roomTemplates),
+      scenarios: buildScenarioDefs(scenarios),
     },
     gear: buildGearCatalog(gear),
     banks: {

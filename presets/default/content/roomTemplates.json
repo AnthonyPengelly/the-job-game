@@ -96,56 +96,5 @@
         { "id": "defuse-rushing",  "greedy": true,  "heatCost": 2, "reward": 2 }
       ]
     }
-  ],
-
-  "scenarios": [
-    {
-      "id": "found-a-document",
-      "setup": "You spot a folder on the desk — confidential, by the look of it.",
-      "choices": [
-        { "id": "pocket-it",   "label": "Pocket the document",  "effect": { "heatDelta": 0,  "lootDelta": 2 } },
-        { "id": "leave-it",    "label": "Leave it — stay cool", "effect": { "heatDelta": -2, "lootDelta": 0 } }
-      ]
-    },
-    {
-      "id": "unexpected-visitor",
-      "setup": "A face you don't recognise rounds the corner — not staff, not crew.",
-      "choices": [
-        { "id": "bluff-past",  "label": "Bluff past them",   "effect": { "heatDelta": 2,  "lootDelta": 1 } },
-        { "id": "hide-it-out", "label": "Hide and wait",     "effect": { "heatDelta": -2, "lootDelta": 0 } }
-      ]
-    },
-    {
-      "id": "shortcut-through-kitchen",
-      "setup": "The kitchen back passage cuts two minutes off the route — if it's clear.",
-      "choices": [
-        { "id": "take-shortcut",  "label": "Take the shortcut",  "effect": { "heatDelta": -4, "lootDelta": 0 } },
-        { "id": "stick-to-plan",  "label": "Stick to the plan",  "effect": { "heatDelta": 0,  "lootDelta": 1 } }
-      ]
-    },
-    {
-      "id": "dropped-radio",
-      "setup": "A guard drops their radio — it skids under a cabinet, crackling.",
-      "choices": [
-        { "id": "retrieve-radio",  "label": "Retrieve the radio",  "effect": { "heatDelta": 4,  "lootDelta": 0 } },
-        { "id": "abandon-radio",   "label": "Leave it and move",   "effect": { "heatDelta": -2, "lootDelta": 0 } }
-      ]
-    },
-    {
-      "id": "bonus-safe",
-      "setup": "A small wall safe, not on the plan — someone's private stash.",
-      "choices": [
-        { "id": "crack-it",       "label": "Crack it open",       "effect": { "heatDelta": 0,  "lootDelta": 2 } },
-        { "id": "skip-the-safe",  "label": "Skip — not worth it", "effect": { "heatDelta": -2, "lootDelta": 0 } }
-      ]
-    },
-    {
-      "id": "lobby-encounter",
-      "setup": "Two guests linger in the lobby right on your route.",
-      "choices": [
-        { "id": "chat-your-way",  "label": "Chat your way through", "effect": { "heatDelta": 2,  "lootDelta": 1 } },
-        { "id": "slip-around",    "label": "Slip around unseen",    "effect": { "heatDelta": -2, "lootDelta": 0 } }
-      ]
-    }
   ]
 }
