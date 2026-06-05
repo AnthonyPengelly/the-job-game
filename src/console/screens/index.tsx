@@ -6,7 +6,7 @@ import { ObstacleRoom } from './ObstacleRoom';
 import { MinigameHost } from './MinigameHost';
 import { ScenarioRoom } from './ScenarioRoom';
 import { Offer } from './Offer';
-import { GetawayStub } from './GetawayStub';
+import { Getaway } from './Getaway';
 import { Result } from './Result';
 
 // ── Room router ───────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ export function PhaseRouter({ phase }: PhaseRouterProps) {
     case 'room':     return <RoomRouter />;
     case 'minigame': return <MinigameHost />;
     case 'offer':    return <Offer />;
-    case 'getaway':  return <GetawayStub />;
+    case 'getaway':  return <Getaway />;
     case 'result':   return <Result />;
     default: {
       const _exhaustive: never = phase;
@@ -49,4 +49,4 @@ export function PhaseRouter({ phase }: PhaseRouterProps) {
   }
 }
 
-export { Setup, Briefing, Offer, GetawayStub, Result };
+export { Setup, Briefing, Offer, Getaway, Result };
