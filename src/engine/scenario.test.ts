@@ -5,7 +5,7 @@ import { generateRoom } from '@/engine/generation';
 import { reduce } from '@/engine/reduce';
 import { initialState } from '@/engine/run';
 import type { EngineConfig } from '@/engine/config';
-import type { RunState, PlayerId, GearId, ScenarioEffect } from '@/engine/types';
+import type { RunState, PlayerId, GearId, ScenarioEffect, GearGrantDescriptor } from '@/engine/types';
 import { reduceSession, initialSession } from '@/engine/history';
 
 // ── Inline test config ────────────────────────────────────────────────────────
@@ -305,11 +305,15 @@ describe('applyScenarioEffect — Gear (earnedGear)', () => {
     expect(next.earnedGear).toContain('stat-tech-2' as GearId);
   });
 
-  it('resolves multi-lane descriptor using first matching lane', () => {
+  it('carries multi-lane descriptor unresolved so GM/crew can pick the lane', () => {
     const state = initialState(1);
-    const effect: ScenarioEffect = { heatDelta: 0, lootDelta: 0, gear: { kind: 'statBoost', lanes: ['charm', 'stealth'] } };
+    const descriptor: GearGrantDescriptor = { kind: 'statBoost', lanes: ['charm', 'stealth'] };
+    const effect: ScenarioEffect = { heatDelta: 0, lootDelta: 0, gear: descriptor };
     const next = applyScenarioEffect(state, effect, cfg);
-    expect(next.earnedGear).toContain('stat-charm-1' as GearId);
+    // The descriptor must appear in earnedGear verbatim — no first-match collapse.
+    expect(next.earnedGear).toContainEqual(descriptor);
+    // No GearId should have been pushed for a multi-lane grant.
+    expect(next.earnedGear.every(g => typeof g !== 'string')).toBe(true);
   });
 
   it('accumulates gear across multiple effects', () => {

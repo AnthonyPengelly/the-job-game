@@ -207,8 +207,14 @@ export interface RunState {
   usedObstacleTemplateIds: string[];
   /** Scenario template IDs drawn this run — reset when the pool is exhausted. */
   usedScenarioTemplateIds: string[];
-  /** Gear IDs earned from scenario outcomes, waiting for the GM to ASSIGN_GEAR. */
-  earnedGear: GearId[];
+  /**
+   * Gear earned from scenario outcomes, waiting for the GM to ASSIGN_GEAR.
+   * A GearId means the gear is fully resolved (single-lane grant).
+   * A GearGrantDescriptor means the crew still needs to choose which lane applies
+   * (multi-lane grant) — the GM picks a lane and dispatches ASSIGN_GEAR with the
+   * resulting GearId.
+   */
+  earnedGear: Array<GearId | GearGrantDescriptor>;
 }
 
 // ── GM-override events (E2.5) ─────────────────────────────────────────────────

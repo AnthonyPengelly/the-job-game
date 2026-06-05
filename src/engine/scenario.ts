@@ -46,25 +46,22 @@ export function resolveRoll(roll: number, dc: number, critFumble: boolean): bool
 // ── Gear resolution ───────────────────────────────────────────────────────────
 
 /**
- * Resolve a GearGrantDescriptor to a GearId from cfg.gear.
- * For multi-lane descriptors (lanes), picks the first matching gear found.
+ * Resolve a single-lane GearGrantDescriptor to a GearId from cfg.gear.
+ * Must only be called when descriptor.lane is defined (single-lane grant).
  * Throws if no matching gear exists in the catalog (fail loudly at the boundary).
  */
 function resolveGearGrant(descriptor: GearGrantDescriptor, cfg: EngineConfig): GearId {
-  const targetLanes =
-    descriptor.lane !== undefined ? [descriptor.lane] : (descriptor.lanes ?? []);
+  const lane = descriptor.lane!;
   const targetKind = descriptor.kind === 'bigScore' ? 'statBoost' : descriptor.kind;
   const targetMagnitude = descriptor.kind === 'bigScore' ? 2 : 1;
 
-  for (const lane of targetLanes) {
-    for (const [gearId, def] of Object.entries(cfg.gear)) {
-      if (def.kind !== targetKind || def.lane !== lane) continue;
-      if (def.kind === 'statBoost' && def.magnitude === targetMagnitude) {
-        return gearId as GearId;
-      }
-      if (def.kind === 'powerUp') {
-        return gearId as GearId;
-      }
+  for (const [gearId, def] of Object.entries(cfg.gear)) {
+    if (def.kind !== targetKind || def.lane !== lane) continue;
+    if (def.kind === 'statBoost' && def.magnitude === targetMagnitude) {
+      return gearId as GearId;
+    }
+    if (def.kind === 'powerUp') {
+      return gearId as GearId;
     }
   }
 
@@ -79,7 +76,8 @@ function resolveGearGrant(descriptor: GearGrantDescriptor, cfg: EngineConfig): G
  * Apply a ScenarioEffect to the run state, resolving all five currencies:
  *   Heat  → applyScenarioSwing (clamped at 0)
  *   Loot  → direct add
- *   Gear  → resolved GearId pushed onto earnedGear pool
+ *   Gear  → single-lane: resolved GearId pushed onto earnedGear; multi-lane
+ *            (lanes): descriptor pushed unresolved so GM/crew can pick the lane
  *   info  → easeNextObstacle CarriedEffect with roomsLeft=1
  *   delayed → CarriedEffect with payoff that fires on expiry
  *
@@ -104,8 +102,15 @@ export function applyScenarioEffect(
 
   // Gear
   if (effect.gear !== undefined) {
-    const gearId = resolveGearGrant(effect.gear, cfg);
-    next = { ...next, earnedGear: [...next.earnedGear, gearId] };
+    if (effect.gear.lane !== undefined) {
+      // Single-lane grant: resolve to GearId immediately.
+      const gearId = resolveGearGrant(effect.gear, cfg);
+      next = { ...next, earnedGear: [...next.earnedGear, gearId] };
+    } else {
+      // Multi-lane grant: carry descriptor unresolved — crew picks which lane
+      // applies, then GM dispatches ASSIGN_GEAR with the chosen GearId.
+      next = { ...next, earnedGear: [...next.earnedGear, effect.gear] };
+    }
   }
 
   // Info (ease the next obstacle's dial by cfg.scenario.easeDialSteps)
