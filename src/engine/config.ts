@@ -1,6 +1,6 @@
 // The frozen, parsed shape the pure engine reducer reads from the active preset.
 // Defined here so the engine never imports from the content or platform layers.
-import type { Lane } from './types';
+import type { Lane, ScenarioDef } from './types';
 
 // ── Trivia bank type (mirrored from content schema; defined here to avoid upward imports) ──
 
@@ -38,24 +38,10 @@ export interface ObstacleTemplateConfig {
   options: [ObstacleOptionConfig, ObstacleOptionConfig];
 }
 
-export interface ScenarioChoiceConfig {
-  id: string;
-  /** Revealed to players; effects are hidden until after the commit. */
-  label: string;
-  /** Signed heat delta — negative cools, positive heats. Clamp applied by applyScenarioSwing. */
-  heatDelta: number;
-  /** Loot awarded (0, 1, 2). */
-  lootDelta: number;
-}
-
-export interface ScenarioTemplateConfig {
-  id: string;
-  choices: [ScenarioChoiceConfig, ScenarioChoiceConfig];
-}
-
 export interface RoomTemplatesConfig {
   obstacles: ObstacleTemplateConfig[];
-  scenarios: ScenarioTemplateConfig[];
+  /** Scenario pool drawn by generation. Uses the full ScenarioDef from types.ts. */
+  scenarios: ScenarioDef[];
 }
 
 // ── Full engine config ────────────────────────────────────────────────────────
@@ -131,6 +117,14 @@ export interface EngineConfig {
   generation: {
     /** Probability [0,1] of drawing an obstacle room vs a scenario room. */
     obstacleRatio: number;
+  };
+  scenario: {
+    /** DC is clamped to this range. Default [1, 20]. */
+    dcClamp: [number, number];
+    /** Dial steps subtracted from the next obstacle when an info effect fires. */
+    easeDialSteps: number;
+    /** Whether nat-20 always succeeds and nat-1 always fails, overriding the DC. */
+    critFumble: boolean;
   };
   roomTemplates: RoomTemplatesConfig;
   /** Gear catalog keyed by gear id. Loaded from content/gear.json. */

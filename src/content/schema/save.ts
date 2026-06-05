@@ -39,6 +39,11 @@ const chooseScenarioSchema = z.object({
   attemptedBy: z.string().optional(),
 });
 
+const resolveScenarioRollSchema = z.object({
+  t: z.literal('RESOLVE_SCENARIO_ROLL'),
+  externalRoll: z.number().int().min(1).max(20).optional(),
+});
+
 const assignGearSchema = z.object({
   t: z.literal('ASSIGN_GEAR'),
   gear: z.string(),
@@ -108,6 +113,7 @@ export const runEventSchema = z.discriminatedUnion('t', [
   chooseOptionSchema,
   resolveMinigameSchema,
   chooseScenarioSchema,
+  resolveScenarioRollSchema,
   assignGearSchema,
   pushOnSchema,
   callGetawaySchema,

@@ -1,4 +1,5 @@
-import type { EngineConfig, GearDef, ObstacleOptionConfig, ObstacleTemplateConfig, ScenarioChoiceConfig, ScenarioTemplateConfig, TriviaItemConfig } from '@/engine/config';
+import type { EngineConfig, GearDef, ObstacleOptionConfig, ObstacleTemplateConfig, TriviaItemConfig } from '@/engine/config';
+import type { ScenarioDef } from '@/engine/types';
 import type { CategoriesBank, TriviaBank, ParsedGear, ParsedMeta, ParsedRoomTemplates, ParsedScaling, ParsedTuning } from '@/content/schema';
 
 export interface PresetBundle {
@@ -37,18 +38,12 @@ function buildObstacleTemplates(raw: ParsedRoomTemplates): ObstacleTemplateConfi
   } satisfies ObstacleTemplateConfig));
 }
 
-function buildScenarioChoice(c: ParsedRoomTemplates['scenarios'][number]['choices'][number]): ScenarioChoiceConfig {
-  return { id: c.id, label: c.label, heatDelta: c.heatDelta, lootDelta: c.lootDelta };
-}
-
-function buildScenarioTemplates(raw: ParsedRoomTemplates): ScenarioTemplateConfig[] {
-  return raw.scenarios.map(s => ({
-    id: s.id,
-    choices: [
-      buildScenarioChoice(s.choices[0]),
-      buildScenarioChoice(s.choices[1]),
-    ] as [ScenarioChoiceConfig, ScenarioChoiceConfig],
-  } satisfies ScenarioTemplateConfig));
+/**
+ * Pass scenario defs through unchanged — ParsedRoomTemplates already matches
+ * the ScenarioDef shape validated by roomTemplatesSchema.
+ */
+function buildScenarioDefs(raw: ParsedRoomTemplates): ScenarioDef[] {
+  return raw.scenarios as unknown as ScenarioDef[];
 }
 
 function buildGearCatalog(raw: ParsedGear): Record<string, GearDef> {
@@ -93,6 +88,8 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
       buySecondsBonus: tuning.getaway.buySecondsBonus,
     },
     scoring: tuning.scoring,
+    generation: tuning.generation,
+    scenario: tuning.scenario,
     scaling: {
       profiles,
       exhaustionRest: scaling.exhaustionRest,
@@ -102,10 +99,9 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
       soloEligibleMinPool: scaling.soloEligibleMinPool,
       dialCurve: scaling.dialCurve,
     },
-    generation: tuning.generation,
     roomTemplates: {
       obstacles: buildObstacleTemplates(roomTemplates),
-      scenarios: buildScenarioTemplates(roomTemplates),
+      scenarios: buildScenarioDefs(roomTemplates),
     },
     gear: buildGearCatalog(gear),
     banks: {

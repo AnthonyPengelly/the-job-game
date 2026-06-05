@@ -42,6 +42,7 @@ const cfg: EngineConfig = {
     dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
   },
   generation: { obstacleRatio: 0.8 },
+  scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false },
   gear: {},
   banks: { categories: [], trivia: [] },
   roomTemplates: {
@@ -68,9 +69,10 @@ const cfg: EngineConfig = {
     scenarios: [
       {
         id: 'scen-1',
+        setup: 'A clerk offers to help.',
         choices: [
-          { id: 's1-a', label: 'A', heatDelta: -1, lootDelta: 0 },
-          { id: 's1-b', label: 'B', heatDelta:  0, lootDelta: 1 },
+          { id: 's1-a', label: 'A', effect: { heatDelta: -1, lootDelta: 0 } },
+          { id: 's1-b', label: 'B', effect: { heatDelta:  0, lootDelta: 1 } },
         ],
       },
     ],

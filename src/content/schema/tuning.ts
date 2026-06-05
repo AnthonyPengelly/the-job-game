@@ -64,6 +64,11 @@ export const tuningSchema = z.object({
   generation: z.object({
     obstacleRatio: z.number().gt(0).lt(1),
   }).strict(),
+  scenario: z.object({
+    dcClamp: z.tuple([z.number().int().min(1), z.number().int().max(20)]),
+    easeDialSteps: z.number().int().nonnegative(),
+    critFumble: z.boolean(),
+  }).strict(),
 }).strict();
 
 export type ParsedTuning = z.infer<typeof tuningSchema>;

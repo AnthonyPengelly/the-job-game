@@ -37,6 +37,7 @@ export const testCfg: EngineConfig = {
     dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
   },
   generation: { obstacleRatio: 0.7 },
+  scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false },
   gear: {},
   banks: {
     categories: ['Things made of gold', 'Types of cheese', 'European cities'],
@@ -80,16 +81,18 @@ export const testCfg: EngineConfig = {
     scenarios: [
       {
         id: 'scen-1',
+        setup: 'A clerk eyes you nervously.',
         choices: [
-          { id: 's1-a', label: 'A', heatDelta: -1, lootDelta: 0 },
-          { id: 's1-b', label: 'B', heatDelta:  0, lootDelta: 1 },
+          { id: 's1-a', label: 'Pay him off',  effect: { heatDelta: -1, lootDelta: 0 } },
+          { id: 's1-b', label: 'Ignore him',   effect: { heatDelta:  0, lootDelta: 1 } },
         ],
       },
       {
         id: 'scen-2',
+        setup: 'A van idles in the alley.',
         choices: [
-          { id: 's2-a', label: 'A', heatDelta: 2, lootDelta: 0 },
-          { id: 's2-b', label: 'B', heatDelta: -1, lootDelta: 1 },
+          { id: 's2-a', label: 'Take the van',  effect: { heatDelta: 2,  lootDelta: 0 } },
+          { id: 's2-b', label: 'Leave it',      effect: { heatDelta: -1, lootDelta: 1 } },
         ],
       },
     ],

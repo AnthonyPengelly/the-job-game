@@ -1,14 +1,14 @@
 // Pure room generation functions.
 // No React, no DOM, no Math.random — all randomness via the seeded RNG.
-// E2/E5/E7 note: minCommit/variant/excluded-from-solo filtering and the real
-// 44 scenarios are later epics. E1 generation is the seeded structural stream only.
 
 import { rngFromState } from './rng';
 import { obstacleCommitRange } from './scaling';
+import { applyScenarioEffect } from './scenario';
 import type { EngineConfig } from './config';
 import type {
   RunState,
   CarriedEffect,
+  ScenarioEffect,
   ObstacleRoom,
   ScenarioRoom,
   ObstacleOption,
@@ -16,23 +16,44 @@ import type {
   GameId,
 } from './types';
 
+// ── Carried-effect tick ───────────────────────────────────────────────────────
+
+/** Result of ticking carried effects: surviving effects and any fired payoffs. */
+export interface TickResult {
+  remaining: CarriedEffect[];
+  firedPayoffs: ScenarioEffect[];
+}
+
 /**
  * Tick all carried effects by one room: decrement roomsLeft, remove expired ones.
- * Effects that reach roomsLeft <= 0 are considered fired/expired and dropped.
- * Side-effect behaviour (beyond expiry) is deferred to later epics.
+ * Effects that expire (roomsLeft reaches 0) fire their payoff (if any).
  */
-export function tickCarriedEffects(carried: readonly CarriedEffect[]): CarriedEffect[] {
-  return carried
-    .map(e => ({ ...e, roomsLeft: e.roomsLeft - 1 }))
-    .filter(e => e.roomsLeft > 0);
+export function tickCarriedEffects(carried: readonly CarriedEffect[]): TickResult {
+  const remaining: CarriedEffect[] = [];
+  const firedPayoffs: ScenarioEffect[] = [];
+
+  for (const e of carried) {
+    const newRoomsLeft = e.roomsLeft - 1;
+    if (newRoomsLeft <= 0) {
+      if (e.payoff !== undefined) {
+        firedPayoffs.push(e.payoff);
+      }
+    } else {
+      remaining.push({ ...e, roomsLeft: newRoomsLeft });
+    }
+  }
+
+  return { remaining, firedPayoffs };
 }
+
+// ── No-repeat draw ────────────────────────────────────────────────────────────
 
 /**
  * Draw a template ID from the given pool without repeating any ID in `usedIds`
  * until the pool is exhausted. Once exhausted, the pool resets and any template
  * may be drawn again (shuffle-deck semantics).
  *
- * Returns [chosenId, updatedUsedIds, advancedRng].
+ * Returns [chosenId, updatedUsedIds].
  */
 function drawWithoutRepeat(
   rng: ReturnType<typeof rngFromState>,
@@ -47,34 +68,51 @@ function drawWithoutRepeat(
   return [chosen, newUsed];
 }
 
+// ── Room generation ───────────────────────────────────────────────────────────
+
 /**
  * Generate the next room for the given state, advancing rngState and ticking
  * carried effects. The room type (obstacle vs scenario) is determined by a
  * seeded draw against cfg.generation.obstacleRatio.
  *
  * Does NOT advance roomIndex — the caller (reducer's PUSH_ON) does that first.
- * Does tick carried effects — call this after roomIndex is already incremented.
+ *
+ * easeNextObstacle effects only tick on obstacle rooms: they persist unchanged
+ * through intervening scenario rooms until the first obstacle is reached, then
+ * fire and expire. All other carried effects tick every room.
  */
 export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
   const rng = rngFromState(state.rngState);
 
-  // Tick carried effects first (deterministic, no RNG draw needed).
-  const newCarried = tickCarriedEffects(state.carried);
+  // Separate ease effects: they only tick (and expire) on obstacle rooms.
+  // All other effects tick every room regardless of type.
+  const easeEffects = state.carried.filter(e => e.kind === 'easeNextObstacle');
+  const otherEffects = state.carried.filter(e => e.kind !== 'easeNextObstacle');
+
+  // Tick non-ease effects; collect any fired payoffs.
+  const { remaining: otherRemaining, firedPayoffs } = tickCarriedEffects(otherEffects);
+
+  // Apply fired payoffs (e.g. briefcase Loot++ on expiry).
+  // Ease effects are included unchanged so they survive this step.
+  // Payoffs may append new effects; those additions live beyond the initial slice.
+  let stateAfterPayoffs: RunState = { ...state, carried: [...otherRemaining, ...easeEffects] };
+  for (const payoff of firedPayoffs) {
+    stateAfterPayoffs = applyScenarioEffect(stateAfterPayoffs, payoff, cfg);
+  }
+  // Effects appended by payoffs — keep untouched regardless of room type.
+  const payoffAddedEffects = stateAfterPayoffs.carried.slice(otherRemaining.length + easeEffects.length);
 
   // Choose room type via seeded RNG draw.
   const isObstacle = rng.next() < cfg.generation.obstacleRatio;
 
   if (isObstacle) {
     const allIds = cfg.roomTemplates.obstacles.map(t => t.id);
-    const [templateId, newUsed] = drawWithoutRepeat(rng, allIds, state.usedObstacleTemplateIds);
+    const [templateId, newUsed] = drawWithoutRepeat(rng, allIds, stateAfterPayoffs.usedObstacleTemplateIds);
 
     const template = cfg.roomTemplates.obstacles.find(t => t.id === templateId);
-    // template is always found: templateId came from the same allIds array.
     if (template === undefined) throw new Error(`obstacle template ${templateId} not found in config`);
 
-    // Annotate each option with its scaling-aware commitRange when crew is present.
-    // This is pure metadata — no RNG draw, no change to template/option selection.
-    const headcount = state.crew.length;
+    const headcount = stateAfterPayoffs.crew.length;
     const range: [number, number] | undefined =
       headcount >= 2 ? obstacleCommitRange(template.gameId, headcount, cfg) : undefined;
 
@@ -97,42 +135,57 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
       },
     ];
 
+    // Ease effects fire on this obstacle: annotate the room, then tick/expire them.
+    const pendingEaseSteps = easeEffects.reduce((sum) => sum + cfg.scenario.easeDialSteps, 0);
+    const { remaining: easeRemaining } = tickCarriedEffects(easeEffects);
+
     const room: ObstacleRoom = {
       kind: 'obstacle',
       templateId,
       options,
+      ...(pendingEaseSteps > 0 && { easeDialSteps: pendingEaseSteps }),
     };
 
     return {
-      ...state,
+      ...stateAfterPayoffs,
+      carried: [...otherRemaining, ...easeRemaining, ...payoffAddedEffects],
       rngState: rng.state(),
       currentRoom: room,
-      carried: newCarried,
       usedObstacleTemplateIds: newUsed,
     };
   } else {
     const allIds = cfg.roomTemplates.scenarios.map(t => t.id);
-    const [templateId, newUsed] = drawWithoutRepeat(rng, allIds, state.usedScenarioTemplateIds);
+    const [templateId, newUsed] = drawWithoutRepeat(rng, allIds, stateAfterPayoffs.usedScenarioTemplateIds);
 
     const template = cfg.roomTemplates.scenarios.find(t => t.id === templateId);
     if (template === undefined) throw new Error(`scenario template ${templateId} not found in config`);
 
     const choices: [ScenarioChoice, ScenarioChoice] = [
-      { id: template.choices[0].id, label: template.choices[0].label },
-      { id: template.choices[1].id, label: template.choices[1].label },
+      {
+        id: template.choices[0].id,
+        label: template.choices[0].label,
+        isRoll: 'roll' in template.choices[0],
+      },
+      {
+        id: template.choices[1].id,
+        label: template.choices[1].label,
+        isRoll: 'roll' in template.choices[1],
+      },
     ];
 
     const room: ScenarioRoom = {
       kind: 'scenario',
       templateId,
+      setup: template.setup,
       choices,
     };
 
+    // Ease effects are NOT ticked on scenario rooms — stateAfterPayoffs.carried
+    // already holds them unchanged and they will fire on the next obstacle.
     return {
-      ...state,
+      ...stateAfterPayoffs,
       rngState: rng.state(),
       currentRoom: room,
-      carried: newCarried,
       usedScenarioTemplateIds: newUsed,
     };
   }

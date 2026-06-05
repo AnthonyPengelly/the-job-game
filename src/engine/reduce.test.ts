@@ -40,6 +40,7 @@ const cfg: EngineConfig = {
     dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
   },
   generation: { obstacleRatio: 0.6 },
+  scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false },
   gear: {
     'stat-tech-1':   { id: 'stat-tech-1',   kind: 'statBoost', lane: 'tech',     magnitude: 1 },
     'stat-tech-2':   { id: 'stat-tech-2',   kind: 'statBoost', lane: 'tech',     magnitude: 2 },
@@ -79,23 +80,34 @@ const cfg: EngineConfig = {
     scenarios: [
       {
         id: 'scen-1',
+        setup: 'A clerk offers to help.',
         choices: [
-          { id: 's1-a', label: 'Choice A', heatDelta: -2, lootDelta: 0 },
-          { id: 's1-b', label: 'Choice B', heatDelta:  0, lootDelta: 1 },
+          { id: 's1-a', label: 'Choice A', effect: { heatDelta: -2, lootDelta: 0 } },
+          { id: 's1-b', label: 'Choice B', effect: { heatDelta:  0, lootDelta: 1 } },
         ],
       },
       {
         id: 'scen-2',
+        setup: 'A van idles in the alley.',
         choices: [
-          { id: 's2-a', label: 'Option A', heatDelta:  2, lootDelta: 0 },
-          { id: 's2-b', label: 'Option B', heatDelta: -4, lootDelta: 0 },
+          { id: 's2-a', label: 'Option A', effect: { heatDelta:  2, lootDelta: 0 } },
+          { id: 's2-b', label: 'Option B', effect: { heatDelta: -4, lootDelta: 0 } },
         ],
       },
       {
         id: 'scen-3',
+        setup: 'Something stashed beneath the floorboard.',
         choices: [
-          { id: 's3-a', label: 'Take it', heatDelta:  0, lootDelta: 2 },
-          { id: 's3-b', label: 'Leave it', heatDelta: -2, lootDelta: 0 },
+          { id: 's3-a', label: 'Take it',  effect: { heatDelta:  0, lootDelta: 2 } },
+          { id: 's3-b', label: 'Leave it', effect: { heatDelta: -2, lootDelta: 0 } },
+        ],
+      },
+      {
+        id: 'scen-roll',
+        setup: 'A scanner crackles with police frequencies.',
+        choices: [
+          { id: 'sr-listen', label: 'Listen in',    roll: { lane: 'tech', baseDifficulty: 13, success: { heatDelta: 0, lootDelta: 0, info: true }, failure: { heatDelta: 2, lootDelta: 0 } } },
+          { id: 'sr-move',   label: 'Keep moving', effect: { heatDelta: 0, lootDelta: 0 } },
         ],
       },
     ],
@@ -519,16 +531,17 @@ describe('CHOOSE_SCENARIO', () => {
       currentRoom: {
         kind: 'scenario' as const,
         templateId: 'scen-1',
+        setup: 'A clerk offers to help.',
         choices: [
-          { id: 's1-a', label: 'Choice A' },
-          { id: 's1-b', label: 'Choice B' },
+          { id: 's1-a', label: 'Choice A', isRoll: false },
+          { id: 's1-b', label: 'Choice B', isRoll: false },
         ],
       },
       ...overrides,
     };
   }
 
-  it('transitions to offer phase', () => {
+  it('transitions to offer phase for a no-roll choice', () => {
     const next = reduce(
       scenarioState({ heat: 5 }),
       { t: 'CHOOSE_SCENARIO', choiceId: 's1-a' },
@@ -568,17 +581,18 @@ describe('CHOOSE_SCENARIO', () => {
 
   it('applies positive heat delta', () => {
     // scen-2, s2-a: heatDelta = +2
-    const s = {
+    const s: RunState = {
       ...scenarioState({ heat: 3 }),
       currentRoom: {
         kind: 'scenario' as const,
         templateId: 'scen-2',
+        setup: 'A van idles in the alley.',
         choices: [
-          { id: 's2-a', label: 'Option A' },
-          { id: 's2-b', label: 'Option B' },
+          { id: 's2-a', label: 'Option A', isRoll: false },
+          { id: 's2-b', label: 'Option B', isRoll: false },
         ],
       },
-    } satisfies RunState;
+    };
     const next = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 's2-a' }, cfg);
     expect(next.heat).toBe(5);
   });
@@ -600,19 +614,65 @@ describe('CHOOSE_SCENARIO', () => {
 
   it('sets escapeSignal when heat and room thresholds are met', () => {
     // heat 9 + heatDelta 2 = 11 >= runAt (11); roomIndex >= 2
-    const s = {
+    const s: RunState = {
       ...scenarioState({ heat: 9, roomIndex: 2 }),
       currentRoom: {
         kind: 'scenario' as const,
         templateId: 'scen-2',
+        setup: 'A van idles in the alley.',
         choices: [
-          { id: 's2-a', label: 'Option A' },
-          { id: 's2-b', label: 'Option B' },
+          { id: 's2-a', label: 'Option A', isRoll: false },
+          { id: 's2-b', label: 'Option B', isRoll: false },
         ],
       },
-    } satisfies RunState;
+    };
     const next = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 's2-a' }, cfg);
     expect(next.escapeSignal).toBe(true);
+  });
+
+  it('for a roll choice: stores pendingRoll and stays in room phase', () => {
+    const s: RunState = {
+      ...initialState(42),
+      phase: 'room' as const,
+      crew: [{ id: 'p0' as PlayerId, name: 'Alice', stats: { tech: 2, physical: 0, charm: 0, stealth: 0 }, powerUps: {} }],
+      currentRoom: {
+        kind: 'scenario' as const,
+        templateId: 'scen-roll',
+        setup: 'A scanner crackles.',
+        choices: [
+          { id: 'sr-listen', label: 'Listen in', isRoll: true },
+          { id: 'sr-move',   label: 'Keep moving', isRoll: false },
+        ],
+      },
+    };
+    const next = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'sr-listen', attemptedBy: 'p0' as PlayerId }, cfg);
+    expect(next.phase).toBe('room');
+    expect(next.currentRoom?.kind).toBe('scenario');
+    if (next.currentRoom?.kind === 'scenario') {
+      const pr = next.currentRoom.pendingRoll;
+      expect(pr).toBeDefined();
+      expect(pr?.lane).toBe('tech');
+      // DC = baseDifficulty(13) - laneRating(2) = 11
+      expect(pr?.dc).toBe(11);
+    }
+  });
+
+  it('for a roll choice: throws if attemptedBy is missing', () => {
+    const s: RunState = {
+      ...initialState(42),
+      phase: 'room' as const,
+      crew: [{ id: 'p0' as PlayerId, name: 'Alice', stats: { tech: 2, physical: 0, charm: 0, stealth: 0 }, powerUps: {} }],
+      currentRoom: {
+        kind: 'scenario' as const,
+        templateId: 'scen-roll',
+        setup: 'A scanner crackles.',
+        choices: [
+          { id: 'sr-listen', label: 'Listen in', isRoll: true },
+          { id: 'sr-move',   label: 'Keep moving', isRoll: false },
+        ],
+      },
+    };
+    expect(() => reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'sr-listen' }, cfg)).toThrow();
   });
 });
 
@@ -819,7 +879,18 @@ describe('determinism: event log replay', () => {
         state = reduce(state, { t: 'CHOOSE_OPTION', optionId: opt.id, committed: [] }, cfg);
         state = reduce(state, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
       } else if (state.currentRoom?.kind === 'scenario') {
-        state = reduce(state, { t: 'CHOOSE_SCENARIO', choiceId: state.currentRoom.choices[0]!.id }, cfg);
+        // Pick a no-roll choice if available, otherwise use first and supply attemptedBy.
+        const room = state.currentRoom;
+        const noRollChoice = room.choices.find(c => !c.isRoll);
+        const choice = noRollChoice ?? room.choices[0]!;
+        if (!choice.isRoll) {
+          state = reduce(state, { t: 'CHOOSE_SCENARIO', choiceId: choice.id }, cfg);
+        } else {
+          const attempter = state.crew[0]?.id;
+          if (attempter === undefined) throw new Error('No crew for roll attempt');
+          state = reduce(state, { t: 'CHOOSE_SCENARIO', choiceId: choice.id, attemptedBy: attempter }, cfg);
+          state = reduce(state, { t: 'RESOLVE_SCENARIO_ROLL' }, cfg);
+        }
       }
       state = reduce(state, { t: 'CALL_GETAWAY' }, cfg);
       state = reduce(state, { t: 'RESOLVE_GETAWAY' }, cfg);

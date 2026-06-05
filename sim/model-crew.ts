@@ -5,7 +5,19 @@ import { greedyAvailable, forcedGetaway } from '@/engine/heat';
 import { getawayOdds } from '@/engine/getaway';
 import type { Rng } from '@/engine/rng';
 import type { EngineConfig } from '@/engine/config';
-import type { RunState, RunEvent, Skill, ObstacleRoom } from '@/engine/types';
+import type { RunState, RunEvent, Skill, ObstacleRoom, ScenarioChoiceDef } from '@/engine/types';
+
+/** Expected heat delta for a choice: effect's delta, or average of success/failure for rolls. */
+function choiceHeatDelta(c: ScenarioChoiceDef): number {
+  if ('effect' in c) return c.effect.heatDelta;
+  return (c.roll.success.heatDelta + c.roll.failure.heatDelta) / 2;
+}
+
+/** Expected loot delta for a choice: effect's delta, or average of success/failure for rolls. */
+function choiceLootDelta(c: ScenarioChoiceDef): number {
+  if ('effect' in c) return c.effect.lootDelta;
+  return (c.roll.success.lootDelta + c.roll.failure.lootDelta) / 2;
+}
 
 // Python: SKILL = {'bad': 0.45, 'avg': 0.65, 'good': 0.82}
 export const SKILL_VALUES: Record<Skill, number> = {
@@ -54,17 +66,18 @@ function pickScenarioChoiceId(
   const [t0, t1] = template.choices;
   const [c0, c1] = room.choices;
 
-  // Identify cooling (lower heatDelta) and heating (higher heatDelta) choices.
-  const coolIsIdx0 = t0.heatDelta <= t1.heatDelta;
+  // Identify cooling (lower expected heatDelta) and heating (higher) choices.
+  const h0 = choiceHeatDelta(t0);
+  const h1 = choiceHeatDelta(t1);
+  const l0 = choiceLootDelta(t0);
+  const l1 = choiceLootDelta(t1);
+
+  const coolIsIdx0 = h0 <= h1;
   const coolId = coolIsIdx0 ? c0.id : c1.id;
   const heatId = coolIsIdx0 ? c1.id : c0.id;
 
-  // Loot-leaning choice: higher lootDelta; tiebreak: cooling (safer).
-  const lootIsIdx0 = t0.lootDelta > t1.lootDelta
-    ? true
-    : t1.lootDelta > t0.lootDelta
-      ? false
-      : coolIsIdx0;
+  // Loot-leaning choice: higher expected lootDelta; tiebreak: cooling (safer).
+  const lootIsIdx0 = l0 > l1 ? true : l1 > l0 ? false : coolIsIdx0;
   const lootId = lootIsIdx0 ? c0.id : c1.id;
 
   const isHot = state.heat > 0.6 * cfg.heat.hMax;
@@ -121,7 +134,19 @@ export function nextModelEvent(
           committed: state.crew.map(pl => pl.id),
         };
       } else {
-        return { t: 'CHOOSE_SCENARIO', choiceId: pickScenarioChoiceId(state, rng, p, cfg) };
+        // If pendingRoll is set, we already chose; resolve the roll now.
+        if (room.pendingRoll !== undefined) {
+          return { t: 'RESOLVE_SCENARIO_ROLL' };
+        }
+        const choiceId = pickScenarioChoiceId(state, rng, p, cfg);
+        const template = cfg.roomTemplates.scenarios.find(t => t.id === room.templateId);
+        const choiceDef = template?.choices.find(c => c.id === choiceId);
+        const isRollChoice = choiceDef !== undefined && 'roll' in choiceDef;
+        if (isRollChoice && state.crew.length > 0) {
+          // For roll choices, the first available player attempts it.
+          return { t: 'CHOOSE_SCENARIO', choiceId, attemptedBy: state.crew[0]!.id };
+        }
+        return { t: 'CHOOSE_SCENARIO', choiceId };
       }
     }
 
