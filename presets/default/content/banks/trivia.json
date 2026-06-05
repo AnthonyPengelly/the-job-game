@@ -1,0 +1,318 @@
+{
+  "id": "trivia",
+  "kind": "trivia",
+  "items": [
+    {
+      "question": "What is a PIN number?",
+      "answer": "Personal Identification Number",
+      "tier": "easy",
+      "options": [
+        "Personal Identification Number",
+        "Private Internal Node",
+        "Portable Input Notation",
+        "Persistent Identity Network"
+      ]
+    },
+    {
+      "question": "What does CCTV stand for?",
+      "answer": "Closed-Circuit Television",
+      "tier": "easy",
+      "options": [
+        "Closed-Circuit Television",
+        "Central Camera Tracking View",
+        "Covert Crime Tape Video",
+        "Commercial Circuit TV"
+      ]
+    },
+    {
+      "question": "What metal are most safe-deposit boxes made from?",
+      "answer": "Steel",
+      "tier": "easy",
+      "options": ["Steel", "Iron", "Titanium", "Aluminium"]
+    },
+    {
+      "question": "A 'deadbolt' is a type of what?",
+      "answer": "Lock",
+      "tier": "easy",
+      "options": ["Lock", "Alarm", "Safe", "Camera"]
+    },
+    {
+      "question": "What floor are penthouses typically on?",
+      "answer": "Top floor",
+      "tier": "easy",
+      "options": ["Top floor", "Ground floor", "Basement", "Second floor"]
+    },
+    {
+      "question": "What does a fingerprint reader scan?",
+      "answer": "The unique ridge pattern on a fingertip",
+      "tier": "easy",
+      "options": [
+        "The unique ridge pattern on a fingertip",
+        "Body temperature",
+        "Vein structure",
+        "Skin colour"
+      ]
+    },
+    {
+      "question": "Which gemstone is traditionally the most valuable?",
+      "answer": "Diamond",
+      "tier": "easy",
+      "options": ["Diamond", "Ruby", "Emerald", "Sapphire"]
+    },
+    {
+      "question": "What does a combination lock require instead of a key?",
+      "answer": "A sequence of numbers or symbols",
+      "tier": "easy",
+      "options": [
+        "A sequence of numbers or symbols",
+        "A magnetic card",
+        "A retinal scan",
+        "A voice command"
+      ]
+    },
+    {
+      "question": "In a standard deck, how many cards have a face (J, Q, K)?",
+      "answer": "12",
+      "tier": "easy",
+      "options": ["12", "8", "16", "4"]
+    },
+    {
+      "question": "What is the name of the world's most famous diamond, once stolen?",
+      "answer": "The Koh-i-Noor",
+      "tier": "easy",
+      "options": [
+        "The Koh-i-Noor",
+        "The Hope Diamond",
+        "The Pink Star",
+        "The Cullinan Diamond"
+      ]
+    },
+    {
+      "question": "What city hosts the Louvre, one of history's most-targeted museums?",
+      "answer": "Paris",
+      "tier": "easy",
+      "options": ["Paris", "Rome", "London", "Madrid"]
+    },
+    {
+      "question": "What does 'encrypted' mean in cybersecurity?",
+      "answer": "Data is scrambled so only authorised parties can read it",
+      "tier": "medium",
+      "options": [
+        "Data is scrambled so only authorised parties can read it",
+        "Data is deleted permanently",
+        "Data is duplicated for backup",
+        "Data is compressed to save space"
+      ]
+    },
+    {
+      "question": "What is a 'social engineering' attack?",
+      "answer": "Manipulating people into giving up confidential information",
+      "tier": "medium",
+      "options": [
+        "Manipulating people into giving up confidential information",
+        "Hacking into social media accounts",
+        "Physically disabling a network router",
+        "Installing malware via USB"
+      ]
+    },
+    {
+      "question": "What is a 'dead drop' in espionage?",
+      "answer": "A method of passing items between two people without meeting",
+      "tier": "medium",
+      "options": [
+        "A method of passing items between two people without meeting",
+        "A secret parachute extraction point",
+        "A code phrase meaning mission aborted",
+        "A disposable communication device"
+      ]
+    },
+    {
+      "question": "Which country pioneered the use of the modern passport?",
+      "answer": "United Kingdom",
+      "tier": "medium",
+      "options": ["United Kingdom", "France", "United States", "Switzerland"]
+    },
+    {
+      "question": "What is 'laminar flow' used for in laser-grid security systems?",
+      "answer": "To carry smoke particles that reveal laser beams",
+      "tier": "medium",
+      "options": [
+        "To carry smoke particles that reveal laser beams",
+        "To cool laser emitters",
+        "To detect motion via air pressure changes",
+        "To power the laser grid"
+      ]
+    },
+    {
+      "question": "What is a 'duress code'?",
+      "answer": "A code that signals you are under coercion while appearing compliant",
+      "tier": "medium",
+      "options": [
+        "A code that signals you are under coercion while appearing compliant",
+        "An emergency self-destruct sequence",
+        "A secondary PIN for extra security",
+        "A voice-activated alarm trigger"
+      ]
+    },
+    {
+      "question": "What does a 'keylogger' record?",
+      "answer": "Keystrokes typed on a keyboard",
+      "tier": "medium",
+      "options": [
+        "Keystrokes typed on a keyboard",
+        "Physical key impressions",
+        "Network login timestamps",
+        "Door access attempts"
+      ]
+    },
+    {
+      "question": "In lock-picking, what is a 'tension wrench' used for?",
+      "answer": "To apply rotational pressure to the lock core while picking",
+      "tier": "medium",
+      "options": [
+        "To apply rotational pressure to the lock core while picking",
+        "To snap the lock shackle",
+        "To lubricate the lock cylinder",
+        "To hold pick tools in place"
+      ]
+    },
+    {
+      "question": "What is the purpose of a Faraday cage?",
+      "answer": "To block electromagnetic fields, preventing wireless signals",
+      "tier": "medium",
+      "options": [
+        "To block electromagnetic fields, preventing wireless signals",
+        "To amplify radio signals",
+        "To store sensitive documents safely",
+        "To shield explosives from detonation"
+      ]
+    },
+    {
+      "question": "In the 1963 Great Train Robbery, what was stolen?",
+      "answer": "Cash — over £2.6 million in banknotes",
+      "tier": "medium",
+      "options": [
+        "Cash — over £2.6 million in banknotes",
+        "Gold bullion",
+        "Diamonds",
+        "Government documents"
+      ]
+    },
+    {
+      "question": "What is a 'bump key'?",
+      "answer": "A specially cut key that uses impact to open pin-tumbler locks",
+      "tier": "medium",
+      "options": [
+        "A specially cut key that uses impact to open pin-tumbler locks",
+        "A duplicate key made from a wax impression",
+        "A magnetic override key for electronic locks",
+        "A key that breaks off inside a lock to jam it"
+      ]
+    },
+    {
+      "question": "What security feature does UV light reveal on banknotes?",
+      "answer": "Fluorescent security threads and watermarks",
+      "tier": "hard",
+      "options": [
+        "Fluorescent security threads and watermarks",
+        "Magnetic ink patterns",
+        "Microprinting visible to the naked eye",
+        "Holographic overlays"
+      ]
+    },
+    {
+      "question": "What is 'shoulder surfing' in security parlance?",
+      "answer": "Covertly observing someone's screen or keypad entry in public",
+      "tier": "hard",
+      "options": [
+        "Covertly observing someone's screen or keypad entry in public",
+        "Sending malware via Bluetooth proximity",
+        "Hacking a wireless network from a vehicle",
+        "Intercepting shoulder-mounted body cameras"
+      ]
+    },
+    {
+      "question": "Which encryption algorithm uses a 128-, 192-, or 256-bit key?",
+      "answer": "AES (Advanced Encryption Standard)",
+      "tier": "hard",
+      "options": [
+        "AES (Advanced Encryption Standard)",
+        "DES (Data Encryption Standard)",
+        "RSA",
+        "SHA-256"
+      ]
+    },
+    {
+      "question": "What is 'tailgating' in physical security?",
+      "answer": "Slipping through a secured door behind an authorised person",
+      "tier": "hard",
+      "options": [
+        "Slipping through a secured door behind an authorised person",
+        "Following a vehicle into a secured car park",
+        "Using a stolen proximity card",
+        "Hacking a building's access control server"
+      ]
+    },
+    {
+      "question": "In the 2003 Antwerp diamond heist, thieves bypassed how many layers of security?",
+      "answer": "Ten",
+      "tier": "hard",
+      "options": ["Ten", "Three", "Six", "Fourteen"]
+    },
+    {
+      "question": "What is 'juice jacking'?",
+      "answer": "Stealing data or installing malware via a compromised public USB charging port",
+      "tier": "hard",
+      "options": [
+        "Stealing data or installing malware via a compromised public USB charging port",
+        "Siphoning fuel from a vehicle for use in an escape",
+        "Overloading a building's power supply to disable security systems",
+        "Intercepting wireless payments at a point-of-sale terminal"
+      ]
+    },
+    {
+      "question": "What does 'OSINT' stand for in intelligence gathering?",
+      "answer": "Open-Source Intelligence",
+      "tier": "hard",
+      "options": [
+        "Open-Source Intelligence",
+        "Operational Signal Intelligence",
+        "Organised Security Investigation Network",
+        "Official State Intelligence"
+      ]
+    },
+    {
+      "question": "What is a 'man-in-the-middle' attack?",
+      "answer": "Secretly intercepting and potentially altering communications between two parties",
+      "tier": "hard",
+      "options": [
+        "Secretly intercepting and potentially altering communications between two parties",
+        "Physically positioning someone between a guard and a target",
+        "Using a double agent to mislead an organisation",
+        "Disrupting a network by flooding it with traffic"
+      ]
+    },
+    {
+      "question": "What technique did D.B. Cooper use that made his 1971 hijacking unique?",
+      "answer": "He parachuted from the plane mid-flight with the ransom money",
+      "tier": "hard",
+      "options": [
+        "He parachuted from the plane mid-flight with the ransom money",
+        "He landed the plane himself and drove away",
+        "He disguised himself as a flight attendant",
+        "He used a fake bomb made from household items"
+      ]
+    },
+    {
+      "question": "What is a 'zero-day exploit'?",
+      "answer": "An attack that targets a vulnerability before the vendor knows it exists",
+      "tier": "hard",
+      "options": [
+        "An attack that targets a vulnerability before the vendor knows it exists",
+        "A time-delayed malware payload that activates at midnight",
+        "A brute-force attack that tries all passwords from a dictionary",
+        "A first-day phishing campaign targeting new employees"
+      ]
+    }
+  ]
+}

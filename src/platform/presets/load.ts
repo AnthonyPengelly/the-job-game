@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { cwd } from 'node:process';
 import type { EngineConfig } from '@/engine/config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, gearSchema, categoriesBankSchema } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, gearSchema, categoriesBankSchema, triviaBankSchema } from '@/content/schema';
 import { buildConfig } from './build-config';
 
 function readJson(dir: string, file: string): unknown {
@@ -28,6 +28,9 @@ export function loadPreset(id = 'default'): EngineConfig {
   const categoriesBank = categoriesBankSchema.parse(
     readJson(resolve(dir, 'content', 'banks'), 'categories.json'),
   );
+  const triviaBank = triviaBankSchema.parse(
+    readJson(resolve(dir, 'content', 'banks'), 'trivia.json'),
+  );
 
-  return buildConfig({ meta, tuning, scaling, roomTemplates, gear, categoriesBank });
+  return buildConfig({ meta, tuning, scaling, roomTemplates, gear, categoriesBank, triviaBank });
 }
