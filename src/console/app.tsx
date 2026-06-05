@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { StoreProvider, useGameStore } from '@/console/store';
 import type { CreateGameStoreOptions } from '@/console/store';
 import { PhaseRouter, Setup } from '@/console/screens';
+import { Hud } from '@/console/hud';
 
 // ── App shell ─────────────────────────────────────────────────────────────────
 
@@ -27,11 +28,12 @@ function AppShell() {
 
   const showSetup = hasResumableSave || crew.length === 0;
 
-  if (showSetup) {
-    return <Setup />;
-  }
-
-  return <PhaseRouter phase={phase} />;
+  return (
+    <>
+      <Hud />
+      {showSetup ? <Setup /> : <PhaseRouter phase={phase} />}
+    </>
+  );
 }
 
 // ── Root ──────────────────────────────────────────────────────────────────────
