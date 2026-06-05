@@ -28,6 +28,7 @@ const scenarioEffectSchema: z.ZodTypeAny = z.lazy(() =>
       kind: z.string().min(1),
       roomsLeft: z.number().int().positive(),
       payoff: scenarioEffectSchema,
+      perRoomEffect: scenarioEffectSchema.optional(),
     }).strict().optional(),
   }).strict(),
 );

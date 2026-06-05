@@ -38,6 +38,8 @@ export interface DelayedPayoff {
   kind: string;
   roomsLeft: number;
   payoff: ScenarioEffect;
+  /** Applied on each room tick while still carried (e.g. briefcase per-room Heat ↑). */
+  perRoomEffect?: ScenarioEffect;
 }
 
 /** Structured outcome of a scenario choice, covering all five currencies. */
@@ -153,6 +155,8 @@ export interface CarriedEffect {
   roomsLeft: number;
   /** Applied via applyScenarioEffect when roomsLeft reaches 0 (e.g. briefcase Loot++). */
   payoff?: ScenarioEffect;
+  /** Applied each room while still carried (before expiry). */
+  perRoomEffect?: ScenarioEffect;
 }
 
 // ── History ───────────────────────────────────────────────────────────────────

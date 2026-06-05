@@ -390,11 +390,12 @@
           "id": "locked-briefcase-take",
           "label": "Take it along",
           "effect": {
-            "heatDelta": 2,
+            "heatDelta": 0,
             "lootDelta": 0,
             "delayed": {
               "kind": "briefcase",
               "roomsLeft": 3,
+              "perRoomEffect": { "heatDelta": 2, "lootDelta": 0 },
               "payoff": { "heatDelta": 0, "lootDelta": 2 }
             }
           }
