@@ -4,6 +4,7 @@ import type { CreateGameStoreOptions } from '@/console/store';
 import { PhaseRouter, Setup } from '@/console/screens';
 import { Hud } from '@/console/hud';
 import { OverridePanel } from '@/console/overrides';
+import { DiceModeControl } from '@/console/settings';
 
 // ── App shell ─────────────────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ function AppShell() {
     <>
       {crew.length > 0 && <Hud />}
       {crew.length > 0 && <OverridePanel />}
+      <DiceModeControl />
       {showSetup ? <Setup /> : <PhaseRouter phase={phase} />}
     </>
   );

@@ -2,9 +2,11 @@ import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
 import { initialState, initialSession, reduceSession } from '@/engine';
 import type { EngineConfig, RunEvent, PlayerSetup, SessionState } from '@/engine';
-import { writeSave, readSave, clearSave } from '@/platform';
+import { writeSave, readSave, clearSave, readSettings, writeSettings } from '@/platform';
 import type { StorageLike } from '@/platform';
 import { SAVE_VERSION } from '@/content/schema/save';
+import { SETTINGS_VERSION } from '@/content/schema/settings';
+import type { DiceMode } from '@/content/schema/settings';
 import { replay } from './replay';
 
 // ── State shape ───────────────────────────────────────────────────────────────
@@ -22,6 +24,8 @@ export interface GameStoreState {
    * one-time notice to the GM before clearing it.
    */
   staleSaveNotice: boolean;
+  /** Whether the app rolls the d20 automatically or the GM enters a physical die result. */
+  diceMode: DiceMode;
 
   // Actions
   dispatch: (event: RunEvent) => void;
@@ -35,6 +39,8 @@ export interface GameStoreState {
    * Call when the GM chooses "Resume the job".
    */
   acceptResume: () => void;
+  /** Toggle dice mode and write through to settings storage. GM-only. */
+  setDiceMode: (mode: DiceMode) => void;
 }
 
 // ── Factory options ───────────────────────────────────────────────────────────
@@ -53,6 +59,10 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
     writeSave({ version: SAVE_VERSION, seed, eventLog }, storage);
   }
 
+  // Read settings at store-creation time so diceMode is available before the
+  // first hydrate() call (e.g. on the Setup screen before a run starts).
+  const initialSettings = readSettings(storage);
+
   return createStore<GameStoreState>()((set, get) => ({
     session: initialSession(initialState(0)),
     eventLog: [],
@@ -60,6 +70,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
     runSeed: 0,
     hasResumableSave: false,
     staleSaveNotice: false,
+    diceMode: initialSettings.diceMode,
 
     dispatch(event: RunEvent): void {
       const { session, eventLog, cfg: c, runSeed } = get();
@@ -126,6 +137,15 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         set({ staleSaveNotice: true });
       }
       // 'absent': clean start — no notice, nothing to clear
+
+      // Always re-read settings on hydrate so a manual storage edit is picked up.
+      const settings = readSettings(storage);
+      set({ diceMode: settings.diceMode });
+    },
+
+    setDiceMode(mode: DiceMode): void {
+      writeSettings({ version: SETTINGS_VERSION, diceMode: mode }, storage);
+      set({ diceMode: mode });
     },
   }));
 }

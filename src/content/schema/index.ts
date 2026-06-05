@@ -19,5 +19,8 @@ export type { ParsedGear, ParsedGearItem } from './gear';
 export { runEventSchema, saveEnvelopeSchema, SAVE_VERSION, parseSaveEnvelope, safeParseSaveEnvelope } from './save';
 export type { SaveEnvelope } from './save';
 
+export { settingsSchema, diceModeSchema, SETTINGS_VERSION, DEFAULT_SETTINGS } from './settings';
+export type { Settings, DiceMode } from './settings';
+
 export { bankSchema, categoriesBankSchema, triviaBankSchema, triviaTierSchema, triviaItemSchema } from './bank';
 export type { Bank, CategoriesBank, TriviaBank, TriviaItem, TriviaTier } from './bank';
