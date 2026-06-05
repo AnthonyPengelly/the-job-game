@@ -75,5 +75,33 @@ describe('registry', () => {
     it('contains at least safeCrack after E4.4 registration', () => {
       expect(games.some(g => g.id === 'safeCrack')).toBe(true);
     });
+
+    it('has exactly 10 entries (8 non-bank base games + 2 variant modules)', () => {
+      expect(games.length).toBe(10);
+    });
+
+    const EXPECTED_STATIC_IDS = [
+      'safeCrack',
+      'crackTheTumblers',
+      'crackTheTumblersSolo',
+      'beat16',
+      'followTheCircuit',
+      'theOnceOver',
+      'steadyHands',
+      'assemblyLine',
+      'assemblyLineNegotiated',
+      'defuseTheAlarm',
+    ] as const;
+
+    for (const id of EXPECTED_STATIC_IDS) {
+      it(`contains ${id}`, () => {
+        expect(games.some(g => g.id === id)).toBe(true);
+      });
+    }
+
+    it('does not include bank-bound games (categories/insideKnowledge require buildRegistry)', () => {
+      expect(games.some(g => g.id === 'categories')).toBe(false);
+      expect(games.some(g => g.id === 'insideKnowledge')).toBe(false);
+    });
   });
 });
