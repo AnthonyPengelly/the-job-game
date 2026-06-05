@@ -43,6 +43,13 @@ function renderObstacleRoom(seed = 1) {
   return store;
 }
 
+/** Start a run with three players — for 3 players crewPerOption[1]=2, so maxCrew=2 < crew.length. */
+function makeObstacleStore3(seed = 1) {
+  const store = createGameStore({ cfg: obstacleOnlyCfg, storage: makeStorage() });
+  store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }], seed);
+  return store;
+}
+
 function renderMinigameStub(seed = 1) {
   const store = makeObstacleStore(seed);
   // Advance to minigame phase via CHOOSE_OPTION.
@@ -156,6 +163,32 @@ describe('ObstacleRoom screen', () => {
     // After selecting the maximum, extra checkboxes are disabled.
     // (No third player exists in this test, so instead verify both are checked
     // and the button is enabled — enforcing the max IS the test for 2 players.)
+    expect(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`)).toBeChecked();
+    expect(screen.getByTestId(`crew-checkbox-${crew[1]!.id}`)).toBeChecked();
+    expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
+  });
+
+  it('disables surplus checkbox once commitRange max is reached (3-player, max=2)', () => {
+    // 3 players with profile '3': crewPerOption=[1,2] → maxCrew = min(2, 3) = 2 < crew.length=3
+    const store = makeObstacleStore3();
+    render(
+      <StoreContext.Provider value={store}>
+        <ObstacleRoom />
+      </StoreContext.Provider>,
+    );
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+
+    // Check the first two crew members (reaches the max of 2).
+    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`));
+    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[1]!.id}`));
+
+    // Third player's checkbox must be disabled — max already reached.
+    expect(screen.getByTestId(`crew-checkbox-${crew[2]!.id}`)).toBeDisabled();
+    // First two remain checked and commit is valid.
     expect(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`)).toBeChecked();
     expect(screen.getByTestId(`crew-checkbox-${crew[1]!.id}`)).toBeChecked();
     expect(screen.getByTestId('btn-commit')).not.toBeDisabled();

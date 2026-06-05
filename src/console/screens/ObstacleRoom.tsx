@@ -68,7 +68,7 @@ export function ObstacleRoom() {
     dispatch({
       t: 'CHOOSE_OPTION',
       optionId: selectedOptionId,
-      committed: [...committed] as PlayerId[],
+      committed: [...committed],
     });
   }
 
