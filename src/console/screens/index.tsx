@@ -1,16 +1,25 @@
 import type { RunPhase } from '@/engine';
+import { useGameStore } from '@/console/store';
 import { Setup } from './Setup';
 import { Briefing } from './Briefing';
+import { ObstacleRoom } from './ObstacleRoom';
+import { MinigameStub } from './MinigameStub';
 
-// ── Placeholder screens (filled by E3.5–E3.8) ────────────────────────────────
+// ── Room router ───────────────────────────────────────────────────────────────
 
-function RoomPlaceholder() {
-  return <div data-testid="screen-room">Room (coming in E3.6)</div>;
+/**
+ * Reads currentRoom from the store and renders the appropriate room screen.
+ * Obstacle rooms → ObstacleRoom (E3.6). Scenario rooms → placeholder (E3.7).
+ * Both variants carry data-testid="screen-room" so the phase router assertion holds.
+ */
+function RoomRouter() {
+  const currentRoom = useGameStore(s => s.session.present.currentRoom);
+  if (currentRoom?.kind === 'obstacle') return <ObstacleRoom />;
+  // Scenario rooms are implemented in E3.7.
+  return <div data-testid="screen-room">Scenario Room (coming in E3.7)</div>;
 }
 
-function MinigamePlaceholder() {
-  return <div data-testid="screen-minigame">Mini-game (coming in E3.6)</div>;
-}
+// ── Placeholder screens (filled by E3.8) ─────────────────────────────────────
 
 function OfferPlaceholder() {
   return <div data-testid="screen-offer">Offer (coming in E3.8)</div>;
@@ -38,8 +47,8 @@ interface PhaseRouterProps {
 export function PhaseRouter({ phase }: PhaseRouterProps) {
   switch (phase) {
     case 'briefing': return <Briefing />;
-    case 'room':     return <RoomPlaceholder />;
-    case 'minigame': return <MinigamePlaceholder />;
+    case 'room':     return <RoomRouter />;
+    case 'minigame': return <MinigameStub />;
     case 'offer':    return <OfferPlaceholder />;
     case 'getaway':  return <GetawayPlaceholder />;
     case 'result':   return <ResultPlaceholder />;
