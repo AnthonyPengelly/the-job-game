@@ -7,6 +7,8 @@ import { beat16 } from './games/beat-16';
 import { followTheCircuit } from './games/follow-the-circuit';
 import { theOnceOver } from './games/the-once-over';
 import { steadyHands } from './games/steady-hands';
+import { assemblyLine } from './games/assembly-line';
+import { assemblyLineNegotiated } from './games/assembly-line-negotiated';
 import { makeCategories } from './games/categories';
 import { makeInsideKnowledge } from './games/inside-knowledge';
 
@@ -16,7 +18,7 @@ import { makeInsideKnowledge } from './games/inside-knowledge';
  * Exported so tests can push mock games and restore the array length.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const games: MiniGame<any, any>[] = [safeCrack, crackTheTumblers, crackTheTumblersSolo, beat16, followTheCircuit, theOnceOver, steadyHands];
+export const games: MiniGame<any, any>[] = [safeCrack, crackTheTumblers, crackTheTumblersSolo, beat16, followTheCircuit, theOnceOver, steadyHands, assemblyLine, assemblyLineNegotiated];
 
 /**
  * Build the full game registry from the active EngineConfig.
