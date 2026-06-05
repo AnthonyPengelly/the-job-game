@@ -3,6 +3,22 @@
 import type { EngineConfig } from './config';
 
 /**
+ * Multiplier applied to loot at Getaway resolution — single source of truth
+ * for the formula so the console breakdown display and scoreRun stay in sync.
+ */
+export function getawayMultiplier(
+  heat: number,
+  win: boolean,
+  cfg: EngineConfig,
+): number {
+  if (win) {
+    return cfg.scoring.winBaseMultiplier +
+      cfg.scoring.lowHeatStyleBonus * (1 - heat / cfg.heat.hMax);
+  }
+  return cfg.scoring.bustMultiplier;
+}
+
+/**
  * Final run score after Getaway resolution.
  *
  * Python ref:
@@ -20,9 +36,5 @@ export function scoreRun(
   win: boolean,
   cfg: EngineConfig,
 ): number {
-  if (win) {
-    const styleFactor = cfg.scoring.lowHeatStyleBonus * (1 - heat / cfg.heat.hMax);
-    return loot * (cfg.scoring.winBaseMultiplier + styleFactor);
-  }
-  return loot * cfg.scoring.bustMultiplier;
+  return loot * getawayMultiplier(heat, win, cfg);
 }

@@ -5,6 +5,9 @@ import { Briefing } from './Briefing';
 import { ObstacleRoom } from './ObstacleRoom';
 import { MinigameStub } from './MinigameStub';
 import { ScenarioRoom } from './ScenarioRoom';
+import { Offer } from './Offer';
+import { GetawayStub } from './GetawayStub';
+import { Result } from './Result';
 
 // ── Room router ───────────────────────────────────────────────────────────────
 
@@ -18,20 +21,6 @@ function RoomRouter() {
   if (currentRoom?.kind === 'obstacle') return <ObstacleRoom />;
   if (currentRoom?.kind === 'scenario') return <ScenarioRoom />;
   return <div data-testid="screen-room">Room (no current room)</div>;
-}
-
-// ── Placeholder screens (filled by E3.8) ─────────────────────────────────────
-
-function OfferPlaceholder() {
-  return <div data-testid="screen-offer">Offer (coming in E3.8)</div>;
-}
-
-function GetawayPlaceholder() {
-  return <div data-testid="screen-getaway">Getaway (coming in E3.8)</div>;
-}
-
-function ResultPlaceholder() {
-  return <div data-testid="screen-result">Result (coming in E3.8)</div>;
 }
 
 // ── Phase router ──────────────────────────────────────────────────────────────
@@ -50,9 +39,9 @@ export function PhaseRouter({ phase }: PhaseRouterProps) {
     case 'briefing': return <Briefing />;
     case 'room':     return <RoomRouter />;
     case 'minigame': return <MinigameStub />;
-    case 'offer':    return <OfferPlaceholder />;
-    case 'getaway':  return <GetawayPlaceholder />;
-    case 'result':   return <ResultPlaceholder />;
+    case 'offer':    return <Offer />;
+    case 'getaway':  return <GetawayStub />;
+    case 'result':   return <Result />;
     default: {
       const _exhaustive: never = phase;
       return _exhaustive;
@@ -60,4 +49,4 @@ export function PhaseRouter({ phase }: PhaseRouterProps) {
   }
 }
 
-export { Setup, Briefing };
+export { Setup, Briefing, Offer, GetawayStub, Result };
