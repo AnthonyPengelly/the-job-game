@@ -1,4 +1,5 @@
 // Crew panel: displays each player's name, lane stats, power-ups, and exhaustion status.
+import { isResting } from '@/engine';
 import type { Player } from '@/engine';
 
 // ── Lane stat row ─────────────────────────────────────────────────────────────
@@ -13,8 +14,7 @@ interface PlayerCardProps {
 }
 
 function PlayerCard({ player, roomIndex }: PlayerCardProps) {
-  const resting =
-    player.restingUntilRoom !== undefined && roomIndex <= player.restingUntilRoom;
+  const resting = isResting(player, roomIndex);
 
   return (
     <div

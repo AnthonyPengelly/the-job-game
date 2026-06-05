@@ -30,7 +30,7 @@ function AppShell() {
 
   return (
     <>
-      <Hud />
+      {crew.length > 0 && <Hud />}
       {showSetup ? <Setup /> : <PhaseRouter phase={phase} />}
     </>
   );
