@@ -4,3 +4,6 @@ export type { PresetBundle } from './presets/build-config';
 
 export { writeSave, readSave, clearSave } from './persistence/save';
 export type { StorageLike, ReadSaveResult } from './persistence/save';
+
+export { publishSlice, subscribeToSlice, playerViewSliceSchema } from './channel';
+export type { PlayerViewSlice, DefuseRulebookSlice } from './channel';
