@@ -30,6 +30,7 @@ export const testCfg: EngineConfig = {
   },
   generation: { obstacleRatio: 0.7 },
   gear: {},
+  banks: { categories: ['Things made of gold', 'Types of cheese', 'European cities'] },
   roomTemplates: {
     obstacles: [
       {

@@ -179,6 +179,15 @@ describe('loadPreset', () => {
     });
   });
 
+  describe('banks', () => {
+    it('returns banks.categories as a non-empty string array', () => {
+      const cfg = loadPreset('default');
+      expect(Array.isArray(cfg.banks.categories)).toBe(true);
+      expect(cfg.banks.categories.length).toBeGreaterThan(0);
+      expect(typeof cfg.banks.categories[0]).toBe('string');
+    });
+  });
+
   describe('gear catalog', () => {
     it('loads a gear catalog with at least one statBoost and one powerUp', () => {
       const cfg = loadPreset('default');

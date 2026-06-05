@@ -117,4 +117,8 @@ export interface EngineConfig {
   roomTemplates: RoomTemplatesConfig;
   /** Gear catalog keyed by gear id. Loaded from content/gear.json. */
   gear: Record<string, GearDef>;
+  /** Content banks loaded from the active preset. */
+  banks: {
+    categories: string[];
+  };
 }

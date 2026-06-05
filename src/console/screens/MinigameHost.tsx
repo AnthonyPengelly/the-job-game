@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useGameStore } from '@/console/store';
-import { getGame } from '@/minigames';
+import { buildRegistry } from '@/minigames';
 import { rngFromState, resolveGameVariant, computeDial } from '@/engine';
 import type { CommittedPlayer, Difficulty } from '@/minigames';
 import type { Outcome } from '@/engine';
@@ -37,7 +37,8 @@ export function MinigameHost() {
     return resolveGameVariant(rawGameId, commitSize, headcount, cfg);
   }, [rawGameId, commitSize, headcount, cfg]);
 
-  const game = resolvedGameId !== undefined ? getGame(resolvedGameId) : undefined;
+  const registry = useMemo(() => buildRegistry(cfg), [cfg]);
+  const game = resolvedGameId !== undefined ? registry.find(g => g.id === resolvedGameId) : undefined;
 
   // Build CommittedPlayer projections (id/name/stats/powerUps only)
   const committed: CommittedPlayer[] = useMemo(() => {

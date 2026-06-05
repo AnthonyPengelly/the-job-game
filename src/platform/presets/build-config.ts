@@ -1,5 +1,5 @@
 import type { EngineConfig, GearDef, ObstacleOptionConfig, ObstacleTemplateConfig, ScenarioChoiceConfig, ScenarioTemplateConfig } from '@/engine/config';
-import type { ParsedGear, ParsedMeta, ParsedRoomTemplates, ParsedScaling, ParsedTuning } from '@/content/schema';
+import type { CategoriesBank, ParsedGear, ParsedMeta, ParsedRoomTemplates, ParsedScaling, ParsedTuning } from '@/content/schema';
 
 export interface PresetBundle {
   meta: ParsedMeta;
@@ -7,6 +7,7 @@ export interface PresetBundle {
   scaling: ParsedScaling;
   roomTemplates: ParsedRoomTemplates;
   gear: ParsedGear;
+  categoriesBank: CategoriesBank;
 }
 
 export function deepFreeze<T extends object>(obj: T): T {
@@ -62,7 +63,7 @@ function buildGearCatalog(raw: ParsedGear): Record<string, GearDef> {
 }
 
 export function buildConfig(bundle: PresetBundle): EngineConfig {
-  const { tuning, scaling, roomTemplates, gear } = bundle;
+  const { tuning, scaling, roomTemplates, gear, categoriesBank } = bundle;
 
   const profiles: Record<string, { getawayBonus: number; crewPerOption: [number, number]; exhaustion: 'full' | 'light' | 'tired' }> = {};
   for (const [key, profile] of Object.entries(scaling.profiles)) {
@@ -103,6 +104,9 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
       scenarios: buildScenarioTemplates(roomTemplates),
     },
     gear: buildGearCatalog(gear),
+    banks: {
+      categories: categoriesBank.items,
+    },
   };
 
   return deepFreeze(config);

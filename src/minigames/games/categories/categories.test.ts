@@ -1,39 +1,45 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
-import { generate } from './generate';
+import { makeGenerate } from './generate';
 import { judge, skipBoost } from './judge';
 import type { CategoriesState } from './judge';
-import { categories } from './index';
-import { getGame } from '@/minigames/registry';
+import { makeCategories } from './index';
+import { loadPreset } from '@/platform/presets/load';
+import { buildRegistry } from '@/minigames/registry';
 
 const dial = (level: number): Difficulty => ({ level });
+
+const TEST_ITEMS = ['Things made of gold', 'Types of cheese', 'European cities', 'Casino games', 'Cocktails'];
+const TEST_ITEMS_SINGLE = ['Only item'];
 
 // ── Registry ──────────────────────────────────────────────────────────────────
 
 describe('categories registry', () => {
-  it('is registered and getGame returns the module', () => {
-    expect(getGame('categories')).toBe(categories);
+  it('buildRegistry with default preset contains categories game', () => {
+    const cfg = loadPreset('default');
+    const registry = buildRegistry(cfg);
+    expect(registry.find(g => g.id === 'categories')).toBeDefined();
   });
 
-  it('has id categories', () => {
-    expect(categories.id).toBe('categories');
+  it('makeCategories has id categories', () => {
+    expect(makeCategories(TEST_ITEMS).id).toBe('categories');
   });
 
-  it('has lane charm', () => {
-    expect(categories.lanes).toEqual(['charm']);
+  it('makeCategories has lane charm', () => {
+    expect(makeCategories(TEST_ITEMS).lanes).toEqual(['charm']);
   });
 
-  it('has minCommit 1', () => {
-    expect(categories.minCommit).toBe(1);
+  it('makeCategories has minCommit 1', () => {
+    expect(makeCategories(TEST_ITEMS).minCommit).toBe(1);
   });
 
-  it('has no soloVariantId', () => {
-    expect(categories.soloVariantId).toBeUndefined();
+  it('makeCategories has no soloVariantId', () => {
+    expect(makeCategories(TEST_ITEMS).soloVariantId).toBeUndefined();
   });
 
-  it('has one boost hook', () => {
-    expect(categories.boosts).toHaveLength(1);
+  it('makeCategories has one boost hook', () => {
+    expect(makeCategories(TEST_ITEMS).boosts).toHaveLength(1);
   });
 });
 
@@ -42,27 +48,42 @@ describe('categories registry', () => {
 describe('generate — reproducibility', () => {
   it('same seed + same dial ⇒ identical params', () => {
     const d = dial(0);
+    const generate = makeGenerate(TEST_ITEMS);
     const p1 = generate(mulberry32(1312), d);
     const p2 = generate(mulberry32(1312), d);
     expect(p1).toEqual(p2);
   });
 
   it('different seeds produce different categories', () => {
+    const generate = makeGenerate(TEST_ITEMS);
     const p1 = generate(mulberry32(1), dial(0));
     const p2 = generate(mulberry32(9999), dial(0));
     expect(p1.category).not.toEqual(p2.category);
   });
 
   it('category is a non-empty string from the bank', () => {
-    const p = generate(mulberry32(42), dial(0));
+    const p = makeGenerate(TEST_ITEMS)(mulberry32(42), dial(0));
     expect(typeof p.category).toBe('string');
     expect(p.category.length).toBeGreaterThan(0);
   });
 
   it('skipCategory is a non-empty string from the bank', () => {
-    const p = generate(mulberry32(42), dial(0));
+    const p = makeGenerate(TEST_ITEMS)(mulberry32(42), dial(0));
     expect(typeof p.skipCategory).toBe('string');
     expect(p.skipCategory.length).toBeGreaterThan(0);
+  });
+
+  it('skipCategory differs from category when the bank has more than one item', () => {
+    for (let seed = 0; seed < 50; seed++) {
+      const p = makeGenerate(TEST_ITEMS)(mulberry32(seed), dial(0));
+      expect(p.skipCategory).not.toEqual(p.category);
+    }
+  });
+
+  it('does not infinite-loop when bank has a single item', () => {
+    const p = makeGenerate(TEST_ITEMS_SINGLE)(mulberry32(1), dial(0));
+    expect(p.category).toBe('Only item');
+    expect(p.skipCategory).toBe('Only item');
   });
 });
 
@@ -70,20 +91,20 @@ describe('generate — reproducibility', () => {
 
 describe('generate — dial levers (higher dial = harder)', () => {
   it('higher dial ⇒ higher target count', () => {
-    const easy = generate(mulberry32(42), dial(-2));
-    const hard = generate(mulberry32(42), dial(2));
+    const easy = makeGenerate(TEST_ITEMS)(mulberry32(42), dial(-2));
+    const hard = makeGenerate(TEST_ITEMS)(mulberry32(42), dial(2));
     expect(hard.targetCount).toBeGreaterThanOrEqual(easy.targetCount);
   });
 
   it('higher dial ⇒ less time', () => {
-    const easy = generate(mulberry32(42), dial(-2));
-    const hard = generate(mulberry32(42), dial(2));
+    const easy = makeGenerate(TEST_ITEMS)(mulberry32(42), dial(-2));
+    const hard = makeGenerate(TEST_ITEMS)(mulberry32(42), dial(2));
     expect(hard.timerSeconds).toBeLessThanOrEqual(easy.timerSeconds);
   });
 
   it('targetCount is always within [4, 12]', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
-      const p = generate(mulberry32(1), dial(level));
+      const p = makeGenerate(TEST_ITEMS)(mulberry32(1), dial(level));
       expect(p.targetCount).toBeGreaterThanOrEqual(4);
       expect(p.targetCount).toBeLessThanOrEqual(12);
     }
@@ -91,7 +112,7 @@ describe('generate — dial levers (higher dial = harder)', () => {
 
   it('timerSeconds is always within [30, 90]', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
-      const p = generate(mulberry32(1), dial(level));
+      const p = makeGenerate(TEST_ITEMS)(mulberry32(1), dial(level));
       expect(p.timerSeconds).toBeGreaterThanOrEqual(30);
       expect(p.timerSeconds).toBeLessThanOrEqual(90);
     }

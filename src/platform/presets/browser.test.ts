@@ -3,13 +3,14 @@ import { ZodError } from 'zod';
 import { loadDefaultConfig } from './browser';
 import { loadPreset } from './load';
 import { buildConfig } from './build-config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, gearSchema } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, gearSchema, categoriesBankSchema } from '@/content/schema';
 
 import metaJson from '../../../presets/default/_meta.json';
 import tuningJson from '../../../presets/default/tuning.json';
 import scalingJson from '../../../presets/default/scaling.json';
 import roomTemplatesJson from '../../../presets/default/content/roomTemplates.json';
 import gearJson from '../../../presets/default/content/gear.json';
+import categoriesJson from '../../../presets/default/content/banks/categories.json';
 
 describe('loadDefaultConfig', () => {
   it('deep-equals the Node loadPreset("default") output', () => {
@@ -28,6 +29,7 @@ describe('loadDefaultConfig', () => {
     expect(browserCfg.generation).toEqual(nodeCfg.generation);
     expect(browserCfg.roomTemplates).toEqual(nodeCfg.roomTemplates);
     expect(browserCfg.gear).toEqual(nodeCfg.gear);
+    expect(browserCfg.banks).toEqual(nodeCfg.banks);
   });
 
   it('returns a deeply frozen EngineConfig', () => {
@@ -48,7 +50,8 @@ describe('buildConfig with malformed input', () => {
       const scaling = scalingSchema.parse(scalingJson);
       const roomTemplates = roomTemplatesSchema.parse(roomTemplatesJson);
       const gear = gearSchema.parse(gearJson);
-      buildConfig({ meta, tuning, scaling, roomTemplates, gear });
+      const categoriesBank = categoriesBankSchema.parse(categoriesJson);
+      buildConfig({ meta, tuning, scaling, roomTemplates, gear, categoriesBank });
     }).toThrow(ZodError);
   });
 
@@ -66,7 +69,8 @@ describe('buildConfig with malformed input', () => {
       const scaling = scalingSchema.parse(malformedScaling);
       const roomTemplates = roomTemplatesSchema.parse(roomTemplatesJson);
       const gear = gearSchema.parse(gearJson);
-      buildConfig({ meta, tuning, scaling, roomTemplates, gear });
+      const categoriesBank = categoriesBankSchema.parse(categoriesJson);
+      buildConfig({ meta, tuning, scaling, roomTemplates, gear, categoriesBank });
     }).toThrow(ZodError);
   });
 
@@ -81,7 +85,8 @@ describe('buildConfig with malformed input', () => {
       const scaling = scalingSchema.parse(scalingJson);
       const roomTemplates = roomTemplatesSchema.parse(roomTemplatesJson);
       const gear = gearSchema.parse(malformedGear);
-      buildConfig({ meta, tuning, scaling, roomTemplates, gear });
+      const categoriesBank = categoriesBankSchema.parse(categoriesJson);
+      buildConfig({ meta, tuning, scaling, roomTemplates, gear, categoriesBank });
     }).toThrow(ZodError);
   });
 });
