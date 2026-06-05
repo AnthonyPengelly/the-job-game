@@ -4,19 +4,20 @@ import { Setup } from './Setup';
 import { Briefing } from './Briefing';
 import { ObstacleRoom } from './ObstacleRoom';
 import { MinigameStub } from './MinigameStub';
+import { ScenarioRoom } from './ScenarioRoom';
 
 // ── Room router ───────────────────────────────────────────────────────────────
 
 /**
  * Reads currentRoom from the store and renders the appropriate room screen.
- * Obstacle rooms → ObstacleRoom (E3.6). Scenario rooms → placeholder (E3.7).
+ * Obstacle rooms → ObstacleRoom (E3.6). Scenario rooms → ScenarioRoom (E3.7).
  * Both variants carry data-testid="screen-room" so the phase router assertion holds.
  */
 function RoomRouter() {
   const currentRoom = useGameStore(s => s.session.present.currentRoom);
   if (currentRoom?.kind === 'obstacle') return <ObstacleRoom />;
-  // Scenario rooms are implemented in E3.7.
-  return <div data-testid="screen-room">Scenario Room (coming in E3.7)</div>;
+  if (currentRoom?.kind === 'scenario') return <ScenarioRoom />;
+  return <div data-testid="screen-room">Room (no current room)</div>;
 }
 
 // ── Placeholder screens (filled by E3.8) ─────────────────────────────────────
