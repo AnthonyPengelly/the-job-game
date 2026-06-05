@@ -34,6 +34,7 @@ const cfg: EngineConfig = {
     dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
   },
   generation: { obstacleRatio: 0.6 },
+  scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false },
   gear: {},
   banks: { categories: [], trivia: [] },
   roomTemplates: {
@@ -78,23 +79,26 @@ const cfg: EngineConfig = {
     scenarios: [
       {
         id: 'scen-1',
+        setup: 'A clerk offers to help.',
         choices: [
-          { id: 's1-a', label: 'Choice A', heatDelta: -2, lootDelta: 0 },
-          { id: 's1-b', label: 'Choice B', heatDelta:  0, lootDelta: 1 },
+          { id: 's1-a', label: 'Choice A', effect: { heatDelta: -2, lootDelta: 0 } },
+          { id: 's1-b', label: 'Choice B', effect: { heatDelta:  0, lootDelta: 1 } },
         ],
       },
       {
         id: 'scen-2',
+        setup: 'A van idles in the alley.',
         choices: [
-          { id: 's2-a', label: 'Option A', heatDelta:  2, lootDelta: 0 },
-          { id: 's2-b', label: 'Option B', heatDelta: -4, lootDelta: 0 },
+          { id: 's2-a', label: 'Option A', effect: { heatDelta:  2, lootDelta: 0 } },
+          { id: 's2-b', label: 'Option B', effect: { heatDelta: -4, lootDelta: 0 } },
         ],
       },
       {
         id: 'scen-3',
+        setup: 'Something stashed beneath the floorboard.',
         choices: [
-          { id: 's3-a', label: 'Take it', heatDelta: 0, lootDelta: 2 },
-          { id: 's3-b', label: 'Leave it', heatDelta: -2, lootDelta: 0 },
+          { id: 's3-a', label: 'Take it',  effect: { heatDelta: 0,  lootDelta: 2 } },
+          { id: 's3-b', label: 'Leave it', effect: { heatDelta: -2, lootDelta: 0 } },
         ],
       },
     ],
@@ -112,37 +116,59 @@ describe('tickCarriedEffects', () => {
     const effects: CarriedEffect[] = [
       { id: 'e1', kind: 'briefcase', roomsLeft: 3 },
     ];
-    const result = tickCarriedEffects(effects);
-    expect(result[0]?.roomsLeft).toBe(2);
+    const { remaining } = tickCarriedEffects(effects);
+    expect(remaining[0]?.roomsLeft).toBe(2);
   });
 
   it('removes effects when roomsLeft reaches 0 after tick', () => {
     const effects: CarriedEffect[] = [
       { id: 'expiring', kind: 'briefcase', roomsLeft: 1 },
     ];
-    expect(tickCarriedEffects(effects)).toHaveLength(0);
+    const { remaining } = tickCarriedEffects(effects);
+    expect(remaining).toHaveLength(0);
   });
 
   it('removes effects already at roomsLeft <= 0', () => {
     const effects: CarriedEffect[] = [
       { id: 'already-expired', kind: 'briefcase', roomsLeft: 0 },
     ];
-    expect(tickCarriedEffects(effects)).toHaveLength(0);
+    const { remaining } = tickCarriedEffects(effects);
+    expect(remaining).toHaveLength(0);
   });
 
-  it('fires an effect with roomsLeft=1, keeps roomsLeft=2 alive', () => {
+  it('removes expired and keeps surviving; decrements survivor', () => {
     const effects: CarriedEffect[] = [
       { id: 'a', kind: 'x', roomsLeft: 2 },
       { id: 'b', kind: 'y', roomsLeft: 1 },
     ];
-    const result = tickCarriedEffects(effects);
-    expect(result).toHaveLength(1);
-    expect(result[0]!.id).toBe('a');
-    expect(result[0]!.roomsLeft).toBe(1);
+    const { remaining } = tickCarriedEffects(effects);
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0]!.id).toBe('a');
+    expect(remaining[0]!.roomsLeft).toBe(1);
   });
 
-  it('returns empty array for empty input', () => {
-    expect(tickCarriedEffects([])).toEqual([]);
+  it('fires payoff from an expiring effect with payoff set', () => {
+    const effects: CarriedEffect[] = [
+      { id: 'briefcase', kind: 'briefcase', roomsLeft: 1, payoff: { heatDelta: 0, lootDelta: 1 } },
+    ];
+    const { remaining, firedPayoffs } = tickCarriedEffects(effects);
+    expect(remaining).toHaveLength(0);
+    expect(firedPayoffs).toHaveLength(1);
+    expect(firedPayoffs[0]?.lootDelta).toBe(1);
+  });
+
+  it('no payoff fired for effects that expire without a payoff', () => {
+    const effects: CarriedEffect[] = [
+      { id: 'ease', kind: 'easeNextObstacle', roomsLeft: 1 },
+    ];
+    const { firedPayoffs } = tickCarriedEffects(effects);
+    expect(firedPayoffs).toHaveLength(0);
+  });
+
+  it('returns empty for empty input', () => {
+    const { remaining, firedPayoffs } = tickCarriedEffects([]);
+    expect(remaining).toEqual([]);
+    expect(firedPayoffs).toEqual([]);
   });
 
   it('does not mutate the input array', () => {
@@ -257,6 +283,22 @@ describe('generateRoom — scenario room shape', () => {
     if (currentRoom?.kind === 'scenario') {
       expect(currentRoom.choices[0]!.label.length).toBeGreaterThan(0);
       expect(currentRoom.choices[1]!.label.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('scenario choices carry isRoll flag from the ScenarioDef', () => {
+    const { currentRoom } = findScenarioRoom();
+    if (currentRoom?.kind === 'scenario') {
+      for (const choice of currentRoom.choices) {
+        expect(typeof choice.isRoll).toBe('boolean');
+      }
+    }
+  });
+
+  it('scenario room carries a non-empty setup string', () => {
+    const { currentRoom } = findScenarioRoom();
+    if (currentRoom?.kind === 'scenario') {
+      expect(currentRoom.setup.length).toBeGreaterThan(0);
     }
   });
 

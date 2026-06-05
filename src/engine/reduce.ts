@@ -4,7 +4,7 @@
 // is a compile error (the default: never assert below).
 import { rngFromState } from './rng';
 import type { EngineConfig } from './config';
-import type { RunState, RunEvent } from './types';
+import type { RunState, RunEvent, ScenarioRoom, PendingRoll } from './types';
 import { startRun } from './run';
 import { applyGear, applyExhaustion } from './crew';
 import { generateRoom } from './generation';
@@ -13,12 +13,12 @@ import {
   obstacleDrip,
   greedySurcharge,
   outcomeHeat as outcomeHeatFn,
-  applyScenarioSwing,
   escapeSignal as computeEscapeSignal,
   forcedGetaway,
 } from './heat';
 import { resolveGetawayOutcome } from './getaway';
 import { scoreRun } from './scoring';
+import { computeDC, resolveRoll, applyScenarioEffect } from './scenario';
 
 /**
  * Pure reducer: (state, event, config) → next state.
@@ -109,32 +109,110 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
       if (room === null || room.kind !== 'scenario') {
         throw new Error('CHOOSE_SCENARIO requires an active scenario room');
       }
-      const template = cfg.roomTemplates.scenarios.find(t => t.id === room.templateId);
-      if (template === undefined) {
-        throw new Error(`Scenario template "${room.templateId}" not found in config`);
+      const scenarioDef = cfg.roomTemplates.scenarios.find(t => t.id === room.templateId);
+      if (scenarioDef === undefined) {
+        throw new Error(`Scenario "${room.templateId}" not found in config`);
       }
-      const choiceConfig = template.choices.find(c => c.id === event.choiceId);
-      if (choiceConfig === undefined) {
+      const choiceDef = scenarioDef.choices.find(c => c.id === event.choiceId);
+      if (choiceDef === undefined) {
         throw new Error(
-          `Choice "${event.choiceId}" not found in template "${room.templateId}"`,
+          `Choice "${event.choiceId}" not found in scenario "${room.templateId}"`,
         );
       }
 
-      const newHeat = applyScenarioSwing(state.heat, choiceConfig.heatDelta);
-      const lootGained = choiceConfig.lootDelta;
+      if ('effect' in choiceDef) {
+        // No-roll choice: apply effect immediately and advance to offer.
+        const next = applyScenarioEffect(state, choiceDef.effect, cfg);
+        const intermediate: RunState = {
+          ...next,
+          history: [
+            ...next.history,
+            {
+              kind: 'scenario',
+              roomIndex: state.roomIndex,
+              choiceId: event.choiceId,
+              lootGained: choiceDef.effect.lootDelta,
+              heatGained: choiceDef.effect.heatDelta,
+            },
+          ],
+          phase: 'offer',
+        };
+        return { ...intermediate, escapeSignal: computeEscapeSignal(intermediate, cfg) };
+      }
+
+      // Roll choice: compute DC, store pendingRoll, stay in room phase awaiting the roll.
+      if (event.attemptedBy === undefined) {
+        throw new Error('CHOOSE_SCENARIO with a roll choice requires attemptedBy');
+      }
+      const player = state.crew.find(p => p.id === event.attemptedBy);
+      if (player === undefined) {
+        throw new Error(`Unknown player "${event.attemptedBy ?? ''}" in CHOOSE_SCENARIO`);
+      }
+      const laneRating = player.stats[choiceDef.roll.lane];
+      const dc = computeDC(choiceDef.roll.baseDifficulty, laneRating, cfg.scenario.dcClamp);
+
+      const pendingRoll: PendingRoll = {
+        choiceId: event.choiceId,
+        attemptedBy: event.attemptedBy,
+        lane: choiceDef.roll.lane,
+        laneRating,
+        baseDifficulty: choiceDef.roll.baseDifficulty,
+        dc,
+      };
+
+      const updatedRoom: ScenarioRoom = { ...room, pendingRoll };
+      return { ...state, currentRoom: updatedRoom };
+    }
+
+    case 'RESOLVE_SCENARIO_ROLL': {
+      const room = state.currentRoom;
+      if (room === null || room.kind !== 'scenario') {
+        throw new Error('RESOLVE_SCENARIO_ROLL requires an active scenario room');
+      }
+      const { pendingRoll } = room;
+      if (pendingRoll === undefined) {
+        throw new Error('RESOLVE_SCENARIO_ROLL requires a pending roll (dispatch CHOOSE_SCENARIO first)');
+      }
+      const scenarioDef = cfg.roomTemplates.scenarios.find(t => t.id === room.templateId);
+      if (scenarioDef === undefined) {
+        throw new Error(`Scenario "${room.templateId}" not found in config`);
+      }
+      const choiceDef = scenarioDef.choices.find(c => c.id === pendingRoll.choiceId);
+      if (choiceDef === undefined || !('roll' in choiceDef)) {
+        throw new Error(`Roll choice "${pendingRoll.choiceId}" not found in scenario "${room.templateId}"`);
+      }
+
+      // Use external roll when supplied (physical dice mode), else draw from seeded RNG.
+      let roll: number;
+      let nextRngState = state.rngState;
+      if (event.externalRoll !== undefined) {
+        roll = event.externalRoll;
+      } else {
+        const rng = rngFromState(state.rngState);
+        roll = rng.int(1, 20);
+        nextRngState = rng.state();
+      }
+
+      const success = resolveRoll(roll, pendingRoll.dc, cfg.scenario.critFumble);
+      const effect = success ? choiceDef.roll.success : choiceDef.roll.failure;
+
+      const stateWithRoll: RunState = { ...state, rngState: nextRngState };
+      const next = applyScenarioEffect(stateWithRoll, effect, cfg);
 
       const intermediate: RunState = {
-        ...state,
-        heat: newHeat,
-        loot: state.loot + lootGained,
+        ...next,
+        currentRoom: null,
         history: [
-          ...state.history,
+          ...next.history,
           {
             kind: 'scenario',
             roomIndex: state.roomIndex,
-            choiceId: event.choiceId,
-            lootGained,
-            heatGained: choiceConfig.heatDelta,
+            choiceId: pendingRoll.choiceId,
+            lootGained: effect.lootDelta,
+            heatGained: effect.heatDelta,
+            roll,
+            dc: pendingRoll.dc,
+            success,
           },
         ],
         phase: 'offer',
