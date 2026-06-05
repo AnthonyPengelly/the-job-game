@@ -27,8 +27,8 @@ export function judge(state: DefuseState, params: DefuseParams): Outcome {
     params.safeWireIds.length > 0 &&
     params.safeWireIds.every(id => state.cutIds.includes(id));
 
-  // Alarm tripped by an un-forgiven wrong cut
-  if (hasWrongCut && !state.spareWireUsed) return 'botched';
+  // Alarm tripped — spareWire forgives exactly one wrong cut, not all
+  if (wrongCuts.length > (state.spareWireUsed ? 1 : 0)) return 'botched';
 
   // Timer expired without completing all safe cuts
   if (state.timerExpired && !allSafeCut) return 'botched';

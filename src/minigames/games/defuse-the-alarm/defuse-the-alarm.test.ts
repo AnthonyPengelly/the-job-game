@@ -207,6 +207,26 @@ describe('judge — three tier boundaries', () => {
     expect(judge(state, baseParams)).toBe('complication');
   });
 
+  it('botched when two wrong cuts even with spareWire used (boundary: forgives exactly one)', () => {
+    // Use explicit params so the test does not rely on RNG wire distribution
+    const params: DefuseParams = {
+      wires: [
+        { id: 'wire-0' as CardId, color: 'red', symbol: 'circle' },
+        { id: 'wire-1' as CardId, color: 'blue', symbol: 'square' },
+        { id: 'wire-2' as CardId, color: 'green', symbol: 'square' },
+      ],
+      cutRules: [{ property: 'color', value: 'red', text: 'Cut RED wires' }],
+      safeWireIds: ['wire-0' as CardId],
+      timerSeconds: 120,
+    };
+    // Two wrong cuts with spareWire used → still botched (only one forgiven)
+    const state = makeState({
+      cutIds: ['wire-0', 'wire-1', 'wire-2'] as CardId[],
+      spareWireUsed: true,
+    });
+    expect(judge(state, params)).toBe('botched');
+  });
+
   it('still botched if spareWire used but timer also expired with cuts incomplete', () => {
     const state = makeState({ timerExpired: true, spareWireUsed: true });
     expect(judge(state, baseParams)).toBe('botched');
