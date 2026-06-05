@@ -1,6 +1,5 @@
-// Crew panel: displays each player's name, lane stats, power-ups, and exhaustion status.
 import { isResting } from '@/engine';
-import type { Player } from '@/engine';
+import type { Player, PlayerId, GearId } from '@/engine';
 
 // ── Lane stat row ─────────────────────────────────────────────────────────────
 
@@ -11,9 +10,10 @@ const LANES = ['tech', 'physical', 'charm', 'stealth'] as const;
 interface PlayerCardProps {
   player: Player;
   roomIndex: number;
+  onAssignGear?: (gear: GearId, to: PlayerId) => void;
 }
 
-function PlayerCard({ player, roomIndex }: PlayerCardProps) {
+function PlayerCard({ player, roomIndex, onAssignGear }: PlayerCardProps) {
   const resting = isResting(player, roomIndex);
 
   return (
@@ -21,6 +21,23 @@ function PlayerCard({ player, roomIndex }: PlayerCardProps) {
       data-testid={`crew-member-${player.id}`}
       aria-label={`${player.name}${resting ? ' (exhausted)' : ''}`}
       style={{ opacity: resting ? 0.5 : 1 }}
+      onDragOver={
+        onAssignGear
+          ? (e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+            }
+          : undefined
+      }
+      onDrop={
+        onAssignGear
+          ? (e) => {
+              e.preventDefault();
+              const gearId = e.dataTransfer.getData('application/x-gear-id') as GearId;
+              if (gearId) onAssignGear(gearId, player.id);
+            }
+          : undefined
+      }
     >
       <span data-testid={`crew-name-${player.id}`}>{player.name}</span>
       {resting && (
@@ -51,13 +68,20 @@ function PlayerCard({ player, roomIndex }: PlayerCardProps) {
 interface CrewPanelProps {
   crew: Player[];
   roomIndex: number;
+  /** When provided, player cards become drop targets for gear cards. */
+  onAssignGear?: (gear: GearId, to: PlayerId) => void;
 }
 
-export function CrewPanel({ crew, roomIndex }: CrewPanelProps) {
+export function CrewPanel({ crew, roomIndex, onAssignGear }: CrewPanelProps) {
   return (
     <div data-testid="crew-panel">
       {crew.map(player => (
-        <PlayerCard key={player.id} player={player} roomIndex={roomIndex} />
+        <PlayerCard
+          key={player.id}
+          player={player}
+          roomIndex={roomIndex}
+          {...(onAssignGear !== undefined ? { onAssignGear } : {})}
+        />
       ))}
     </div>
   );
