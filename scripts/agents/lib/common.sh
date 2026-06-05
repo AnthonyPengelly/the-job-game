@@ -194,8 +194,11 @@ merge_branch() {  # merge_branch <branch> <into>
   local branch="$1" into="${2:-main}"
   git checkout "$into"
   git merge --no-ff --no-edit "$branch"
-  # Retry with a pull-rebase if another agent pushed to <into> while we were working.
-  git push origin "$into" || (git pull --rebase origin "$into" && git push origin "$into")
+  # Retry if another agent pushed to <into> while we were working.
+  # Use fetch+merge (not rebase) so the merge commit retains two parents — a plain
+  # `git pull --rebase` would flatten our merge commit into a regular commit, causing
+  # the `git log --format="%s"` skip-detection to stop working on future restarts.
+  git push origin "$into" || (git fetch origin && git merge --no-edit origin/"$into" && git push origin "$into")
 }
 
 # Does the diff touch design-bearing code? (decides whether game-design review runs)

@@ -39,16 +39,20 @@ for TASK in "${TASKS[@]}"; do
   log "---- task $TASK (branch $BRANCH) ----"
 
   # already merged? skip (resumability)
-  # grep the merge commit log for the branch name as a fixed string — robust
-  # against both "Merge branch 'X'" and "Merge remote-tracking branch 'origin/X'"
-  # formats, and unaffected by the builder pushing new commits to the branch
-  # after a human merge (which breaks --is-ancestor checks).
-  # NB: capture to a var first — do NOT pipe `git log ... | grep -q`. Under
-  # `set -o pipefail`, grep -q exits on first match and SIGPIPEs git log (exit
-  # 141), which pipefail reports as pipeline failure → every task looks unmerged
-  # and gets rebuilt. (This is what was re-building E1.1 in the container.)
-  merged_subjects="$(git log --merges --format="%s" origin/main 2>/dev/null || true)"
-  if grep -qF "${BRANCH}" <<<"$merged_subjects"; then
+  # Check whether the remote branch tip is already reachable from origin/main.
+  # This is robust to all three cases:
+  #   1. Normal --no-ff merge: branch tip is a parent of the merge commit → reachable.
+  #   2. Rebased merge (git pull --rebase on push-rejection): the individual commits
+  #      are replayed on main, so after force-updating the remote branch to the
+  #      replayed commit it's again reachable.
+  #   3. Branch doesn't exist yet: fetch fails, grep won't find it, falls through.
+  # Deliberately NOT using `git log --merges` (or any subject-grep): a plain
+  # `git pull --rebase` on push-rejection linearises/skips the merge commit so its
+  # "Merge branch 'X'" subject never lands in main's log. (This is what caused E5.4
+  # to be rebuilt on restart despite its content already being on main.)
+  git fetch origin "${BRANCH}" 2>/dev/null || true
+  if git show-ref --verify --quiet "refs/remotes/origin/${BRANCH}" \
+     && git merge-base --is-ancestor "origin/${BRANCH}" origin/main 2>/dev/null; then
     log "task $TASK already merged; skipping"; continue
   fi
 
