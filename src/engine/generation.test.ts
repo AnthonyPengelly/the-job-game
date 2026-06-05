@@ -599,3 +599,55 @@ describe('generateRoom — commitRange annotation', () => {
     throw new Error('No obstacle room found');
   });
 });
+
+// ─── generateRoom — easeNextObstacle annotation ──────────────────────────────
+
+describe('generateRoom — easeNextObstacle annotation', () => {
+  const easeEffect: CarriedEffect = { id: 'ease-1', kind: 'easeNextObstacle', roomsLeft: 1 };
+
+  it('easeDialSteps is set on an obstacle room when an ease effect is active', () => {
+    for (let seed = 0; seed < 50; seed++) {
+      const result = generateRoom(makeState(seed, { carried: [easeEffect] }), cfg);
+      if (result.currentRoom?.kind !== 'obstacle') continue;
+      expect(result.currentRoom.easeDialSteps).toBe(cfg.scenario.easeDialSteps);
+      expect(result.carried.find(e => e.kind === 'easeNextObstacle')).toBeUndefined();
+      return;
+    }
+    throw new Error('No obstacle room found in 50 seeds');
+  });
+
+  it('ease effect persists through a scenario room without ticking', () => {
+    for (let seed = 0; seed < 50; seed++) {
+      const result = generateRoom(makeState(seed, { carried: [easeEffect] }), cfg);
+      if (result.currentRoom?.kind !== 'scenario') continue;
+      expect(result.carried.find(e => e.kind === 'easeNextObstacle')).toBeDefined();
+      return;
+    }
+    throw new Error('No scenario room found in 50 seeds');
+  });
+
+  it('easeDialSteps reaches an obstacle room that follows an intervening scenario', () => {
+    // Step 1: find a seed that generates a scenario room first.
+    let afterScenario: RunState | undefined;
+    for (let seed = 0; seed < 50; seed++) {
+      const state = makeState(seed, { carried: [easeEffect] });
+      const result = generateRoom(state, cfg);
+      if (result.currentRoom?.kind !== 'scenario') continue;
+      afterScenario = { ...state, ...result, roomIndex: 1 };
+      break;
+    }
+    expect(afterScenario).toBeDefined();
+
+    // Step 2: generate rooms until obstacle; it must carry easeDialSteps.
+    let state = afterScenario!;
+    for (let i = 0; i < 50; i++) {
+      const next = generateRoom(state, cfg);
+      state = { ...state, ...next, roomIndex: state.roomIndex + 1 };
+      if (next.currentRoom?.kind !== 'obstacle') continue;
+      expect(next.currentRoom.easeDialSteps).toBe(cfg.scenario.easeDialSteps);
+      expect(next.carried.find(e => e.kind === 'easeNextObstacle')).toBeUndefined();
+      return;
+    }
+    throw new Error('No obstacle room found after intervening scenario');
+  });
+});

@@ -76,26 +76,31 @@ function drawWithoutRepeat(
  * seeded draw against cfg.generation.obstacleRatio.
  *
  * Does NOT advance roomIndex — the caller (reducer's PUSH_ON) does that first.
- * Checks for active easeNextObstacle effects BEFORE ticking so roomsLeft=1 applies
- * to the room being generated now. Fired payoffs from expired effects are applied
- * to the state before returning.
+ *
+ * easeNextObstacle effects only tick on obstacle rooms: they persist unchanged
+ * through intervening scenario rooms until the first obstacle is reached, then
+ * fire and expire. All other carried effects tick every room.
  */
 export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
   const rng = rngFromState(state.rngState);
 
-  // Check for active ease effects BEFORE tick: roomsLeft=1 means "ease this room".
-  const pendingEaseSteps = state.carried
-    .filter(e => e.kind === 'easeNextObstacle')
-    .reduce((sum) => sum + cfg.scenario.easeDialSteps, 0);
+  // Separate ease effects: they only tick (and expire) on obstacle rooms.
+  // All other effects tick every room regardless of type.
+  const easeEffects = state.carried.filter(e => e.kind === 'easeNextObstacle');
+  const otherEffects = state.carried.filter(e => e.kind !== 'easeNextObstacle');
 
-  // Tick carried effects, collecting any fired payoffs.
-  const { remaining, firedPayoffs } = tickCarriedEffects(state.carried);
+  // Tick non-ease effects; collect any fired payoffs.
+  const { remaining: otherRemaining, firedPayoffs } = tickCarriedEffects(otherEffects);
 
   // Apply fired payoffs (e.g. briefcase Loot++ on expiry).
-  let stateAfterPayoffs: RunState = { ...state, carried: remaining };
+  // Ease effects are included unchanged so they survive this step.
+  // Payoffs may append new effects; those additions live beyond the initial slice.
+  let stateAfterPayoffs: RunState = { ...state, carried: [...otherRemaining, ...easeEffects] };
   for (const payoff of firedPayoffs) {
     stateAfterPayoffs = applyScenarioEffect(stateAfterPayoffs, payoff, cfg);
   }
+  // Effects appended by payoffs — keep untouched regardless of room type.
+  const payoffAddedEffects = stateAfterPayoffs.carried.slice(otherRemaining.length + easeEffects.length);
 
   // Choose room type via seeded RNG draw.
   const isObstacle = rng.next() < cfg.generation.obstacleRatio;
@@ -130,6 +135,10 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
       },
     ];
 
+    // Ease effects fire on this obstacle: annotate the room, then tick/expire them.
+    const pendingEaseSteps = easeEffects.reduce((sum) => sum + cfg.scenario.easeDialSteps, 0);
+    const { remaining: easeRemaining } = tickCarriedEffects(easeEffects);
+
     const room: ObstacleRoom = {
       kind: 'obstacle',
       templateId,
@@ -139,6 +148,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
 
     return {
       ...stateAfterPayoffs,
+      carried: [...otherRemaining, ...easeRemaining, ...payoffAddedEffects],
       rngState: rng.state(),
       currentRoom: room,
       usedObstacleTemplateIds: newUsed,
@@ -170,6 +180,8 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
       choices,
     };
 
+    // Ease effects are NOT ticked on scenario rooms — stateAfterPayoffs.carried
+    // already holds them unchanged and they will fire on the next obstacle.
     return {
       ...stateAfterPayoffs,
       rngState: rng.state(),
