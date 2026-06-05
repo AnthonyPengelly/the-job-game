@@ -4,7 +4,6 @@ import type { BoostHook } from '@/minigames/contract';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { OutcomeJudge } from '@/minigames/primitives/OutcomeJudge';
-import { DialReadout } from '@/minigames/primitives/DialReadout';
 import type { SafeCrackParams } from './generate';
 import { computeFeedback, judge, techBoost, stealthBoost } from './judge';
 import type { SafeCrackState } from './judge';
@@ -19,7 +18,7 @@ function initState(guessBudget: number): SafeCrackState {
   };
 }
 
-export function SafeCrackComponent({ params, dial, committed, onResolve }: MiniGameProps<SafeCrackParams>): JSX.Element {
+export function SafeCrackComponent({ params, committed, onResolve }: MiniGameProps<SafeCrackParams>): JSX.Element {
   const [state, setState] = useState<SafeCrackState>(() => initState(params.guessBudget));
   const [currentInput, setCurrentInput] = useState('');
   const [timerRunning, setTimerRunning] = useState(true);
@@ -63,8 +62,6 @@ export function SafeCrackComponent({ params, dial, committed, onResolve }: MiniG
 
   return (
     <div data-testid="safe-crack">
-      <DialReadout dial={dial} />
-
       <Timer
         seconds={params.timerSeconds}
         running={timerRunning}
@@ -127,7 +124,7 @@ export function SafeCrackComponent({ params, dial, committed, onResolve }: MiniG
         />
       </div>
 
-      <OutcomeJudge suggested={suggested} onConfirm={onResolve} />
+      <OutcomeJudge key={suggested} suggested={suggested} onConfirm={onResolve} />
     </div>
   );
 }

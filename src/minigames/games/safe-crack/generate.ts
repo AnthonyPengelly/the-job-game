@@ -22,8 +22,10 @@ function clamp(n: number, lo: number, hi: number): number {
  *   - guessBudget: more guesses at lower difficulty (3..10)
  *   - timerSeconds: more time at lower difficulty (60..180)
  *
- * Tech eases digit count, Stealth eases guess count — both fold into dial.level
- * via computeDial in the launcher (aggregation already done before generate is called).
+ * Both lanes (Tech + Stealth) aggregate into dial.level via computeDial before
+ * generate is called. The scalar drives all three levers together — per-lane
+ * differentiation (Tech → digit count, Stealth → guess count) is not implemented;
+ * the scalar aggregation is the accepted E4 trade-off (see MINIGAMES.md §3).
  */
 export function generate(rng: Rng, dial: Difficulty): SafeCrackParams {
   const digitCount = clamp(Math.round(4 + dial.level * 1.5), 3, 6);
