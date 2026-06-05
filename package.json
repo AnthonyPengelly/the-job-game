@@ -14,7 +14,7 @@
     "check": "npm run typecheck && npm run lint && npm run test",
     "check:full": "npm run check && node scripts/sensors/lint-import-direction.mjs",
     "sim:check": "vitest run --config vitest.sim.config.ts",
-    "content:validate": "echo 'stub: preset/content schema validation. E7/E10 wire this.' && exit 0",
+    "content:validate": "vitest run src/content/narration/counts.test.ts src/content/schema/narration.test.ts --reporter=verbose",
     "agent:preflight": "./scripts/agents/preflight.sh",
     "agent:orchestrate": "./scripts/agents/orchestrate.sh",
     "agent:epic": "./scripts/agents/run-epic.sh",

@@ -1,5 +1,6 @@
 import type { EngineConfig } from '@/engine/config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema } from '@/content/schema';
+import type { ParsedNarration } from '@/content/schema';
 import { buildConfig } from './build-config';
 
 import metaJson from '../../../presets/default/_meta.json';
@@ -10,6 +11,7 @@ import scenariosJson from '../../../presets/default/content/scenarios.json';
 import gearJson from '../../../presets/default/content/gear.json';
 import categoriesJson from '../../../presets/default/content/banks/categories.json';
 import triviaJson from '../../../presets/default/content/banks/trivia.json';
+import narrationJson from '../../../presets/default/content/narration.json';
 
 export function loadDefaultConfig(): EngineConfig {
   const meta = metaSchema.parse(metaJson);
@@ -21,4 +23,12 @@ export function loadDefaultConfig(): EngineConfig {
   const categoriesBank = categoriesBankSchema.parse(categoriesJson);
   const triviaBank = triviaBankSchema.parse(triviaJson);
   return buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank });
+}
+
+/**
+ * Parses the bundled default narration bank.
+ * Returned separately from EngineConfig so narration never enters the engine or sim.
+ */
+export function loadDefaultNarration(): ParsedNarration {
+  return narrationSchema.parse(narrationJson);
 }

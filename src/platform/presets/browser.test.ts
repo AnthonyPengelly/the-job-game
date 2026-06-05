@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { ZodError } from 'zod';
-import { loadDefaultConfig } from './browser';
-import { loadPreset } from './load';
+import { loadDefaultConfig, loadDefaultNarration } from './browser';
+import { loadPreset, loadNarration } from './load';
 import { buildConfig } from './build-config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema } from '@/content/schema';
 
 import metaJson from '../../../presets/default/_meta.json';
 import tuningJson from '../../../presets/default/tuning.json';
@@ -96,5 +96,35 @@ describe('buildConfig with malformed input', () => {
       const triviaBank = triviaBankSchema.parse(triviaJson);
       buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank });
     }).toThrow(ZodError);
+  });
+});
+
+describe('loadDefaultNarration', () => {
+  it('returns a parsed narration bank with all ten beats', () => {
+    const bank = loadDefaultNarration();
+    expect(bank).toBeDefined();
+    expect(Array.isArray(bank.briefing)).toBe(true);
+    expect(Array.isArray(bank.obstacleClue)).toBe(true);
+    expect(Array.isArray(bank.optionDescription)).toBe(true);
+    expect(Array.isArray(bank.pushRun)).toBe(true);
+    expect(Array.isArray(bank.outcomeQuip)).toBe(true);
+    expect(Array.isArray(bank.scenarioSetup)).toBe(true);
+    expect(Array.isArray(bank.getawayIntro)).toBe(true);
+    expect(Array.isArray(bank.getawayCountdown)).toBe(true);
+    expect(Array.isArray(bank.winSting)).toBe(true);
+    expect(Array.isArray(bank.bustSting)).toBe(true);
+  });
+
+  it('deep-equals the Node loadNarration("default") output', () => {
+    const browserBank = loadDefaultNarration();
+    const nodeBank = loadNarration('default');
+    expect(browserBank.briefing).toEqual(nodeBank.briefing);
+    expect(browserBank.obstacleClue).toEqual(nodeBank.obstacleClue);
+    expect(browserBank.winSting).toEqual(nodeBank.winSting);
+    expect(browserBank.bustSting).toEqual(nodeBank.bustSting);
+  });
+
+  it('throws ZodError on a malformed narration fixture', () => {
+    expect(() => narrationSchema.parse({ briefing: 'not-an-array' })).toThrow(ZodError);
   });
 });
