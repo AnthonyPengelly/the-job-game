@@ -3,7 +3,7 @@ import { useGameStore } from '@/console/store';
 import { Setup } from './Setup';
 import { Briefing } from './Briefing';
 import { ObstacleRoom } from './ObstacleRoom';
-import { MinigameStub } from './MinigameStub';
+import { MinigameHost } from './MinigameHost';
 import { ScenarioRoom } from './ScenarioRoom';
 import { Offer } from './Offer';
 import { GetawayStub } from './GetawayStub';
@@ -38,7 +38,7 @@ export function PhaseRouter({ phase }: PhaseRouterProps) {
   switch (phase) {
     case 'briefing': return <Briefing />;
     case 'room':     return <RoomRouter />;
-    case 'minigame': return <MinigameStub />;
+    case 'minigame': return <MinigameHost />;
     case 'offer':    return <Offer />;
     case 'getaway':  return <GetawayStub />;
     case 'result':   return <Result />;
