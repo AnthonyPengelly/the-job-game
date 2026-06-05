@@ -1,4 +1,5 @@
 import { useGameStore } from '@/console/store';
+import { getawayMultiplier } from '@/engine/scoring';
 
 /**
  * GM console screen for the result phase.
@@ -15,10 +16,7 @@ export function Result() {
   const win = state.win ?? false;
   const finalScore = state.finalScore ?? 0;
 
-  const multiplier = win
-    ? cfg.scoring.winBaseMultiplier +
-      cfg.scoring.lowHeatStyleBonus * (1 - state.heat / cfg.heat.hMax)
-    : cfg.scoring.bustMultiplier;
+  const multiplier = getawayMultiplier(state.heat, win, cfg);
 
   return (
     <div data-testid="screen-result">

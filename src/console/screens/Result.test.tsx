@@ -3,6 +3,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { StoreContext, createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
+import { getawayMultiplier } from '@/engine/scoring';
 import type { StorageLike } from '@/platform';
 import { Result } from './Result';
 
@@ -108,10 +109,7 @@ describe('Result screen', () => {
   it('win final score matches engine scoring formula', () => {
     const store = makeResultStore(true);
     const state = store.getState().session.present;
-    const expectedScore =
-      state.loot *
-      (testCfg.scoring.winBaseMultiplier +
-        testCfg.scoring.lowHeatStyleBonus * (1 - state.heat / testCfg.heat.hMax));
+    const expectedScore = state.loot * getawayMultiplier(state.heat, true, testCfg);
     render(
       <StoreContext.Provider value={store}>
         <Result />
@@ -123,7 +121,7 @@ describe('Result screen', () => {
   it('bust final score matches engine scoring formula', () => {
     const store = makeResultStore(false);
     const state = store.getState().session.present;
-    const expectedScore = state.loot * testCfg.scoring.bustMultiplier;
+    const expectedScore = state.loot * getawayMultiplier(state.heat, false, testCfg);
     render(
       <StoreContext.Provider value={store}>
         <Result />
