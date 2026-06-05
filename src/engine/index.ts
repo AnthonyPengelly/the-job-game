@@ -50,6 +50,7 @@ export type {
   ObstacleOption,
   ObstacleRoom,
   ScenarioChoice,
+  ScenarioChoiceDef,
   ScenarioRoom,
   CurrentRoom,
   CarriedEffect,
