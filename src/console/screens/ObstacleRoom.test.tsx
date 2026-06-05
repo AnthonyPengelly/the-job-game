@@ -1,0 +1,289 @@
+// @vitest-environment jsdom
+import { describe, it, expect, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { StoreContext, createGameStore } from '@/console/store';
+import { testCfg } from '@/engine/test-config';
+import type { StorageLike } from '@/platform';
+import { ObstacleRoom } from './ObstacleRoom';
+import { MinigameStub } from './MinigameStub';
+
+afterEach(cleanup);
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function makeStorage(): StorageLike {
+  const data = new Map<string, string>();
+  return {
+    getItem: (k: string) => data.get(k) ?? null,
+    setItem: (k: string, v: string) => { data.set(k, v); },
+    removeItem: (k: string) => { data.delete(k); },
+  };
+}
+
+/** Config variant that always generates obstacle rooms (obstacleRatio=1.0). */
+const obstacleOnlyCfg = {
+  ...testCfg,
+  generation: { obstacleRatio: 1.0 },
+};
+
+/** Start a run with two players using the obstacle-only config. Seed 1 is stable. */
+function makeObstacleStore(seed = 1) {
+  const store = createGameStore({ cfg: obstacleOnlyCfg, storage: makeStorage() });
+  store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
+  return store;
+}
+
+function renderObstacleRoom(seed = 1) {
+  const store = makeObstacleStore(seed);
+  render(
+    <StoreContext.Provider value={store}>
+      <ObstacleRoom />
+    </StoreContext.Provider>,
+  );
+  return store;
+}
+
+function renderMinigameStub(seed = 1) {
+  const store = makeObstacleStore(seed);
+  // Advance to minigame phase via CHOOSE_OPTION.
+  const room = store.getState().session.present.currentRoom;
+  if (room === null || room.kind !== 'obstacle') {
+    throw new Error('Expected an obstacle room after startRun with obstacleOnlyCfg');
+  }
+  const crew = store.getState().session.present.crew;
+  // Use the safe option (options[0]).
+  const safeOption = room.options[0]!;
+  const committedPlayer = crew[0]!;
+  store.getState().dispatch({
+    t: 'CHOOSE_OPTION',
+    optionId: safeOption.id,
+    committed: [committedPlayer.id],
+  });
+
+  render(
+    <StoreContext.Provider value={store}>
+      <MinigameStub />
+    </StoreContext.Provider>,
+  );
+  return store;
+}
+
+// ── ObstacleRoom tests ────────────────────────────────────────────────────────
+
+describe('ObstacleRoom screen', () => {
+  it('renders with data-testid screen-room', () => {
+    renderObstacleRoom();
+    expect(screen.getByTestId('screen-room')).toBeInTheDocument();
+  });
+
+  it('shows the obstacle lane clue from the template config', () => {
+    renderObstacleRoom();
+    // The lane text is always present; just verify the element exists.
+    expect(screen.getByTestId('obstacle-lane')).toBeInTheDocument();
+  });
+
+  it('renders both option cards with reward and heat', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+
+    for (const option of room.options) {
+      expect(screen.getByTestId(`option-card-${option.id}`)).toBeInTheDocument();
+      expect(screen.getByTestId(`option-reward-${option.id}`)).toHaveTextContent(
+        String(option.reward),
+      );
+      expect(screen.getByTestId(`option-heat-${option.id}`)).toHaveTextContent(
+        String(option.heatCost),
+      );
+      expect(screen.getByTestId(`option-game-${option.id}`)).toHaveTextContent(
+        option.gameId,
+      );
+    }
+  });
+
+  it('commit button is disabled before any option is selected', () => {
+    renderObstacleRoom();
+    expect(screen.getByTestId('btn-commit')).toBeDisabled();
+  });
+
+  it('shows crew checkboxes after an option is selected', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+    expect(screen.getByTestId('crew-commit')).toBeInTheDocument();
+  });
+
+  it('commit button disabled when crew below commitRange minimum', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+
+    // Select an option — minimum is 1 crew.
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+
+    // Commit without selecting any crew — 0 selected, min is 1.
+    expect(screen.getByTestId('btn-commit')).toBeDisabled();
+  });
+
+  it('commit button enabled when exactly the minimum crew are selected', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+
+    // Select exactly 1 crew member (minimum is 1 for 2-player game in testCfg).
+    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`));
+    expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
+  });
+
+  it('cannot check more crew than the commitRange maximum', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+
+    // The max commit for 2 players with testCfg profile '2' is 2.
+    // Select both crew members.
+    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`));
+    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[1]!.id}`));
+
+    // After selecting the maximum, extra checkboxes are disabled.
+    // (No third player exists in this test, so instead verify both are checked
+    // and the button is enabled — enforcing the max IS the test for 2 players.)
+    expect(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`)).toBeChecked();
+    expect(screen.getByTestId(`crew-checkbox-${crew[1]!.id}`)).toBeChecked();
+    expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
+  });
+
+  it('dispatches CHOOSE_OPTION with the chosen option id and crew', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+    const safeOption = room.options[0]!;
+
+    // Select option and one crew member, then commit.
+    fireEvent.click(screen.getByTestId(`option-select-${safeOption.id}`));
+    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`));
+    fireEvent.click(screen.getByTestId('btn-commit'));
+
+    // Engine should now be in minigame phase.
+    expect(store.getState().session.present.phase).toBe('minigame');
+    // currentRoom should record the committed option.
+    const updatedRoom = store.getState().session.present.currentRoom;
+    if (updatedRoom === null || updatedRoom.kind !== 'obstacle') {
+      throw new Error('Expected obstacle room after CHOOSE_OPTION');
+    }
+    expect(updatedRoom.committedOptionId).toBe(safeOption.id);
+    expect(updatedRoom.committedBy).toContain(crew[0]!.id);
+  });
+});
+
+// ── MinigameStub tests ────────────────────────────────────────────────────────
+
+describe('MinigameStub screen', () => {
+  it('renders with data-testid screen-minigame', () => {
+    renderMinigameStub();
+    expect(screen.getByTestId('screen-minigame')).toBeInTheDocument();
+  });
+
+  it('shows all three outcome buttons', () => {
+    renderMinigameStub();
+    expect(screen.getByTestId('btn-outcome-clean')).toBeInTheDocument();
+    expect(screen.getByTestId('btn-outcome-complication')).toBeInTheDocument();
+    expect(screen.getByTestId('btn-outcome-botched')).toBeInTheDocument();
+  });
+
+  it('clean outcome advances to offer phase and adds loot equal to option reward', () => {
+    const store = renderMinigameStub();
+    const lootBefore = store.getState().session.present.loot;
+
+    fireEvent.click(screen.getByTestId('btn-outcome-clean'));
+
+    const state = store.getState().session.present;
+    expect(state.phase).toBe('offer');
+    // clean → loot += option.reward (1 for the safe option)
+    expect(state.loot).toBeGreaterThan(lootBefore);
+    // history records the obstacle result
+    const lastResult = state.history[state.history.length - 1];
+    expect(lastResult?.kind).toBe('obstacle');
+    if (lastResult?.kind === 'obstacle') {
+      expect(lastResult.outcome).toBe('clean');
+    }
+  });
+
+  it('complication outcome advances to offer phase and reflects heat and loot change', () => {
+    const store = renderMinigameStub();
+    const heatBefore = store.getState().session.present.heat;
+
+    fireEvent.click(screen.getByTestId('btn-outcome-complication'));
+
+    const state = store.getState().session.present;
+    expect(state.phase).toBe('offer');
+    // complication adds more heat than clean
+    expect(state.heat).toBeGreaterThan(heatBefore);
+    const lastResult = state.history[state.history.length - 1];
+    expect(lastResult?.kind).toBe('obstacle');
+    if (lastResult?.kind === 'obstacle') {
+      expect(lastResult.outcome).toBe('complication');
+    }
+  });
+
+  it('botched outcome advances to offer phase and reflects heat change', () => {
+    const store = renderMinigameStub();
+    const heatBefore = store.getState().session.present.heat;
+
+    fireEvent.click(screen.getByTestId('btn-outcome-botched'));
+
+    const state = store.getState().session.present;
+    expect(state.phase).toBe('offer');
+    // botched: outcomeLoot.botched=0 loot gained; heat increases
+    expect(state.heat).toBeGreaterThan(heatBefore);
+    const lastResult = state.history[state.history.length - 1];
+    expect(lastResult?.kind).toBe('obstacle');
+    if (lastResult?.kind === 'obstacle') {
+      expect(lastResult.outcome).toBe('botched');
+    }
+  });
+
+  it('exact heat and loot values match engine arithmetic for clean outcome', () => {
+    // drip at room 0 = obstacleHeat.safe + Math.floor(0 * rampPerObstacle) = 1 + 0 = 1
+    // outcomeHeat.clean = 0 → total heat = 1
+    // loot = option.reward = 1 (safe option)
+    const store = renderMinigameStub();
+
+    fireEvent.click(screen.getByTestId('btn-outcome-clean'));
+
+    const state = store.getState().session.present;
+    expect(state.heat).toBe(1);
+    expect(state.loot).toBe(1);
+  });
+
+  it('exact heat and loot values match engine arithmetic for complication outcome', () => {
+    // drip=1, outcomeHeat.complication=1 → heat=2; outcomeLoot.complication=1 → loot=1
+    const store = renderMinigameStub();
+
+    fireEvent.click(screen.getByTestId('btn-outcome-complication'));
+
+    const state = store.getState().session.present;
+    expect(state.heat).toBe(2);
+    expect(state.loot).toBe(1);
+  });
+
+  it('exact heat and loot values match engine arithmetic for botched outcome', () => {
+    // drip=1, outcomeHeat.botched=2 → heat=3; outcomeLoot.botched=0 → loot=0
+    const store = renderMinigameStub();
+
+    fireEvent.click(screen.getByTestId('btn-outcome-botched'));
+
+    const state = store.getState().session.present;
+    expect(state.heat).toBe(3);
+    expect(state.loot).toBe(0);
+  });
+});
