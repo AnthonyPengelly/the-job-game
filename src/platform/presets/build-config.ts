@@ -88,6 +88,9 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
       skillPivot: tuning.getaway.skillPivot,
       headcountTerm: tuning.getaway.headcountTerm,
       clamp: tuning.getaway.clamp,
+      brief: tuning.getaway.brief,
+      ditchHeatCost: tuning.getaway.ditchHeatCost,
+      buySecondsBonus: tuning.getaway.buySecondsBonus,
     },
     scoring: tuning.scoring,
     scaling: {

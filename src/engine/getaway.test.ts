@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getawayOdds, resolveGetawayOutcome } from '@/engine/getaway';
+import { getawayOdds, resolveGetawayOutcome, getawayBrief } from '@/engine/getaway';
 import type { EngineConfig } from '@/engine/config';
 
 // Mirror of the default preset — inline so tests have no platform dependency.
@@ -15,7 +15,13 @@ const cfg: EngineConfig = {
     skillTerm: 0.5,
     skillPivot: 0.65,
     headcountTerm: 0.8,
-    clamp: [0.04, 0.97],
+    clamp: [0.04, 0.97] as [number, number],
+    brief: {
+      lowHeat:  { heat: 0,  targetCards: 5,  timerSeconds: 90 },
+      highHeat: { heat: 20, targetCards: 12, timerSeconds: 45 },
+    },
+    ditchHeatCost: 2,
+    buySecondsBonus: 20,
   },
   scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
   scaling: {
@@ -170,5 +176,94 @@ describe('resolveGetawayOutcome', () => {
     );
     // odds at heat 0, good skill, n=4 ≈ 0.97 (clamped) → roll 0.95 < 0.97 → win
     expect(highSkill).toBe(true);
+  });
+});
+
+// ─── getawayBrief ─────────────────────────────────────────────────────────────
+
+describe('getawayBrief', () => {
+  // cfg.getaway.brief: lowHeat={heat:0,targetCards:5,timerSeconds:90}
+  //                    highHeat={heat:20,targetCards:12,timerSeconds:45}
+
+  it('returns integer targetCards and timerSeconds', () => {
+    for (const heat of [0, 5, 11, 15, 20]) {
+      const brief = getawayBrief(heat, cfg);
+      expect(Number.isInteger(brief.targetCards)).toBe(true);
+      expect(Number.isInteger(brief.timerSeconds)).toBe(true);
+    }
+  });
+
+  it('targetCards is non-decreasing as heat rises (monotone)', () => {
+    const heats = Array.from({ length: 21 }, (_, i) => i);
+    const targets = heats.map(h => getawayBrief(h, cfg).targetCards);
+    for (let i = 1; i < targets.length; i++) {
+      expect(targets[i]).toBeGreaterThanOrEqual(targets[i - 1]!);
+    }
+  });
+
+  it('timerSeconds is non-increasing as heat rises (monotone)', () => {
+    const heats = Array.from({ length: 21 }, (_, i) => i);
+    const timers = heats.map(h => getawayBrief(h, cfg).timerSeconds);
+    for (let i = 1; i < timers.length; i++) {
+      expect(timers[i]).toBeLessThanOrEqual(timers[i - 1]!);
+    }
+  });
+
+  it('at heat 0 returns low-end anchor values', () => {
+    const brief = getawayBrief(0, cfg);
+    expect(brief.targetCards).toBe(cfg.getaway.brief.lowHeat.targetCards);
+    expect(brief.timerSeconds).toBe(cfg.getaway.brief.lowHeat.timerSeconds);
+  });
+
+  it('at heat 20 (hMax) returns high-end anchor values', () => {
+    const brief = getawayBrief(20, cfg);
+    expect(brief.targetCards).toBe(cfg.getaway.brief.highHeat.targetCards);
+    expect(brief.timerSeconds).toBe(cfg.getaway.brief.highHeat.timerSeconds);
+  });
+
+  it('at heat ~11 (escape signal) is between low and high anchors', () => {
+    const brief = getawayBrief(11, cfg);
+    expect(brief.targetCards).toBeGreaterThanOrEqual(cfg.getaway.brief.lowHeat.targetCards);
+    expect(brief.targetCards).toBeLessThanOrEqual(cfg.getaway.brief.highHeat.targetCards);
+    expect(brief.timerSeconds).toBeLessThanOrEqual(cfg.getaway.brief.lowHeat.timerSeconds);
+    expect(brief.timerSeconds).toBeGreaterThanOrEqual(cfg.getaway.brief.highHeat.timerSeconds);
+  });
+
+  it('changing a tunable changes the output (reads from preset)', () => {
+    const altCfg: EngineConfig = {
+      ...cfg,
+      getaway: {
+        ...cfg.getaway,
+        brief: {
+          lowHeat:  { heat: 0,  targetCards: 3,  timerSeconds: 120 },
+          highHeat: { heat: 20, targetCards: 15, timerSeconds: 30 },
+        },
+      },
+    };
+    // heat=15 ensures both targetCards and timerSeconds differ under the two anchor sets
+    const base = getawayBrief(15, cfg);
+    const alt  = getawayBrief(15, altCfg);
+    expect(alt.targetCards).not.toBe(base.targetCards);
+    expect(alt.timerSeconds).not.toBe(base.timerSeconds);
+  });
+
+  it('sane band at heat 0: small target, generous time (≤ 6 cards, ≥ 80 s)', () => {
+    const brief = getawayBrief(0, cfg);
+    expect(brief.targetCards).toBeLessThanOrEqual(6);
+    expect(brief.timerSeconds).toBeGreaterThanOrEqual(80);
+  });
+
+  it('sane band at heat 11: mid-range target and time', () => {
+    const brief = getawayBrief(11, cfg);
+    expect(brief.targetCards).toBeGreaterThan(5);
+    expect(brief.targetCards).toBeLessThan(12);
+    expect(brief.timerSeconds).toBeLessThan(90);
+    expect(brief.timerSeconds).toBeGreaterThan(45);
+  });
+
+  it('sane band at heat 20: large target, short time (≥ 10 cards, ≤ 55 s)', () => {
+    const brief = getawayBrief(20, cfg);
+    expect(brief.targetCards).toBeGreaterThanOrEqual(10);
+    expect(brief.timerSeconds).toBeLessThanOrEqual(55);
   });
 });

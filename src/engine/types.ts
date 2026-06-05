@@ -158,6 +158,7 @@ export type RunEvent =
   | { t: 'ASSIGN_GEAR'; gear: GearId; to: PlayerId }
   | { t: 'PUSH_ON' }
   | { t: 'CALL_GETAWAY' }
+  | { t: 'GETAWAY_DITCH' }
   | { t: 'RESOLVE_GETAWAY'; win?: boolean }
   | OverrideEvent;
 
