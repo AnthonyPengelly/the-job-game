@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { PlayerViewSlice } from './channel';
 import { subscribeToSlice } from './channel';
 import { DefuseRulebook } from './screens/DefuseRulebook';
+import { GetawayDisplay } from './screens/GetawayDisplay';
 
 /** Isolated player-facing React surface. Never imports @/console. */
 export function PlayerViewApp(): JSX.Element {
@@ -13,6 +14,10 @@ export function PlayerViewApp(): JSX.Element {
 
   if (slice.kind === 'defuse-rulebook') {
     return <DefuseRulebook slice={slice} />;
+  }
+
+  if (slice.kind === 'getaway') {
+    return <GetawayDisplay slice={slice} />;
   }
 
   return (

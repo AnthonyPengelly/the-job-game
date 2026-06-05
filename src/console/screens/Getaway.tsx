@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/console/store';
 import { getawayBrief } from '@/engine';
+import { publishSlice } from '@/platform/channel';
 
 /**
  * Live Getaway referee screen — replaces GetawayStub.
@@ -37,6 +38,35 @@ export function Getaway() {
   // Guard against double-dispatch if both timer + clear race.
   const resolvedRef = useRef(false);
 
+  // ── Crew helpers ─────────────────────────────────────────────────────────────
+
+  const activeCrew = crew;
+  const currentClueGiverIdx = clueGiverIndex % activeCrew.length;
+  const currentPlayer = activeCrew[currentClueGiverIdx];
+
+  // ── Publish player-view slice ────────────────────────────────────────────────
+  // Publishes player-safe Getaway state to the player-view channel on every change.
+  // Publishes idle on unmount (resolve or navigation away).
+
+  useEffect(() => {
+    publishSlice({
+      kind: 'getaway',
+      cardsCleared,
+      targetCards: brief.targetCards,
+      secondsRemaining: secondsLeft,
+      clueGiverName: currentPlayer?.name ?? '',
+      clueGiverIndex: currentClueGiverIdx,
+      gameActive: timerActive,
+    });
+  }, [cardsCleared, secondsLeft, timerActive, clueGiverIndex, brief.targetCards, currentPlayer, currentClueGiverIdx]);
+
+  useEffect(() => {
+    return () => {
+      // SEAM(E8/E9): teardown audio/narration on unmount.
+      publishSlice({ kind: 'idle' });
+    };
+  }, []);
+
   // ── Countdown timer ──────────────────────────────────────────────────────────
 
   // SEAM(E8/E9): climax narration/sound — intro trigger on first start.
@@ -60,9 +90,6 @@ export function Getaway() {
   }, [timerActive, secondsLeft, dispatch]);
 
   // ── Action handlers ──────────────────────────────────────────────────────────
-
-  const activeCrew = crew;
-  const currentPlayer = activeCrew[clueGiverIndex % activeCrew.length];
 
   function handleCleared() {
     if (resolvedRef.current) return;
