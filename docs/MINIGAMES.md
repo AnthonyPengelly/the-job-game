@@ -108,10 +108,14 @@ interface Difficulty {
 
 **Mapping rating → difficulty.** Each committed player passively eases the game
 in their committed lane. For a single-lane game, use the committed crew's lane
-rating (highest, or sum, per the scaling preset). For a **combo**, the dial
-reads **both** lanes — each lane eases its own half (e.g. Safe-Crack: Tech eases
-digit count, Stealth eases guess count). Exact aggregation (max vs sum) is a
-**preset/scaling** value (`docs/CONTENT-AND-TUNING.md`), never hardcoded.
+rating (highest, or sum, per the scaling preset). For a **combo**, all committed
+lane ratings aggregate into a single scalar `dial.level` via `computeDial`
+(sum-weighted by the `perLanePoint` preset field, never hardcoded — see
+`docs/CONTENT-AND-TUNING.md`). The design calls for each lane to ease its own
+half of difficulty (e.g. Safe-Crack: Tech → digit count, Stealth → guess count),
+but the current implementation drives all levers from the same scalar — this is
+the **accepted E4 trade-off**; per-lane differentiation can be added in a later
+epic by threading per-lane levels through `Difficulty`.
 
 The dial expresses itself through four levers (design doc, "Stats dial
 difficulty"):
@@ -313,7 +317,8 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 - **Boosts:** **Tech → Stethoscope** (reveal a digit's position); **Stealth →
   Patient Touch** (one extra guess).
 - **Dial levers:** fewer digits in play (fewer items); more guesses (tolerance);
-  more time. Tech eases digit count, Stealth eases guess count.
+  more time. Both lanes aggregate into one scalar — see §3 for the accepted
+  approximation note on per-lane differentiation.
 - **minCommit:** **1.** Dial-only solo and 2–3.
 
 ### 8. Assembly Line — `assembly-line`
