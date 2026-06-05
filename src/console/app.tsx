@@ -3,6 +3,7 @@ import { StoreProvider, useGameStore } from '@/console/store';
 import type { CreateGameStoreOptions } from '@/console/store';
 import { PhaseRouter, Setup } from '@/console/screens';
 import { Hud } from '@/console/hud';
+import { OverridePanel } from '@/console/overrides';
 
 // ── App shell ─────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ function AppShell() {
   return (
     <>
       {crew.length > 0 && <Hud />}
+      <OverridePanel />
       {showSetup ? <Setup /> : <PhaseRouter phase={phase} />}
     </>
   );
