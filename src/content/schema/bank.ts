@@ -17,3 +17,26 @@ export const categoriesBankSchema = z.object({
 });
 
 export type CategoriesBank = z.infer<typeof categoriesBankSchema>;
+
+/** Difficulty tier for trivia questions. */
+export const triviaTierSchema = z.enum(['easy', 'medium', 'hard']);
+export type TriviaTier = z.infer<typeof triviaTierSchema>;
+
+/** A single trivia question with answer and optional multiple-choice options. */
+export const triviaItemSchema = z.object({
+  question: z.string().min(1),
+  answer: z.string().min(1),
+  tier: triviaTierSchema,
+  options: z.array(z.string().min(1)).min(2).optional(),
+});
+
+export type TriviaItem = z.infer<typeof triviaItemSchema>;
+
+/** Strict schema for the trivia bank — items are TriviaItem objects. */
+export const triviaBankSchema = z.object({
+  id: z.string(),
+  kind: z.literal('trivia'),
+  items: z.array(triviaItemSchema).min(1),
+});
+
+export type TriviaBank = z.infer<typeof triviaBankSchema>;

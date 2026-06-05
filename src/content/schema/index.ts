@@ -16,5 +16,5 @@ export type { ParsedGear, ParsedGearItem } from './gear';
 export { runEventSchema, saveEnvelopeSchema, SAVE_VERSION, parseSaveEnvelope, safeParseSaveEnvelope } from './save';
 export type { SaveEnvelope } from './save';
 
-export { bankSchema, categoriesBankSchema } from './bank';
-export type { Bank, CategoriesBank } from './bank';
+export { bankSchema, categoriesBankSchema, triviaBankSchema, triviaTierSchema, triviaItemSchema } from './bank';
+export type { Bank, CategoriesBank, TriviaBank, TriviaItem, TriviaTier } from './bank';

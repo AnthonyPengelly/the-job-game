@@ -35,7 +35,7 @@ const cfg: EngineConfig = {
   },
   generation: { obstacleRatio: 0.8 },
   gear: {},
-  banks: { categories: [] },
+  banks: { categories: [], trivia: [] },
   roomTemplates: {
     obstacles: [
       {

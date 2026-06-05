@@ -30,7 +30,15 @@ export const testCfg: EngineConfig = {
   },
   generation: { obstacleRatio: 0.7 },
   gear: {},
-  banks: { categories: ['Things made of gold', 'Types of cheese', 'European cities'] },
+  banks: {
+    categories: ['Things made of gold', 'Types of cheese', 'European cities'],
+    trivia: [
+      { question: 'What does CCTV stand for?', answer: 'Closed-Circuit Television', tier: 'easy' as const },
+      { question: 'What is a deadbolt?', answer: 'A type of lock', tier: 'easy' as const },
+      { question: 'What is social engineering?', answer: 'Manipulating people for information', tier: 'medium' as const },
+      { question: 'What is AES?', answer: 'Advanced Encryption Standard', tier: 'hard' as const },
+    ],
+  },
   roomTemplates: {
     obstacles: [
       {

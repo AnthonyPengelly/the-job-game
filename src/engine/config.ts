@@ -2,6 +2,15 @@
 // Defined here so the engine never imports from the content or platform layers.
 import type { Lane } from './types';
 
+// ── Trivia bank type (mirrored from content schema; defined here to avoid upward imports) ──
+
+export interface TriviaItemConfig {
+  question: string;
+  answer: string;
+  tier: 'easy' | 'medium' | 'hard';
+  options?: string[];
+}
+
 // ── Gear catalog types ────────────────────────────────────────────────────────
 
 export type GearDef =
@@ -120,5 +129,6 @@ export interface EngineConfig {
   /** Content banks loaded from the active preset. */
   banks: {
     categories: string[];
+    trivia: TriviaItemConfig[];
   };
 }
