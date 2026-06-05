@@ -1,3 +1,3 @@
 // Minigames layer — MiniGame contract, shared primitives, ten game modules.
-// Placeholder: E5+ implements the contract and games.
-export type MinigamesLayer = 'minigames';
+export type { Difficulty, CommittedPlayer, BoostHook, MiniGameProps, MiniGame } from './contract';
+export { games, getGame, hasGame } from './registry';
