@@ -37,10 +37,7 @@ export function MinigameHost() {
     return resolveGameVariant(rawGameId, commitSize, headcount, cfg);
   }, [rawGameId, commitSize, headcount, cfg]);
 
-  const baseGame = rawGameId !== undefined ? getGame(rawGameId) : undefined;
-  // Use the resolved variant; if the variant module is missing, getGame returns undefined
-  // and the game === undefined guard below renders MinigameStub (never the base game).
-  const game = resolvedGameId !== undefined ? getGame(resolvedGameId) : baseGame;
+  const game = resolvedGameId !== undefined ? getGame(resolvedGameId) : undefined;
 
   // Build CommittedPlayer projections (id/name/stats/powerUps only)
   const committed: CommittedPlayer[] = useMemo(() => {
