@@ -24,3 +24,6 @@ export type { Settings, DiceMode } from './settings';
 
 export { bankSchema, categoriesBankSchema, triviaBankSchema, triviaTierSchema, triviaItemSchema } from './bank';
 export type { Bank, CategoriesBank, TriviaBank, TriviaItem, TriviaTier } from './bank';
+
+export { narrationSchema, narrationVariantSchema, narrationWhenSchema } from './narration';
+export type { ParsedNarration, NarrationVariant, NarrationWhen, NarrationBeat } from './narration';
