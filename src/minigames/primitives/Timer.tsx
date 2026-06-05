@@ -24,7 +24,7 @@ export function Timer({ seconds, running, onExpire, audible = true }: TimerProps
     if (remaining <= 0) {
       if (!expiredRef.current) {
         expiredRef.current = true;
-        playBeep(880, 0.3);
+        if (audible) playBeep(880, 0.3);
         onExpireRef.current();
       }
       return;

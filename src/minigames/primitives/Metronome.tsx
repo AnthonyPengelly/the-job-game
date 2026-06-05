@@ -13,6 +13,11 @@ export interface MetronomeHandle {
   mute(): void;
 }
 
+/** Pure predicate: should beat N play a sound given current mute state and audible-beat limit? */
+export function isBeatAudible(beat: number, muted: boolean, audibleBeats: number): boolean {
+  return !muted && (audibleBeats === 0 || beat <= audibleBeats);
+}
+
 /**
  * Precise Web Audio clock-based metronome (not setTimeout).
  * Returns a stable handle; the hook cleans up on unmount or when bpm/audibleBeats change.
@@ -58,9 +63,7 @@ export function useMetronome({ bpm, audibleBeats }: MetronomeOptions): Metronome
       // Schedule any beats due in the next 100ms lookahead
       while (nextBeatTime < now + 0.1) {
         const beat = beatCount + 1;
-        const shouldBeAudible =
-          !mutedRef.current && (audibleBeats === 0 || beat <= audibleBeats);
-        if (shouldBeAudible && audioCtx) {
+        if (isBeatAudible(beat, mutedRef.current, audibleBeats) && audioCtx) {
           scheduleBeep(nextBeatTime);
         }
         beatCallbackRef.current?.(beat);

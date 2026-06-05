@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useMetronome } from './Metronome';
+import { useMetronome, isBeatAudible } from './Metronome';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -9,6 +9,28 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+});
+
+describe('isBeatAudible', () => {
+  it('returns false when muted', () => {
+    expect(isBeatAudible(1, true, 0)).toBe(false);
+    expect(isBeatAudible(1, true, 4)).toBe(false);
+  });
+
+  it('returns true for any beat when audibleBeats=0 (always-on)', () => {
+    expect(isBeatAudible(1, false, 0)).toBe(true);
+    expect(isBeatAudible(100, false, 0)).toBe(true);
+  });
+
+  it('returns true for beats within the audible window', () => {
+    expect(isBeatAudible(1, false, 4)).toBe(true);
+    expect(isBeatAudible(4, false, 4)).toBe(true);
+  });
+
+  it('returns false for beats beyond the audible window', () => {
+    expect(isBeatAudible(5, false, 4)).toBe(false);
+    expect(isBeatAudible(100, false, 4)).toBe(false);
+  });
 });
 
 describe('useMetronome', () => {
