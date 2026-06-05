@@ -18,22 +18,28 @@ import type {
 
 // ── Carried-effect tick ───────────────────────────────────────────────────────
 
-/** Result of ticking carried effects: surviving effects and any fired payoffs. */
+/** Result of ticking carried effects: surviving effects, fired payoffs, and per-room effects. */
 export interface TickResult {
   remaining: CarriedEffect[];
   firedPayoffs: ScenarioEffect[];
+  perRoomEffects: ScenarioEffect[];
 }
 
 /**
  * Tick all carried effects by one room: decrement roomsLeft, remove expired ones.
  * Effects that expire (roomsLeft reaches 0) fire their payoff (if any).
+ * perRoomEffect fires on every tick, including the expiry tick.
  */
 export function tickCarriedEffects(carried: readonly CarriedEffect[]): TickResult {
   const remaining: CarriedEffect[] = [];
   const firedPayoffs: ScenarioEffect[] = [];
+  const perRoomEffects: ScenarioEffect[] = [];
 
   for (const e of carried) {
     const newRoomsLeft = e.roomsLeft - 1;
+    if (e.perRoomEffect !== undefined) {
+      perRoomEffects.push(e.perRoomEffect);
+    }
     if (newRoomsLeft <= 0) {
       if (e.payoff !== undefined) {
         firedPayoffs.push(e.payoff);
@@ -43,7 +49,7 @@ export function tickCarriedEffects(carried: readonly CarriedEffect[]): TickResul
     }
   }
 
-  return { remaining, firedPayoffs };
+  return { remaining, firedPayoffs, perRoomEffects };
 }
 
 // ── No-repeat draw ────────────────────────────────────────────────────────────
@@ -89,17 +95,20 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
   const easeEffects = state.carried.filter(e => e.kind === 'easeNextObstacle');
   const otherEffects = state.carried.filter(e => e.kind !== 'easeNextObstacle');
 
-  // Tick non-ease effects; collect any fired payoffs.
-  const { remaining: otherRemaining, firedPayoffs } = tickCarriedEffects(otherEffects);
+  // Tick non-ease effects; collect per-room effects and any fired payoffs.
+  const { remaining: otherRemaining, firedPayoffs, perRoomEffects } = tickCarriedEffects(otherEffects);
 
-  // Apply fired payoffs (e.g. briefcase Loot++ on expiry).
+  // Apply per-room effects first (e.g. briefcase Heat ↑ while carried), then payoffs on expiry.
   // Ease effects are included unchanged so they survive this step.
-  // Payoffs may append new effects; those additions live beyond the initial slice.
+  // Payoffs/perRoomEffects may append new effects; those additions live beyond the initial slice.
   let stateAfterPayoffs: RunState = { ...state, carried: [...otherRemaining, ...easeEffects] };
+  for (const perRoom of perRoomEffects) {
+    stateAfterPayoffs = applyScenarioEffect(stateAfterPayoffs, perRoom, cfg);
+  }
   for (const payoff of firedPayoffs) {
     stateAfterPayoffs = applyScenarioEffect(stateAfterPayoffs, payoff, cfg);
   }
-  // Effects appended by payoffs — keep untouched regardless of room type.
+  // Effects appended by perRoomEffects or payoffs — keep untouched regardless of room type.
   const payoffAddedEffects = stateAfterPayoffs.carried.slice(otherRemaining.length + easeEffects.length);
 
   // Choose room type via seeded RNG draw.

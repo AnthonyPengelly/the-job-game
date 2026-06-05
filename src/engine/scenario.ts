@@ -123,13 +123,14 @@ export function applyScenarioEffect(
     next = { ...next, carried: [...next.carried, easeEffect] };
   }
 
-  // Delayed payoff (e.g. briefcase → Loot++ after N rooms)
+  // Delayed payoff (e.g. briefcase → Loot++ after N rooms, with optional per-room Heat tick)
   if (effect.delayed !== undefined) {
     const delayedEffect: CarriedEffect = {
       id: `delayed-${next.roomIndex}-${next.carried.length}`,
       kind: effect.delayed.kind,
       roomsLeft: effect.delayed.roomsLeft,
       payoff: effect.delayed.payoff,
+      ...(effect.delayed.perRoomEffect !== undefined && { perRoomEffect: effect.delayed.perRoomEffect }),
     };
     next = { ...next, carried: [...next.carried, delayedEffect] };
   }

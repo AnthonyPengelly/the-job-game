@@ -165,10 +165,47 @@ describe('tickCarriedEffects', () => {
     expect(firedPayoffs).toHaveLength(0);
   });
 
+  it('fires perRoomEffect on a surviving tick', () => {
+    const effects: CarriedEffect[] = [
+      { id: 'bc', kind: 'briefcase', roomsLeft: 2, perRoomEffect: { heatDelta: 2, lootDelta: 0 } },
+    ];
+    const { remaining, perRoomEffects } = tickCarriedEffects(effects);
+    expect(remaining).toHaveLength(1);
+    expect(perRoomEffects).toHaveLength(1);
+    expect(perRoomEffects[0]?.heatDelta).toBe(2);
+  });
+
+  it('fires perRoomEffect on the expiry tick alongside payoff', () => {
+    const effects: CarriedEffect[] = [
+      {
+        id: 'bc',
+        kind: 'briefcase',
+        roomsLeft: 1,
+        perRoomEffect: { heatDelta: 2, lootDelta: 0 },
+        payoff: { heatDelta: 0, lootDelta: 2 },
+      },
+    ];
+    const { remaining, perRoomEffects, firedPayoffs } = tickCarriedEffects(effects);
+    expect(remaining).toHaveLength(0);
+    expect(perRoomEffects).toHaveLength(1);
+    expect(perRoomEffects[0]?.heatDelta).toBe(2);
+    expect(firedPayoffs).toHaveLength(1);
+    expect(firedPayoffs[0]?.lootDelta).toBe(2);
+  });
+
+  it('returns empty perRoomEffects for effects without perRoomEffect', () => {
+    const effects: CarriedEffect[] = [
+      { id: 'ease', kind: 'easeNextObstacle', roomsLeft: 1 },
+    ];
+    const { perRoomEffects } = tickCarriedEffects(effects);
+    expect(perRoomEffects).toHaveLength(0);
+  });
+
   it('returns empty for empty input', () => {
-    const { remaining, firedPayoffs } = tickCarriedEffects([]);
+    const { remaining, firedPayoffs, perRoomEffects } = tickCarriedEffects([]);
     expect(remaining).toEqual([]);
     expect(firedPayoffs).toEqual([]);
+    expect(perRoomEffects).toEqual([]);
   });
 
   it('does not mutate the input array', () => {

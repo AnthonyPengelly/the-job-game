@@ -18,7 +18,7 @@
       "getaway.*": "terms of the Heat->odds Getaway curve; see CONTENT-AND-TUNING.md mapping table",
       "scoring.lowHeatStyleBonus": "Loot multiplier earned at Heat 0 on a win (scales to 0 at hMax)",
       "scoring.bustMultiplier": "fraction of Loot banked on a bust",
-      "generation.obstacleRatio": "probability [0,1] of drawing an obstacle room vs a scenario room (Python ref: 0.6)"
+      "generation.obstacleRatio": "probability [0,1] of drawing an obstacle room vs a scenario room (Python ref: 0.6; tuned to 0.65 because real roll-heavy scenarios perturb the RNG stream more than the 6 placeholder flat scenarios did, restoring sim run-length tightness ≥ 0.93)"
     }
   },
 
@@ -75,7 +75,7 @@
   },
 
   "generation": {
-    "obstacleRatio": 0.6
+    "obstacleRatio": 0.65
   },
 
   "scenario": {
