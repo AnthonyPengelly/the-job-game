@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { StoreContext, createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import { getawayBrief } from '@/engine';
 import type { StorageLike } from '@/platform';
+import type { PlayerViewSlice } from '@/platform/channel';
+import * as channelModule from '@/platform/channel';
 import { Getaway } from './Getaway';
 
 afterEach(() => {
@@ -418,5 +420,82 @@ describe('Getaway brief difficulty bands', () => {
     expect(screen.getByTestId('target-cards').textContent).toBe(targetBefore);
     // Timer may change only if buy-seconds was clicked; ditch itself doesn't touch it
     expect(screen.getByTestId('timer-display').getAttribute('data-remaining')).toBe(timerBefore);
+  });
+});
+
+// ── Player-view slice publish / teardown ───────────────────────────────────────
+
+describe('Getaway player-view publish', () => {
+  let publishedSlices: PlayerViewSlice[];
+
+  beforeEach(() => {
+    publishedSlices = [];
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation((slice: PlayerViewSlice) => {
+      publishedSlices.push(slice);
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('publishes a getaway slice on mount', () => {
+    renderGetaway();
+    const getawayCalls = publishedSlices.filter(s => s.kind === 'getaway');
+    expect(getawayCalls.length).toBeGreaterThan(0);
+  });
+
+  it('published slice contains player-safe fields only', () => {
+    renderGetaway();
+    const slice = publishedSlices.find(s => s.kind === 'getaway');
+    expect(slice).toBeDefined();
+    if (slice?.kind !== 'getaway') return;
+    expect(slice).toHaveProperty('cardsCleared');
+    expect(slice).toHaveProperty('targetCards');
+    expect(slice).toHaveProperty('secondsRemaining');
+    expect(slice).toHaveProperty('clueGiverName');
+    expect(slice).toHaveProperty('clueGiverIndex');
+    expect(slice).toHaveProperty('gameActive');
+    // Must NOT contain GM-only fields
+    expect(slice).not.toHaveProperty('heat');
+    expect(slice).not.toHaveProperty('getawayOdds');
+  });
+
+  it('publishes updated slice after Cleared action', () => {
+    renderGetaway();
+    publishedSlices.length = 0;
+
+    fireEvent.click(screen.getByTestId('btn-cleared'));
+
+    const getawayCalls = publishedSlices.filter(s => s.kind === 'getaway');
+    expect(getawayCalls.length).toBeGreaterThan(0);
+    const last = getawayCalls.at(-1);
+    if (last?.kind !== 'getaway') return;
+    expect(last.cardsCleared).toBe(1);
+  });
+
+  it('publishes idle slice on unmount (resolve or navigate away)', () => {
+    const { unmount } = render(
+      <StoreContext.Provider value={makeGetawayStore()}>
+        <Getaway />
+      </StoreContext.Provider>,
+    );
+
+    publishedSlices.length = 0;
+    act(() => { unmount(); });
+
+    expect(publishedSlices.some(s => s.kind === 'idle')).toBe(true);
+  });
+
+  it('publishes idle slice after force-win resolution (component unmounts on phase change)', () => {
+    renderGetaway();
+    publishedSlices.length = 0;
+
+    act(() => {
+      fireEvent.click(screen.getByTestId('btn-force-win'));
+    });
+    cleanup();
+
+    expect(publishedSlices.some(s => s.kind === 'idle')).toBe(true);
   });
 });

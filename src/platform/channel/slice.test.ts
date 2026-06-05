@@ -63,6 +63,102 @@ describe('playerViewSliceSchema — defuse-rulebook', () => {
   });
 });
 
+// ── getaway slice ─────────────────────────────────────────────────────────────
+
+describe('playerViewSliceSchema — getaway', () => {
+  const validGetaway = {
+    kind: 'getaway' as const,
+    cardsCleared: 3,
+    targetCards: 8,
+    secondsRemaining: 45,
+    clueGiverName: 'Alice',
+    clueGiverIndex: 0,
+    gameActive: true,
+  };
+
+  it('validates a valid getaway slice', () => {
+    const result = playerViewSliceSchema.safeParse(validGetaway);
+    expect(result.success).toBe(true);
+  });
+
+  it('validates with gameActive false', () => {
+    const result = playerViewSliceSchema.safeParse({ ...validGetaway, gameActive: false });
+    expect(result.success).toBe(true);
+  });
+
+  it('validates with cardsCleared 0', () => {
+    const result = playerViewSliceSchema.safeParse({ ...validGetaway, cardsCleared: 0 });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects negative cardsCleared', () => {
+    const result = playerViewSliceSchema.safeParse({ ...validGetaway, cardsCleared: -1 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects zero targetCards', () => {
+    const result = playerViewSliceSchema.safeParse({ ...validGetaway, targetCards: 0 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects negative secondsRemaining', () => {
+    const result = playerViewSliceSchema.safeParse({ ...validGetaway, secondsRemaining: -1 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing clueGiverName', () => {
+    const result = playerViewSliceSchema.safeParse({
+      kind: 'getaway',
+      cardsCleared: validGetaway.cardsCleared,
+      targetCards: validGetaway.targetCards,
+      secondsRemaining: validGetaway.secondsRemaining,
+      clueGiverIndex: validGetaway.clueGiverIndex,
+      gameActive: validGetaway.gameActive,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing gameActive', () => {
+    const result = playerViewSliceSchema.safeParse({
+      kind: 'getaway',
+      cardsCleared: validGetaway.cardsCleared,
+      targetCards: validGetaway.targetCards,
+      secondsRemaining: validGetaway.secondsRemaining,
+      clueGiverName: validGetaway.clueGiverName,
+      clueGiverIndex: validGetaway.clueGiverIndex,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('strips GM-only fields (e.g. heat, odds) on parse', () => {
+    const parsed = playerViewSliceSchema.parse({
+      ...validGetaway,
+      heat: 12,
+      getawayOdds: 0.42,
+      secretField: 'GM-only',
+    });
+    expect(parsed).not.toHaveProperty('heat');
+    expect(parsed).not.toHaveProperty('getawayOdds');
+    expect(parsed).not.toHaveProperty('secretField');
+  });
+
+  it('stripped getaway slice has exactly the expected keys', () => {
+    const parsed = playerViewSliceSchema.parse({
+      ...validGetaway,
+      heat: 12,
+    }) as Extract<PlayerViewSlice, { kind: 'getaway' }>;
+    expect(Object.keys(parsed).sort()).toEqual([
+      'cardsCleared',
+      'clueGiverIndex',
+      'clueGiverName',
+      'gameActive',
+      'kind',
+      'secondsRemaining',
+      'targetCards',
+    ]);
+  });
+});
+
 // ── player-view isolation — GM-only fields are stripped ───────────────────────
 
 describe('playerViewSliceSchema — isolation: GM-only fields stripped', () => {
