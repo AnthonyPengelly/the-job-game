@@ -32,7 +32,7 @@ function AppShell() {
   return (
     <>
       {crew.length > 0 && <Hud />}
-      <OverridePanel />
+      {crew.length > 0 && <OverridePanel />}
       {showSetup ? <Setup /> : <PhaseRouter phase={phase} />}
     </>
   );

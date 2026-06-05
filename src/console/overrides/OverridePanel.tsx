@@ -266,10 +266,15 @@ export function OverridePanel() {
           {/* ── Phase jump ── */}
           <section data-testid="override-section-phase">
             <strong>Phase</strong>
-            {/* Options are built from ALL_PHASES — value is always RunPhase | ''. */}
+            {/*
+             * Controlled to value="" so the placeholder always shows after a
+             * jump or Undo Last. Since value never moves away from "", any
+             * option (including the current phase) triggers onChange — no
+             * silent no-ops on re-selection.
+             */}
             <select
               data-testid="override-phase-select"
-              defaultValue=""
+              value=""
               onChange={e => {
                 const v = e.target.value as RunPhase | '';
                 if (v !== '') {
