@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ZodError } from 'zod';
-import { loadPreset } from './load';
+import { loadPreset, loadNarration } from './load';
 
 describe('loadPreset', () => {
   describe('default preset', () => {
@@ -247,5 +247,31 @@ describe('loadPreset', () => {
         expect(mentionsHMax).toBe(true);
       }
     });
+  });
+});
+
+describe('loadNarration', () => {
+  it('parses the default narration bank without throwing', () => {
+    const bank = loadNarration('default');
+    expect(bank).toBeDefined();
+    expect(Array.isArray(bank.briefing)).toBe(true);
+    expect(bank.briefing.length).toBeGreaterThan(0);
+  });
+
+  it('returns all ten expected beats', () => {
+    const bank = loadNarration('default');
+    const expectedBeats = [
+      'briefing', 'obstacleClue', 'optionDescription', 'pushRun',
+      'outcomeQuip', 'scenarioSetup', 'getawayIntro', 'getawayCountdown',
+      'winSting', 'bustSting',
+    ] as const;
+    for (const beat of expectedBeats) {
+      expect(bank[beat]).toBeDefined();
+      expect(Array.isArray(bank[beat])).toBe(true);
+    }
+  });
+
+  it('throws ZodError when narration.json is malformed', () => {
+    expect(() => loadNarration('test-malformed-narration')).toThrow();
   });
 });

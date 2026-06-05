@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { cwd } from 'node:process';
 import type { EngineConfig } from '@/engine/config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema } from '@/content/schema';
+import type { ParsedNarration } from '@/content/schema';
 import { buildConfig } from './build-config';
 
 function readJson(dir: string, file: string): unknown {
@@ -36,4 +37,14 @@ export function loadPreset(id = 'default'): EngineConfig {
   );
 
   return buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank });
+}
+
+/**
+ * Reads and Zod-parses the narration bank from presets/<id>/content/narration.json.
+ * Returns ParsedNarration separately — narration must never enter EngineConfig or
+ * the sim's RNG stream.
+ */
+export function loadNarration(id = 'default'): ParsedNarration {
+  const dir = resolve(cwd(), 'presets', id);
+  return narrationSchema.parse(readJson(resolve(dir, 'content'), 'narration.json'));
 }
