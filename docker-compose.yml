@@ -25,7 +25,7 @@ services:
       MODEL_QA: "${MODEL_QA:-}"
       MODEL_PARSE: "${MODEL_PARSE:-claude-haiku-4-5-20251001}"
       # --- loop bounds ---
-      MAX_REVIEW_ROUNDS: "${MAX_REVIEW_ROUNDS:-5}"
+      MAX_REVIEW_ROUNDS: "${MAX_REVIEW_ROUNDS:-3}"
       MAX_QA_ROUNDS: "${MAX_QA_ROUNDS:-3}"
       RATE_LIMIT_DEFAULT_SLEEP: "${RATE_LIMIT_DEFAULT_SLEEP:-900}"
       # --- what to run: orchestrate (default) | "epic E5" | preflight ---
