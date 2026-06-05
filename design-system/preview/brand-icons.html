@@ -1,0 +1,31 @@
+<!-- @dsCard group="Brand" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .ico { display:flex; gap:var(--space-5); flex-wrap:wrap; align-items:center; }
+  .ic { display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--fg-muted); }
+  .ic svg { width:30px; height:30px; }
+  .ic.hot { color:var(--danger); }
+  .ic.go { color:var(--accent); }
+  .ic .nm { font-family:var(--font-data); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-faint); }
+</style></head>
+<body><div class="card">
+  <span class="t-label">Iconography · Lucide — 1.75px stroke, line-only</span>
+  <div class="ico">
+    <span class="ic hot"><i data-lucide="flame"></i><span class="nm">heat</span></span>
+    <span class="ic go"><i data-lucide="banknote"></i><span class="nm">loot</span></span>
+    <span class="ic"><i data-lucide="users"></i><span class="nm">crew</span></span>
+    <span class="ic"><i data-lucide="briefcase"></i><span class="nm">gear</span></span>
+    <span class="ic"><i data-lucide="timer"></i><span class="nm">getaway</span></span>
+    <span class="ic"><i data-lucide="cctv"></i><span class="nm">watch</span></span>
+    <span class="ic"><i data-lucide="dice-5"></i><span class="nm">roll</span></span>
+    <span class="ic"><i data-lucide="door-open"></i><span class="nm">room</span></span>
+    <span class="ic"><i data-lucide="skip-forward"></i><span class="nm">next</span></span>
+    <span class="ic"><i data-lucide="volume-2"></i><span class="nm">sfx</span></span>
+  </div>
+  <div class="cap" style="color:var(--fg-faint)">Lucide via CDN. Stroke icons only — never filled, never emoji. Tint with semantic color for state.</div>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });</script>
+</body></html>

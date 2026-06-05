@@ -1,0 +1,41 @@
+<!-- @dsCard group="Colors" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .grp { display:flex; flex-direction:column; gap: var(--space-2); }
+  .ramp { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .chip { height: 46px; border-radius: var(--radius-sm); display:flex; align-items:flex-end; padding:4px 6px; }
+  .chip .n { font-family:var(--font-data); font-size:10px; font-weight:700; color:var(--c-fg-ink); }
+  .hdr { display:flex; align-items:center; gap:var(--space-2); }
+  .hdr .t-label { font-size:12px; }
+</style></head>
+<body><div class="card">
+  <div class="grp">
+    <div class="hdr"><span class="t-label" style="color:var(--caution)">Amber — caution · Offer · pending</span></div>
+    <div class="ramp">
+      <div class="chip" style="background:var(--c-amber-300)"><span class="n">300</span></div>
+      <div class="chip" style="background:var(--c-amber-400)"><span class="n">400</span></div>
+      <div class="chip" style="background:var(--c-amber-500)"><span class="n">500</span></div>
+      <div class="chip" style="background:var(--c-amber-900)"><span class="n" style="color:var(--c-amber-300)">900</span></div>
+    </div>
+  </div>
+  <div class="grp">
+    <div class="hdr"><span class="t-label" style="color:var(--danger)">Heat Red — danger · Heat fill · blown cover</span></div>
+    <div class="ramp">
+      <div class="chip" style="background:var(--c-red-300)"><span class="n">300</span></div>
+      <div class="chip" style="background:var(--c-red-400)"><span class="n">400</span></div>
+      <div class="chip" style="background:var(--c-red-500)"><span class="n">500</span></div>
+      <div class="chip" style="background:var(--c-red-900)"><span class="n" style="color:var(--c-red-300)">900</span></div>
+    </div>
+  </div>
+  <div class="grp">
+    <div class="hdr"><span class="t-label" style="color:var(--data)">Data Cyan — telemetry · links · focus</span></div>
+    <div class="ramp">
+      <div class="chip" style="background:var(--c-cyan-300)"><span class="n">300</span></div>
+      <div class="chip" style="background:var(--c-cyan-400)"><span class="n">400</span></div>
+      <div class="chip" style="background:var(--c-cyan-500)"><span class="n">500</span></div>
+      <div class="chip" style="background:var(--c-cyan-900)"><span class="n" style="color:var(--c-cyan-300)">900</span></div>
+    </div>
+  </div>
+</div></body></html>

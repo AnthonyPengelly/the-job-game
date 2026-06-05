@@ -174,7 +174,7 @@ Screens, all driven by the engine's `phase`:
 
 **Teleprompter principle:** narration is large, paced, one beat at a time; the narrator performs lines, never reads paragraphs. Variant selection (next section) keeps it fresh.
 
-**Design tokens / vibe:** dark, cinematic, "van" aesthetic — but that's polish, scheduled late. Function first.
+**Design tokens / vibe:** dark, cinematic, "van" aesthetic. The design system is complete and lives in `design-system/` — tokens, type, UI kits, and component patterns are all specified; `docs/DESIGN-SYSTEM.md` has the implementation checklist. Token setup happens in E0 (not a placeholder); the full visual pass is E10. Function ships first; styling lands in E10.
 
 ---
 
@@ -209,7 +209,7 @@ Screens, all driven by the engine's `phase`:
 Sequenced so the thing is *playable end-to-end as early as possible*, then deepened. Each epic is a coherent slice with a clear "done." Dependencies noted.
 
 ### Epic 0 — Foundations & scaffold
-Vite + React + TS project, linting/formatting, Vitest, folder structure (engine / content / games / console / platform), seedable RNG, design-token skeleton, CI that runs tests. **Done:** empty app shell renders, one passing engine test, RNG reproducible.
+Vite + React + TS project, linting/formatting, Vitest, folder structure (engine / content / games / console / platform), seedable RNG, design tokens (from `design-system/colors_and_type.css` — self-hosted fonts, no CDN), CI that runs tests. **Done:** empty app shell renders, one passing engine test, RNG reproducible.
 
 ### Epic 1 — Core rules engine *(depends: 0)*
 Port the Python model to TS: `RunState`, `reduce`, heat steps, escalation ramp, escape signal, forced Getaway, Getaway odds, scoring. A headless test harness that runs N simulated runs and reports the same distributions your sim does (median ~4–5 obstacles, runs rarely past 10, win-rate bands by skill). **Done:** TS sim reproduces the Python numbers within tolerance. *This is the backbone — everything leans on it.*
@@ -239,7 +239,7 @@ Author the variant lines for every beat, the non-repeating selector, and the tel
 Web Audio subsystem, preload, context-sensitive soundboard, Heat-driven ambient bed, shared metronome. **Done:** the narrator can score the whole run; metronome games feel tight.
 
 ### Epic 10 — Persistence, scoring history & polish *(depends: 3)*
-Resume, personal-best leaderboard ("beat that number"), settings, the cinematic visual pass (design tokens, motion, the face-down Heat cards), accessibility (glanceability, big hit targets), perf. **Done:** survives a closed laptop lid; looks the part.
+Resume, personal-best leaderboard ("beat that number"), settings, full visual pass against the design system (`design-system/` — UI kits, token application, specimen verification; see `docs/DESIGN-SYSTEM.md`), accessibility (glanceability, big hit targets), perf. **Done:** survives a closed laptop lid; every screen matches the design-system preview specimens.
 
 ### Epic 11 — Tuning panel & content tooling *(optional; depends: 1)*
 In-browser Monte Carlo + constant sliders to re-balance and watch distributions; optional content-authoring/validation screen. **Done:** you can retune Heat without leaving the app.

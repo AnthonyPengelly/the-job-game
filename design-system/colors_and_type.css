@@ -1,0 +1,283 @@
+/* ============================================================
+   THE JOB — Design Tokens
+   Color · Type · Spacing · Radius · Elevation
+   ------------------------------------------------------------
+   Dark-first tactical HUD. Tuned for legibility at arm's length
+   in a dim room OR bright sunlight. Read across a table, never
+   touched by players.
+   ============================================================ */
+
+/* --- Webfonts (Google Fonts CDN).
+   NOTE: for the real offline app these MUST be self-hosted.
+   See README "Fonts" caveat. ----------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+
+:root {
+  /* ---------------------------------------------------------
+     1. RAW COLOR PALETTE
+     --------------------------------------------------------- */
+
+  /* Tactical darks — the "van interior". Slightly cool-neutral. */
+  --c-void:        #06080a;   /* deepest app canvas */
+  --c-base:        #0b0f11;   /* default background */
+  --c-surface-1:   #141a1d;   /* panels, cards */
+  --c-surface-2:   #1d2529;   /* raised panel / header bar */
+  --c-surface-3:   #283238;   /* inputs, chips, slots */
+  --c-surface-4:   #36434a;   /* hover on dark chips */
+
+  /* Hairlines */
+  --c-line:        rgba(170, 200, 195, 0.10);
+  --c-line-strong: rgba(170, 200, 195, 0.20);
+  --c-line-faint:  rgba(170, 200, 195, 0.055);
+
+  /* Text */
+  --c-fg-1:        #eef4f1;   /* primary text */
+  --c-fg-2:        #a4b2ad;   /* secondary / labels */
+  --c-fg-3:        #66756f;   /* muted / disabled */
+  --c-fg-ink:      #05140c;   /* dark text on bright accents */
+
+  /* SIGNAL GREEN — primary action / live / phosphor readout */
+  --c-green-200:   #b6f7d2;
+  --c-green-300:   #7df0ad;
+  --c-green-400:   #44e588;
+  --c-green-500:   #1fd06e;   /* primary */
+  --c-green-600:   #14a657;
+  --c-green-700:   #0c7b40;
+  --c-green-900:   #0a2c1c;   /* tint surface */
+
+  /* AMBER — caution / Offer phase / pending */
+  --c-amber-300:   #ffd58a;
+  --c-amber-400:   #f7b84b;
+  --c-amber-500:   #ef9d22;
+  --c-amber-700:   #8a560c;
+  --c-amber-900:   #2e2008;
+
+  /* HEAT RED — danger / Heat fill / blown cover */
+  --c-red-300:     #ff9a8f;
+  --c-red-400:     #ff6b5e;
+  --c-red-500:     #f0463a;
+  --c-red-600:     #cf2f25;
+  --c-red-700:     #8f1c16;
+  --c-red-900:     #2c0d0b;
+
+  /* DATA CYAN — secondary readout / hacker telemetry / links */
+  --c-cyan-300:    #93ecf2;
+  --c-cyan-400:    #4fd6e0;
+  --c-cyan-500:    #21b8c4;
+  --c-cyan-900:    #07262a;
+
+  /* ---------------------------------------------------------
+     2. SEMANTIC COLOR TOKENS  (use these in product code)
+     --------------------------------------------------------- */
+  --bg-app:          var(--c-void);
+  --bg:              var(--c-base);
+  --bg-panel:        var(--c-surface-1);
+  --bg-panel-raised: var(--c-surface-2);
+  --bg-input:        var(--c-surface-3);
+  --bg-hover:        var(--c-surface-4);
+
+  --border:          var(--c-line);
+  --border-strong:   var(--c-line-strong);
+  --border-faint:    var(--c-line-faint);
+
+  --fg:              var(--c-fg-1);
+  --fg-muted:        var(--c-fg-2);
+  --fg-faint:        var(--c-fg-3);
+  --fg-on-accent:    var(--c-fg-ink);
+
+  --accent:          var(--c-green-500);
+  --accent-hover:    var(--c-green-400);
+  --accent-press:    var(--c-green-600);
+  --accent-tint:     var(--c-green-900);
+
+  --caution:         var(--c-amber-400);
+  --caution-strong:  var(--c-amber-500);
+  --caution-tint:    var(--c-amber-900);
+
+  --danger:          var(--c-red-500);
+  --danger-hover:    var(--c-red-400);
+  --danger-press:    var(--c-red-600);
+  --danger-tint:     var(--c-red-900);
+
+  --heat:            var(--c-red-500);   /* Heat track fill */
+  --heat-glow:       var(--c-red-400);
+
+  --data:            var(--c-cyan-400);  /* telemetry / links */
+  --data-tint:       var(--c-cyan-900);
+
+  --focus-ring:      var(--c-cyan-400);
+
+  /* ---------------------------------------------------------
+     3. TYPOGRAPHY
+     --------------------------------------------------------- */
+  --font-display: 'Saira Condensed', 'Arial Narrow', sans-serif; /* tactical signage */
+  --font-data:    'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace; /* HUD numbers */
+  --font-body:    'IBM Plex Sans', system-ui, -apple-system, sans-serif; /* read-aloud + UI prose */
+
+  /* Type scale — generous for arm's-length reading */
+  --text-xs:   13px;
+  --text-sm:   15px;
+  --text-base: 18px;   /* min comfortable body */
+  --text-md:   21px;
+  --text-lg:   26px;
+  --text-xl:   34px;
+  --text-2xl:  46px;
+  --text-3xl:  62px;
+  --text-4xl:  84px;   /* hero counters / Getaway clock */
+
+  --leading-tight:  1.05;
+  --leading-snug:   1.25;
+  --leading-normal: 1.5;
+  --leading-relax:  1.65;  /* teleprompter */
+
+  --track-tight:  -0.01em;
+  --track-normal: 0;
+  --track-wide:   0.04em;
+  --track-caps:   0.12em;  /* uppercase HUD labels */
+
+  /* ---------------------------------------------------------
+     4. SPACING  (4px base grid)
+     --------------------------------------------------------- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  48px;
+  --space-8:  64px;
+  --space-9:  96px;
+
+  /* ---------------------------------------------------------
+     5. RADIUS  (crisp / tactical — small corners)
+     --------------------------------------------------------- */
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   7px;
+  --radius-lg:   12px;
+  --radius-pill: 999px;
+
+  /* ---------------------------------------------------------
+     6. ELEVATION  (borders + shadow + inner top-light)
+     --------------------------------------------------------- */
+  --elev-1: 0 1px 0 0 rgba(255,255,255,0.03) inset,
+            0 1px 2px rgba(0,0,0,0.5);
+  --elev-2: 0 1px 0 0 rgba(255,255,255,0.04) inset,
+            0 4px 14px rgba(0,0,0,0.55);
+  --elev-3: 0 1px 0 0 rgba(255,255,255,0.05) inset,
+            0 12px 36px rgba(0,0,0,0.65);
+
+  /* Live / active glows */
+  --glow-accent: 0 0 0 1px var(--c-green-600),
+                 0 0 18px -2px rgba(31,208,110,0.55);
+  --glow-heat:   0 0 0 1px var(--c-red-600),
+                 0 0 18px -2px rgba(240,70,58,0.6);
+  --glow-data:   0 0 0 1px var(--c-cyan-500),
+                 0 0 16px -2px rgba(79,214,224,0.5);
+
+  /* Motion */
+  --ease-out:  cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-in:   cubic-bezier(0.5, 0, 0.75, 0);
+  --dur-fast:  90ms;
+  --dur-base:  160ms;
+  --dur-slow:  280ms;
+}
+
+/* ============================================================
+   SEMANTIC TYPE CLASSES — apply directly or copy the rules
+   ============================================================ */
+
+.t-display {                      /* big tactical headers */
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-3xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--track-tight);
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.t-h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--track-tight);
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.t-h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-xl);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--track-normal);
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.t-label {                        /* HUD section labels / overlines */
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  line-height: 1;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.t-data {                         /* counters, Heat numbers, telemetry */
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  line-height: 1;
+  letter-spacing: var(--track-normal);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.t-data-hero {                    /* huge counters / Getaway clock */
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: var(--text-4xl);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.t-body {                         /* default UI prose */
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--track-normal);
+  color: var(--fg);
+}
+
+.t-body-sm {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--fg-muted);
+}
+
+.t-teleprompter {                 /* GM read-aloud narration */
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--text-xl);
+  line-height: var(--leading-relax);
+  letter-spacing: 0.005em;
+  color: var(--c-green-200);
+  text-wrap: pretty;
+}
+
+.t-mono {                         /* inline code / IDs / tags */
+  font-family: var(--font-data);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  letter-spacing: var(--track-normal);
+  color: var(--fg-muted);
+}

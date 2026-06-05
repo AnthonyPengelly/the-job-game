@@ -1,0 +1,26 @@
+/* Shared styling for design-system preview cards.
+   Each card is a standalone ~700px-wide specimen. */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: var(--bg-app);
+  color: var(--fg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+.card {
+  padding: var(--space-5) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 100%;
+}
+.row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.col { display: flex; flex-direction: column; gap: var(--space-2); }
+.cap {                       /* tiny mono caption under swatches */
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.cap b { color: var(--fg-muted); font-weight: 700; }

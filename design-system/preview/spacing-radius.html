@@ -1,0 +1,20 @@
+<!-- @dsCard group="Spacing" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .row2 { display:flex; gap: var(--space-5); flex-wrap:wrap; }
+  .unit { display:flex; flex-direction:column; align-items:center; gap:var(--space-2); }
+  .box { width:84px; height:64px; background:var(--c-surface-3); border:1px solid var(--border-strong); }
+</style></head>
+<body><div class="card">
+  <span class="t-label">Radius · crisp / tactical</span>
+  <div class="row2">
+    <div class="unit"><div class="box" style="border-radius:var(--radius-xs)"></div><div class="cap"><b>xs</b> 2px</div></div>
+    <div class="unit"><div class="box" style="border-radius:var(--radius-sm)"></div><div class="cap"><b>sm</b> 4px</div></div>
+    <div class="unit"><div class="box" style="border-radius:var(--radius-md)"></div><div class="cap"><b>md</b> 7px</div></div>
+    <div class="unit"><div class="box" style="border-radius:var(--radius-lg)"></div><div class="cap"><b>lg</b> 12px</div></div>
+    <div class="unit"><div class="box" style="border-radius:var(--radius-pill);width:64px"></div><div class="cap"><b>pill</b> 999</div></div>
+  </div>
+  <div class="cap" style="color:var(--fg-faint)">Corners stay tight — equipment-panel feel. md for cards/buttons, sm for chips/inputs, pill only for status badges.</div>
+</div></body></html>

@@ -1,0 +1,24 @@
+<!-- @dsCard group="Colors" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .stack { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); }
+  .sw { display: flex; flex-direction: column; gap: var(--space-2); }
+  .chip { height: 64px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+</style></head>
+<body><div class="card">
+  <div class="stack">
+    <div class="sw"><div class="chip" style="background:var(--c-void)"></div><div class="cap"><b>app</b><br>#06080A</div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-base)"></div><div class="cap"><b>base</b><br>#0B0F11</div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-surface-1)"></div><div class="cap"><b>panel</b><br>#141A1D</div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-surface-2)"></div><div class="cap"><b>raised</b><br>#1D2529</div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-surface-3)"></div><div class="cap"><b>input</b><br>#283238</div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-surface-4)"></div><div class="cap"><b>hover</b><br>#36434A</div></div>
+  </div>
+  <div class="row" style="gap:var(--space-5)">
+    <div class="row" style="gap:var(--space-2)"><span style="width:20px;height:20px;border-radius:var(--radius-sm);border:1px solid var(--c-line)"></span><span class="cap">line .10</span></div>
+    <div class="row" style="gap:var(--space-2)"><span style="width:20px;height:20px;border-radius:var(--radius-sm);border:1px solid var(--c-line-strong)"></span><span class="cap">line-strong .20</span></div>
+    <div class="row" style="gap:var(--space-2)"><span style="width:20px;height:20px;border-radius:var(--radius-sm);border:1px solid var(--c-line-faint)"></span><span class="cap">line-faint .055</span></div>
+  </div>
+</div></body></html>

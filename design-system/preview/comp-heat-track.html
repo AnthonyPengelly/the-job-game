@@ -1,0 +1,33 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .heat { display:flex; flex-direction:column; gap:var(--space-3); }
+  .track { display:flex; gap:5px; }
+  .slot {
+    flex:1; height:34px; border-radius:var(--radius-xs);
+    background:var(--c-surface-3); border:1px solid var(--border);
+  }
+  .slot.on { background:var(--heat); border-color:var(--c-red-400); box-shadow:0 0 10px -2px var(--heat-glow); }
+  .slot.warn { background:var(--caution); border-color:var(--c-amber-300); }
+  .slot.next { border-color:var(--c-red-400); border-style:dashed; }
+  .meta { display:flex; align-items:baseline; justify-content:space-between; }
+</style></head>
+<body><div class="card">
+  <div class="heat">
+    <div class="meta">
+      <span class="t-label" style="color:var(--danger)">⬤ Heat</span>
+      <span class="t-data" style="font-size:22px;white-space:nowrap"><span style="color:var(--danger)">12</span><span style="color:var(--fg-faint)"> / 20</span></span>
+    </div>
+    <div class="track">
+      <!-- 12 lit, 13th = next, rest empty; 10-12 ramp to warn->on -->
+      <div class="slot on"></div><div class="slot on"></div><div class="slot on"></div><div class="slot on"></div>
+      <div class="slot on"></div><div class="slot on"></div><div class="slot on"></div><div class="slot on"></div>
+      <div class="slot warn"></div><div class="slot warn"></div><div class="slot on"></div><div class="slot on"></div>
+      <div class="slot next"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+      <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    </div>
+  </div>
+  <div class="cap" style="color:var(--fg-faint)">20 slots. Lit = accrued Heat. Dashed = next to fill. Fills left→right; 20 = the job is blown.</div>
+</div></body></html>

@@ -115,7 +115,7 @@ src/
 │   ├── overrides/           ← always-available GM edit surface + "undo last"
 │   ├── teleprompter/        ← large, paced, one-beat-at-a-time narration
 │   ├── soundboard/          ← context-sensitive buttons (drives platform audio)
-│   └── theme/               ← design tokens, the dark "van" aesthetic (polish, late)
+│   └── theme/               ← design tokens sourced from design-system/colors_and_type.css (see docs/DESIGN-SYSTEM.md)
 │
 ├── player-view/             ← isolated player-facing surface (§6)
 │   ├── app.tsx              ← its own route/entry; never imports console

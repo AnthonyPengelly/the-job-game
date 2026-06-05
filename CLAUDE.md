@@ -67,4 +67,5 @@ The work backlog is **`docs/EPICS.md`**: epics E0–E12 with stories, dependenci
 | `docs/GAME-DESIGN-RIGOUR.md` | The balance harness and agent-led playtesting |
 | `docs/TESTING.md` | Test strategy, the sim harness, Playwright QA |
 | `docs/MINIGAMES.md` | The MiniGame contract, the ten games, solo/scaling variants |
+| `docs/DESIGN-SYSTEM.md` | Visual design system: tokens, type, UI kits, offline-font setup, implementation checklist (E0 + E10) |
 | `docs/design/*` | The fixed game design (do not contradict) |

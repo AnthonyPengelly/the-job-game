@@ -1,0 +1,35 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .panel {
+    background:var(--bg-panel); border:1px solid var(--border);
+    border-radius:var(--radius-lg); box-shadow:var(--elev-2);
+    overflow:hidden; width:300px;
+  }
+  .panel .head {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; border-bottom:1px solid var(--border);
+    background:var(--bg-panel-raised);
+  }
+  .panel .body { padding:16px; display:flex; flex-direction:column; gap:8px; }
+  .panel.active { border-color:var(--c-green-700); box-shadow:var(--glow-accent); }
+  .tag { font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+</style></head>
+<body><div class="card">
+  <div class="row" style="align-items:stretch; gap:var(--space-4)">
+    <div class="panel">
+      <div class="head"><span class="t-h2" style="font-size:20px">Briefing</span><span class="tag">Phase 02</span></div>
+      <div class="body">
+        <p class="t-body" style="font-size:16px">Standard panel — neutral border, soft shadow, raised header bar.</p>
+      </div>
+    </div>
+    <div class="panel active">
+      <div class="head"><span class="t-h2" style="font-size:20px;color:var(--accent)">Obstacle</span><span class="tag" style="color:var(--accent)">● Live</span></div>
+      <div class="body">
+        <p class="t-body" style="font-size:16px">Active panel — green border + glow signals the live phase.</p>
+      </div>
+    </div>
+  </div>
+</div></body></html>

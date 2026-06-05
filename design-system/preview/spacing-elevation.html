@@ -1,0 +1,20 @@
+<!-- @dsCard group="Spacing" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .row2 { display:flex; gap: var(--space-5); flex-wrap:wrap; align-items:center; }
+  .unit { display:flex; flex-direction:column; align-items:center; gap:var(--space-3); }
+  .box { width:96px; height:64px; background:var(--c-surface-2); border:1px solid var(--border); border-radius:var(--radius-md); }
+</style></head>
+<body><div class="card">
+  <span class="t-label">Elevation &amp; glow</span>
+  <div class="row2">
+    <div class="unit"><div class="box" style="box-shadow:var(--elev-1)"></div><div class="cap"><b>elev-1</b></div></div>
+    <div class="unit"><div class="box" style="box-shadow:var(--elev-2)"></div><div class="cap"><b>elev-2</b></div></div>
+    <div class="unit"><div class="box" style="box-shadow:var(--elev-3)"></div><div class="cap"><b>elev-3</b></div></div>
+    <div class="unit"><div class="box" style="box-shadow:var(--glow-accent)"></div><div class="cap" style="color:var(--accent)"><b>glow-accent</b></div></div>
+    <div class="unit"><div class="box" style="box-shadow:var(--glow-heat)"></div><div class="cap" style="color:var(--danger)"><b>glow-heat</b></div></div>
+  </div>
+  <div class="cap" style="color:var(--fg-faint)">Depth comes from borders + soft shadow + an inner top-light. Glows mark LIVE state — active phase, rising Heat.</div>
+</div></body></html>

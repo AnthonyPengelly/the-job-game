@@ -1,0 +1,27 @@
+<!-- @dsCard group="Colors" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .ramp { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2); }
+  .sw { display: flex; flex-direction: column; gap: var(--space-2); }
+  .chip { height: 72px; border-radius: var(--radius-md); }
+  .lead { display:flex; align-items:baseline; gap: var(--space-3); }
+  .dot { width:12px; height:12px; border-radius:50%; background:var(--accent); box-shadow: var(--glow-accent); }
+</style></head>
+<body><div class="card">
+  <div class="lead">
+    <span class="dot"></span>
+    <span class="t-label" style="color:var(--accent)">Signal Green — primary · live · phosphor</span>
+  </div>
+  <div class="ramp">
+    <div class="sw"><div class="chip" style="background:var(--c-green-200)"></div><div class="cap">200</div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-green-300)"></div><div class="cap">300</div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-green-400)"></div><div class="cap">400</div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-green-500);box-shadow:var(--glow-accent)"></div><div class="cap"><b>500</b></div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-green-600)"></div><div class="cap">600</div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-green-700)"></div><div class="cap">700</div></div>
+    <div class="sw"><div class="chip" style="background:var(--c-green-900)"></div><div class="cap">900</div></div>
+  </div>
+  <div class="cap" style="color:var(--fg-faint)">500 is the primary action / active state. 900 is a tint surface. 200 carries teleprompter text.</div>
+</div></body></html>

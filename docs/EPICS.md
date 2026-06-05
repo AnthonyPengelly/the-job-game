@@ -35,7 +35,7 @@ Critical path: **E0 → E1 → E2 → E3 → E4 → E5**. E6–E9 fan out from E
 - The seeded RNG (`mulberry32` or similar) in `src/engine/rng.ts`, with tests proving reproducibility.
 - Folder skeleton: `src/{engine,content,minigames,console,player-view,platform}`.
 - `npm` scripts wired (even if some are stubs that later epics fill): `dev`, `build`, `check`, `check:full`, `sim:check`, `content:validate`, `test`, `lint`, `typecheck`.
-- Design-token skeleton (CSS variables; dark "van" theme placeholder).
+- Design tokens: copy `design-system/colors_and_type.css` into `src/console/theme/tokens.css` and import it at the app root; self-host the three Google Fonts (Saira Condensed, JetBrains Mono, IBM Plex Sans) as woff2 under `public/fonts/` with local `@font-face` rules replacing the CDN import. The design system is the source of truth — see `docs/DESIGN-SYSTEM.md` for the full checklist.
 
 **Acceptance gate:** `npm run check:full` passes on an empty app; `npm run dev` serves a shell at localhost; RNG reproducibility test green; the import-direction lint rule actually fails when engine imports React (prove with a deleted-after test).
 
@@ -178,10 +178,10 @@ Each game includes: procedural generator, judging (app-assist + GM-confirm per `
 
 **Stories**
 - Build on E3's persistence: add the **personal-best leaderboard** ("beat that number") and settings under their own keys; a finished run writes its score to history.
-- Cinematic visual pass: design tokens, motion, the face-down Heat cards, the "van" aesthetic.
+- **Visual pass against the design system** (`design-system/` in the repo root — read `design-system/README.md` first, then follow `docs/DESIGN-SYSTEM.md`). The design system is the source of truth; do not invent tokens, colours, or type choices. Implement every GM Console screen using patterns from `design-system/ui_kits/gm-console/` (HUD, phase screens, primitives, tweaks panel) and the Player View from `design-system/ui_kits/player-view/`. Verify each component against the `design-system/preview/` specimen cards. Specific requirements: Heat track 20-slot face-down-card fill with `--glow-heat` on the live slot; teleprompter block with green left-rule and `--accent-tint` wash; `--dur-slow` phase transitions; Lucide stroke icons offline-bundled (never CDN).
 - Accessibility/glanceability: big hit targets, readable across a room; performance.
 
-**Acceptance gate:** a finished run appears on the leaderboard and persists across refresh/restart; mid-run resume still works (regression check on E3); visual pass approved by the design reviewer; no major a11y/perf regressions.
+**Acceptance gate:** a finished run appears on the leaderboard and persists across refresh/restart; mid-run resume still works (regression check on E3); every screen matches the design-system preview specimens and is approved by the design reviewer; no CDN requests at runtime (fonts and icons are bundled/self-hosted); no major a11y/perf regressions.
 
 ---
 

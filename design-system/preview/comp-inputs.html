@@ -1,0 +1,33 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .field { display:flex; flex-direction:column; gap:6px; width:260px; }
+  label.l { font-family:var(--font-data); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-muted); }
+  .inp {
+    font-family:var(--font-body); font-size:17px; color:var(--fg);
+    background:var(--bg-input); border:1px solid var(--border-strong);
+    border-radius:var(--radius-sm); padding:11px 13px; outline:none; width:100%;
+  }
+  .inp::placeholder { color:var(--fg-faint); }
+  .inp.focus { border-color:var(--focus-ring); box-shadow:0 0 0 3px rgba(79,214,224,.22); }
+  .stepper { display:flex; align-items:center; gap:0; }
+  .stepper button { font-family:var(--font-display); font-size:22px; width:46px; height:46px; background:var(--c-surface-3); color:var(--fg); border:1px solid var(--border-strong); cursor:pointer; }
+  .stepper button:first-child { border-radius:var(--radius-sm) 0 0 var(--radius-sm); }
+  .stepper button:last-child { border-radius:0 var(--radius-sm) var(--radius-sm) 0; }
+  .stepper .val { font-family:var(--font-data); font-weight:800; font-size:22px; width:64px; text-align:center; border-top:1px solid var(--border-strong); border-bottom:1px solid var(--border-strong); height:46px; line-height:46px; background:var(--bg-input); }
+</style></head>
+<body><div class="card">
+  <div class="row" style="gap:var(--space-5); align-items:flex-end">
+    <div class="field">
+      <label class="l">Player count</label>
+      <div class="stepper"><button>−</button><span class="val">5</span><button>+</button></div>
+    </div>
+    <div class="field">
+      <label class="l">Crew name</label>
+      <input class="inp focus" value="The Magpies">
+    </div>
+  </div>
+  <div class="cap" style="color:var(--fg-faint)">Inputs sit on the darkest surface. Focus = cyan ring. Steppers for the few numeric inputs a GM touches mid-game.</div>
+</div></body></html>

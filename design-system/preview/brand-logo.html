@@ -1,0 +1,23 @@
+<!-- @dsCard group="Brand" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .wm { display:inline-flex; flex-direction:column; line-height:.86; }
+  .wm .the { font-family:var(--font-data); font-weight:700; font-size:15px; letter-spacing:.55em; text-transform:uppercase; color:var(--accent); margin-left:4px; }
+  .wm .job { font-family:var(--font-display); font-weight:800; font-size:78px; letter-spacing:-0.02em; text-transform:uppercase; color:var(--fg); }
+  .lockups { display:flex; gap:var(--space-6); align-items:center; }
+  .mono-lock { display:inline-flex; align-items:center; gap:9px; font-family:var(--font-data); font-weight:800; font-size:20px; letter-spacing:.04em; color:var(--fg); }
+  .mono-lock .sq { width:14px; height:14px; background:var(--accent); box-shadow:var(--glow-accent); border-radius:2px; }
+  .mono-lock .t { color:var(--accent); }
+</style></head>
+<body><div class="card">
+  <div class="lockups">
+    <div class="wm"><span class="the">The</span><span class="job">Job</span></div>
+    <div class="col" style="gap:14px">
+      <div class="mono-lock"><span class="sq"></span><span><span class="t">THE</span>_JOB</span></div>
+      <div class="mono-lock" style="font-size:14px;color:var(--fg-muted)"><span class="sq" style="width:10px;height:10px;box-shadow:none"></span>GM CONSOLE</div>
+    </div>
+  </div>
+  <div class="cap" style="color:var(--fg-faint)">Primary stacked wordmark + compact mono lockup for the HUD corner. Green "THE" overline is the signature.</div>
+</div></body></html>

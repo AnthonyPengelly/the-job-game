@@ -1,0 +1,43 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .badge {
+    font-family:var(--font-data); font-weight:700; font-size:12px;
+    letter-spacing:.1em; text-transform:uppercase; line-height:1;
+    padding:6px 11px; border-radius:var(--radius-pill);
+    display:inline-flex; align-items:center; gap:7px; border:1px solid transparent;
+  }
+  .badge .d { width:7px; height:7px; border-radius:50%; }
+  .b-live { background:var(--accent-tint); color:var(--c-green-300); border-color:var(--c-green-700); }
+  .b-live .d { background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  .b-warn { background:var(--caution-tint); color:var(--c-amber-300); border-color:var(--c-amber-700); }
+  .b-warn .d { background:var(--caution); }
+  .b-danger { background:var(--danger-tint); color:var(--c-red-300); border-color:var(--c-red-700); }
+  .b-danger .d { background:var(--danger); }
+  .b-idle { background:var(--c-surface-3); color:var(--fg-muted); border-color:var(--border); }
+  .b-idle .d { background:var(--fg-faint); }
+  /* phase pills */
+  .pills { display:flex; gap:6px; }
+  .pill { font-family:var(--font-display); text-transform:uppercase; font-weight:600; font-size:13px; letter-spacing:.04em; padding:7px 12px; border-radius:var(--radius-sm); background:var(--c-surface-2); color:var(--fg-faint); border:1px solid var(--border); }
+  .pill.done { color:var(--fg-muted); }
+  .pill.now { background:var(--accent); color:var(--fg-on-accent); border-color:var(--accent); }
+</style></head>
+<body><div class="card">
+  <div class="row" style="gap:var(--space-3)">
+    <span class="badge b-live"><span class="d"></span>Live</span>
+    <span class="badge b-warn"><span class="d"></span>Pending</span>
+    <span class="badge b-danger"><span class="d"></span>Blown</span>
+    <span class="badge b-idle"><span class="d"></span>Idle</span>
+  </div>
+  <div class="pills">
+    <span class="pill done">Setup</span>
+    <span class="pill done">Brief</span>
+    <span class="pill now">Obstacle</span>
+    <span class="pill">Offer</span>
+    <span class="pill">Getaway</span>
+    <span class="pill">Result</span>
+  </div>
+  <div class="cap" style="color:var(--fg-faint)">Status badges (pill radius) + the phase rail that tracks progress through a job.</div>
+</div></body></html>

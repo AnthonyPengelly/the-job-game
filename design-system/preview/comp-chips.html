@@ -1,0 +1,26 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="_card.css">
+<style>
+  .chip {
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--c-surface-2); border:1px solid var(--border);
+    border-radius:var(--radius-md); padding:10px 16px; box-shadow:var(--elev-1);
+  }
+  .chip .ic { width:8px; height:8px; border-radius:50%; }
+  .chip .k { font-family:var(--font-data); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .chip .v { font-family:var(--font-data); font-weight:800; font-size:26px; color:var(--fg); line-height:1; font-variant-numeric:tabular-nums; }
+  .chip.accent { border-color:var(--c-green-700); }
+  .chip.accent .ic { background:var(--accent); box-shadow:var(--glow-accent); }
+  .stack { display:flex; flex-direction:column; gap:2px; }
+</style></head>
+<body><div class="card">
+  <div class="row" style="gap:var(--space-4)">
+    <div class="chip accent"><span class="ic"></span><div class="stack"><span class="k">Loot</span><span class="v">$48.5k</span></div></div>
+    <div class="chip"><div class="stack"><span class="k">Rounds</span><span class="v">3<span style="color:var(--fg-faint);font-size:16px"> / 6</span></span></div></div>
+    <div class="chip"><div class="stack"><span class="k">Crew</span><span class="v">5</span></div></div>
+    <div class="chip"><div class="stack"><span class="k">Gear left</span><span class="v">2</span></div></div>
+  </div>
+  <div class="cap" style="color:var(--fg-faint)">Counter chips — one metric each. Mono value, micro caps label, optional status dot. Sit in the HUD bar.</div>
+</div></body></html>
