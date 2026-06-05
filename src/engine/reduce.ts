@@ -33,7 +33,7 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
       // Delegate to startRun (sets up crew/mansion), then generate the first room.
       const s = startRun(state, event);
       const s2 = generateRoom(s, cfg);
-      return { ...s2, phase: 'room' };
+      return { ...s2, phase: 'briefing' };
     }
 
     case 'CHOOSE_OPTION': {

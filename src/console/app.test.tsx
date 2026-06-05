@@ -55,7 +55,7 @@ describe('Phase router', () => {
     expect(screen.getByTestId('screen-setup')).toBeInTheDocument();
   });
 
-  it('renders the Room placeholder after START_RUN', async () => {
+  it('renders the Briefing screen after START_RUN', async () => {
     const storage = makeStorage();
     await act(async () => {
       render(<App storeOptions={{ cfg: testCfg, storage }} />);
@@ -72,7 +72,7 @@ describe('Phase router', () => {
       fireEvent.click(screen.getByTestId('btn-start-run'));
     });
 
-    expect(screen.getByTestId('screen-room')).toBeInTheDocument();
+    expect(screen.getByTestId('screen-briefing')).toBeInTheDocument();
   });
 
   it('PhaseRouter renders the correct screen for each RunPhase', () => {
@@ -131,7 +131,7 @@ describe('Resume flow', () => {
       fireEvent.click(screen.getByTestId('btn-resume'));
     });
 
-    // After resume, app routes to the room screen (phase='room' after START_RUN)
-    expect(screen.getByTestId('screen-room')).toBeInTheDocument();
+    // After resume, app routes to briefing screen (phase='briefing' after START_RUN)
+    expect(screen.getByTestId('screen-briefing')).toBeInTheDocument();
   });
 });

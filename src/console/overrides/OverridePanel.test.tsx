@@ -383,8 +383,8 @@ describe('OverridePanel — Phase jump', () => {
     renderPanelWithRouter();
     openPanel();
 
-    // Initially in room phase after START_RUN
-    expect(screen.getByTestId('screen-room')).toBeInTheDocument();
+    // Initially in briefing phase after START_RUN
+    expect(screen.getByTestId('screen-briefing')).toBeInTheDocument();
 
     fireEvent.change(screen.getByTestId('override-phase-select'), {
       target: { value: 'offer' },
@@ -409,7 +409,7 @@ describe('OverridePanel — Phase jump', () => {
       store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase });
       expect(store.getState().session.present.phase).toBe(phase);
       store.getState().undo();
-      expect(store.getState().session.present.phase).toBe('room');
+      expect(store.getState().session.present.phase).toBe('briefing');
     }
   });
 });
@@ -434,7 +434,7 @@ describe('OverridePanel — Undo Last', () => {
   it('Undo Last on a phase jump restores the prior phase', () => {
     const store = renderPanel();
     openPanel();
-    expect(store.getState().session.present.phase).toBe('room');
+    expect(store.getState().session.present.phase).toBe('briefing');
 
     fireEvent.change(screen.getByTestId('override-phase-select'), {
       target: { value: 'offer' },
@@ -442,7 +442,7 @@ describe('OverridePanel — Undo Last', () => {
     expect(store.getState().session.present.phase).toBe('offer');
 
     fireEvent.click(screen.getByTestId('btn-undo-last'));
-    expect(store.getState().session.present.phase).toBe('room');
+    expect(store.getState().session.present.phase).toBe('briefing');
   });
 
   it('Undo Last is safe when there is nothing to undo', () => {

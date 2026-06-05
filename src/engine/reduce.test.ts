@@ -144,13 +144,13 @@ function getawayState(
 // ─── START_RUN ────────────────────────────────────────────────────────────────
 
 describe('START_RUN', () => {
-  it('transitions to room phase', () => {
+  it('transitions to briefing phase', () => {
     const s = reduce(
       initialState(42),
       { t: 'START_RUN', crew: [{ name: 'Alice' }] },
       cfg,
     );
-    expect(s.phase).toBe('room');
+    expect(s.phase).toBe('briefing');
   });
 
   it('builds crew from setup', () => {

@@ -41,12 +41,12 @@ describe('startRun', () => {
     expect(store.getState().staleSaveNotice).toBe(false);
   });
 
-  it('advances to room phase and records a single START_RUN event', () => {
+  it('advances to briefing phase and records a single START_RUN event', () => {
     const storage = makeStorage();
     const store = createGameStore({ cfg: testCfg, storage });
     store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 42);
     const { session, eventLog } = store.getState();
-    expect(session.present.phase).toBe('room');
+    expect(session.present.phase).toBe('briefing');
     expect(eventLog).toHaveLength(1);
     expect(eventLog[0]!.t).toBe('START_RUN');
   });
@@ -214,7 +214,7 @@ describe('goAgain', () => {
   it('clears save and resets to initial briefing state', () => {
     const storage = makeStorage();
     const store = seedStore(storage);
-    expect(store.getState().session.present.phase).toBe('room');
+    expect(store.getState().session.present.phase).toBe('briefing');
 
     store.getState().goAgain();
     expect(store.getState().session.present.phase).toBe('briefing');

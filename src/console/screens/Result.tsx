@@ -22,7 +22,7 @@ export function Result() {
     <div data-testid="screen-result">
       <h2 data-testid="result-outcome">{win ? 'Win' : 'Bust'}</h2>
 
-      <p data-testid="result-final-score">Final score: {finalScore}</p>
+      <p data-testid="result-final-score">Final score: {finalScore.toFixed(2)}</p>
 
       <div data-testid="result-breakdown">
         <p data-testid="breakdown-loot">Loot banked: {state.loot}</p>

@@ -338,7 +338,7 @@ describe('HUD — stays mounted across phase changes', () => {
 
     // Both the HUD and the phase screen are present together
     expect(screen.getByTestId('hud')).toBeInTheDocument();
-    expect(screen.getByTestId('screen-room')).toBeInTheDocument();
+    expect(screen.getByTestId('screen-briefing')).toBeInTheDocument();
 
     const phases: RunPhase[] = ['briefing', 'offer', 'getaway', 'result'];
     const phaseTestIds: Record<RunPhase, string> = {

@@ -83,8 +83,8 @@ describe('Setup — new run', () => {
       expect(startEvent.crew[2]?.name).toBe('Eve');
       expect(startEvent.seed).toBe(42);
     }
-    // Engine processes START_RUN → phase='room'
-    expect(session.present.phase).toBe('room');
+    // Engine processes START_RUN → phase='briefing'
+    expect(session.present.phase).toBe('briefing');
   });
 
   it('dispatches START_RUN with a random non-negative seed when seed field is empty', () => {
@@ -148,7 +148,7 @@ describe('Setup — resume flow', () => {
     fireEvent.click(screen.getByTestId('btn-resume'));
     expect(store.getState().hasResumableSave).toBe(false);
     // The hydrated session phase should still reflect the saved run
-    expect(store.getState().session.present.phase).toBe('room');
+    expect(store.getState().session.present.phase).toBe('briefing');
   });
 
   it('New job shows the crew form', () => {
