@@ -19,7 +19,7 @@ export {
   forcedGetaway,
 } from './heat';
 
-export { getawayOdds, resolveGetawayOutcome } from './getaway';
+export { getawayOdds, resolveGetawayOutcome, getawayBrief } from './getaway';
 
 export { scoreRun } from './scoring';
 

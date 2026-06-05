@@ -18,7 +18,15 @@ const cfg: EngineConfig = {
   outcomeHeat: { clean: 0, complication: 1, botched: 2 },
   outcomeLoot: { complication: 1, botched: 0 },
   scenarioSwing: { small: 2, big: 4 },
-  getaway: { exponent: 1.3, skillTerm: 0.5, skillPivot: 0.65, headcountTerm: 0.8, clamp: [0.04, 0.97] },
+  getaway: {
+    exponent: 1.3, skillTerm: 0.5, skillPivot: 0.65, headcountTerm: 0.8, clamp: [0.04, 0.97] as [number, number],
+    brief: {
+      lowHeat:  { heat: 0,  targetCards: 5,  timerSeconds: 90 },
+      highHeat: { heat: 20, targetCards: 12, timerSeconds: 45 },
+    },
+    ditchHeatCost: 2,
+    buySecondsBonus: 20,
+  },
   scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
   scaling: {
     profiles: {},

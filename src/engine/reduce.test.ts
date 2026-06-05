@@ -13,7 +13,15 @@ const cfg: EngineConfig = {
   outcomeHeat: { clean: 0, complication: 1, botched: 2 },
   outcomeLoot: { complication: 1, botched: 0 },
   scenarioSwing: { small: 2, big: 4 },
-  getaway: { exponent: 1.3, skillTerm: 0.5, skillPivot: 0.65, headcountTerm: 0.8, clamp: [0.04, 0.97] },
+  getaway: {
+    exponent: 1.3, skillTerm: 0.5, skillPivot: 0.65, headcountTerm: 0.8, clamp: [0.04, 0.97] as [number, number],
+    brief: {
+      lowHeat:  { heat: 0,  targetCards: 5,  timerSeconds: 90 },
+      highHeat: { heat: 20, targetCards: 12, timerSeconds: 45 },
+    },
+    ditchHeatCost: 2,
+    buySecondsBonus: 20,
+  },
   scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
   scaling: {
     profiles: {
@@ -678,6 +686,43 @@ describe('CALL_GETAWAY', () => {
     const next = reduce(s, { t: 'CALL_GETAWAY' }, cfg);
     expect(next.heat).toBe(12);
     expect(next.loot).toBe(7);
+  });
+});
+
+// ─── GETAWAY_DITCH ────────────────────────────────────────────────────────────
+
+describe('GETAWAY_DITCH', () => {
+  it('raises heat by ditchHeatCost', () => {
+    const s = getawayState(0, 5);
+    const next = reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
+    expect(next.heat).toBe(5 + cfg.getaway.ditchHeatCost);
+  });
+
+  it('clamps heat at hMax (does not exceed hMax)', () => {
+    const s = getawayState(0, 19);
+    const next = reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
+    expect(next.heat).toBe(cfg.heat.hMax);
+  });
+
+  it('clamps correctly when already at hMax', () => {
+    const s = getawayState(0, 20);
+    const next = reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
+    expect(next.heat).toBe(cfg.heat.hMax);
+  });
+
+  it('preserves loot, phase, and other fields', () => {
+    const s = getawayState(7, 8);
+    const next = reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
+    expect(next.loot).toBe(7);
+    expect(next.phase).toBe('getaway');
+    expect(next.rngState).toBe(s.rngState);
+  });
+
+  it('does not mutate input state', () => {
+    const s = getawayState(0, 5);
+    const before = s.heat;
+    reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
+    expect(s.heat).toBe(before);
   });
 });
 

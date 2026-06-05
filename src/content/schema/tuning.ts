@@ -41,6 +41,20 @@ export const tuningSchema = z.object({
     skillPivot: z.number().gt(0).lt(1),
     headcountTerm: z.number().positive(),
     clamp: z.tuple([z.number(), z.number()]),
+    brief: z.object({
+      lowHeat: z.object({
+        heat: z.number().nonnegative(),
+        targetCards: z.number().int().positive(),
+        timerSeconds: z.number().int().positive(),
+      }).strict(),
+      highHeat: z.object({
+        heat: z.number().nonnegative(),
+        targetCards: z.number().int().positive(),
+        timerSeconds: z.number().int().positive(),
+      }).strict(),
+    }).strict(),
+    ditchHeatCost: z.number().int().positive(),
+    buySecondsBonus: z.number().int().positive(),
   }).strict(),
   scoring: z.object({
     winBaseMultiplier: z.number().positive(),

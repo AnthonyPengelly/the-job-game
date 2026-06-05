@@ -93,6 +93,15 @@ export interface EngineConfig {
     skillPivot: number;
     headcountTerm: number;
     clamp: [number, number];
+    /** Difficulty anchors for Heat→(targetCards, timerSeconds) mapping. */
+    brief: {
+      lowHeat: { heat: number; targetCards: number; timerSeconds: number };
+      highHeat: { heat: number; targetCards: number; timerSeconds: number };
+    };
+    /** Heat added when the crew ditches a card during the Getaway. */
+    ditchHeatCost: number;
+    /** Seconds added to the countdown when the GM uses "buy seconds". */
+    buySecondsBonus: number;
   };
   scoring: {
     winBaseMultiplier: number;
