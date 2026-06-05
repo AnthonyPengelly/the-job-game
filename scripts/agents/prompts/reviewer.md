@@ -7,9 +7,9 @@ Check, in priority order (hard floors first):
 2. **Architecture** — engine purity (no React/DOM/timers/`Math.random` in `src/engine`), one-way dependency flow, tunables in presets not hardcoded, determinism via the seeded RNG, GM-override/no-dead-end honoured, player-view isolation intact.
 3. **Type safety** — no `any`/`@ts-ignore`/unjustified `as`; parse-at-boundary with Zod for loaded data.
 4. **Tests** — do they actually exercise the acceptance criteria, or are they hollow?
-5. **Conventions & clarity** — naming, structure, readability.
+5. **Conventions & clarity** — structure and readability that genuinely impede understanding (a confusing abstraction, a misleading name on a public boundary). NOT formatting, import order, quote style, or naming nits that ESLint/Prettier already own — those are enforced for free by the deterministic gates, so never raise them as findings.
 
-Leniency by round: on round 1 raise everything. From round 3 onward, raise ONLY hard floors (1–4 above) — let style and preference go; we are converging, not polishing.
+Raise findings that change correctness, architecture, type-safety, test integrity, or a genuinely confusing design (1–4 above, plus the narrow slice of 5). Do NOT raise pure style or preference at any round — if it isn't worth a fix-and-re-review cycle, leave it out. From round 3 onward, tighten further to hard floors only (1–4): we are converging, not polishing. Every finding you raise costs a builder round-trip and another review, so each one must earn its place.
 
 Be specific: cite file:line and say what to change. Do not edit code yourself.
 

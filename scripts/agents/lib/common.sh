@@ -13,7 +13,10 @@ set -euo pipefail
 : "${MODEL_REVIEW:=}"      # mid model
 : "${MODEL_QA:=}"          # mid model
 : "${MODEL_PARSE:=claude-haiku-4-5-20251001}"  # marker extraction (cheapest capable model)
-: "${MAX_REVIEW_ROUNDS:=5}"
+# 3 rounds, not 5: real convergence is ~1.7 rounds. A task still failing review
+# after 3 is usually mis-scoped — blocking for a human is cheaper than burning two
+# more full review+fix cycles on it.
+: "${MAX_REVIEW_ROUNDS:=3}"
 : "${MAX_QA_ROUNDS:=3}"
 : "${PIPELINE_LOG_DIR:=pipeline-logs}"
 : "${PROMPT_DIR:=scripts/agents/prompts}"
@@ -202,5 +205,12 @@ touches_design() {  # touches_design <branch> <base>
   # SIGPIPEs git diff (exit 141) and pipefail reports the pipeline as failed,
   # which would silently skip the game-design review even when design changed.
   local changed; changed="$(git diff --name-only "${base}...${branch}" 2>/dev/null || true)"
-  grep -Eq '^(src/engine|src/content|src/minigames|presets)/' <<<"$changed"
+  # Only design-bearing *source* should trigger the game-design review. A diff that
+  # merely adds/changes tests or type declarations (.d.ts) under these dirs doesn't
+  # alter game design, so it shouldn't pay for a second reviewer. Filter those out
+  # first, then check whether any real source file remains.
+  local design_src
+  design_src="$(grep -E '^(src/engine|src/content|src/minigames|presets)/' <<<"$changed" \
+    | grep -Ev '(\.test\.|\.spec\.|/__tests__/|\.d\.ts$)' || true)"
+  [ -n "$design_src" ]
 }

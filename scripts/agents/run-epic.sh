@@ -60,27 +60,34 @@ for TASK in "${TASKS[@]}"; do
   [ -n "$branch" ] || { err "builder produced no branch for $TASK"; exit 3; }
   git fetch origin "$branch":"$branch" 2>/dev/null || git checkout "$branch"
 
-  # REVIEW GATE (loop)
-  round=0; approved=0
+  # REVIEW GATE (loop). Once a reviewer returns LGTM we don't pay to re-run it on
+  # later rounds: the fixer only addresses the *other* reviewer's findings, and the
+  # deterministic gates (which DO re-run every round) catch any test/type/lint
+  # regression a fix might introduce. This is the main lever against review churn —
+  # before, both reviewers re-ran in full every round even after passing.
+  round=0; approved=0; code_passed=0; design_passed=0
   while [ "$round" -lt "$MAX_REVIEW_ROUNDS" ]; do
     round=$((round+1))
     findings="${PIPELINE_LOG_DIR}/findings-${TASK}-${round}.txt"; : >"$findings"
 
-    # deterministic gates first (free)
+    # deterministic gates first (free) — always, every round
     if ! run_deterministic_gates "${PIPELINE_LOG_DIR}/gates-${TASK}-${round}.txt"; then
       echo "DETERMINISTIC GATES FAILED:" >>"$findings"
       cat "${PIPELINE_LOG_DIR}/gates-${TASK}-${round}.txt" >>"$findings"
     else
-      # code reviewer (always)
-      cr="$(render_prompt reviewer.md TASK="$TASK" BRANCH="$branch" ROUND="$round")"
-      cro="$(run_agent "review-code-${TASK}-${round}" "$MODEL_REVIEW" "$cr")"
-      if has_status_issues "$cro"; then { echo "CODE REVIEW:"; cat "$cro"; } >>"$findings"; fi
+      # code reviewer — run until it passes once, then skip on later rounds
+      if [ "$code_passed" -eq 0 ]; then
+        cr="$(render_prompt reviewer.md TASK="$TASK" BRANCH="$branch" ROUND="$round")"
+        cro="$(run_agent "review-code-${TASK}-${round}" "$MODEL_REVIEW" "$cr")"
+        if has_status_issues "$cro"; then { echo "CODE REVIEW:"; cat "$cro"; } >>"$findings"; else code_passed=1; fi
+      fi
 
-      # game-design reviewer (only if design-bearing code changed)
-      if touches_design "$branch"; then
+      # game-design reviewer — only if design-bearing source changed, and only
+      # until it passes once
+      if [ "$design_passed" -eq 0 ] && touches_design "$branch"; then
         gr="$(render_prompt game-design-reviewer.md TASK="$TASK" BRANCH="$branch" ROUND="$round")"
         gro="$(run_agent "review-design-${TASK}-${round}" "$MODEL_REVIEW" "$gr")"
-        if has_status_issues "$gro"; then { echo "GAME-DESIGN REVIEW:"; cat "$gro"; } >>"$findings"; fi
+        if has_status_issues "$gro"; then { echo "GAME-DESIGN REVIEW:"; cat "$gro"; } >>"$findings"; else design_passed=1; fi
       fi
     fi
 
