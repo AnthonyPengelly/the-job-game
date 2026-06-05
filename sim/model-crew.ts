@@ -99,6 +99,12 @@ export function nextModelEvent(
   const p = Math.min(0.95, base + growthBonus(state.roomIndex + 1));
 
   switch (state.phase) {
+    case 'briefing': {
+      // START_RUN lands here with room 0 already generated. Mirror the Briefing screen's
+      // "Begin" button: just flip phase to 'room' so the loop can proceed.
+      return { t: 'OVERRIDE_SET_PHASE', phase: 'room' };
+    }
+
     case 'room': {
       const room = state.currentRoom;
       if (room === null) throw new Error('nextModelEvent: room phase but no currentRoom');
