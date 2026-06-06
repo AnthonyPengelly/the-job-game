@@ -4,6 +4,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { StoreContext, createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
+import type { ParsedNarration } from '@/content/schema';
 import { ObstacleRoom } from './ObstacleRoom';
 import { MinigameStub } from './MinigameStub';
 
@@ -20,6 +21,23 @@ function makeStorage(): StorageLike {
   };
 }
 
+function makeNarrationFixture(): ParsedNarration {
+  const variants = (prefix: string, count: number) =>
+    Array.from({ length: count }, (_, i) => ({ id: `${prefix}-${i}`, text: `${prefix} text ${i}` }));
+  return {
+    briefing: variants('br', 8),
+    obstacleClue: variants('oc', 10),
+    optionDescription: variants('od', 10),
+    pushRun: variants('pr', 8),
+    outcomeQuip: variants('oq', 18),
+    scenarioSetup: variants('ss', 8),
+    getawayIntro: variants('gi', 6),
+    getawayCountdown: variants('gc', 6),
+    winSting: variants('ws', 6),
+    bustSting: variants('bs', 6),
+  };
+}
+
 /** Config variant that always generates obstacle rooms (obstacleRatio=1.0). */
 const obstacleOnlyCfg = {
   ...testCfg,
@@ -28,7 +46,8 @@ const obstacleOnlyCfg = {
 
 /** Start a run with two players using the obstacle-only config. Seed 1 is stable. */
 function makeObstacleStore(seed = 1) {
-  const store = createGameStore({ cfg: obstacleOnlyCfg, storage: makeStorage() });
+  const narration = makeNarrationFixture();
+  const store = createGameStore({ cfg: obstacleOnlyCfg, storage: makeStorage(), narration });
   store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
   return store;
 }
@@ -45,7 +64,8 @@ function renderObstacleRoom(seed = 1) {
 
 /** Start a run with three players — for 3 players crewPerOption[1]=2, so maxCrew=2 < crew.length. */
 function makeObstacleStore3(seed = 1) {
-  const store = createGameStore({ cfg: obstacleOnlyCfg, storage: makeStorage() });
+  const narration = makeNarrationFixture();
+  const store = createGameStore({ cfg: obstacleOnlyCfg, storage: makeStorage(), narration });
   store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }], seed);
   return store;
 }
@@ -215,6 +235,50 @@ describe('ObstacleRoom screen', () => {
     }
     expect(updatedRoom.committedOptionId).toBe(safeOption.id);
     expect(updatedRoom.committedBy).toContain(crew[0]!.id);
+  });
+});
+
+// ── Narration tests ───────────────────────────────────────────────────────────
+
+describe('ObstacleRoom narration', () => {
+  it('renders the teleprompter with the obstacle clue line', () => {
+    renderObstacleRoom();
+    expect(screen.getByTestId('teleprompter')).toBeInTheDocument();
+    const line = screen.getByTestId('teleprompter-line');
+    expect(line.textContent).not.toBe('');
+  });
+
+  it('teleprompter advance button is always enabled (no dead-end)', () => {
+    renderObstacleRoom();
+    const advanceBtn = screen.getByTestId('teleprompter-advance');
+    expect(advanceBtn).not.toBeDisabled();
+    fireEvent.click(advanceBtn);
+    // After advance the teleprompter line element still exists.
+    expect(screen.getByTestId('teleprompter-line')).toBeInTheDocument();
+  });
+
+  it('renders narration lines on each option card', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+
+    for (const option of room.options) {
+      expect(screen.getByTestId(`option-narration-${option.id}`)).toBeInTheDocument();
+      expect(screen.getByTestId(`option-narration-${option.id}`).textContent).not.toBe('');
+    }
+  });
+
+  it('commit button remains reachable regardless of narration state', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+
+    // Advance narration and verify commit still works.
+    fireEvent.click(screen.getByTestId('teleprompter-advance'));
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`));
+    expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
   });
 });
 

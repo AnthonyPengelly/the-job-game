@@ -1,17 +1,15 @@
+import { useState } from 'react';
 import { useGameStore } from '@/console/store';
-import type { MansionType } from '@/engine';
-
-const MANSION_LABELS: Record<MansionType, string> = {
-  villa: 'A lavish villa on the coast',
-  estate: 'A sprawling country estate',
-  penthouse: 'A sky-high penthouse suite',
-};
+import { Teleprompter } from '@/console/teleprompter';
 
 export function Briefing() {
   const mansion = useGameStore(s => s.session.present.mansion);
+  const director = useGameStore(s => s.director);
   const dispatch = useGameStore(s => s.dispatch);
 
-  const label = MANSION_LABELS[mansion.type] ?? mansion.type;
+  const [narrationLine, setNarrationLine] = useState(() =>
+    director?.next('briefing', { mansionType: mansion.type }) ?? ''
+  );
 
   function handleBegin() {
     // Advance from the briefing phase to the first room. In normal flow, START_RUN
@@ -20,10 +18,17 @@ export function Briefing() {
     dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'room' });
   }
 
+  function handleAdvance() {
+    if (!director) return;
+    setNarrationLine(director.next('briefing', { mansionType: mansion.type }));
+  }
+
   return (
     <div data-testid="screen-briefing">
       <h2>The Briefing</h2>
-      <p data-testid="mansion-dressing">{label}</p>
+      <div data-testid="mansion-dressing">
+        <Teleprompter line={narrationLine} onAdvance={handleAdvance} />
+      </div>
       <button data-testid="btn-begin" onClick={handleBegin}>
         Begin
       </button>

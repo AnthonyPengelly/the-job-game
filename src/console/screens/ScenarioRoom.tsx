@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useGameStore } from '@/console/store';
+import { Teleprompter } from '@/console/teleprompter';
 import type { PlayerId, ScenarioChoice } from '@/engine';
 
 // ── Stage-one choice card ─────────────────────────────────────────────────────
@@ -144,11 +145,25 @@ function RollReveal() {
  */
 export function ScenarioRoom() {
   const room = useGameStore(s => s.session.present.currentRoom);
+  const director = useGameStore(s => s.director);
   const dispatch = useGameStore(s => s.dispatch);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // Framing line for the scenario: picked once at mount (RoomRouter guarantees
+  // room.kind === 'scenario' when this component is alive).
+  const [setupLine, setSetupLine] = useState<string>(() =>
+    director && room?.kind === 'scenario'
+      ? director.next('scenarioSetup')
+      : ''
+  );
+
   if (room === null || room.kind !== 'scenario') return null;
+
+  function handleSetupAdvance() {
+    if (!director) return;
+    setSetupLine(director.next('scenarioSetup'));
+  }
 
   // Stage 2: roll pending after CHOOSE_SCENARIO for a roll choice
   if (room.pendingRoll !== undefined) {
@@ -165,6 +180,9 @@ export function ScenarioRoom() {
     return (
       <div data-testid="screen-room">
         <h2>Scenario</h2>
+        <div data-testid="scenario-narration">
+          <Teleprompter line={setupLine} onAdvance={handleSetupAdvance} />
+        </div>
         <p data-testid="scenario-setup">{room.setup}</p>
         <div data-testid="scenario-choices">
           {room.choices.map(choice => (
