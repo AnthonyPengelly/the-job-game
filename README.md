@@ -6,7 +6,8 @@ This repository is **both** the app and the autonomous build harness that create
 
 ## For the human
 
-- **Play / develop the app:** `npm install && npm run dev` (once Epic E0 has landed).
+- **Play the game (offline, no server):** `npm install && npm run build` — then double-click `dist/index.html`. Use Chrome or Edge for full `localStorage` support. See [`docs/OFFLINE-BUILD.md`](docs/OFFLINE-BUILD.md) for the full procedure and browser caveats.
+- **Develop the app:** `npm run dev` (hot-reload dev server on localhost).
 - **Run the autonomous build:** see the operator run-book in [`docs/WAYS-OF-WORKING.md`](docs/WAYS-OF-WORKING.md). TL;DR: configure `.env`, `docker compose build agent`, run preflight until green, then `RUN=orchestrate docker compose run --rm agent`.
 
 ## The design (authoritative, fixed)
