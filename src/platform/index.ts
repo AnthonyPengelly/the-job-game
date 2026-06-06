@@ -1,6 +1,16 @@
-export { loadDefaultConfig, loadDefaultNarration, loadDefaultSoundManifest } from './presets/browser';
+export { loadDefaultConfig, loadDefaultNarration, loadDefaultSoundManifest, loadDefaultBundle } from './presets/browser';
 export { buildConfig } from './presets/build-config';
 export type { PresetBundle } from './presets/build-config';
+
+export {
+  listPresets,
+  readPreset,
+  writePreset,
+  deletePreset,
+  clonePreset,
+  buildConfigFromPreset,
+} from './presets/preset-store';
+export type { BuildConfigResult, PresetListEntry } from './presets/preset-store';
 
 export { createAudioEngine } from './audio';
 export type { AudioEngine, AudioEngineOptions, AudioClock, AudioClockOptions, ScheduledEntry } from './audio';

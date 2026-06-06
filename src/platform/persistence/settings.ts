@@ -33,6 +33,14 @@ export function readSettings(storage: StorageLike = window.localStorage): Settin
   }
 
   if (result.data.version !== SETTINGS_VERSION) {
+    if (result.data.version < SETTINGS_VERSION) {
+      // Known forward migration: Zod has already applied schema defaults (e.g.
+      // activePresetId: 'default' for v1 saves). Bump the version and persist.
+      const migrated: Settings = { ...result.data, version: SETTINGS_VERSION };
+      writeSettings(migrated, storage);
+      return migrated;
+    }
+    // Future version — we don't know what fields it might have; reset.
     console.warn('[the-job] settings: version mismatch — resetting to default');
     writeSettings(DEFAULT_SETTINGS, storage);
     return { ...DEFAULT_SETTINGS };

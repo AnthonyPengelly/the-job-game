@@ -1,6 +1,9 @@
 export { tuningSchema } from './tuning';
 export type { ParsedTuning } from './tuning';
 
+export { userPresetSchema } from './user-preset';
+export type { UserPreset } from './user-preset';
+
 export { scalingSchema } from './scaling';
 export type { ParsedScaling } from './scaling';
 
