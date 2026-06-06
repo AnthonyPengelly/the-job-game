@@ -4,6 +4,7 @@ import type { AudioEngine } from '@/platform';
 import type { ParsedSoundManifest } from '@/content/schema';
 import { AudioClockContext } from '@/minigames/primitives';
 import type { AudioClockHandle } from '@/minigames/primitives';
+import { useAmbientBed } from './useAmbientBed';
 
 // ── Public handle type ────────────────────────────────────────────────────────
 
@@ -69,6 +70,9 @@ export function AudioProvider({ children }: AudioProviderProps) {
       window.removeEventListener('keydown', handleGesture);
     };
   }, [engine]);
+
+  // Wire store heat → ambient bed intensity (E9.5).
+  useAmbientBed();
 
   return (
     <AudioHandleContext.Provider value={handleRef.current}>
