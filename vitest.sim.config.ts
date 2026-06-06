@@ -9,6 +9,7 @@ export default defineConfig({
       '@/engine': resolve(__dirname, 'src/engine'),
       '@/content': resolve(__dirname, 'src/content'),
       '@/platform': resolve(__dirname, 'src/platform'),
+      '@/console': resolve(__dirname, 'src/console'),
     },
   },
   test: {
