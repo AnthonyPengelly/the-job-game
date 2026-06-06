@@ -61,4 +61,33 @@ describe('runMonteCarlo', () => {
     expect(bad.winRate).toBeLessThan(avg.winRate);
     expect(avg.winRate).toBeLessThan(good.winRate);
   });
+
+  it('distributions shift when tuning is hotter (E11.4 gate)', () => {
+    const cfg = loadDefaultConfig();
+
+    // Build a hotter EngineConfig by raising escalation ramp and greedy heat cost.
+    // These are the two knobs the plan calls out explicitly.
+    const hotterCfg = {
+      ...cfg,
+      escalation: {
+        ...cfg.escalation,
+        rampPerObstacle: cfg.escalation.rampPerObstacle * 3,
+      },
+      obstacleHeat: {
+        ...cfg.obstacleHeat,
+        greedy: cfg.obstacleHeat.greedy * 2,
+      },
+    };
+
+    const opts = { n: 500, baseSeed: 1312, skill: 'avg' as const, headcount: 4 };
+    const base = runMonteCarlo(cfg, opts);
+    const hot = runMonteCarlo(hotterCfg, opts);
+
+    // Hotter Heat means the run ends sooner (shorter median) and win rate drops.
+    expect(hot.winRate).toBeLessThanOrEqual(base.winRate);
+    expect(hot.medianObstacles).toBeLessThanOrEqual(base.medianObstacles);
+    // At least one aggregate must genuinely differ.
+    const shifted = hot.winRate !== base.winRate || hot.medianObstacles !== base.medianObstacles;
+    expect(shifted).toBe(true);
+  });
 });
