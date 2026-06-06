@@ -27,3 +27,6 @@ export type { Bank, CategoriesBank, TriviaBank, TriviaItem, TriviaTier } from '.
 
 export { narrationSchema, narrationVariantSchema, narrationWhenSchema } from './narration';
 export type { ParsedNarration, NarrationVariant, NarrationWhen, NarrationBeat } from './narration';
+
+export { soundManifestSchema, soundCueSchema, soundChannelSchema, runPhaseSchema } from './sound';
+export type { ParsedSoundManifest, SoundCue, SoundChannel, AmbientBed } from './sound';

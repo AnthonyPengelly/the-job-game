@@ -1,6 +1,6 @@
 import type { EngineConfig } from '@/engine/config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema } from '@/content/schema';
-import type { ParsedNarration } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
+import type { ParsedNarration, ParsedSoundManifest } from '@/content/schema';
 import { buildConfig } from './build-config';
 
 import metaJson from '../../../presets/default/_meta.json';
@@ -12,6 +12,7 @@ import gearJson from '../../../presets/default/content/gear.json';
 import categoriesJson from '../../../presets/default/content/banks/categories.json';
 import triviaJson from '../../../presets/default/content/banks/trivia.json';
 import narrationJson from '../../../presets/default/content/narration.json';
+import soundJson from '../../../presets/default/content/sound.json';
 
 export function loadDefaultConfig(): EngineConfig {
   const meta = metaSchema.parse(metaJson);
@@ -31,4 +32,12 @@ export function loadDefaultConfig(): EngineConfig {
  */
 export function loadDefaultNarration(): ParsedNarration {
   return narrationSchema.parse(narrationJson);
+}
+
+/**
+ * Parses the bundled default sound manifest.
+ * Returned separately from EngineConfig so the manifest never enters the engine or sim.
+ */
+export function loadDefaultSoundManifest(): ParsedSoundManifest {
+  return soundManifestSchema.parse(soundJson);
 }

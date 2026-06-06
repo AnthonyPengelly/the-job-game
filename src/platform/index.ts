@@ -1,4 +1,4 @@
-export { loadDefaultConfig, loadDefaultNarration } from './presets/browser';
+export { loadDefaultConfig, loadDefaultNarration, loadDefaultSoundManifest } from './presets/browser';
 export { buildConfig } from './presets/build-config';
 export type { PresetBundle } from './presets/build-config';
 
