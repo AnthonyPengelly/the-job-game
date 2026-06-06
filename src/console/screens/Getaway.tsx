@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/console/store';
 import { getawayBrief } from '@/engine';
 import { publishSlice } from '@/platform/channel';
+import { Teleprompter } from '@/console/teleprompter';
 
 /**
  * Live Getaway referee screen — replaces GetawayStub.
@@ -25,10 +26,29 @@ export function Getaway() {
   const cfg = useGameStore(s => s.cfg);
   const heat = useGameStore(s => s.session.present.heat);
   const crew = useGameStore(s => s.session.present.crew);
+  const director = useGameStore(s => s.director);
 
   // Brief locked at mount time — difficulty does not change on GETAWAY_DITCH.
   const briefRef = useRef(getawayBrief(heat, cfg));
   const brief = briefRef.current;
+
+  // Narration: getawayIntro and getawayCountdown picked once at mount.
+  const [introLine, setIntroLine] = useState<string>(() =>
+    director?.next('getawayIntro') ?? ''
+  );
+  const [countdownLine, setCountdownLine] = useState<string>(() =>
+    director?.next('getawayCountdown') ?? ''
+  );
+
+  function handleIntroAdvance() {
+    if (!director) return;
+    setIntroLine(director.next('getawayIntro'));
+  }
+
+  function handleCountdownAdvance() {
+    if (!director) return;
+    setCountdownLine(director.next('getawayCountdown'));
+  }
 
   const [cardsCleared, setCardsCleared] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(brief.timerSeconds);
@@ -148,6 +168,13 @@ export function Getaway() {
     <div data-testid="screen-getaway">
       <h2>Getaway</h2>
 
+      {/* Narration: intro line at the start of the getaway */}
+      {introLine !== '' && (
+        <div data-testid="getaway-intro-narration">
+          <Teleprompter line={introLine} onAdvance={handleIntroAdvance} />
+        </div>
+      )}
+
       {/* Brief display */}
       <p>
         Target: <span data-testid="target-cards">{brief.targetCards}</span> cards
@@ -174,6 +201,13 @@ export function Getaway() {
       <button data-testid="btn-toggle-timer" onClick={toggleTimer}>
         {timerActive ? 'Pause' : 'Start'}
       </button>
+
+      {/* Narration: countdown/finale tension line */}
+      {countdownLine !== '' && (
+        <div data-testid="getaway-countdown-narration">
+          <Teleprompter line={countdownLine} onAdvance={handleCountdownAdvance} />
+        </div>
+      )}
 
       {/* Round actions */}
       <button data-testid="btn-cleared" onClick={handleCleared}>

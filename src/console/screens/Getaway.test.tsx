@@ -6,6 +6,7 @@ import { testCfg } from '@/engine/test-config';
 import { getawayBrief } from '@/engine';
 import type { StorageLike } from '@/platform';
 import type { PlayerViewSlice } from '@/platform/channel';
+import type { ParsedNarration } from '@/content/schema';
 import * as channelModule from '@/platform/channel';
 import { Getaway } from './Getaway';
 
@@ -497,5 +498,115 @@ describe('Getaway player-view publish', () => {
     cleanup();
 
     expect(publishedSlices.some(s => s.kind === 'idle')).toBe(true);
+  });
+});
+
+// ── Narration: getawayIntro and getawayCountdown ───────────────────────────────
+
+function makeGetawayNarrationFixture(): ParsedNarration {
+  const variants = (prefix: string, count: number) =>
+    Array.from({ length: count }, (_, i) => ({ id: `${prefix}-${i}`, text: `${prefix} text ${i}` }));
+  return {
+    briefing: variants('br', 6),
+    obstacleClue: variants('oc', 10),
+    optionDescription: variants('od', 10),
+    pushRun: variants('pr', 8),
+    outcomeQuip: variants('oq', 18),
+    scenarioSetup: variants('ss', 8),
+    getawayIntro: [
+      { id: 'gi-0', text: 'Getaway intro line A' },
+      { id: 'gi-1', text: 'Getaway intro line B' },
+      { id: 'gi-2', text: 'Getaway intro line C' },
+      { id: 'gi-3', text: 'Getaway intro line D' },
+    ],
+    getawayCountdown: [
+      { id: 'gc-0', text: 'Getaway countdown line A' },
+      { id: 'gc-1', text: 'Getaway countdown line B' },
+      { id: 'gc-2', text: 'Getaway countdown line C' },
+      { id: 'gc-3', text: 'Getaway countdown line D' },
+    ],
+    winSting: variants('ws', 6),
+    bustSting: variants('bs', 6),
+  };
+}
+
+function makeGetawayStoreWithNarration(seed = 1) {
+  const narration = makeGetawayNarrationFixture();
+  const store = createGameStore({ cfg: obstacleOnlyCfg, storage: makeStorage(), narration });
+  store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
+
+  const room = store.getState().session.present.currentRoom;
+  if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+  const crew = store.getState().session.present.crew;
+  store.getState().dispatch({
+    t: 'CHOOSE_OPTION',
+    optionId: room.options[0]!.id,
+    committed: [crew[0]!.id],
+  });
+  store.getState().dispatch({ t: 'RESOLVE_MINIGAME', outcome: 'clean' });
+  store.getState().dispatch({ t: 'CALL_GETAWAY' });
+
+  if (store.getState().session.present.phase !== 'getaway') throw new Error('Expected getaway phase');
+  return store;
+}
+
+describe('Getaway screen — narration', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  beforeEach(() => {
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation(() => {});
+  });
+
+  it('renders getaway-intro-narration container with teleprompter when narration is loaded', () => {
+    const store = makeGetawayStoreWithNarration();
+    render(
+      <StoreContext.Provider value={store}>
+        <Getaway />
+      </StoreContext.Provider>,
+    );
+    expect(screen.getByTestId('getaway-intro-narration')).toBeInTheDocument();
+    const line = screen.getAllByTestId('teleprompter-line')[0]?.textContent ?? '';
+    expect(line).toContain('Getaway intro line');
+  });
+
+  it('renders getaway-countdown-narration container with teleprompter when narration is loaded', () => {
+    const store = makeGetawayStoreWithNarration();
+    render(
+      <StoreContext.Provider value={store}>
+        <Getaway />
+      </StoreContext.Provider>,
+    );
+    expect(screen.getByTestId('getaway-countdown-narration')).toBeInTheDocument();
+  });
+
+  it('both narration teleprompters are advanceable (no dead-end)', () => {
+    const store = makeGetawayStoreWithNarration();
+    render(
+      <StoreContext.Provider value={store}>
+        <Getaway />
+      </StoreContext.Provider>,
+    );
+    const advanceBtns = screen.getAllByTestId('teleprompter-advance');
+    for (const btn of advanceBtns) {
+      expect(btn).not.toBeDisabled();
+      fireEvent.click(btn);
+    }
+    // All existing game controls remain present
+    expect(screen.getByTestId('btn-cleared')).toBeInTheDocument();
+    expect(screen.getByTestId('btn-force-win')).toBeInTheDocument();
+  });
+
+  it('narration absent when no director is loaded (backward compat)', () => {
+    // Store WITHOUT narration — introLine/countdownLine will be '' so containers are not rendered
+    const store = makeGetawayStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <Getaway />
+      </StoreContext.Provider>,
+    );
+    expect(screen.queryByTestId('getaway-intro-narration')).toBeNull();
+    expect(screen.queryByTestId('getaway-countdown-narration')).toBeNull();
   });
 });

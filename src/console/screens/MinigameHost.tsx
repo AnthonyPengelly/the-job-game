@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useGameStore } from '@/console/store';
 import { buildRegistry } from '@/minigames';
 import { rngFromState, resolveGameVariant, computeDial } from '@/engine';
 import type { CommittedPlayer, Difficulty } from '@/minigames';
 import type { Outcome } from '@/engine';
 import { DialReadout } from '@/minigames/primitives/DialReadout';
+import { Teleprompter } from '@/console/teleprompter';
 import { MinigameStub } from './MinigameStub';
 
 /**
@@ -14,11 +15,16 @@ import { MinigameStub } from './MinigameStub';
  *
  * Falls back to MinigameStub for any unregistered gameId (CLAUDE.md rule 1 — no dead-ends).
  * The launcher never mutates engine rngState; generate() draws read-only.
+ *
+ * After a registered game resolves: if a narration director is available, an
+ * outcomeQuip is shown via Teleprompter before the RESOLVE_MINIGAME dispatch.
+ * The GM can advance the quip or confirm immediately — no dead-end.
  */
 export function MinigameHost() {
   const present = useGameStore(s => s.session.present);
   const cfg = useGameStore(s => s.cfg);
   const dispatch = useGameStore(s => s.dispatch);
+  const director = useGameStore(s => s.director);
 
   // Derive room/option/game resolution data (computed on every render from live state)
   const room = present.currentRoom;
@@ -67,8 +73,47 @@ export function MinigameHost() {
     return game.generate(rng, dial);
   }, [present.rngState, resolvedGameId, dial.level]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Outcome quip: set when a registered game resolves and a director is available.
+  const [pendingOutcome, setPendingOutcome] = useState<Outcome | null>(null);
+  const [quipLine, setQuipLine] = useState<string>('');
+
   function handleResolve(outcome: Outcome) {
-    dispatch({ t: 'RESOLVE_MINIGAME', outcome });
+    if (director !== null) {
+      const line = director.next('outcomeQuip', { outcome });
+      setQuipLine(line);
+      setPendingOutcome(outcome);
+    } else {
+      dispatch({ t: 'RESOLVE_MINIGAME', outcome });
+    }
+  }
+
+  function handleConfirmOutcome() {
+    if (pendingOutcome !== null) {
+      dispatch({ t: 'RESOLVE_MINIGAME', outcome: pendingOutcome });
+    }
+  }
+
+  function handleQuipAdvance() {
+    if (pendingOutcome !== null && director !== null) {
+      setQuipLine(director.next('outcomeQuip', { outcome: pendingOutcome }));
+    }
+  }
+
+  // Outcome quip screen: shown after a registered game resolves (director available only).
+  if (pendingOutcome !== null) {
+    return (
+      <div data-testid="screen-minigame">
+        <div data-testid="outcome-quip">
+          <Teleprompter line={quipLine} onAdvance={handleQuipAdvance} />
+        </div>
+        <button data-testid="btn-confirm-outcome" onClick={handleConfirmOutcome}>
+          Continue
+        </button>
+        <button data-testid="btn-back-outcome" onClick={() => setPendingOutcome(null)}>
+          Back
+        </button>
+      </div>
+    );
   }
 
   // Graceful fallback for unregistered games — never a dead-end (CLAUDE.md rule 1)

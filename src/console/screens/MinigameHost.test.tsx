@@ -8,6 +8,7 @@ import { games } from '@/minigames';
 import type { MiniGame } from '@/minigames';
 import type { GameId } from '@/engine';
 import type { StorageLike } from '@/platform';
+import type { ParsedNarration } from '@/content/schema';
 import { MinigameHost } from './MinigameHost';
 
 afterEach(cleanup);
@@ -32,6 +33,9 @@ const mockGame: MiniGame<MockParams, MockState> = {
       <span data-testid="mock-params-value">{params.value}</span>
       <button data-testid="mock-resolve-clean" onClick={() => onResolve('clean')}>
         Resolve Clean
+      </button>
+      <button data-testid="mock-resolve-botched" onClick={() => onResolve('botched')}>
+        Resolve Botched
       </button>
     </div>
   ),
@@ -116,6 +120,32 @@ function makeMinigameStore(seed = 1, techStat = 0) {
 function readDialLevel(): number {
   const text = screen.getByTestId('dial-level').textContent ?? '';
   return parseFloat(text.replace('Difficulty: ', ''));
+}
+
+// ── Narration fixture ─────────────────────────────────────────────────────────
+
+function makeNarrationFixture(): ParsedNarration {
+  const variants = (prefix: string, count: number) =>
+    Array.from({ length: count }, (_, i) => ({ id: `${prefix}-${i}`, text: `${prefix} text ${i}` }));
+  return {
+    briefing: variants('br', 6),
+    obstacleClue: variants('oc', 10),
+    optionDescription: variants('od', 10),
+    pushRun: variants('pr', 8),
+    outcomeQuip: [
+      { id: 'oq-clean-0', text: 'Clean quip A', when: { outcome: 'clean' } },
+      { id: 'oq-clean-1', text: 'Clean quip B', when: { outcome: 'clean' } },
+      { id: 'oq-complication-0', text: 'Complication quip A', when: { outcome: 'complication' } },
+      { id: 'oq-complication-1', text: 'Complication quip B', when: { outcome: 'complication' } },
+      { id: 'oq-botched-0', text: 'Botched quip A', when: { outcome: 'botched' } },
+      { id: 'oq-botched-1', text: 'Botched quip B', when: { outcome: 'botched' } },
+    ],
+    scenarioSetup: variants('ss', 8),
+    getawayIntro: variants('gi', 6),
+    getawayCountdown: variants('gc', 6),
+    winSting: variants('ws', 6),
+    bustSting: variants('bs', 6),
+  };
 }
 
 // ── Registry setup / teardown ─────────────────────────────────────────────────
@@ -234,7 +264,7 @@ describe('MinigameHost', () => {
       expect(valueA).toBe(valueB);
     });
 
-    it('forwards onResolve to RESOLVE_MINIGAME and advances to offer phase', () => {
+    it('forwards onResolve to RESOLVE_MINIGAME and advances to offer phase (no narration)', () => {
       const store = makeMinigameStore();
       render(
         <StoreContext.Provider value={store}>
@@ -254,5 +284,120 @@ describe('MinigameHost', () => {
         expect(lastResult.outcome).toBe('clean');
       }
     });
+  });
+});
+
+// ── Narration: outcomeQuip ────────────────────────────────────────────────────
+
+describe('MinigameHost — outcome quip narration', () => {
+  let savedLen: number;
+
+  beforeEach(() => {
+    savedLen = games.length;
+    games.push(mockGame);
+  });
+
+  afterEach(() => {
+    games.splice(savedLen);
+    cleanup();
+  });
+
+  function makeMinigameStoreWithNarration(seed = 1) {
+    const narration = makeNarrationFixture();
+    const store = createGameStore({ cfg: mockGameCfg, storage: makeStorage(), narration });
+    store.getState().startRun([{ name: 'Alice' }], seed);
+
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') {
+      throw new Error('Expected obstacle room');
+    }
+    const player = store.getState().session.present.crew[0]!;
+    store.getState().dispatch({
+      t: 'CHOOSE_OPTION',
+      optionId: room.options[0]!.id,
+      committed: [player.id],
+    });
+    return store;
+  }
+
+  it('shows outcome-quip teleprompter after the game calls onResolve', () => {
+    const store = makeMinigameStoreWithNarration();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByTestId('mock-resolve-clean'));
+
+    expect(screen.getByTestId('outcome-quip')).toBeInTheDocument();
+    const line = screen.getByTestId('teleprompter-line').textContent ?? '';
+    expect(line).toContain('Clean quip');
+  });
+
+  it('quip is scoped to the chosen outcome — botched shows botched quip', () => {
+    const store = makeMinigameStoreWithNarration();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByTestId('mock-resolve-botched'));
+
+    const line = screen.getByTestId('teleprompter-line').textContent ?? '';
+    expect(line).toContain('Botched quip');
+  });
+
+  it('confirm button dispatches RESOLVE_MINIGAME → offer phase', () => {
+    const store = makeMinigameStoreWithNarration();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByTestId('mock-resolve-clean'));
+    fireEvent.click(screen.getByTestId('btn-confirm-outcome'));
+
+    expect(store.getState().session.present.phase).toBe('offer');
+  });
+
+  it('back button returns to the game screen (no dead-end)', () => {
+    const store = makeMinigameStoreWithNarration();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByTestId('mock-resolve-clean'));
+    expect(screen.getByTestId('outcome-quip')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('btn-back-outcome'));
+
+    expect(screen.getByTestId('mock-game-component')).toBeInTheDocument();
+    expect(screen.queryByTestId('outcome-quip')).toBeNull();
+  });
+
+  it('advance button re-picks a quip (same outcome, never blocks)', () => {
+    const store = makeMinigameStoreWithNarration();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByTestId('mock-resolve-clean'));
+    const advanceBtn = screen.getByTestId('teleprompter-advance');
+    expect(advanceBtn).not.toBeDisabled();
+    const lineBefore = screen.getByTestId('teleprompter-line').textContent;
+    fireEvent.click(advanceBtn);
+    // After advance the line element is still present
+    expect(screen.getByTestId('teleprompter-line')).toBeInTheDocument();
+    // The text is still a clean quip
+    const lineAfter = screen.getByTestId('teleprompter-line').textContent ?? '';
+    expect(lineAfter).toContain('Clean quip');
+    void lineBefore; // used to silence unused var lint
   });
 });
