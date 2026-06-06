@@ -67,6 +67,13 @@ export interface AudioEngine {
    */
   setAmbient(intensity: number): void;
 
+  /**
+   * Schedule an oscillator beep at the given audio-clock time (seconds).
+   * Used by the shared Metronome via AudioClockContext (E9.4).
+   * No-op if no AudioContext is available.
+   */
+  scheduleBeep(when: number): void;
+
   /** The precise audio-clock scheduler for metronome use. */
   readonly clock: AudioClock;
 
@@ -331,6 +338,25 @@ export function createAudioEngine(
     bed.heartbeatGain.gain.setTargetAtTime(clamped, now, rampTime);
   }
 
+  // ── Beep scheduler ────────────────────────────────────────────────────────
+
+  function scheduleBeep(when: number): void {
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.15, when);
+      gain.gain.exponentialRampToValueAtTime(0.001, when + 0.05);
+      osc.start(when);
+      osc.stop(when + 0.06);
+    } catch {
+      // AudioContext may be suspended or context may lack oscillator support — no-op
+    }
+  }
+
   return {
     preload,
     resume,
@@ -340,6 +366,7 @@ export function createAudioEngine(
     setMasterGain,
     mute,
     setAmbient,
+    scheduleBeep,
     get clock() {
       return clock;
     },
