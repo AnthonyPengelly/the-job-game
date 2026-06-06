@@ -32,16 +32,24 @@ describe('readSettings — fresh boot', () => {
 describe('writeSettings / readSettings round-trip', () => {
   it('persists diceMode=physical and reads it back', () => {
     const storage = makeStorage();
-    writeSettings({ version: SETTINGS_VERSION, diceMode: 'physical' }, storage);
+    writeSettings({ version: SETTINGS_VERSION, diceMode: 'physical', activePresetId: 'default' }, storage);
     const result = readSettings(storage);
     expect(result.diceMode).toBe('physical');
+    expect(result.activePresetId).toBe('default');
   });
 
   it('persists diceMode=app and reads it back', () => {
     const storage = makeStorage();
-    writeSettings({ version: SETTINGS_VERSION, diceMode: 'app' }, storage);
+    writeSettings({ version: SETTINGS_VERSION, diceMode: 'app', activePresetId: 'default' }, storage);
     const result = readSettings(storage);
     expect(result.diceMode).toBe('app');
+  });
+
+  it('round-trips a non-default activePresetId', () => {
+    const storage = makeStorage();
+    writeSettings({ version: SETTINGS_VERSION, diceMode: 'app', activePresetId: 'user-preset-abc' }, storage);
+    const result = readSettings(storage);
+    expect(result.activePresetId).toBe('user-preset-abc');
   });
 });
 
@@ -54,7 +62,7 @@ describe('reload / rehydration', () => {
     expect(readSettings(storage).diceMode).toBe('app');
 
     // Toggle and write through
-    writeSettings({ version: SETTINGS_VERSION, diceMode: 'physical' }, storage);
+    writeSettings({ version: SETTINGS_VERSION, diceMode: 'physical', activePresetId: 'default' }, storage);
 
     // Simulate reload: fresh readSettings call on same storage
     const rehydrated = readSettings(storage);
@@ -67,7 +75,7 @@ describe('reload / rehydration', () => {
 describe('separate key from run-save', () => {
   it('clearing the run-save key leaves settings intact', () => {
     const storage = makeStorage();
-    writeSettings({ version: SETTINGS_VERSION, diceMode: 'physical' }, storage);
+    writeSettings({ version: SETTINGS_VERSION, diceMode: 'physical', activePresetId: 'default' }, storage);
     storage.setItem('the-job:run-save', JSON.stringify({ version: 1, seed: 42, eventLog: [] }));
 
     // Clear the run save
@@ -81,7 +89,7 @@ describe('separate key from run-save', () => {
 
   it('clearSettings only removes the settings key', () => {
     const storage = makeStorage();
-    writeSettings({ version: SETTINGS_VERSION, diceMode: 'physical' }, storage);
+    writeSettings({ version: SETTINGS_VERSION, diceMode: 'physical', activePresetId: 'default' }, storage);
     storage.setItem('the-job:run-save', JSON.stringify({ version: 1, seed: 42, eventLog: [] }));
 
     clearSettings(storage);
@@ -154,7 +162,42 @@ describe('writeSettings error resilience', () => {
       removeItem: () => {},
     };
     expect(() =>
-      writeSettings({ version: SETTINGS_VERSION, diceMode: 'app' }, throwingStorage),
+      writeSettings({ version: SETTINGS_VERSION, diceMode: 'app', activePresetId: 'default' }, throwingStorage),
     ).not.toThrow();
+  });
+});
+
+// ── v1 → v2 migration ────────────────────────────────────────────────────────
+
+describe('v1 → v2 migration', () => {
+  it('old v1 settings load without reset — diceMode is preserved', () => {
+    const storage = makeStorage();
+    // Simulate a v1 settings object (no activePresetId)
+    storage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, diceMode: 'physical' }));
+
+    const result = readSettings(storage);
+
+    expect(result.diceMode).toBe('physical');
+    expect(result.activePresetId).toBe('default');
+    expect(result.version).toBe(SETTINGS_VERSION);
+  });
+
+  it('migrated settings are written back with the new version', () => {
+    const storage = makeStorage();
+    storage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, diceMode: 'app' }));
+
+    readSettings(storage);
+
+    const raw = storage.getItem(SETTINGS_KEY);
+    expect(raw).not.toBeNull();
+    const written = JSON.parse(raw!) as { version: number; activePresetId: string };
+    expect(written.version).toBe(SETTINGS_VERSION);
+    expect(written.activePresetId).toBe('default');
+  });
+
+  it('fresh default includes activePresetId', () => {
+    const storage = makeStorage();
+    const result = readSettings(storage);
+    expect(result.activePresetId).toBe('default');
   });
 });

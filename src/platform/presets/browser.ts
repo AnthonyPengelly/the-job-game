@@ -2,6 +2,7 @@ import type { EngineConfig } from '@/engine/config';
 import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
 import type { ParsedNarration, ParsedSoundManifest } from '@/content/schema';
 import { buildConfig } from './build-config';
+import type { PresetBundle } from './build-config';
 
 import metaJson from '../../../presets/default/_meta.json';
 import tuningJson from '../../../presets/default/tuning.json';
@@ -14,7 +15,8 @@ import triviaJson from '../../../presets/default/content/banks/trivia.json';
 import narrationJson from '../../../presets/default/content/narration.json';
 import soundJson from '../../../presets/default/content/sound.json';
 
-export function loadDefaultConfig(): EngineConfig {
+/** Returns the parsed (but not yet frozen) default preset bundle. */
+export function loadDefaultBundle(): PresetBundle {
   const meta = metaSchema.parse(metaJson);
   const tuning = tuningSchema.parse(tuningJson);
   const scaling = scalingSchema.parse(scalingJson);
@@ -23,7 +25,11 @@ export function loadDefaultConfig(): EngineConfig {
   const gear = gearSchema.parse(gearJson);
   const categoriesBank = categoriesBankSchema.parse(categoriesJson);
   const triviaBank = triviaBankSchema.parse(triviaJson);
-  return buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank });
+  return { meta, tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank };
+}
+
+export function loadDefaultConfig(): EngineConfig {
+  return buildConfig(loadDefaultBundle());
 }
 
 /**

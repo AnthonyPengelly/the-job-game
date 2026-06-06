@@ -14,7 +14,6 @@ import {
 } from '@/platform';
 import type { StorageLike } from '@/platform';
 import { SAVE_VERSION } from '@/content/schema/save';
-import { SETTINGS_VERSION } from '@/content/schema/settings';
 import type { DiceMode } from '@/content/schema/settings';
 import type { ParsedNarration } from '@/content/schema';
 import type { LeaderboardEntry } from '@/content/schema/leaderboard';
@@ -246,7 +245,8 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
     },
 
     setDiceMode(mode: DiceMode): void {
-      writeSettings({ version: SETTINGS_VERSION, diceMode: mode }, storage);
+      const current = readSettings(storage);
+      writeSettings({ ...current, diceMode: mode }, storage);
       set({ diceMode: mode });
     },
   }));
