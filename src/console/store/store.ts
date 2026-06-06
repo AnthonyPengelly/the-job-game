@@ -2,12 +2,22 @@ import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
 import { initialState, initialSession, reduceSession } from '@/engine';
 import type { EngineConfig, RunEvent, PlayerSetup, SessionState } from '@/engine';
-import { writeSave, readSave, clearSave, readSettings, writeSettings } from '@/platform';
+import {
+  writeSave,
+  readSave,
+  clearSave,
+  readSettings,
+  writeSettings,
+  readLeaderboard,
+  appendScore,
+  topEntries,
+} from '@/platform';
 import type { StorageLike } from '@/platform';
 import { SAVE_VERSION } from '@/content/schema/save';
 import { SETTINGS_VERSION } from '@/content/schema/settings';
 import type { DiceMode } from '@/content/schema/settings';
 import type { ParsedNarration } from '@/content/schema';
+import type { LeaderboardEntry } from '@/content/schema/leaderboard';
 import { createNarrationDirector } from '@/console/teleprompter';
 import type { NarrationDirector } from '@/console/teleprompter';
 import { replay } from './replay';
@@ -35,6 +45,19 @@ export interface GameStoreState {
    * startRun / hydrate / goAgain so narration deterministically follows runSeed.
    */
   director: NarrationDirector | null;
+
+  /** All leaderboard entries sorted by score descending. Refreshed on every write. */
+  leaderboard: LeaderboardEntry[];
+  /**
+   * 1-indexed rank of the current run in the leaderboard. Set when a dispatch
+   * transitions to the result phase with a final score; reset to null otherwise.
+   */
+  currentRunRank: number | null;
+  /**
+   * True if the current run's score is a new personal best for this seed.
+   * Set alongside currentRunRank; reset to false when leaving the result phase.
+   */
+  currentRunNewBest: boolean;
 
   // Actions
   dispatch: (event: RunEvent) => void;
@@ -76,6 +99,10 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
     writeSave({ version: SAVE_VERSION, seed, eventLog }, storage);
   }
 
+  function sortedLeaderboard(): LeaderboardEntry[] {
+    return topEntries(Number.MAX_SAFE_INTEGER, storage);
+  }
+
   // Read settings at store-creation time so diceMode is available before the
   // first hydrate() call (e.g. on the Setup screen before a run starts).
   const initialSettings = readSettings(storage);
@@ -89,13 +116,49 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
     staleSaveNotice: false,
     diceMode: initialSettings.diceMode,
     director: makeDirector(0),
+    leaderboard: sortedLeaderboard(),
+    currentRunRank: null,
+    currentRunNewBest: false,
 
     dispatch(event: RunEvent): void {
       const { session, eventLog, cfg: c, runSeed } = get();
       const newSession = reduceSession(session, event, c);
       const newLog = [...eventLog, event];
       writeThrough(runSeed, newLog);
-      set({ session: newSession, eventLog: newLog });
+
+      // Write to leaderboard when a dispatch lands us in the result phase.
+      // Dedupe by runSeed (upsert keeping best score) so undo/redo across the
+      // result boundary never double-counts.
+      let leaderboardPatch: Partial<Pick<GameStoreState, 'leaderboard' | 'currentRunRank' | 'currentRunNewBest'>> = {};
+      if (newSession.present.phase === 'result' && newSession.present.finalScore !== undefined) {
+        const prevBestForSeed = readLeaderboard(storage).entries.find(
+          e => e.runSeed === runSeed,
+        );
+        const entry: LeaderboardEntry = {
+          runSeed,
+          score: newSession.present.finalScore,
+          loot: newSession.present.loot,
+          heatAtGetaway: newSession.present.heat,
+          win: newSession.present.win ?? false,
+          crewSize: newSession.present.crew.length,
+          finishedAt: Date.now(),
+        };
+        const newEnvelope = appendScore(entry, storage);
+        const sorted = [...newEnvelope.entries].sort((a, b) => b.score - a.score);
+        const rank = sorted.findIndex(e => e.runSeed === runSeed) + 1;
+        const currentRunNewBest =
+          prevBestForSeed === undefined || entry.score > prevBestForSeed.score;
+        leaderboardPatch = {
+          leaderboard: sorted,
+          currentRunRank: rank > 0 ? rank : null,
+          currentRunNewBest,
+        };
+      } else if (session.present.phase === 'result' && newSession.present.phase !== 'result') {
+        // Undo out of result phase — rank/new-best are no longer valid.
+        leaderboardPatch = { currentRunRank: null, currentRunNewBest: false };
+      }
+
+      set({ session: newSession, eventLog: newLog, ...leaderboardPatch });
     },
 
     undo(): void {
@@ -104,7 +167,15 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
       const newSession = reduceSession(session, { t: 'UNDO_LAST' }, c);
       const newLog = eventLog.slice(0, -1);
       writeThrough(runSeed, newLog);
-      set({ session: newSession, eventLog: newLog });
+
+      // Clear rank/new-best if we've undone out of the result phase.
+      const leavingResult =
+        session.present.phase === 'result' && newSession.present.phase !== 'result';
+      const leaderboardPatch = leavingResult
+        ? { currentRunRank: null, currentRunNewBest: false }
+        : {};
+
+      set({ session: newSession, eventLog: newLog, ...leaderboardPatch });
     },
 
     startRun(setup: PlayerSetup[], seed?: number): void {
@@ -122,6 +193,8 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         hasResumableSave: false,
         staleSaveNotice: false,
         director: makeDirector(startSeed),
+        currentRunRank: null,
+        currentRunNewBest: false,
       });
     },
 
@@ -134,6 +207,8 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         hasResumableSave: false,
         staleSaveNotice: false,
         director: makeDirector(0),
+        currentRunRank: null,
+        currentRunNewBest: false,
       });
     },
 
@@ -152,6 +227,12 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
           runSeed: result.save.seed,
           hasResumableSave: true,
           director: makeDirector(result.save.seed),
+          // Hydrate/replay does not append to the leaderboard.
+          // Refresh the leaderboard read so any externally-modified storage is
+          // picked up, but do not write a new entry.
+          leaderboard: sortedLeaderboard(),
+          currentRunRank: null,
+          currentRunNewBest: false,
         });
       } else if (result.reason === 'stale' || result.reason === 'corrupt') {
         clearSave(storage);

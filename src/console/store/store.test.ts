@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameStore } from './store';
 import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
+import { readLeaderboard } from '@/platform';
 import type { RunEvent, PlayerId } from '@/engine';
 import { SAVE_VERSION } from '@/content/schema/save';
 import type { ParsedNarration } from '@/content/schema';
@@ -350,5 +351,191 @@ describe('director — seeded from runSeed', () => {
     const refLine = reference.next('briefing');
     expect(line2a).toBe(refLine);
     expect(line1a).toBe(refLine);
+  });
+});
+
+// ── Leaderboard integration ───────────────────────────────────────────────────
+
+/** Drive a store from fresh-start to the result phase using override shortcuts. */
+function reachResultPhase(storage: StorageLike, seed = 42, loot = 10, win = true) {
+  const store = createGameStore({ cfg: testCfg, storage });
+  store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
+  store.getState().dispatch({ t: 'OVERRIDE_SET_LOOT', value: loot });
+  store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'getaway' });
+  store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win });
+  return store;
+}
+
+describe('leaderboard — write on run finish', () => {
+  it('appends exactly one entry to the leaderboard when reaching result phase', () => {
+    const storage = makeStorage();
+    const store = reachResultPhase(storage, 42, 10, true);
+    expect(store.getState().session.present.phase).toBe('result');
+    expect(store.getState().leaderboard).toHaveLength(1);
+    const entry = store.getState().leaderboard[0]!;
+    expect(entry.runSeed).toBe(42);
+    expect(entry.win).toBe(true);
+    expect(entry.loot).toBe(10);
+    expect(typeof entry.score).toBe('number');
+    expect(entry.finishedAt).toBeGreaterThan(0);
+  });
+
+  it('persists the leaderboard entry to storage independently of the run save', () => {
+    const storage = makeStorage();
+    reachResultPhase(storage, 42, 10, true);
+    const saved = readLeaderboard(storage);
+    expect(saved.entries).toHaveLength(1);
+    expect(saved.entries[0]!.runSeed).toBe(42);
+  });
+
+  it('appends a second entry for a different seed', () => {
+    const storage = makeStorage();
+    reachResultPhase(storage, 1, 5, true);
+    reachResultPhase(storage, 2, 8, false);
+    const { leaderboard } = createGameStore({ cfg: testCfg, storage }).getState();
+    // 2 entries — different seeds
+    expect(leaderboard).toHaveLength(2);
+  });
+});
+
+describe('leaderboard — dedupe by seed (undo/redo invariant)', () => {
+  it('does not duplicate when undo out of result then redo re-triggers RESOLVE_GETAWAY', () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }], 42);
+    store.getState().dispatch({ t: 'OVERRIDE_SET_LOOT', value: 10 });
+    store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'getaway' });
+    store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
+
+    expect(store.getState().leaderboard).toHaveLength(1);
+
+    // Undo back to getaway
+    store.getState().undo();
+    expect(store.getState().session.present.phase).toBe('getaway');
+
+    // Redo result
+    store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
+    expect(store.getState().session.present.phase).toBe('result');
+    expect(store.getState().leaderboard).toHaveLength(1);
+  });
+
+  it('keeps the higher score when the re-resolved run has a different result', () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }], 7);
+    store.getState().dispatch({ t: 'OVERRIDE_SET_LOOT', value: 20 });
+    store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'getaway' });
+    store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
+    const firstScore = store.getState().leaderboard[0]!.score;
+
+    // Undo result, adjust loot upward, redo — higher score should win
+    store.getState().undo();
+    store.getState().dispatch({ t: 'OVERRIDE_SET_LOOT', value: 50 });
+    store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
+
+    const lb = store.getState().leaderboard;
+    expect(lb).toHaveLength(1);
+    expect(lb[0]!.score).toBeGreaterThan(firstScore);
+  });
+});
+
+describe('leaderboard — currentRunRank and currentRunNewBest', () => {
+  it('sets currentRunRank = 1 for the first (and only) run', () => {
+    const storage = makeStorage();
+    const store = reachResultPhase(storage, 42, 10, true);
+    expect(store.getState().currentRunRank).toBe(1);
+  });
+
+  it('sets currentRunNewBest = true for the first run with this seed', () => {
+    const storage = makeStorage();
+    const store = reachResultPhase(storage, 42, 10, true);
+    expect(store.getState().currentRunNewBest).toBe(true);
+  });
+
+  it('sets currentRunNewBest = false when same seed arrives with a lower score', () => {
+    const storage = makeStorage();
+    // First run with seed 42, loot=20 (high score)
+    reachResultPhase(storage, 42, 20, true);
+    // Second run with same seed, lower loot
+    const store = reachResultPhase(storage, 42, 1, false);
+    expect(store.getState().currentRunNewBest).toBe(false);
+  });
+
+  it('clears rank and newBest when undoing out of result phase', () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }], 42);
+    store.getState().dispatch({ t: 'OVERRIDE_SET_LOOT', value: 10 });
+    store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'getaway' });
+    store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
+    expect(store.getState().currentRunRank).toBe(1);
+
+    store.getState().undo();
+    expect(store.getState().currentRunRank).toBeNull();
+    expect(store.getState().currentRunNewBest).toBe(false);
+  });
+
+  it('resets rank and newBest on startRun', () => {
+    const storage = makeStorage();
+    const store = reachResultPhase(storage, 42, 10, true);
+    expect(store.getState().currentRunRank).toBe(1);
+
+    store.getState().startRun([{ name: 'Bob' }], 99);
+    expect(store.getState().currentRunRank).toBeNull();
+    expect(store.getState().currentRunNewBest).toBe(false);
+  });
+
+  it('resets rank and newBest on goAgain', () => {
+    const storage = makeStorage();
+    const store = reachResultPhase(storage, 42, 10, true);
+    store.getState().goAgain();
+    expect(store.getState().currentRunRank).toBeNull();
+    expect(store.getState().currentRunNewBest).toBe(false);
+  });
+});
+
+describe('leaderboard — hydrate does not append', () => {
+  it('hydrating a result-phase save does not add a new leaderboard entry', () => {
+    const storage = makeStorage();
+    // Reach result and write leaderboard entry via dispatch
+    reachResultPhase(storage, 42, 10, true);
+    expect(readLeaderboard(storage).entries).toHaveLength(1);
+
+    // A fresh store that hydrates the same save should NOT add another entry
+    const store2 = createGameStore({ cfg: testCfg, storage });
+    store2.getState().hydrate();
+    expect(readLeaderboard(storage).entries).toHaveLength(1);
+    // hydrate does not set rank/newBest
+    expect(store2.getState().currentRunRank).toBeNull();
+    expect(store2.getState().currentRunNewBest).toBe(false);
+  });
+
+  it('hydrate refreshes leaderboard state from storage', () => {
+    const storage = makeStorage();
+    reachResultPhase(storage, 1, 10, true);
+    reachResultPhase(storage, 2, 20, true);
+
+    // New store reads leaderboard at create-time
+    const store = createGameStore({ cfg: testCfg, storage });
+    expect(store.getState().leaderboard).toHaveLength(2);
+    // After hydrate, leaderboard is still present
+    store.getState().hydrate();
+    expect(store.getState().leaderboard).toHaveLength(2);
+  });
+});
+
+describe('leaderboard — corrupt/stale leaderboard in storage resets cleanly', () => {
+  it('initialises with an empty leaderboard when storage contains malformed data', () => {
+    const storage = makeStorage();
+    storage.setItem('the-job:leaderboard', '{ not valid json }');
+    const store = createGameStore({ cfg: testCfg, storage });
+    expect(store.getState().leaderboard).toHaveLength(0);
+  });
+
+  it('initialises with an empty leaderboard when storage contains a stale version', () => {
+    const storage = makeStorage();
+    storage.setItem('the-job:leaderboard', JSON.stringify({ version: 999, entries: [] }));
+    const store = createGameStore({ cfg: testCfg, storage });
+    expect(store.getState().leaderboard).toHaveLength(0);
   });
 });
