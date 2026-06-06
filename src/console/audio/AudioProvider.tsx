@@ -71,16 +71,25 @@ export function AudioProvider({ children }: AudioProviderProps) {
     };
   }, [engine]);
 
-  // Wire store heat → ambient bed intensity (E9.5).
-  useAmbientBed();
-
   return (
     <AudioHandleContext.Provider value={handleRef.current}>
       <AudioClockContext.Provider value={clockHandleRef.current}>
+        <AmbientBedWire />
         {children}
       </AudioClockContext.Provider>
     </AudioHandleContext.Provider>
   );
+}
+
+/**
+ * Mounts inside both AudioHandleContext and AudioClockContext providers so that
+ * useAmbientBed() → useAudio() → useContext(AudioHandleContext) resolves to the
+ * handle above, not the null default. AudioProvider cannot call useAmbientBed()
+ * in its own body because a component cannot consume a context it itself renders.
+ */
+function AmbientBedWire() {
+  useAmbientBed();
+  return null;
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
