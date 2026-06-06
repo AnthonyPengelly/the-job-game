@@ -2,15 +2,16 @@
 /**
  * Sensor: asserts no CDN hostnames appear in the built dist artefacts.
  *
- * Builds the project (if dist/ doesn't exist or is stale) then scans
- * dist/**\/*.{css,js,html} for known CDN hostnames. Exits non-zero with a
- * clear message if any CDN reference is found.
+ * Always builds from current source before scanning so the check can never
+ * false-pass against a stale dist/ left over from a previous pipeline step.
+ * Scans dist/**\/*.{css,js,html} for known CDN hostnames and exits non-zero
+ * with a clear message if any CDN reference is found.
  *
  * Run from the repo root: node scripts/sensors/no-cdn.mjs
  */
 
 import { execSync } from 'child_process';
-import { readdirSync, readFileSync, statSync, existsSync } from 'fs';
+import { readdirSync, readFileSync, statSync } from 'fs';
 import { resolve, join } from 'path';
 
 const repoRoot = process.cwd();
@@ -37,11 +38,9 @@ function walk(dir, exts) {
   return results;
 }
 
-// Build if dist doesn't exist.
-if (!existsSync(distDir)) {
-  console.log('[no-cdn] dist/ not found — running build…');
-  execSync('npm run build', { cwd: repoRoot, stdio: 'inherit' });
-}
+// Always build from current source so the scan reflects the actual output.
+console.log('[no-cdn] building from current source…');
+execSync('npm run build', { cwd: repoRoot, stdio: 'inherit' });
 
 const files = walk(distDir, ['.css', '.js', '.html']);
 
