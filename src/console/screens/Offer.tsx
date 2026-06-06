@@ -1,4 +1,20 @@
+import { useState } from 'react';
 import { useGameStore } from '@/console/store';
+import { Teleprompter } from '@/console/teleprompter';
+import type { EngineConfig } from '@/engine';
+
+// ── Heat band derivation ──────────────────────────────────────────────────────
+
+type HeatBand = 'cool' | 'warm' | 'hot';
+
+function deriveHeatBand(heat: number, cfg: EngineConfig): HeatBand {
+  const runAtThreshold = cfg.heat.hMax * cfg.heat.runAtFraction;
+  if (heat < runAtThreshold) return 'cool';
+  if (heat < cfg.heat.hMax * 0.75) return 'warm';
+  return 'hot';
+}
+
+// ── Offer screen ──────────────────────────────────────────────────────────────
 
 /**
  * GM console screen for the offer phase.
@@ -9,10 +25,21 @@ import { useGameStore } from '@/console/store';
  *
  * The escape-signal hint ("getting hot — we can roll") is shown exactly when
  * state.escapeSignal is true (heat is at or above the run-at fraction).
+ *
+ * The pushRun teleprompter surfaces a director-selected line scoped by heatBand
+ * derived from current Heat vs the escape signal threshold.
  */
 export function Offer() {
   const dispatch = useGameStore(s => s.dispatch);
   const escapeSignal = useGameStore(s => s.session.present.escapeSignal);
+  const heat = useGameStore(s => s.session.present.heat);
+  const cfg = useGameStore(s => s.cfg);
+  const director = useGameStore(s => s.director);
+
+  const [pushRunLine, setPushRunLine] = useState<string>(() => {
+    if (!director) return '';
+    return director.next('pushRun', { heatBand: deriveHeatBand(heat, cfg) });
+  });
 
   function handlePushOn() {
     dispatch({ t: 'PUSH_ON' });
@@ -22,9 +49,20 @@ export function Offer() {
     dispatch({ t: 'CALL_GETAWAY' });
   }
 
+  function handleAdvance() {
+    if (!director) return;
+    setPushRunLine(director.next('pushRun', { heatBand: deriveHeatBand(heat, cfg) }));
+  }
+
   return (
     <div data-testid="screen-offer">
       <h2>Offer</h2>
+
+      {pushRunLine !== '' && (
+        <div data-testid="push-run-narration">
+          <Teleprompter line={pushRunLine} onAdvance={handleAdvance} />
+        </div>
+      )}
 
       {escapeSignal && (
         <p data-testid="escape-signal-hint">Getting hot — we can roll.</p>

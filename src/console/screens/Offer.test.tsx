@@ -4,6 +4,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { StoreContext, createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
+import type { ParsedNarration } from '@/content/schema';
 import { Offer } from './Offer';
 
 afterEach(cleanup);
@@ -143,5 +144,120 @@ describe('Offer screen', () => {
     fireEvent.click(screen.getByTestId('btn-push-on'));
     // Engine routes to getaway instead of another room.
     expect(store.getState().session.present.phase).toBe('getaway');
+  });
+});
+
+// ── Narration: pushRun teleprompter ───────────────────────────────────────────
+
+function makeNarrationFixture(): ParsedNarration {
+  const variants = (prefix: string, count: number) =>
+    Array.from({ length: count }, (_, i) => ({ id: `${prefix}-${i}`, text: `${prefix} text ${i}` }));
+  return {
+    briefing: variants('br', 6),
+    obstacleClue: variants('oc', 10),
+    optionDescription: variants('od', 10),
+    pushRun: [
+      { id: 'pr-cool-0', text: 'Cool push run A', when: { heatBand: 'cool' } },
+      { id: 'pr-cool-1', text: 'Cool push run B', when: { heatBand: 'cool' } },
+      { id: 'pr-warm-0', text: 'Warm push run A', when: { heatBand: 'warm' } },
+      { id: 'pr-warm-1', text: 'Warm push run B', when: { heatBand: 'warm' } },
+      { id: 'pr-hot-0', text: 'Hot push run A', when: { heatBand: 'hot' } },
+      { id: 'pr-hot-1', text: 'Hot push run B', when: { heatBand: 'hot' } },
+    ],
+    outcomeQuip: variants('oq', 18),
+    scenarioSetup: variants('ss', 8),
+    getawayIntro: variants('gi', 6),
+    getawayCountdown: variants('gc', 6),
+    winSting: variants('ws', 6),
+    bustSting: variants('bs', 6),
+  };
+}
+
+function makeOfferStoreWithNarration(seed = 1) {
+  const narration = makeNarrationFixture();
+  const store = createGameStore({ cfg: obstacleOnlyCfg, storage: makeStorage(), narration });
+  store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
+
+  const room = store.getState().session.present.currentRoom;
+  if (room === null || room.kind !== 'obstacle') {
+    throw new Error('Expected obstacle room');
+  }
+  const crew = store.getState().session.present.crew;
+  store.getState().dispatch({
+    t: 'CHOOSE_OPTION',
+    optionId: room.options[0]!.id,
+    committed: [crew[0]!.id],
+  });
+  store.getState().dispatch({ t: 'RESOLVE_MINIGAME', outcome: 'clean' });
+
+  if (store.getState().session.present.phase !== 'offer') {
+    throw new Error('Expected offer phase');
+  }
+  return store;
+}
+
+function renderOfferWithNarration(seed = 1) {
+  const store = makeOfferStoreWithNarration(seed);
+  render(
+    <StoreContext.Provider value={store}>
+      <Offer />
+    </StoreContext.Provider>,
+  );
+  return store;
+}
+
+describe('Offer screen — pushRun narration', () => {
+  it('renders push-run-narration container with teleprompter when narration is loaded', () => {
+    renderOfferWithNarration();
+    expect(screen.getByTestId('push-run-narration')).toBeInTheDocument();
+    expect(screen.getByTestId('teleprompter')).toBeInTheDocument();
+  });
+
+  it('teleprompter shows a non-empty pushRun line (cool band at low heat)', () => {
+    renderOfferWithNarration();
+    const line = screen.getByTestId('teleprompter-line').textContent ?? '';
+    expect(line).not.toBe('');
+    // At low heat the band is 'cool' so the variant text starts with 'Cool'
+    expect(line).toContain('Cool push run');
+  });
+
+  it('advance button re-picks a pushRun line (never disabled)', () => {
+    renderOfferWithNarration();
+    const btn = screen.getByTestId('teleprompter-advance');
+    expect(btn).not.toBeDisabled();
+    fireEvent.click(btn);
+    expect(screen.getByTestId('teleprompter-line')).toBeInTheDocument();
+  });
+
+  it('push-on and call-getaway are still reachable regardless of narration state', () => {
+    renderOfferWithNarration();
+    expect(screen.getByTestId('btn-push-on')).toBeInTheDocument();
+    expect(screen.getByTestId('btn-call-getaway')).toBeInTheDocument();
+  });
+
+  it('hot heatBand narration selected when heat is at hMax (heat set before render)', () => {
+    const narration = makeNarrationFixture();
+    const hotStore = createGameStore({ cfg: obstacleOnlyCfg, storage: makeStorage(), narration });
+    hotStore.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+
+    const room = hotStore.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = hotStore.getState().session.present.crew;
+    hotStore.getState().dispatch({
+      t: 'CHOOSE_OPTION',
+      optionId: room.options[0]!.id,
+      committed: [crew[0]!.id],
+    });
+    hotStore.getState().dispatch({ t: 'RESOLVE_MINIGAME', outcome: 'clean' });
+    // Set heat to hMax BEFORE rendering so the useState initializer uses the hot band.
+    hotStore.getState().dispatch({ t: 'OVERRIDE_SET_HEAT', value: testCfg.heat.hMax });
+
+    render(
+      <StoreContext.Provider value={hotStore}>
+        <Offer />
+      </StoreContext.Provider>,
+    );
+    const line = screen.getByTestId('teleprompter-line').textContent ?? '';
+    expect(line).toContain('Hot push run');
   });
 });
