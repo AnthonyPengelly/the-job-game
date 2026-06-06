@@ -329,11 +329,12 @@ describe('loadSoundManifest', () => {
     expect(ids.has(manifest.ambientBed.heartbeatId)).toBe(true);
   });
 
-  it('every src resolves to a file under public/sound/', () => {
+  it('every src resolves to a bundled asset under src/platform/audio/sounds/', () => {
     const manifest = loadSoundManifest('default');
     for (const cue of manifest.cues) {
       expect(cue.src).toMatch(/^sound\//);
-      const fullPath = resolve(cwd(), 'public', cue.src);
+      const filename = cue.src.replace(/^sound\//, '');
+      const fullPath = resolve(cwd(), 'src/platform/audio/sounds', filename);
       expect(existsSync(fullPath)).toBe(true);
     }
   });
