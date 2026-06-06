@@ -12,7 +12,7 @@
     "lint": "eslint src",
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "check:full": "npm run check && node scripts/sensors/lint-import-direction.mjs",
+    "check:full": "npm run check && node scripts/sensors/lint-import-direction.mjs && node scripts/sensors/no-cdn.mjs",
     "sim:check": "vitest run --config vitest.sim.config.ts",
     "content:validate": "vitest run src/content/narration/counts.test.ts src/content/schema/narration.test.ts --reporter=verbose",
     "agent:preflight": "./scripts/agents/preflight.sh",
@@ -21,6 +21,10 @@
     "agent:shell": "docker compose run --rm --build --entrypoint /bin/bash agent"
   },
   "dependencies": {
+    "@fontsource/ibm-plex-sans": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/saira-condensed": "^5.2.8",
+    "lucide-react": "^1.17.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zod": "^4.4.3",
