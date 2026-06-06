@@ -40,7 +40,7 @@ function AppShell() {
       </main>
       {crew.length > 0 && <OverridePanel />}
       {crew.length > 0 && <Soundboard />}
-      <DiceModeControl />
+      {!showSetup && <DiceModeControl />}
     </div>
   );
 }
