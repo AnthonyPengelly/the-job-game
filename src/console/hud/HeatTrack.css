@@ -1,0 +1,17 @@
+/* HeatTrack — fill animation and live-slot glow overlay */
+
+/* Face-down card fill animation at --dur-slow when heat increases */
+@keyframes slot-fill {
+  0%   { transform: scaleY(0.05); opacity: 0.3; }
+  55%  { transform: scaleY(1.06); }
+  100% { transform: scaleY(1);    opacity: 1; }
+}
+
+.slot.filling {
+  animation: slot-fill var(--dur-slow) var(--ease-out) both;
+}
+
+/* Stronger --glow-heat ring on the live (highest-lit) slot */
+.slot.live {
+  box-shadow: var(--glow-heat) !important;
+}

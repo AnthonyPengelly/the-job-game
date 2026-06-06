@@ -11,10 +11,8 @@ import { Soundboard } from '@/console/soundboard';
 // ── App shell ─────────────────────────────────────────────────────────────────
 
 /**
- * The app shell reads from the store and decides whether to show the pre-run
- * Setup screen or route to the correct in-run screen via PhaseRouter.
- *
- * Routing rules:
+ * The app shell wraps everything in the `.console` design-system shell
+ * (sticky HUD, scrolling stage, phase rail). Routing rules:
  *   - hasResumableSave = true  → Setup (with Resume/New choice)
  *   - crew empty + no save     → Setup (blank new-run form)
  *   - crew non-empty           → PhaseRouter (in-run screens)
@@ -33,21 +31,22 @@ function AppShell() {
   const showSetup = hasResumableSave || crew.length === 0;
 
   return (
-    <>
+    <div className="console" data-accent="green" data-texture="clean">
       {crew.length > 0 && <Hud />}
+      <main className="stage">
+        <div className="stage-inner">
+          {showSetup ? <Setup /> : <PhaseRouter phase={phase} />}
+        </div>
+      </main>
       {crew.length > 0 && <OverridePanel />}
       {crew.length > 0 && <Soundboard />}
       <DiceModeControl />
-      {showSetup ? <Setup /> : <PhaseRouter phase={phase} />}
-    </>
+    </div>
   );
 }
 
 // ── Root ──────────────────────────────────────────────────────────────────────
 
-/**
- * App root. Accepts optional store injection for testing (via `storeOptions`).
- */
 interface AppProps {
   storeOptions?: Partial<CreateGameStoreOptions>;
 }
