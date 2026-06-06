@@ -1,11 +1,7 @@
 import { isResting } from '@/engine';
 import type { Player, PlayerId, GearId } from '@/engine';
 
-// ── Lane stat row ─────────────────────────────────────────────────────────────
-
 const LANES = ['tech', 'physical', 'charm', 'stealth'] as const;
-
-// ── Player card ───────────────────────────────────────────────────────────────
 
 interface PlayerCardProps {
   player: Player;
@@ -15,12 +11,15 @@ interface PlayerCardProps {
 
 function PlayerCard({ player, roomIndex, onAssignGear }: PlayerCardProps) {
   const resting = isResting(player, roomIndex);
+  const hasGear = Object.values(player.powerUps).some(Boolean);
 
   return (
     <div
+      className="av"
       data-testid={`crew-member-${player.id}`}
+      data-out={resting ? 'true' : 'false'}
       aria-label={`${player.name}${resting ? ' (exhausted)' : ''}`}
-      style={{ opacity: resting ? 0.5 : 1 }}
+      title={player.name}
       onDragOver={
         onAssignGear
           ? (e) => {
@@ -39,12 +38,22 @@ function PlayerCard({ player, roomIndex, onAssignGear }: PlayerCardProps) {
           : undefined
       }
     >
-      <span data-testid={`crew-name-${player.id}`}>{player.name}</span>
+      {/* Visible avatar initial */}
+      <span aria-hidden="true">{player.name[0]}</span>
+
+      {/* Gear indicator dot */}
+      {hasGear && !resting && <span className="gdot" aria-hidden="true" />}
+
+      {/* Exhausted marker (visible to tests and screen readers) */}
       {resting && (
-        <span data-testid={`crew-exhausted-${player.id}`}> [exhausted]</span>
+        <span data-testid={`crew-exhausted-${player.id}`} className="sr-only"> [exhausted]</span>
       )}
 
-      <div data-testid={`crew-stats-${player.id}`}>
+      {/* Name (sr-only for tests) */}
+      <span data-testid={`crew-name-${player.id}`} className="sr-only">{player.name}</span>
+
+      {/* Stats (kept for tests and screen readers) */}
+      <div data-testid={`crew-stats-${player.id}`} className="sr-only">
         {LANES.map(lane => (
           <span key={lane} data-testid={`crew-stat-${player.id}-${lane}`}>
             {lane}: {player.stats[lane]}
@@ -52,7 +61,8 @@ function PlayerCard({ player, roomIndex, onAssignGear }: PlayerCardProps) {
         ))}
       </div>
 
-      <div data-testid={`crew-powerups-${player.id}`}>
+      {/* Power-ups (kept for tests and screen readers) */}
+      <div data-testid={`crew-powerups-${player.id}`} className="sr-only">
         {LANES.filter(lane => player.powerUps[lane]).map(lane => (
           <span key={lane} data-testid={`crew-powerup-${player.id}-${lane}`}>
             [{lane} power-up]
@@ -63,18 +73,15 @@ function PlayerCard({ player, roomIndex, onAssignGear }: PlayerCardProps) {
   );
 }
 
-// ── Crew panel ────────────────────────────────────────────────────────────────
-
 interface CrewPanelProps {
   crew: Player[];
   roomIndex: number;
-  /** When provided, player cards become drop targets for gear cards. */
   onAssignGear?: (gear: GearId, to: PlayerId) => void;
 }
 
 export function CrewPanel({ crew, roomIndex, onAssignGear }: CrewPanelProps) {
   return (
-    <div data-testid="crew-panel">
+    <div data-testid="crew-panel" className="crew-row">
       {crew.map(player => (
         <PlayerCard
           key={player.id}
