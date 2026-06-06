@@ -1,3 +1,5 @@
+import { Megaphone } from 'lucide-react';
+
 interface TeleprompterProps {
   /** The narration line to display. */
   line: string;
@@ -13,16 +15,22 @@ interface TeleprompterProps {
  * not call the director; that is the screen's responsibility.
  *
  * The advance button is always enabled (no disabled dead-end).
+ * Styled with kit .teleprompter block: 3px accent left-rule, accent-tint
+ * wash, t-teleprompter type (green-200 text, leading-relax).
  */
 export function Teleprompter({ line, onAdvance }: TeleprompterProps) {
   return (
     <div data-testid="teleprompter" className="teleprompter">
-      <p data-testid="teleprompter-line" className="teleprompter-text">
+      <div className="tp-label">
+        <Megaphone size={13} strokeWidth={1.75} aria-hidden={true} />
+        Read aloud
+      </div>
+      <p data-testid="teleprompter-line" className="t-teleprompter">
         {line}
       </p>
       <button
         data-testid="teleprompter-advance"
-        className="teleprompter-advance"
+        className="btn btn-ghost"
         type="button"
         onClick={onAdvance}
       >
