@@ -12,7 +12,7 @@
     "lint": "eslint src",
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "check:full": "npm run check && node scripts/sensors/lint-import-direction.mjs && node scripts/sensors/no-cdn.mjs",
+    "check:full": "npm run check && node scripts/sensors/lint-import-direction.mjs && node scripts/sensors/no-cdn.mjs && node scripts/sensors/offline-selfcontained.mjs",
     "sim:check": "vitest run --config vitest.sim.config.ts",
     "content:validate": "vitest run src/content/narration/counts.test.ts src/content/schema/narration.test.ts --reporter=verbose",
     "agent:preflight": "./scripts/agents/preflight.sh",
