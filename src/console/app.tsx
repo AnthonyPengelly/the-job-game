@@ -5,6 +5,7 @@ import { PhaseRouter, Setup } from '@/console/screens';
 import { Hud } from '@/console/hud';
 import { OverridePanel } from '@/console/overrides';
 import { DiceModeControl } from '@/console/settings';
+import { TuningPanel } from '@/console/tuning';
 import { AudioProvider } from '@/console/audio';
 import { Soundboard } from '@/console/soundboard';
 
@@ -41,6 +42,7 @@ function AppShell() {
       {crew.length > 0 && <OverridePanel />}
       {crew.length > 0 && <Soundboard />}
       {!showSetup && <DiceModeControl />}
+      {!showSetup && <TuningPanel />}
     </div>
   );
 }
