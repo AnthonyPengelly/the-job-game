@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef } from 'react';
-import { createAudioEngine, loadDefaultSoundManifest } from '@/platform';
+import { createAudioEngine, loadDefaultSoundManifest, createBundledFetchBuffer } from '@/platform';
 import type { AudioEngine } from '@/platform';
 import type { ParsedSoundManifest } from '@/content/schema';
 import { AudioClockContext } from '@/minigames/primitives';
@@ -40,7 +40,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const handleRef = useRef<AudioHandle | null>(null);
   if (handleRef.current === null) {
     const manifest = loadDefaultSoundManifest();
-    const engine = createAudioEngine(manifest);
+    const engine = createAudioEngine(manifest, { fetchBuffer: createBundledFetchBuffer() });
     handleRef.current = { engine, manifest };
   }
 
