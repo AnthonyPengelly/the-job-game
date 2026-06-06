@@ -37,9 +37,9 @@ describe('leaderboardEntrySchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('rejects heatAtGetaway > 20', () => {
-    const result = leaderboardEntrySchema.safeParse({ ...VALID_ENTRY, heatAtGetaway: 21 });
-    expect(result.success).toBe(false);
+  it('accepts heatAtGetaway above the default hMax (preset-tunable ceiling)', () => {
+    const result = leaderboardEntrySchema.safeParse({ ...VALID_ENTRY, heatAtGetaway: 25 });
+    expect(result.success).toBe(true);
   });
 
   it('rejects crewSize < 1', () => {
@@ -97,7 +97,7 @@ describe('leaderboardEnvelopeSchema', () => {
   it('rejects entries with an invalid member', () => {
     const result = leaderboardEnvelopeSchema.safeParse({
       version: LEADERBOARD_VERSION,
-      entries: [{ ...VALID_ENTRY, heatAtGetaway: 99 }],
+      entries: [{ ...VALID_ENTRY, crewSize: 0 }],
     });
     expect(result.success).toBe(false);
   });
