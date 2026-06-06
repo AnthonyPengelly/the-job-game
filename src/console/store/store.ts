@@ -11,6 +11,7 @@ import {
   readLeaderboard,
   appendScore,
   topEntries,
+  buildConfigFromPreset,
 } from '@/platform';
 import type { StorageLike } from '@/platform';
 import { SAVE_VERSION } from '@/content/schema/save';
@@ -38,6 +39,19 @@ export interface GameStoreState {
   staleSaveNotice: boolean;
   /** Whether the app rolls the d20 automatically or the GM enters a physical die result. */
   diceMode: DiceMode;
+  /** The id of the currently active preset. Persisted to settings. */
+  activePresetId: string;
+  /**
+   * Set when applyPreset fails. Cleared on the next successful applyPreset.
+   * The tuning panel reads this to show an inline validation message.
+   */
+  applyPresetError: string | null;
+  /**
+   * True when the boot-time preset resolution fell back to 'default' because
+   * the persisted/URL preset was missing or invalid. Surface a one-time notice
+   * to the GM (mirrors the staleSaveNotice pattern).
+   */
+  presetFallbackNotice: boolean;
   /**
    * Narration director seeded from `runSeed`. Null when no narration bank was
    * provided to the store (e.g. in engine-only tests). Recreated on every
@@ -72,6 +86,12 @@ export interface GameStoreState {
   acceptResume: () => void;
   /** Toggle dice mode and write through to settings storage. GM-only. */
   setDiceMode: (mode: DiceMode) => void;
+  /**
+   * Swap the active preset. On success: swaps cfg, persists the id, clears
+   * the in-progress save, and resets to a clean pre-run state. On failure:
+   * leaves state unchanged and sets applyPresetError with the validation message.
+   */
+  applyPreset: (id: string) => void;
 }
 
 // ── Factory options ───────────────────────────────────────────────────────────
@@ -82,12 +102,18 @@ export interface CreateGameStoreOptions {
   /** Optional narration bank. When supplied the store creates and seeds a
    *  NarrationDirector on every run start / hydrate / goAgain. */
   narration?: ParsedNarration;
+  /** The id of the active preset to record in state. Defaults to 'default'. */
+  activePresetId?: string;
+  /** When true the boot-time preset fallback notice is shown to the GM. */
+  presetFallbackNotice?: boolean;
 }
 
 // ── Factory ───────────────────────────────────────────────────────────────────
 
 export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameStoreState> {
   const { cfg, storage, narration } = options;
+  const initialActivePresetId = options.activePresetId ?? 'default';
+  const initialPresetFallbackNotice = options.presetFallbackNotice ?? false;
 
   function makeDirector(seed: number): NarrationDirector | null {
     if (!narration) return null;
@@ -114,6 +140,9 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
     hasResumableSave: false,
     staleSaveNotice: false,
     diceMode: initialSettings.diceMode,
+    activePresetId: initialActivePresetId,
+    applyPresetError: null,
+    presetFallbackNotice: initialPresetFallbackNotice,
     director: makeDirector(0),
     leaderboard: sortedLeaderboard(),
     currentRunRank: null,
@@ -248,6 +277,33 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
       const current = readSettings(storage);
       writeSettings({ ...current, diceMode: mode }, storage);
       set({ diceMode: mode });
+    },
+
+    applyPreset(id: string): void {
+      const result = buildConfigFromPreset(id, storage);
+      if (!result.ok) {
+        set({ applyPresetError: result.error });
+        return;
+      }
+      // Persist the new active preset id to settings.
+      const current = readSettings(storage);
+      writeSettings({ ...current, activePresetId: id }, storage);
+      // Clear any in-progress save; swapping rules mid-run means a new run
+      // is the clean path (docs/CONTENT-AND-TUNING.md §3).
+      clearSave(storage);
+      set({
+        cfg: result.cfg,
+        activePresetId: id,
+        applyPresetError: null,
+        session: initialSession(initialState(0)),
+        eventLog: [],
+        runSeed: 0,
+        hasResumableSave: false,
+        staleSaveNotice: false,
+        director: makeDirector(0),
+        currentRunRank: null,
+        currentRunNewBest: false,
+      });
     },
   }));
 }
