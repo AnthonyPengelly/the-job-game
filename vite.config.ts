@@ -14,14 +14,6 @@ export default defineConfig({
       '@/platform': resolve(__dirname, 'src/platform'),
     },
   },
-  build: {
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        player: resolve(__dirname, 'player.html'),
-      },
-    },
-  },
   test: {
     environment: 'node',
     setupFiles: ['./src/test-setup-jsdom.ts'],
