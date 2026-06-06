@@ -70,6 +70,21 @@ export const soundManifestSchema = z
     }),
     ambientBed: ambientBedSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((manifest, ctx) => {
+    const cueIds = new Set(manifest.cues.map((c) => c.id));
+    if (!cueIds.has(manifest.ambientBed.droneId)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `ambientBed.droneId "${manifest.ambientBed.droneId}" does not reference an existing cue id`,
+      });
+    }
+    if (!cueIds.has(manifest.ambientBed.heartbeatId)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `ambientBed.heartbeatId "${manifest.ambientBed.heartbeatId}" does not reference an existing cue id`,
+      });
+    }
+  });
 
 export type ParsedSoundManifest = z.infer<typeof soundManifestSchema>;

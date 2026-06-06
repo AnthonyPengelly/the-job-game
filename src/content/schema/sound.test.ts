@@ -115,6 +115,7 @@ describe('soundManifestSchema', () => {
     const manifest = {
       ...validManifest,
       cues: [cueAllPhases, validManifest.cues[1]],
+      ambientBed: { droneId: 'all-phases', heartbeatId: 'ambient-heartbeat' },
     };
     const result = soundManifestSchema.parse(manifest);
     expect(result.cues[0]?.phases).toEqual([...allPhases]);
@@ -136,5 +137,41 @@ describe('soundManifestSchema', () => {
     expect(() =>
       soundManifestSchema.parse({ ...validManifest, extra: true }),
     ).toThrow(ZodError);
+  });
+
+  it('rejects a manifest where ambientBed.droneId does not reference an existing cue', () => {
+    const bad = {
+      ...validManifest,
+      ambientBed: { droneId: 'nonexistent-drone', heartbeatId: 'ambient-heartbeat' },
+    };
+    let caught: unknown;
+    try {
+      soundManifestSchema.parse(bad);
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(ZodError);
+    if (caught instanceof ZodError) {
+      const messages = caught.issues.map((i) => i.message);
+      expect(messages.some((m) => m.includes('ambientBed.droneId'))).toBe(true);
+    }
+  });
+
+  it('rejects a manifest where ambientBed.heartbeatId does not reference an existing cue', () => {
+    const bad = {
+      ...validManifest,
+      ambientBed: { droneId: 'ambient-drone', heartbeatId: 'nonexistent-heartbeat' },
+    };
+    let caught: unknown;
+    try {
+      soundManifestSchema.parse(bad);
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(ZodError);
+    if (caught instanceof ZodError) {
+      const messages = caught.issues.map((i) => i.message);
+      expect(messages.some((m) => m.includes('ambientBed.heartbeatId'))).toBe(true);
+    }
   });
 });
