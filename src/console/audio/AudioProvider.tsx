@@ -4,6 +4,7 @@ import type { AudioEngine } from '@/platform';
 import type { ParsedSoundManifest } from '@/content/schema';
 import { AudioClockContext } from '@/minigames/primitives';
 import type { AudioClockHandle } from '@/minigames/primitives';
+import { useAmbientBed } from './useAmbientBed';
 
 // ── Public handle type ────────────────────────────────────────────────────────
 
@@ -73,10 +74,22 @@ export function AudioProvider({ children }: AudioProviderProps) {
   return (
     <AudioHandleContext.Provider value={handleRef.current}>
       <AudioClockContext.Provider value={clockHandleRef.current}>
+        <AmbientBedWire />
         {children}
       </AudioClockContext.Provider>
     </AudioHandleContext.Provider>
   );
+}
+
+/**
+ * Mounts inside both AudioHandleContext and AudioClockContext providers so that
+ * useAmbientBed() → useAudio() → useContext(AudioHandleContext) resolves to the
+ * handle above, not the null default. AudioProvider cannot call useAmbientBed()
+ * in its own body because a component cannot consume a context it itself renders.
+ */
+function AmbientBedWire() {
+  useAmbientBed();
+  return null;
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
