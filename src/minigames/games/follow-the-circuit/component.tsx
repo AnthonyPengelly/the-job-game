@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { CardSpread } from '@/minigames/primitives/CardSpread';
 import type { CardId } from '@/minigames/primitives/CardSpread';
-import { useMetronome } from '@/minigames/primitives/Metronome';
+import { useMetronome, useAudioClock, useScheduleBeep } from '@/minigames/primitives';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { OutcomeJudge } from '@/minigames/primitives/OutcomeJudge';
 import type { FollowTheCircuitParams } from './generate';
@@ -44,7 +44,9 @@ export function FollowTheCircuitComponent({
   // We use currentRoundLength + 1 to give a small gap beat after the sequence ends.
   const audibleBeats = currentRoundLength;
 
-  const metronome = useMetronome({ bpm: effectiveBpm, audibleBeats });
+  const clock = useAudioClock();
+  const scheduleBeep = useScheduleBeep();
+  const metronome = useMetronome({ bpm: effectiveBpm, audibleBeats, clock, scheduleBeep });
 
   // Stable refs so the onBeat callback always sees current values.
   const phaseRef = useRef<Phase>('watching');
