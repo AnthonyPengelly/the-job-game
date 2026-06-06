@@ -10,5 +10,14 @@ export type { StorageLike, ReadSaveResult } from './persistence/save';
 
 export { readSettings, writeSettings, clearSettings } from './persistence/settings';
 
+export {
+  readLeaderboard,
+  writeLeaderboard,
+  appendScore,
+  clearLeaderboard,
+  topEntries,
+  personalBest,
+} from './persistence/leaderboard';
+
 export { publishSlice, subscribeToSlice, playerViewSliceSchema } from './channel';
 export type { PlayerViewSlice, DefuseRulebookSlice } from './channel';

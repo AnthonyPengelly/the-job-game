@@ -30,3 +30,10 @@ export type { ParsedNarration, NarrationVariant, NarrationWhen, NarrationBeat } 
 
 export { soundManifestSchema, soundCueSchema, soundChannelSchema, runPhaseSchema } from './sound';
 export type { ParsedSoundManifest, SoundCue, SoundChannel, AmbientBed } from './sound';
+
+export {
+  LEADERBOARD_VERSION,
+  leaderboardEntrySchema,
+  leaderboardEnvelopeSchema,
+} from './leaderboard';
+export type { LeaderboardEntry, LeaderboardEnvelope } from './leaderboard';
