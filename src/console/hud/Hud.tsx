@@ -1,7 +1,7 @@
 // Always-visible GM HUD: logo, Heat track, counter chips, crew panel, gear tray, phase rail.
 // Mounted once in the layout; persists across all phase screens.
 // Read-only for heat/loot (only engine events mutate state); gear assignment dispatches ASSIGN_GEAR.
-import { Banknote, Repeat, Users } from 'lucide-react';
+import { Banknote, Repeat, Tv, Users } from 'lucide-react';
 import { useGameStore } from '@/console/store';
 import type { GearId, PlayerId, RunPhase } from '@/engine';
 import { HeatTrack } from './HeatTrack';
@@ -48,6 +48,10 @@ export function Hud() {
 
   function handleRailClick(railPhase: RunPhase) {
     dispatch({ t: 'OVERRIDE_SET_PHASE', phase: railPhase });
+  }
+
+  function handleOpenPlayerView() {
+    window.open('player.html', 'the-job-player');
   }
 
   return (
@@ -109,6 +113,18 @@ export function Hud() {
           </span>
           <CrewPanel crew={crew} roomIndex={roomIndex} onAssignGear={handleAssignGear} />
         </div>
+
+        {/* Player-view launcher */}
+        <button
+          className="btn btn-ghost"
+          onClick={handleOpenPlayerView}
+          data-testid="open-player-view"
+          aria-label="Open player view"
+          style={{ fontSize: '13px', padding: '8px 14px', gap: '7px' }}
+        >
+          <Tv size={16} strokeWidth={1.75} aria-hidden="true" />
+          Player view
+        </button>
       </div>
 
       {/* Phase rail */}
