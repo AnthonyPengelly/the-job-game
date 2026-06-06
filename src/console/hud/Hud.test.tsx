@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, afterEach } from 'vitest';
-import { render, screen, act, cleanup } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, act, cleanup, fireEvent } from '@testing-library/react';
 import { StoreContext, useGameStore } from '@/console/store';
 import { createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
@@ -359,5 +359,51 @@ describe('HUD — stays mounted across phase changes', () => {
       // The correct phase screen is also shown
       expect(screen.getByTestId(phaseTestIds[phase])).toBeInTheDocument();
     }
+  });
+});
+
+// ── Player-view launcher ──────────────────────────────────────────────────────
+
+describe('HUD — player-view launcher', () => {
+  it('renders the open-player-view button', async () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+
+    await act(async () => {
+      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+    });
+    await act(async () => {
+      render(
+        <StoreContext.Provider value={store}>
+          <Hud />
+        </StoreContext.Provider>,
+      );
+    });
+
+    expect(screen.getByTestId('open-player-view')).toBeInTheDocument();
+  });
+
+  it('calls window.open with player.html and a named window on click', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+
+    await act(async () => {
+      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+    });
+    await act(async () => {
+      render(
+        <StoreContext.Provider value={store}>
+          <Hud />
+        </StoreContext.Provider>,
+      );
+    });
+
+    fireEvent.click(screen.getByTestId('open-player-view'));
+
+    expect(openSpy).toHaveBeenCalledOnce();
+    expect(openSpy).toHaveBeenCalledWith('player.html', 'the-job-player');
+
+    openSpy.mockRestore();
   });
 });
