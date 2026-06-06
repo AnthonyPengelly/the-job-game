@@ -1,0 +1,21 @@
+/* Self-hosted fonts via @fontsource npm packages — no CDN, fully offline.
+   Vite resolves these imports and bundles the woff2 files at build time. */
+
+/* Saira Condensed — tactical display / headings (weights: 500 600 700 800) */
+@import '@fontsource/saira-condensed/500.css';
+@import '@fontsource/saira-condensed/600.css';
+@import '@fontsource/saira-condensed/700.css';
+@import '@fontsource/saira-condensed/800.css';
+
+/* JetBrains Mono — HUD numbers / data readout (weights: 400 500 700 800) */
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+@import '@fontsource/jetbrains-mono/800.css';
+
+/* IBM Plex Sans — body / teleprompter prose (weights: 400 500 600 700 + italic 400) */
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/400-italic.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/ibm-plex-sans/700.css';
