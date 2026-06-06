@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { Flame, Shield } from 'lucide-react';
 import { useGameStore } from '@/console/store';
 import { Teleprompter } from '@/console/teleprompter';
+import { PhaseHead, Icon } from '@/console/ui';
 import type { EngineConfig } from '@/engine';
 
 // ── Heat band derivation ──────────────────────────────────────────────────────
@@ -61,8 +63,12 @@ export function Offer() {
   }
 
   return (
-    <div data-testid="screen-offer">
-      <h2>Offer</h2>
+    <div data-testid="screen-offer" className="stage-inner">
+      <PhaseHead
+        eyebrow="04 · The Offer"
+        title="The Fence"
+        aside="A choice · No take-backs"
+      />
 
       {pushRunLine !== '' && (
         <div data-testid="push-run-narration">
@@ -71,15 +77,64 @@ export function Offer() {
       )}
 
       {escapeSignal && (
-        <p data-testid="escape-signal-hint">Getting hot — we can roll.</p>
+        <p
+          data-testid="escape-signal-hint"
+          className="opt-tag"
+          style={{ color: 'var(--caution)' }}
+        >
+          Getting hot — we can roll.
+        </p>
       )}
 
-      <button data-testid="btn-push-on" onClick={handlePushOn}>
-        Push On
-      </button>
-      <button data-testid="btn-call-getaway" onClick={handleCallGetaway}>
-        Call the Getaway
-      </button>
+      <div className="grid-2">
+        <div
+          className="opt risk"
+          role="button"
+          tabIndex={0}
+          data-testid="btn-push-on"
+          onClick={handlePushOn}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handlePushOn(); }}
+        >
+          <span className="opt-tag">
+            <Icon icon={Flame} size={14} />
+            {' '}High risk
+          </span>
+          <h4>Push On</h4>
+          <p className="prose muted" style={{ fontSize: 16 }}>
+            Take another room. More exposure, more reward.
+          </p>
+          <div className="opt-cost">
+            <div className="c">
+              <span className="k">Next room</span>
+              <span className="v" style={{ color: 'var(--danger)' }}>+Heat</span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="opt safe"
+          role="button"
+          tabIndex={0}
+          data-testid="btn-call-getaway"
+          onClick={handleCallGetaway}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCallGetaway(); }}
+        >
+          <span className="opt-tag">
+            <Icon icon={Shield} size={14} />
+            {' '}Play it safe
+          </span>
+          <h4>Call the Getaway</h4>
+          <p className="prose muted" style={{ fontSize: 16 }}>
+            Bank what you have. Live to spend it.
+          </p>
+          <div className="opt-cost">
+            <div className="c">
+              <span className="k">Heat</span>
+              <span className="v" style={{ color: 'var(--fg-faint)' }}>±0</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
