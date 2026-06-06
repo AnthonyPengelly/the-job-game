@@ -3,7 +3,7 @@ import { useStore } from 'zustand/react';
 import type { StoreApi } from 'zustand/vanilla';
 import { createGameStore } from './store';
 import type { GameStoreState, CreateGameStoreOptions } from './store';
-import { loadDefaultConfig } from '@/platform';
+import { loadDefaultConfig, loadDefaultNarration } from '@/platform';
 
 // ── Context ───────────────────────────────────────────────────────────────────
 
@@ -27,6 +27,7 @@ export function StoreProvider({ children, options }: StoreProviderProps) {
     storeRef.current = createGameStore({
       cfg: options?.cfg ?? loadDefaultConfig(),
       storage: options?.storage ?? window.localStorage,
+      narration: options?.narration ?? loadDefaultNarration(),
     });
   }
   return (

@@ -4,6 +4,27 @@ import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
 import type { RunEvent, PlayerId } from '@/engine';
 import { SAVE_VERSION } from '@/content/schema/save';
+import type { ParsedNarration } from '@/content/schema';
+import { createNarrationDirector } from '@/console/teleprompter';
+
+// ── Minimal narration bank for director tests ─────────────────────────────────
+
+const makeNarrationFixture = (): ParsedNarration => {
+  const variants = (prefix: string, count: number) =>
+    Array.from({ length: count }, (_, i) => ({ id: `${prefix}-${i}`, text: `${prefix} text ${i}` }));
+  return {
+    briefing: variants('br', 8),
+    obstacleClue: variants('oc', 10),
+    optionDescription: variants('od', 10),
+    pushRun: variants('pr', 8),
+    outcomeQuip: variants('oq', 18),
+    scenarioSetup: variants('ss', 8),
+    getawayIntro: variants('gi', 6),
+    getawayCountdown: variants('gc', 6),
+    winSting: variants('ws', 6),
+    bustSting: variants('bs', 6),
+  };
+};
 
 // ── In-memory storage stub ────────────────────────────────────────────────────
 
@@ -240,5 +261,94 @@ describe('undo write-through consistency', () => {
     expect(raw).not.toBeNull();
     const saved = JSON.parse(raw!) as { eventLog: RunEvent[] };
     expect(saved.eventLog).toHaveLength(store.getState().eventLog.length);
+  });
+});
+
+// ── Director seeding ──────────────────────────────────────────────────────────
+
+describe('director — seeded from runSeed', () => {
+  it('is null when no narration bank is provided', () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }], 42);
+    expect(store.getState().director).toBeNull();
+  });
+
+  it('is non-null after startRun when narration is provided', () => {
+    const storage = makeStorage();
+    const narration = makeNarrationFixture();
+    const store = createGameStore({ cfg: testCfg, storage, narration });
+    store.getState().startRun([{ name: 'Alice' }], 42);
+    expect(store.getState().director).not.toBeNull();
+  });
+
+  it('startRun re-seeds the director from the run seed', () => {
+    const narration = makeNarrationFixture();
+
+    // Two stores with same seed should produce the same first narration line
+    const s1 = createGameStore({ cfg: testCfg, storage: makeStorage(), narration });
+    const s2 = createGameStore({ cfg: testCfg, storage: makeStorage(), narration });
+
+    s1.getState().startRun([{ name: 'Alice' }], 42);
+    s2.getState().startRun([{ name: 'Bob' }], 42);
+
+    const line1 = s1.getState().director!.next('briefing');
+    const line2 = s2.getState().director!.next('briefing');
+    expect(line1).toBe(line2);
+  });
+
+  it('startRun with different seeds produces different director sequences', () => {
+    const narration = makeNarrationFixture();
+    const s1 = createGameStore({ cfg: testCfg, storage: makeStorage(), narration });
+    const s2 = createGameStore({ cfg: testCfg, storage: makeStorage(), narration });
+
+    s1.getState().startRun([{ name: 'Alice' }], 1);
+    s2.getState().startRun([{ name: 'Alice' }], 2);
+
+    const line1 = s1.getState().director!.next('briefing');
+    const line2 = s2.getState().director!.next('briefing');
+    // Different seeds → almost certainly different first lines
+    expect(line1).not.toBe(line2);
+  });
+
+  it('goAgain resets the director to seed 0', () => {
+    const narration = makeNarrationFixture();
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage, narration });
+
+    // Start with a non-zero seed
+    store.getState().startRun([{ name: 'Alice' }], 99);
+    store.getState().goAgain();
+
+    // A fresh director seeded from 0 should produce the same line
+    const expectedLine = createNarrationDirector(narration, 0).next('briefing');
+    expect(store.getState().director!.next('briefing')).toBe(expectedLine);
+  });
+
+  it('hydrate rebuilds the director from the saved seed', () => {
+    const narration = makeNarrationFixture();
+    const storage = makeStorage();
+
+    // Store 1: start a run and save
+    const store1 = createGameStore({ cfg: testCfg, storage, narration });
+    store1.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 77);
+
+    // Store 2: hydrate from same storage
+    const store2 = createGameStore({ cfg: testCfg, storage, narration });
+    store2.getState().hydrate();
+
+    expect(store2.getState().hasResumableSave).toBe(true);
+
+    // Both directors were seeded from 77 — they should produce the same line sequence
+    const line1a = store1.getState().director!.next('briefing');
+    const line2a = store2.getState().director!.next('briefing');
+    // Directors are seeded identically; the store1 director has already made no calls,
+    // store2's director was freshly rebuilt — first calls should match
+    // (store1's director was created at startRun; store2's at hydrate — both seed=77)
+    // We compare a fresh director seeded from 77 against the hydrated one
+    const reference = createNarrationDirector(narration, 77);
+    const refLine = reference.next('briefing');
+    expect(line2a).toBe(refLine);
+    expect(line1a).toBe(refLine);
   });
 });

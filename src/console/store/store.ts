@@ -7,6 +7,9 @@ import type { StorageLike } from '@/platform';
 import { SAVE_VERSION } from '@/content/schema/save';
 import { SETTINGS_VERSION } from '@/content/schema/settings';
 import type { DiceMode } from '@/content/schema/settings';
+import type { ParsedNarration } from '@/content/schema';
+import { createNarrationDirector } from '@/console/teleprompter';
+import type { NarrationDirector } from '@/console/teleprompter';
 import { replay } from './replay';
 
 // ── State shape ───────────────────────────────────────────────────────────────
@@ -26,6 +29,12 @@ export interface GameStoreState {
   staleSaveNotice: boolean;
   /** Whether the app rolls the d20 automatically or the GM enters a physical die result. */
   diceMode: DiceMode;
+  /**
+   * Narration director seeded from `runSeed`. Null when no narration bank was
+   * provided to the store (e.g. in engine-only tests). Recreated on every
+   * startRun / hydrate / goAgain so narration deterministically follows runSeed.
+   */
+  director: NarrationDirector | null;
 
   // Actions
   dispatch: (event: RunEvent) => void;
@@ -48,12 +57,20 @@ export interface GameStoreState {
 export interface CreateGameStoreOptions {
   cfg: EngineConfig;
   storage: StorageLike;
+  /** Optional narration bank. When supplied the store creates and seeds a
+   *  NarrationDirector on every run start / hydrate / goAgain. */
+  narration?: ParsedNarration;
 }
 
 // ── Factory ───────────────────────────────────────────────────────────────────
 
 export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameStoreState> {
-  const { cfg, storage } = options;
+  const { cfg, storage, narration } = options;
+
+  function makeDirector(seed: number): NarrationDirector | null {
+    if (!narration) return null;
+    return createNarrationDirector(narration, seed);
+  }
 
   function writeThrough(seed: number, eventLog: RunEvent[]): void {
     writeSave({ version: SAVE_VERSION, seed, eventLog }, storage);
@@ -71,6 +88,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
     hasResumableSave: false,
     staleSaveNotice: false,
     diceMode: initialSettings.diceMode,
+    director: makeDirector(0),
 
     dispatch(event: RunEvent): void {
       const { session, eventLog, cfg: c, runSeed } = get();
@@ -103,6 +121,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         runSeed: startSeed,
         hasResumableSave: false,
         staleSaveNotice: false,
+        director: makeDirector(startSeed),
       });
     },
 
@@ -114,6 +133,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         runSeed: 0,
         hasResumableSave: false,
         staleSaveNotice: false,
+        director: makeDirector(0),
       });
     },
 
@@ -131,6 +151,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
           eventLog: result.save.eventLog,
           runSeed: result.save.seed,
           hasResumableSave: true,
+          director: makeDirector(result.save.seed),
         });
       } else if (result.reason === 'stale' || result.reason === 'corrupt') {
         clearSave(storage);
