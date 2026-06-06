@@ -7,6 +7,8 @@ export type { CardSpreadProps, Card, CardId } from './CardSpread';
 export { useMetronome } from './Metronome';
 export type { MetronomeOptions, MetronomeHandle } from './Metronome';
 
+export { AudioClockContext, useAudioClock } from './AudioClockContext';
+
 export { BoostButton } from './BoostButton';
 export type { BoostButtonProps } from './BoostButton';
 
