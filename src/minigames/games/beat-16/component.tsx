@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
-import { useMetronome, useAudioClock } from '@/minigames/primitives';
+import { useMetronome, useAudioClock, useScheduleBeep } from '@/minigames/primitives';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { OutcomeJudge } from '@/minigames/primitives/OutcomeJudge';
 import type { Beat16Params } from './generate';
@@ -21,7 +21,8 @@ export function Beat16Component({
   // Re-run the metronome from scratch when the boost adds 2 extra audible beats.
   const effectiveAudibleBeats = params.audibleBeats + (state.boostUsed ? 2 : 0);
   const clock = useAudioClock();
-  const metronome = useMetronome({ bpm: params.bpm, audibleBeats: effectiveAudibleBeats, clock });
+  const scheduleBeep = useScheduleBeep();
+  const metronome = useMetronome({ bpm: params.bpm, audibleBeats: effectiveAudibleBeats, clock, scheduleBeep });
 
   // Track when beat 1 fires so we can compute expected target-beat time.
   const beat1TimestampRef = useRef<number | null>(null);

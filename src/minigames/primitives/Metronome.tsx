@@ -12,12 +12,20 @@ export interface MetronomeOptions {
    * When absent, falls back to a private AudioContext + oscillator beeps.
    */
   clock?: AudioClock | null;
+  /**
+   * Beep emitter for the clock path. Called with the audio-clock time (seconds)
+   * at which the beep should sound, subject to `audibleBeats` and `mute()`.
+   * Provided alongside `clock` by the shared AudioEngine handle (E9.4+).
+   * When absent, the clock path produces no sound (same as the fallback path
+   * when AudioContext is unavailable).
+   */
+  scheduleBeep?: ((when: number) => void) | null;
 }
 
 export interface MetronomeHandle {
   /** Register a callback fired on each beat. Replaces any previous handler. */
   onBeat(cb: (beatNumber: number) => void): void;
-  /** Silence subsequent audible beats (no-op in clock path; sound is engine-side). */
+  /** Silence subsequent audible beats on all paths (clock path and fallback). */
   mute(): void;
 }
 
@@ -44,7 +52,7 @@ const TICK_MS = 25;
  *
  * Returns a stable handle; the hook cleans up on unmount or when options change.
  */
-export function useMetronome({ bpm, audibleBeats, clock }: MetronomeOptions): MetronomeHandle {
+export function useMetronome({ bpm, audibleBeats, clock, scheduleBeep }: MetronomeOptions): MetronomeHandle {
   const beatCallbackRef = useRef<((n: number) => void) | null>(null);
   const mutedRef = useRef(false);
   const schedulerRef = useRef<{ stop(): void } | null>(null);
@@ -56,7 +64,9 @@ export function useMetronome({ bpm, audibleBeats, clock }: MetronomeOptions): Me
     if (clock != null) {
       // ── Precise audio-clock path ──────────────────────────────────────────
       // No private AudioContext. Beat timing is driven entirely by clock.now().
-      // Sound production is delegated to the audio engine (wired in E9.4).
+      // Audible beats are emitted via scheduleBeep (provided alongside clock
+      // by the shared AudioEngine handle). Without scheduleBeep, the clock path
+      // produces no sound — pass both from AudioClockContext (E9.4+).
       let beatCount = 0;
       let nextBeatTime = clock.now() + LOOKAHEAD_SEC;
       let running = true;
@@ -66,6 +76,9 @@ export function useMetronome({ bpm, audibleBeats, clock }: MetronomeOptions): Me
         const now = clock.now();
         while (nextBeatTime < now + LOOKAHEAD_SEC) {
           const beat = beatCount + 1;
+          if (scheduleBeep && isBeatAudible(beat, mutedRef.current, audibleBeats)) {
+            scheduleBeep(nextBeatTime);
+          }
           beatCallbackRef.current?.(beat);
           beatCount++;
           nextBeatTime += intervalSec;
@@ -146,7 +159,7 @@ export function useMetronome({ bpm, audibleBeats, clock }: MetronomeOptions): Me
       schedulerRef.current?.stop();
       schedulerRef.current = null;
     };
-  }, [bpm, audibleBeats, clock]);
+  }, [bpm, audibleBeats, clock, scheduleBeep]);
 
   const onBeat = useCallback((cb: (n: number) => void) => {
     beatCallbackRef.current = cb;

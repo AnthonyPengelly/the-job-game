@@ -226,5 +226,79 @@ describe('useMetronome — clock-based timing (audio clock, not setTimeout)', ()
       act(() => unmount());
     }).not.toThrow();
   });
+
+  // ── scheduleBeep tests ────────────────────────────────────────────────────
+
+  it('scheduleBeep is called for each audible beat when audibleBeats=0 (always-on)', () => {
+    let audioNow = 0;
+    const clock = makeMockClock(() => audioNow);
+    const scheduleBeep = vi.fn();
+
+    const { result } = renderHook(() =>
+      useMetronome({ bpm: 60, audibleBeats: 0, clock, scheduleBeep }),
+    );
+    act(() => { result.current.onBeat(() => {}); });
+
+    audioNow = 0.05;
+    act(() => { vi.advanceTimersByTime(TICK_MS); });
+    expect(scheduleBeep).toHaveBeenCalledTimes(1);
+
+    audioNow = 1.05;
+    act(() => { vi.advanceTimersByTime(TICK_MS); });
+    expect(scheduleBeep).toHaveBeenCalledTimes(2);
+  });
+
+  it('scheduleBeep is only called for beats within the audibleBeats window', () => {
+    let audioNow = 0;
+    const clock = makeMockClock(() => audioNow);
+    const scheduleBeep = vi.fn();
+
+    // 60 BPM, 2 audible beats — beats 1 and 2 play, beat 3+ are silent
+    renderHook(() =>
+      useMetronome({ bpm: 60, audibleBeats: 2, clock, scheduleBeep }),
+    );
+
+    // Fire beats 1, 2, 3 by advancing the audio clock
+    for (let i = 1; i <= 3; i++) {
+      audioNow = i * 1.05;
+      act(() => { vi.advanceTimersByTime(TICK_MS); });
+    }
+
+    // Only 2 beeps should have been scheduled
+    expect(scheduleBeep).toHaveBeenCalledTimes(2);
+  });
+
+  it('scheduleBeep is suppressed after mute()', () => {
+    let audioNow = 0;
+    const clock = makeMockClock(() => audioNow);
+    const scheduleBeep = vi.fn();
+
+    const { result } = renderHook(() =>
+      useMetronome({ bpm: 60, audibleBeats: 0, clock, scheduleBeep }),
+    );
+
+    // Mute before any beats fire
+    act(() => { result.current.mute(); });
+
+    audioNow = 0.05;
+    act(() => { vi.advanceTimersByTime(TICK_MS); });
+    // Beat callback still fires but scheduleBeep must not be called
+    expect(scheduleBeep).not.toHaveBeenCalled();
+  });
+
+  it('scheduleBeep is called with the beat audio time (not wall time)', () => {
+    let audioNow = 0;
+    const clock = makeMockClock(() => audioNow);
+    const scheduleBeep = vi.fn();
+
+    renderHook(() =>
+      useMetronome({ bpm: 60, audibleBeats: 0, clock, scheduleBeep }),
+    );
+
+    // 60 BPM → 1 s/beat; nextBeatTime starts at 0 + 0.1 = 0.1 s
+    audioNow = 0.05;
+    act(() => { vi.advanceTimersByTime(TICK_MS); });
+    expect(scheduleBeep).toHaveBeenCalledWith(0.1);
+  });
 });
 

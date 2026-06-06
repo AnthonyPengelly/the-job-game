@@ -2,13 +2,26 @@ import { createContext, useContext } from 'react';
 import type { AudioClock } from '@/platform/audio';
 
 /**
- * Provides the shared AudioClock from the audio engine to Metronome consumers.
- * E9.4's AudioProvider wraps the console with the real clock; without a provider
- * the context returns null and useMetronome falls back to its own AudioContext.
+ * Everything the Metronome needs from the shared audio engine: a precise clock
+ * for beat timing, and a beep emitter so the clock path can honor `audibleBeats`
+ * and `mute()`. Both are provided together by E9.4's AudioProvider (they come
+ * from the same AudioEngine instance). Without a provider the context is null
+ * and useMetronome falls back to its private AudioContext.
  */
-export const AudioClockContext = createContext<AudioClock | null>(null);
+export interface AudioClockHandle {
+  clock: AudioClock;
+  /** Schedule an audible tick beep at the given audio clock time (seconds). */
+  scheduleBeep: (when: number) => void;
+}
+
+export const AudioClockContext = createContext<AudioClockHandle | null>(null);
 
 /** Returns the shared AudioClock if provided by a parent AudioProvider, or null. */
 export function useAudioClock(): AudioClock | null {
-  return useContext(AudioClockContext);
+  return useContext(AudioClockContext)?.clock ?? null;
+}
+
+/** Returns the beep scheduler if provided by a parent AudioProvider, or null. */
+export function useScheduleBeep(): ((when: number) => void) | null {
+  return useContext(AudioClockContext)?.scheduleBeep ?? null;
 }
