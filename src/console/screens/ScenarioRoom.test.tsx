@@ -5,6 +5,7 @@ import { StoreContext, createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
 import type { PlayerId, ScenarioChoiceDef } from '@/engine';
+import type { ParsedNarration } from '@/content/schema';
 import { SETTINGS_VERSION } from '@/content/schema/settings';
 import { ScenarioRoom } from './ScenarioRoom';
 
@@ -21,6 +22,23 @@ function makeStorage(): StorageLike {
   };
 }
 
+function makeNarrationFixture(): ParsedNarration {
+  const variants = (prefix: string, count: number) =>
+    Array.from({ length: count }, (_, i) => ({ id: `${prefix}-${i}`, text: `${prefix} text ${i}` }));
+  return {
+    briefing: variants('br', 8),
+    obstacleClue: variants('oc', 10),
+    optionDescription: variants('od', 10),
+    pushRun: variants('pr', 8),
+    outcomeQuip: variants('oq', 18),
+    scenarioSetup: variants('ss', 8),
+    getawayIntro: variants('gi', 6),
+    getawayCountdown: variants('gc', 6),
+    winSting: variants('ws', 6),
+    bustSting: variants('bs', 6),
+  };
+}
+
 /** Config variant that always generates scenario rooms (obstacleRatio=0.0). */
 const scenarioOnlyCfg = {
   ...testCfg,
@@ -28,7 +46,8 @@ const scenarioOnlyCfg = {
 };
 
 function makeScenarioStore(seed = 1) {
-  const store = createGameStore({ cfg: scenarioOnlyCfg, storage: makeStorage() });
+  const narration = makeNarrationFixture();
+  const store = createGameStore({ cfg: scenarioOnlyCfg, storage: makeStorage(), narration });
   store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
   return store;
 }
@@ -88,7 +107,8 @@ function makeRollStore(seed = 42, diceModePhysical = false) {
       JSON.stringify({ version: SETTINGS_VERSION, diceMode: 'physical' }),
     );
   }
-  const store = createGameStore({ cfg: rollScenarioCfg, storage });
+  const narration = makeNarrationFixture();
+  const store = createGameStore({ cfg: rollScenarioCfg, storage, narration });
   store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
   return store;
 }
@@ -240,6 +260,45 @@ describe('ScenarioRoom screen', () => {
     if (lastResult?.kind === 'scenario') {
       expect(lastResult.choiceId).toBe(choice.id);
     }
+  });
+});
+
+// ── Narration tests ───────────────────────────────────────────────────────────
+
+describe('ScenarioRoom narration', () => {
+  it('stage one shows a scenarioSetup narration framing line via the teleprompter', () => {
+    renderScenarioRoom();
+    expect(screen.getByTestId('scenario-narration')).toBeInTheDocument();
+    const line = screen.getByTestId('teleprompter-line');
+    expect(line.textContent).not.toBe('');
+  });
+
+  it('teleprompter advance button is always enabled (no dead-end)', () => {
+    renderScenarioRoom();
+    const advanceBtn = screen.getByTestId('teleprompter-advance');
+    expect(advanceBtn).not.toBeDisabled();
+    fireEvent.click(advanceBtn);
+    expect(screen.getByTestId('teleprompter-line')).toBeInTheDocument();
+  });
+
+  it('scenario authored body text (scenario-setup) still appears below the teleprompter', () => {
+    renderRollRoom();
+    expect(screen.getByTestId('scenario-setup')).toHaveTextContent('The guard turns around.');
+  });
+
+  it('choice buttons remain reachable regardless of narration state', () => {
+    renderRollRoom();
+    fireEvent.click(screen.getByTestId('teleprompter-advance'));
+    expect(screen.getByTestId('btn-choice-sr-roll')).toBeInTheDocument();
+    expect(screen.getByTestId('btn-choice-sr-effect')).toBeInTheDocument();
+  });
+
+  it('narration teleprompter is not shown in stage two (roll reveal)', () => {
+    const { store } = renderRollRoom();
+    advanceToRollReveal(store);
+    // Stage 2 shows roll-reveal, not the narration teleprompter or choices.
+    expect(screen.queryByTestId('scenario-narration')).toBeNull();
+    expect(screen.getByTestId('roll-reveal')).toBeInTheDocument();
   });
 });
 
