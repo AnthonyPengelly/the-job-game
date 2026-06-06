@@ -6,6 +6,7 @@ import { createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
 import { SAVE_VERSION } from '@/content/schema/save';
+import { LEADERBOARD_VERSION } from '@/content/schema/leaderboard';
 import type { RunEvent } from '@/engine';
 import { Setup } from './Setup';
 
@@ -155,5 +156,55 @@ describe('Setup — resume flow', () => {
     renderSetup(storage);
     fireEvent.click(screen.getByTestId('btn-new-job'));
     expect(screen.getByTestId('crew-size-select')).toBeInTheDocument();
+  });
+});
+
+describe('Setup — leaderboard', () => {
+  it('shows empty-state copy when no runs have been recorded', () => {
+    renderSetup(makeStorage());
+    expect(screen.getByText('Complete your first run to see scores here.')).toBeInTheDocument();
+  });
+
+  it('renders leaderboard entries with score, outcome, loot and crew size', () => {
+    const storage = makeStorage();
+    storage.setItem(
+      'the-job:leaderboard',
+      JSON.stringify({
+        version: LEADERBOARD_VERSION,
+        entries: [
+          { runSeed: 1, score: 5000, loot: 12000, heatAtGetaway: 2, win: true,  crewSize: 3, finishedAt: 1000 },
+          { runSeed: 2, score: 2500, loot:  6000, heatAtGetaway: 5, win: false, crewSize: 4, finishedAt: 2000 },
+        ],
+      }),
+    );
+    renderSetup(storage);
+    expect(screen.getByText('5,000')).toBeInTheDocument();
+    expect(screen.getByText('2,500')).toBeInTheDocument();
+    expect(screen.getByText('WIN')).toBeInTheDocument();
+    expect(screen.getByText('BUST')).toBeInTheDocument();
+    // Loot formatted as $k
+    expect(screen.getByText('$12.0k · 3p')).toBeInTheDocument();
+    expect(screen.getByText('$6.0k · 4p')).toBeInTheDocument();
+  });
+
+  it('shows at most 5 entries (top-5 slice)', () => {
+    const storage = makeStorage();
+    const entries = Array.from({ length: 7 }, (_, i) => ({
+      runSeed: i + 1,
+      score: (7 - i) * 1000,
+      loot: 10000,
+      heatAtGetaway: 1,
+      win: true,
+      crewSize: 3,
+      finishedAt: i * 1000,
+    }));
+    storage.setItem(
+      'the-job:leaderboard',
+      JSON.stringify({ version: LEADERBOARD_VERSION, entries }),
+    );
+    renderSetup(storage);
+    // Store sorts descending by score; slice(0,5) keeps rank 1-5 only
+    expect(screen.getByText('7,000')).toBeInTheDocument();
+    expect(screen.queryByText('1,000')).toBeNull();
   });
 });
