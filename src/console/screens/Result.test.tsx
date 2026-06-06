@@ -4,6 +4,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { StoreContext, createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import { getawayMultiplier } from '@/engine/scoring';
+import { appendScore } from '@/platform';
 import type { StorageLike } from '@/platform';
 import type { ParsedNarration } from '@/content/schema';
 import { Result } from './Result';
@@ -240,5 +241,97 @@ describe('Result screen — sting narration', () => {
       </StoreContext.Provider>,
     );
     expect(screen.queryByTestId('result-sting')).toBeNull();
+  });
+});
+
+// ── Leaderboard: new-best badge and rank ──────────────────────────────────────
+
+describe('Result screen — leaderboard outcome', () => {
+  it('shows result-new-best badge when run is the first for its seed (new personal best)', () => {
+    // makeResultStore uses fresh storage — first run is always a new best.
+    const store = makeResultStore(true);
+    render(
+      <StoreContext.Provider value={store}>
+        <Result />
+      </StoreContext.Provider>,
+    );
+    expect(screen.getByTestId('result-new-best')).toBeInTheDocument();
+  });
+
+  it('shows result-rank reflecting the position on the leaderboard', () => {
+    const store = makeResultStore(true);
+    render(
+      <StoreContext.Provider value={store}>
+        <Result />
+      </StoreContext.Provider>,
+    );
+    const rankEl = screen.getByTestId('result-rank');
+    expect(rankEl).toBeInTheDocument();
+    // First-ever run ranks #1.
+    expect(rankEl.textContent).toContain('1');
+  });
+
+  it('does NOT show result-new-best badge when a better score already exists for the seed', () => {
+    const storage = makeStorage();
+    // Pre-populate storage with a very high score for seed 1 so the run cannot beat it.
+    appendScore(
+      { runSeed: 1, score: 9_999_999, loot: 999, heatAtGetaway: 0, win: true, crewSize: 2, finishedAt: 0 },
+      storage,
+    );
+
+    const store = createGameStore({ cfg: obstacleOnlyCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+    store.getState().dispatch({
+      t: 'CHOOSE_OPTION',
+      optionId: room.options[0]!.id,
+      committed: [crew[0]!.id],
+    });
+    store.getState().dispatch({ t: 'RESOLVE_MINIGAME', outcome: 'clean' });
+    store.getState().dispatch({ t: 'CALL_GETAWAY' });
+    store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
+
+    expect(store.getState().currentRunNewBest).toBe(false);
+
+    render(
+      <StoreContext.Provider value={store}>
+        <Result />
+      </StoreContext.Provider>,
+    );
+    expect(screen.queryByTestId('result-new-best')).toBeNull();
+  });
+
+  it('shows result-rank even when not a new personal best', () => {
+    const storage = makeStorage();
+    appendScore(
+      { runSeed: 1, score: 9_999_999, loot: 999, heatAtGetaway: 0, win: true, crewSize: 2, finishedAt: 0 },
+      storage,
+    );
+
+    const store = createGameStore({ cfg: obstacleOnlyCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+    store.getState().dispatch({
+      t: 'CHOOSE_OPTION',
+      optionId: room.options[0]!.id,
+      committed: [crew[0]!.id],
+    });
+    store.getState().dispatch({ t: 'RESOLVE_MINIGAME', outcome: 'clean' });
+    store.getState().dispatch({ t: 'CALL_GETAWAY' });
+    store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
+
+    render(
+      <StoreContext.Provider value={store}>
+        <Result />
+      </StoreContext.Provider>,
+    );
+    // Rank is always shown when currentRunRank is set.
+    expect(screen.getByTestId('result-rank')).toBeInTheDocument();
   });
 });
