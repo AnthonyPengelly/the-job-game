@@ -41,7 +41,6 @@ export function Hud() {
   const dispatch  = useGameStore(s => s.dispatch);
 
   const activeRailIdx  = phaseToRailIndex(phase);
-  const lootFormatted  = `$${(loot / 1000).toFixed(1)}k`;
 
   function handleAssignGear(gear: GearId, to: PlayerId) {
     dispatch({ t: 'ASSIGN_GEAR', gear, to });
@@ -87,8 +86,7 @@ export function Hud() {
             <Banknote size={18} strokeWidth={1.75} aria-hidden="true" />
             <div className="stk">
               <span className="k">Loot</span>
-              <span className="v" aria-hidden="true">{lootFormatted}</span>
-              {/* raw numeric value for tests and screen readers */}
+              <span className="v">{loot}</span>
               <span data-testid="loot-total" className="sr-only">{loot}</span>
             </div>
           </div>
