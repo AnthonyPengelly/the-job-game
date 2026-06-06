@@ -259,6 +259,6 @@ export type RunEvent =
 
 // ── Harness-facing skill type ─────────────────────────────────────────────────
 // Shared vocabulary for the balance harness (sim/). Carries no tunable numbers
-// — those live in model-crew.ts (harness only, not a preset field).
+// — those live in src/console/tuning/montecarlo.ts (shared core, harness + panel).
 
 export type Skill = 'bad' | 'avg' | 'good';

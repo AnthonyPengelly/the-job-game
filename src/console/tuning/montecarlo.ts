@@ -1,11 +1,20 @@
-// Harness-only crew policy. NOT a preset field, NOT in src/engine.
-// Port of heat-model-simulation.py SKILL bands, growth_bonus, player_bonus,
-// and the model-crew decision policy that drives the shipping reduce().
+// Shared browser-safe Monte Carlo core — single source of truth for both the
+// in-app tuning panel (E11.4+) and the CI balance harness (sim/balance.sim.ts).
+//
+// No Node.js fs, no Math.random, no React, no DOM.
+// All randomness flows through the seeded RNG (mulberry32).
+//
+// Crew policy ported from sim/model-crew.ts (originally from heat-model-simulation.py).
+// simulateRun / runMonteCarlo extracted from sim/balance.sim.ts.
+
+import { mulberry32, initialState, reduce } from '@/engine';
 import { greedyAvailable, forcedGetaway } from '@/engine/heat';
 import { getawayOdds } from '@/engine/getaway';
-import type { Rng } from '@/engine/rng';
 import type { EngineConfig } from '@/engine/config';
 import type { RunState, RunEvent, Skill, ObstacleRoom, ScenarioChoiceDef } from '@/engine/types';
+import type { Rng } from '@/engine/rng';
+
+// ── Crew policy (port of heat-model-simulation.py SKILL bands + decision logic) ──
 
 /** Expected heat delta for a choice: effect's delta, or average of success/failure for rolls. */
 function choiceHeatDelta(c: ScenarioChoiceDef): number {
@@ -66,7 +75,6 @@ function pickScenarioChoiceId(
   const [t0, t1] = template.choices;
   const [c0, c1] = room.choices;
 
-  // Identify cooling (lower expected heatDelta) and heating (higher) choices.
   const h0 = choiceHeatDelta(t0);
   const h1 = choiceHeatDelta(t1);
   const l0 = choiceLootDelta(t0);
@@ -76,18 +84,15 @@ function pickScenarioChoiceId(
   const coolId = coolIsIdx0 ? c0.id : c1.id;
   const heatId = coolIsIdx0 ? c1.id : c0.id;
 
-  // Loot-leaning choice: higher expected lootDelta; tiebreak: cooling (safer).
   const lootIsIdx0 = l0 > l1 ? true : l1 > l0 ? false : coolIsIdx0;
   const lootId = lootIsIdx0 ? c0.id : c1.id;
 
   const isHot = state.heat > 0.6 * cfg.heat.hMax;
 
   if (isHot) {
-    // Python: 50% → cool; else p→cool, (1-p)→heat
     if (rng.next() < 0.5) return coolId;
     return rng.next() < p ? coolId : heatId;
   } else {
-    // Python: 70% → loot branch; 30% → p→loot, (1-p)→heat
     if (rng.next() < 0.7) return lootId;
     return rng.next() < p ? lootId : heatId;
   }
@@ -113,8 +118,6 @@ export function nextModelEvent(
 
   switch (state.phase) {
     case 'briefing': {
-      // START_RUN lands here with room 0 already generated. Mirror the Briefing screen's
-      // "Begin" button: just flip phase to 'room' so the loop can proceed.
       return { t: 'OVERRIDE_SET_PHASE', phase: 'room' };
     }
 
@@ -134,7 +137,6 @@ export function nextModelEvent(
           committed: state.crew.map(pl => pl.id),
         };
       } else {
-        // If pendingRoll is set, we already chose; resolve the roll now.
         if (room.pendingRoll !== undefined) {
           return { t: 'RESOLVE_SCENARIO_ROLL' };
         }
@@ -143,7 +145,6 @@ export function nextModelEvent(
         const choiceDef = template?.choices.find(c => c.id === choiceId);
         const isRollChoice = choiceDef !== undefined && 'roll' in choiceDef;
         if (isRollChoice && state.crew.length > 0) {
-          // For roll choices, the first available player attempts it.
           return { t: 'CHOOSE_SCENARIO', choiceId, attemptedBy: state.crew[0]!.id };
         }
         return { t: 'CHOOSE_SCENARIO', choiceId };
@@ -151,7 +152,6 @@ export function nextModelEvent(
     }
 
     case 'minigame': {
-      // In minigame phase, currentRoom is always an obstacle with committedOptionId set.
       const room = state.currentRoom as ObstacleRoom;
       const option = room.options.find(o => o.id === room.committedOptionId);
       if (option === undefined) throw new Error('nextModelEvent: committed option not found');
@@ -160,7 +160,6 @@ export function nextModelEvent(
     }
 
     case 'offer': {
-      // Escape if: signal set, forced getaway (heat >= hMax), or safety cap (40 rooms max)
       if (state.escapeSignal || forcedGetaway(state.heat, cfg) || state.roomIndex >= 39) {
         return { t: 'CALL_GETAWAY' };
       }
@@ -168,10 +167,6 @@ export function nextModelEvent(
     }
 
     case 'getaway': {
-      // Use the win seam to inject skill-aware Getaway resolution.
-      // The engine's default crewSkill is skillPivot (0.65, mediocre baseline for E1),
-      // but the harness knows the actual skill band and must pass it so skill separates
-      // win rates — matching Python's getaway(H, cfg, n, SKILL[skill]).
       const odds = getawayOdds(state.heat, cfg, state.crew.length, SKILL_VALUES[skill]);
       return { t: 'RESOLVE_GETAWAY', win: rng.next() < odds };
     }
@@ -180,4 +175,106 @@ export function nextModelEvent(
       throw new Error(`nextModelEvent: unexpected phase "${state.phase}"`);
     }
   }
+}
+
+// ── Simulation core ───────────────────────────────────────────────────────────
+
+interface RunStats {
+  obstacles: number;
+  rooms: number;
+  win: boolean;
+  loot: number;
+  finalScore: number;
+}
+
+export function simulateRun(
+  seed: number,
+  skill: Skill,
+  headcount: number,
+  cfg: EngineConfig,
+): RunStats {
+  // Two independent RNG streams: engine (embedded in rngState) and harness.
+  // XOR-mix the seed so the two streams differ for every run.
+  const harnessRng = mulberry32(seed ^ 0x9e3779b9);
+
+  const crew = Array.from({ length: headcount }, (_, i) => ({ name: `P${i}` }));
+  let state: RunState = reduce(
+    initialState(seed),
+    { t: 'START_RUN', crew, seed },
+    cfg,
+  );
+
+  while (state.phase !== 'result') {
+    state = reduce(state, nextModelEvent(state, harnessRng, skill, cfg), cfg);
+  }
+
+  return {
+    obstacles: state.obstacleCount,
+    rooms: state.history.length,
+    win: state.win ?? false,
+    loot: state.loot,
+    finalScore: state.finalScore ?? 0,
+  };
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/** One bin in the obstacle-count histogram. */
+export interface RunLengthBin {
+  obstacles: number;
+  count: number;
+}
+
+/** Summary distributions returned by runMonteCarlo — used by the panel (E11.4+) and CI harness. */
+export interface MonteCarloResult {
+  /** Obstacle-count histogram across all simulated runs. */
+  histogram: RunLengthBin[];
+  winRate: number;
+  medianObstacles: number;
+  pRoomsOver10: number;
+  /** P(|obstacles − median| ≤ 1) — run-length tightness (assertion C). */
+  pObstTight: number;
+  meanLoot: number;
+  /** mean(loot × win/bust multiplier) — amplifies skill gap vs raw loot (assertion H). */
+  meanScore: number;
+}
+
+export interface MonteCarloOpts {
+  n: number;
+  baseSeed: number;
+  skill: Skill;
+  headcount: number;
+}
+
+/**
+ * Run N seeded Monte Carlo runs and return summary distributions.
+ * Parameterised so the panel can use a reduced N for interactive speed
+ * while the CI harness keeps N=20_000 for statistical stability.
+ */
+export function runMonteCarlo(cfg: EngineConfig, opts: MonteCarloOpts): MonteCarloResult {
+  const { n, baseSeed, skill, headcount } = opts;
+
+  const runs: RunStats[] = [];
+  for (let i = 0; i < n; i++) {
+    runs.push(simulateRun(baseSeed + i, skill, headcount, cfg));
+  }
+
+  // Obstacle-count histogram
+  const countsByObst = new Map<number, number>();
+  for (const r of runs) {
+    countsByObst.set(r.obstacles, (countsByObst.get(r.obstacles) ?? 0) + 1);
+  }
+  const histogram: RunLengthBin[] = [...countsByObst.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([obstacles, count]) => ({ obstacles, count }));
+
+  const sortedObst = runs.map(r => r.obstacles).sort((a, b) => a - b);
+  const medianObstacles = sortedObst[Math.floor(n / 2)] ?? 0;
+  const pRoomsOver10 = runs.filter(r => r.rooms > 10).length / n;
+  const pObstTight = runs.filter(r => Math.abs(r.obstacles - medianObstacles) <= 1).length / n;
+  const winRate = runs.filter(r => r.win).length / n;
+  const meanLoot = runs.reduce((s, r) => s + r.loot, 0) / n;
+  const meanScore = runs.reduce((s, r) => s + r.finalScore, 0) / n;
+
+  return { histogram, winRate, medianObstacles, pRoomsOver10, pObstTight, meanLoot, meanScore };
 }

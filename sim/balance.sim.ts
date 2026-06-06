@@ -5,10 +5,11 @@
 // See docs/GAME-DESIGN-RIGOUR.md §3 for the full target table (A–J).
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPreset } from '@/platform/presets/load';
-import { mulberry32, initialState, reduce } from '@/engine';
+import { initialState, reduce } from '@/engine';
 import type { EngineConfig } from '@/engine/config';
 import type { RunState, Skill } from '@/engine/types';
-import { nextModelEvent } from './model-crew';
+import { runMonteCarlo } from '@/console/tuning/montecarlo';
+import type { MonteCarloResult } from '@/console/tuning/montecarlo';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -16,86 +17,20 @@ const PRESET_ID: string = (process.env['PRESET'] as string | undefined) ?? 'defa
 const BASE_SEED = 1312;
 const N = 20_000; // 20k: stable SE≈0.007 for H threshold 1.75 — do not reduce
 
-const SKILLS = ['bad', 'avg', 'good'] as const;
-const HEADCOUNTS = [2, 4, 7] as const;
+// ── Cell helper ───────────────────────────────────────────────────────────────
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
-interface RunStats {
-  obstacles: number;
-  rooms: number;
-  win: boolean;
-  loot: number;
-  finalScore: number;
-}
-
-interface CellStats {
-  medianObstacles: number;
-  pRoomsOver10: number;
-  pObstTight: number;
-  winRate: number;
-  meanLoot: number;
-  meanScore: number; // finalScore = loot × win/bust multiplier; amplifies skill gap vs raw loot
-}
-
-// ── Simulation ───────────────────────────────────────────────────────────────
-
-function simulateRun(
-  seed: number,
-  skill: Skill,
-  headcount: number,
-  cfg: EngineConfig,
-): RunStats {
-  // Two independent RNG streams: engine (embedded in rngState) and harness.
-  // XOR-mix the seed so the two streams differ for every run.
-  const harnessRng = mulberry32(seed ^ 0x9e3779b9);
-
-  const crew = Array.from({ length: headcount }, (_, i) => ({ name: `P${i}` }));
-  let state: RunState = reduce(
-    initialState(seed),
-    { t: 'START_RUN', crew, seed },
-    cfg,
-  );
-
-  while (state.phase !== 'result') {
-    state = reduce(state, nextModelEvent(state, harnessRng, skill, cfg), cfg);
-  }
-
-  return {
-    obstacles: state.obstacleCount,
-    // history.length = actual rooms processed (both obstacle and scenario)
-    rooms: state.history.length,
-    win: state.win ?? false,
-    loot: state.loot,
-    finalScore: state.finalScore ?? 0,
-  };
-}
-
-function computeCell(skill: Skill, headcount: number, cfg: EngineConfig): CellStats {
-  const runs: RunStats[] = [];
-  for (let i = 0; i < N; i++) {
-    runs.push(simulateRun(BASE_SEED + i, skill, headcount, cfg));
-  }
-
-  const sortedObst = runs.map(r => r.obstacles).sort((a, b) => a - b);
-  const medianObstacles = sortedObst[Math.floor(N / 2)] ?? 0;
-  const pRoomsOver10 = runs.filter(r => r.rooms > 10).length / N;
-  const pObstTight = runs.filter(r => Math.abs(r.obstacles - medianObstacles) <= 1).length / N;
-  const winRate = runs.filter(r => r.win).length / N;
-  const meanLoot = runs.reduce((s, r) => s + r.loot, 0) / N;
-  const meanScore = runs.reduce((s, r) => s + r.finalScore, 0) / N;
-
-  return { medianObstacles, pRoomsOver10, pObstTight, winRate, meanLoot, meanScore };
+function computeCell(skill: Skill, headcount: number, cfg: EngineConfig): MonteCarloResult {
+  return runMonteCarlo(cfg, { n: N, baseSeed: BASE_SEED, skill, headcount });
 }
 
 // ── Test state ────────────────────────────────────────────────────────────────
 
 let cfg: EngineConfig;
-let avgN4: CellStats;
-let badN4: CellStats;
-let goodN4: CellStats;
-let avgN2: CellStats;
-let avgN7: CellStats;
+let avgN4: MonteCarloResult;
+let badN4: MonteCarloResult;
+let goodN4: MonteCarloResult;
+let avgN2: MonteCarloResult;
+let avgN7: MonteCarloResult;
 
 beforeAll(() => {
   cfg = loadPreset(PRESET_ID);
@@ -231,8 +166,7 @@ describe(`balance assertions — preset:${PRESET_ID} seed:${BASE_SEED} N:${N}`, 
   it('J: botch never terminates a run — routes to offer (structural)', () => {
     // Build a minimal minigame state with a committed safe option, apply botch.
     // Phase must transition to 'offer', never 'result'.
-    const { initialState: mkState, reduce: eng } = { initialState, reduce };
-    const base = mkState(999);
+    const base = initialState(999);
     const option = cfg.roomTemplates.obstacles[0]?.options[0];
     if (option === undefined) throw new Error('no obstacle template in cfg');
     const obstacleTemplate = cfg.roomTemplates.obstacles[0];
@@ -265,7 +199,7 @@ describe(`balance assertions — preset:${PRESET_ID} seed:${BASE_SEED} N:${N}`, 
         committedOptionId: obstacleTemplate.options[0].id,
       },
     };
-    const next = eng(minigameState, { t: 'RESOLVE_MINIGAME', outcome: 'botched' }, cfg);
+    const next = reduce(minigameState, { t: 'RESOLVE_MINIGAME', outcome: 'botched' }, cfg);
     expect(
       next.phase,
       'J: a botched outcome must route to offer, not terminate the run',

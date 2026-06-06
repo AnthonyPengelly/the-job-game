@@ -4,8 +4,7 @@ Headless Monte Carlo that drives the **shipping** `reduce()` and asserts the des
 
 ## Files
 
-- `balance.sim.ts` — 12k × 5 cells of seeded runs; asserts targets A–J.
-- `model-crew.ts` — harness-only crew policy (SKILL bands, growth_bonus, player_bonus). NOT a preset; NOT in `src/engine`.
+- `balance.sim.ts` — 20k × 5 cells of seeded runs; asserts targets A–J. Imports the shared Monte Carlo core from `src/console/tuning/montecarlo.ts`.
 
 ## Run
 
