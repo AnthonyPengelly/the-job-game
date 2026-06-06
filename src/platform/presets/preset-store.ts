@@ -188,6 +188,33 @@ export function clonePreset(
 }
 
 /**
+ * Validate a raw tuning object (e.g. the panel's working copy) and build a
+ * frozen EngineConfig. Returns `{ ok: true, cfg }` on success, or
+ * `{ ok: false, error, path }` on failure — never throws.
+ * Used by the tuning panel to validate the in-memory working copy before
+ * saving or selecting.
+ */
+export function buildConfigFromTuning(rawTuning: unknown): BuildConfigResult {
+  const tuningResult = tuningSchema.safeParse(rawTuning);
+  if (!tuningResult.success) {
+    const issue = tuningResult.error.issues[0];
+    if (issue) {
+      const dotPath = issue.path.join('.');
+      const fieldPath = dotPath ? `tuning.${dotPath}` : 'tuning';
+      return { ok: false, error: `${fieldPath}: ${issue.message}`, path: fieldPath };
+    }
+    return { ok: false, error: tuningResult.error.message };
+  }
+  const bundle = loadDefaultBundle();
+  try {
+    const cfg = buildConfig({ ...bundle, tuning: tuningResult.data });
+    return { ok: true, cfg };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
+/**
  * Validate a preset's tuning and build a frozen EngineConfig.
  * Returns `{ ok: true, cfg }` on success, or `{ ok: false, error, path }` on
  * failure — never throws, never returns a partially-built config.

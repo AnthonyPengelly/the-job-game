@@ -9,6 +9,7 @@ export {
   deletePreset,
   clonePreset,
   buildConfigFromPreset,
+  buildConfigFromTuning,
 } from './presets/preset-store';
 export type { BuildConfigResult, PresetListEntry } from './presets/preset-store';
 
