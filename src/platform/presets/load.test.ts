@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { cwd } from 'node:process';
 import { ZodError } from 'zod';
-import { loadPreset, loadNarration } from './load';
+import { loadPreset, loadNarration, loadSoundManifest } from './load';
 
 describe('loadPreset', () => {
   describe('default preset', () => {
@@ -273,5 +276,69 @@ describe('loadNarration', () => {
 
   it('throws ZodError when narration.json is malformed', () => {
     expect(() => loadNarration('test-malformed-narration')).toThrow();
+  });
+});
+
+describe('loadSoundManifest', () => {
+  it('parses the default sound manifest without throwing', () => {
+    const manifest = loadSoundManifest('default');
+    expect(manifest).toBeDefined();
+    expect(Array.isArray(manifest.cues)).toBe(true);
+    expect(manifest.cues.length).toBeGreaterThan(0);
+  });
+
+  it('returns cues with required fields', () => {
+    const manifest = loadSoundManifest('default');
+    for (const cue of manifest.cues) {
+      expect(typeof cue.id).toBe('string');
+      expect(cue.id.length).toBeGreaterThan(0);
+      expect(typeof cue.src).toBe('string');
+      expect(cue.src.length).toBeGreaterThan(0);
+      expect(['ambient', 'heistSfx', 'sting', 'danger', 'finale']).toContain(cue.channel);
+      expect(Array.isArray(cue.phases)).toBe(true);
+      expect(cue.phases.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('all cue ids are unique', () => {
+    const manifest = loadSoundManifest('default');
+    const ids = manifest.cues.map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('every phases entry is a legal RunPhase', () => {
+    const manifest = loadSoundManifest('default');
+    const validPhases = new Set(['briefing', 'room', 'minigame', 'offer', 'getaway', 'result']);
+    for (const cue of manifest.cues) {
+      for (const phase of cue.phases) {
+        expect(validPhases.has(phase)).toBe(true);
+      }
+    }
+  });
+
+  it('returns ambientBed with droneId and heartbeatId', () => {
+    const manifest = loadSoundManifest('default');
+    expect(typeof manifest.ambientBed.droneId).toBe('string');
+    expect(typeof manifest.ambientBed.heartbeatId).toBe('string');
+  });
+
+  it('ambientBed.droneId and heartbeatId reference existing cue ids', () => {
+    const manifest = loadSoundManifest('default');
+    const ids = new Set(manifest.cues.map((c) => c.id));
+    expect(ids.has(manifest.ambientBed.droneId)).toBe(true);
+    expect(ids.has(manifest.ambientBed.heartbeatId)).toBe(true);
+  });
+
+  it('every src resolves to a file under public/sound/', () => {
+    const manifest = loadSoundManifest('default');
+    for (const cue of manifest.cues) {
+      expect(cue.src).toMatch(/^sound\//);
+      const fullPath = resolve(cwd(), 'public', cue.src);
+      expect(existsSync(fullPath)).toBe(true);
+    }
+  });
+
+  it('throws ZodError when sound.json is malformed', () => {
+    expect(() => loadSoundManifest('test-malformed-sound')).toThrow(ZodError);
   });
 });

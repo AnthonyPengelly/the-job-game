@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { ZodError } from 'zod';
-import { loadDefaultConfig, loadDefaultNarration } from './browser';
-import { loadPreset, loadNarration } from './load';
+import { loadDefaultConfig, loadDefaultNarration, loadDefaultSoundManifest } from './browser';
+import { loadPreset, loadNarration, loadSoundManifest } from './load';
 import { buildConfig } from './build-config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
 
 import metaJson from '../../../presets/default/_meta.json';
 import tuningJson from '../../../presets/default/tuning.json';
@@ -126,5 +126,33 @@ describe('loadDefaultNarration', () => {
 
   it('throws ZodError on a malformed narration fixture', () => {
     expect(() => narrationSchema.parse({ briefing: 'not-an-array' })).toThrow(ZodError);
+  });
+});
+
+describe('loadDefaultSoundManifest', () => {
+  it('returns a parsed sound manifest with cues', () => {
+    const manifest = loadDefaultSoundManifest();
+    expect(manifest).toBeDefined();
+    expect(Array.isArray(manifest.cues)).toBe(true);
+    expect(manifest.cues.length).toBeGreaterThan(0);
+  });
+
+  it('returns ambientBed with droneId and heartbeatId', () => {
+    const manifest = loadDefaultSoundManifest();
+    expect(typeof manifest.ambientBed.droneId).toBe('string');
+    expect(typeof manifest.ambientBed.heartbeatId).toBe('string');
+  });
+
+  it('deep-equals the Node loadSoundManifest("default") output', () => {
+    const browserManifest = loadDefaultSoundManifest();
+    const nodeManifest = loadSoundManifest('default');
+    expect(browserManifest.cues).toEqual(nodeManifest.cues);
+    expect(browserManifest.ambientBed).toEqual(nodeManifest.ambientBed);
+  });
+
+  it('throws ZodError on a malformed sound manifest', () => {
+    expect(() =>
+      soundManifestSchema.parse({ cues: 'not-an-array' }),
+    ).toThrow(ZodError);
   });
 });

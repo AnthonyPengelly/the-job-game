@@ -1,0 +1,74 @@
+{
+  "cues": [
+    {
+      "id": "ambient-drone",
+      "src": "sound/ambient-drone.wav",
+      "channel": "ambient",
+      "loop": true,
+      "gain": 0.6,
+      "phases": ["briefing", "room", "minigame", "offer"]
+    },
+    {
+      "id": "ambient-heartbeat",
+      "src": "sound/ambient-heartbeat.wav",
+      "channel": "ambient",
+      "loop": true,
+      "gain": 0.8,
+      "phases": ["briefing", "room", "minigame", "offer"]
+    },
+    {
+      "id": "sfx-lock",
+      "src": "sound/sfx-lock.wav",
+      "channel": "heistSfx",
+      "gain": 1.0,
+      "phases": ["room", "minigame"]
+    },
+    {
+      "id": "sfx-footstep",
+      "src": "sound/sfx-footstep.wav",
+      "channel": "heistSfx",
+      "gain": 0.9,
+      "phases": ["room", "minigame", "offer"]
+    },
+    {
+      "id": "sting-win",
+      "src": "sound/sting-win.wav",
+      "channel": "sting",
+      "gain": 1.0,
+      "phases": ["result"]
+    },
+    {
+      "id": "sting-bust",
+      "src": "sound/sting-bust.wav",
+      "channel": "sting",
+      "gain": 1.0,
+      "phases": ["result"]
+    },
+    {
+      "id": "danger-alarm",
+      "src": "sound/danger-alarm.wav",
+      "channel": "danger",
+      "loop": true,
+      "gain": 1.0,
+      "phases": ["room", "minigame", "offer"]
+    },
+    {
+      "id": "finale-escape",
+      "src": "sound/finale-escape.wav",
+      "channel": "finale",
+      "gain": 1.0,
+      "phases": ["getaway"]
+    },
+    {
+      "id": "finale-credits",
+      "src": "sound/finale-credits.wav",
+      "channel": "finale",
+      "gain": 0.8,
+      "phases": ["getaway", "result"]
+    }
+  ],
+  "ambientBed": {
+    "droneId": "ambient-drone",
+    "heartbeatId": "ambient-heartbeat"
+  }
+}
