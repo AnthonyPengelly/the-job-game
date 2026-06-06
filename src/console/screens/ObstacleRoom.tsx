@@ -33,7 +33,7 @@ function OptionCard({ option, selected, onSelect, narrationLine }: OptionCardPro
       {narrationLine !== undefined && narrationLine !== '' && (
         <span data-testid={`option-narration-${option.id}`}>{narrationLine}</span>
       )}
-      <span data-testid={`option-game-${option.id}`}>{option.gameId}</span>
+      <span data-testid={`option-game-${option.id}`} />
       <span data-testid={`option-reward-${option.id}`}>Loot: {option.reward}</span>
       <span data-testid={`option-heat-${option.id}`}>Heat: {option.heatCost}</span>
     </div>

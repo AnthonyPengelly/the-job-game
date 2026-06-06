@@ -122,9 +122,7 @@ describe('ObstacleRoom screen', () => {
       expect(screen.getByTestId(`option-heat-${option.id}`)).toHaveTextContent(
         String(option.heatCost),
       );
-      expect(screen.getByTestId(`option-game-${option.id}`)).toHaveTextContent(
-        option.gameId,
-      );
+      expect(screen.getByTestId(`option-game-${option.id}`)).toBeInTheDocument();
     }
   });
 
