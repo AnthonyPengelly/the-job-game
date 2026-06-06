@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/console/store';
 import { Teleprompter } from '@/console/teleprompter';
 import type { EngineConfig } from '@/engine';
@@ -36,10 +36,16 @@ export function Offer() {
   const cfg = useGameStore(s => s.cfg);
   const director = useGameStore(s => s.director);
 
-  const [pushRunLine, setPushRunLine] = useState<string>(() => {
-    if (!director) return '';
-    return director.next('pushRun', { heatBand: deriveHeatBand(heat, cfg) });
-  });
+  // Guard ensures director.next() fires exactly once even under React StrictMode,
+  // which double-invokes useState lazy initializers in development.
+  const hasPicked = useRef(false);
+  const [pushRunLine, setPushRunLine] = useState<string>('');
+  useEffect(() => {
+    if (hasPicked.current || !director) return;
+    hasPicked.current = true;
+    setPushRunLine(director.next('pushRun', { heatBand: deriveHeatBand(heat, cfg) }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handlePushOn() {
     dispatch({ t: 'PUSH_ON' });
