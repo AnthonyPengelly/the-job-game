@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import './player.css';
 import { PlayerViewApp } from './App';
 
 const rootEl = document.getElementById('root');

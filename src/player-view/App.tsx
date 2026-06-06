@@ -13,16 +13,26 @@ export function PlayerViewApp(): JSX.Element {
   }, []);
 
   if (slice.kind === 'defuse-rulebook') {
-    return <DefuseRulebook slice={slice} />;
+    return (
+      <div className="pv">
+        <DefuseRulebook slice={slice} />
+      </div>
+    );
   }
 
   if (slice.kind === 'getaway') {
-    return <GetawayDisplay slice={slice} />;
+    return (
+      <div className="pv">
+        <GetawayDisplay slice={slice} />
+      </div>
+    );
   }
 
   return (
-    <div data-testid="player-view-idle">
-      <p>Waiting for game...</p>
+    <div className="pv" data-testid="player-view-idle">
+      <div className="pv-inner" style={{ alignItems: 'center' }}>
+        <p className="pv-clock-label">Waiting for game&hellip;</p>
+      </div>
     </div>
   );
 }

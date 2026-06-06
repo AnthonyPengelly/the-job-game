@@ -11,22 +11,30 @@ export function GetawayDisplay({ slice }: Props): JSX.Element {
   const minutes = Math.floor(secondsRemaining / 60);
   const secs = secondsRemaining % 60;
   const formattedTime = `${minutes}:${String(secs).padStart(2, '0')}`;
+  const danger = gameActive && secondsRemaining <= 15;
 
   return (
-    <div data-testid="getaway-display">
-      <h2>Getaway!</h2>
+    <div data-testid="getaway-display" className="pv-inner" style={{ alignItems: 'center' }}>
+      <div className="pv-clock-label">Get to the van</div>
 
-      <p data-testid="getaway-clue-giver">
-        Clue-giver: <strong>{clueGiverName}</strong>
-      </p>
-
-      <p data-testid="getaway-cards-cleared">
-        {cardsCleared} / {targetCards} cards cleared
-      </p>
-
-      <div data-testid="getaway-timer" data-remaining={secondsRemaining}>
-        {gameActive ? formattedTime : 'Waiting...'}
+      <div
+        data-testid="getaway-timer"
+        data-remaining={secondsRemaining}
+        className={`pv-clock${danger ? ' danger' : ''}`}
+      >
+        {gameActive ? formattedTime : '—:——'}
       </div>
+
+      <div className="pv-check" data-testid="getaway-cards-cleared">
+        <span className="k">Cards cleared</span>
+        <span className="v">
+          {cardsCleared}&thinsp;/&thinsp;{targetCards}
+        </span>
+      </div>
+
+      <p data-testid="getaway-clue-giver" className="pv-lede">
+        Clue-giver: <b>{clueGiverName}</b>
+      </p>
     </div>
   );
 }

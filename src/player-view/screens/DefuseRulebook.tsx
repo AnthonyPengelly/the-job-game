@@ -7,18 +7,28 @@ interface Props {
 /** Player-facing rulebook for Defuse the Alarm. Never receives GM-only state. */
 export function DefuseRulebook({ slice }: Props): JSX.Element {
   return (
-    <div data-testid="defuse-rulebook">
-      <h2>Wire Cutting Rules</h2>
+    <div data-testid="defuse-rulebook" className="pv-inner">
+      <div className="pv-eyebrow">
+        <span className="sq" />
+        Player View
+        <span className="div" />
+        <span className="muted">Wire Cutting Rules</span>
+      </div>
+      <h1 className="pv-title">Defuse</h1>
+
       {!slice.gameActive ? (
-        <p data-testid="defuse-waiting">Waiting for game to start...</p>
+        <p data-testid="defuse-waiting" className="pv-lede">
+          Waiting for game to start&hellip;
+        </p>
       ) : (
-        <ul data-testid="defuse-rules-list">
+        <div data-testid="defuse-rules-list" className="pv-steps">
           {slice.rules.map((rule, i) => (
-            <li key={i} data-testid={`defuse-rule-${i}`}>
-              {rule}
-            </li>
+            <div key={i} className="pv-step" data-testid={`defuse-rule-${i}`}>
+              <span className="num">{i + 1}</span>
+              <span className="txt">{rule}</span>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
