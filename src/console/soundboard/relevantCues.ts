@@ -14,7 +14,7 @@ export type CueGroups = Partial<Record<SoundChannel, SoundCue[]>>;
 export function relevantCues(phase: RunPhase, manifest: ParsedSoundManifest): CueGroups {
   const result: CueGroups = {};
   for (const cue of manifest.cues) {
-    if ((cue.phases as string[]).includes(phase)) {
+    if (cue.phases.includes(phase)) {
       if (result[cue.channel] === undefined) {
         result[cue.channel] = [];
       }
