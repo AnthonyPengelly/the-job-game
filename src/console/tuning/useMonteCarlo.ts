@@ -3,6 +3,7 @@ import type { EngineConfig } from '@/engine/config';
 import type { Skill } from '@/engine/types';
 import type { MonteCarloResult } from './montecarlo';
 import type { SimWorkerRequest, SimWorkerResponse } from './sim.worker';
+import SimWorker from './sim.worker?worker&inline';
 
 /** Fixed N and seed for the in-app panel — fast enough for interactive use, deterministic. */
 const PANEL_N = 500;
@@ -37,9 +38,7 @@ export function useMonteCarlo(
 
   // Create and destroy the worker alongside this hook instance.
   useEffect(() => {
-    const worker = new Worker(new URL('./sim.worker.ts', import.meta.url), {
-      type: 'module',
-    });
+    const worker = new SimWorker();
     workerRef.current = worker;
 
     worker.addEventListener(
