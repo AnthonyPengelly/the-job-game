@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useGameStore } from '@/console/store';
 import { useMonteCarlo } from './useMonteCarlo';
 import { Distributions } from './Distributions';
@@ -200,8 +200,13 @@ function TuningPanelBody({ storage, initialPresetId }: TuningPanelBodyProps) {
   const [showCloneForm, setShowCloneForm] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  // Validate working copy. Non-ok means sliders produced an out-of-schema value.
-  const validationResult: BuildConfigResult = buildConfigFromTuning(workingTuning);
+  // Validate working copy. Memoized so workingCfg is a stable reference when
+  // workingTuning hasn't changed — prevents useMonteCarlo's effect from firing
+  // on every render and creating a perpetual recompute loop.
+  const validationResult: BuildConfigResult = useMemo(
+    () => buildConfigFromTuning(workingTuning),
+    [workingTuning],
+  );
   // Feed distributions with working cfg (falls back to current store cfg when invalid).
   const workingCfg = validationResult.ok ? validationResult.cfg : storeCfg;
 
