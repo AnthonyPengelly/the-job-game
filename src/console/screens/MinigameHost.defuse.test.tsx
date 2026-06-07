@@ -76,20 +76,10 @@ function makeDefuseStore(seed = 1, opts: MakeDefuseStoreOpts = {}) {
   const crew = store.getState().session.present.crew;
 
   if (opts.charmPowerUp) {
-    store.getState().dispatch({
-      t: 'OVERRIDE_SET_POWERUP',
-      player: crew[0]!.id,
-      lane: 'charm',
-      held: true,
-    });
+    store.getState().dispatch({ t: 'OVERRIDE_SET_POWERUP', player: crew[0]!.id, lane: 'charm', held: true });
   }
   if (opts.stealthPowerUp) {
-    store.getState().dispatch({
-      t: 'OVERRIDE_SET_POWERUP',
-      player: crew[0]!.id,
-      lane: 'stealth',
-      held: true,
-    });
+    store.getState().dispatch({ t: 'OVERRIDE_SET_POWERUP', player: crew[0]!.id, lane: 'stealth', held: true });
   }
 
   const room = store.getState().session.present.currentRoom;
@@ -135,21 +125,22 @@ describe('resolveGameVariant — Defuse has no solo variant (excluded)', () => {
   });
 });
 
-// ── Component mounting ────────────────────────────────────────────────────────
+// ── ARMED state (timer guard) ─────────────────────────────────────────────────
 
-describe('MinigameHost — defuseTheAlarm mounting', () => {
-  it('mounts DefuseComponent (not the stub)', () => {
+describe('MinigameHost — DefuseTheAlarm ARMED state', () => {
+  it('game component not mounted in ARMED — no timer can run on load', () => {
     const store = makeDefuseStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    expect(screen.getByTestId('defuse-the-alarm')).toBeInTheDocument();
-    expect(screen.queryByTestId('minigame-stub')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('defuse-the-alarm')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
   });
 
-  it('renders DialReadout alongside the game component', () => {
+  it('DialReadout visible in ARMED state', () => {
     const store = makeDefuseStore();
     render(
       <StoreContext.Provider value={store}>
@@ -158,34 +149,53 @@ describe('MinigameHost — defuseTheAlarm mounting', () => {
     );
     expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
   });
+});
 
-  it('renders a CardSpread of wires', () => {
+// ── Component mounting ────────────────────────────────────────────────────────
+
+describe('MinigameHost — defuseTheAlarm mounting', () => {
+  it('mounts DefuseComponent after START (not the stub)', () => {
     const store = makeDefuseStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('defuse-the-alarm')).toBeInTheDocument();
+    expect(screen.queryByTestId('minigame-stub')).not.toBeInTheDocument();
+  });
+
+  it('renders a CardSpread of wires in ACTIVE', () => {
+    const store = makeDefuseStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('card-spread')).toBeInTheDocument();
   });
 
-  it('renders a timer', () => {
+  it('renders a timer in ACTIVE', () => {
     const store = makeDefuseStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('timer')).toBeInTheDocument();
   });
 
-  it('renders the GM rulebook reference', () => {
+  it('renders the GM rulebook reference in ACTIVE', () => {
     const store = makeDefuseStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('defuse-rulebook-gm')).toBeInTheDocument();
   });
 });
@@ -200,6 +210,7 @@ describe('MinigameHost — defuseTheAlarm seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const countA = screen.getAllByTestId('card-spread')[0]!.children.length;
     unmountA();
 
@@ -209,6 +220,7 @@ describe('MinigameHost — defuseTheAlarm seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const countB = screen.getAllByTestId('card-spread')[0]!.children.length;
 
     expect(countA).toBe(countB);
@@ -218,23 +230,25 @@ describe('MinigameHost — defuseTheAlarm seeded params stable', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
-  it('Clear Channel boost surfaces when charm power-up is held', () => {
+  it('Clear Channel boost surfaces in ACTIVE when charm power-up is held', () => {
     const store = makeDefuseStore(1, { charmPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 
-  it('Spare Wire boost surfaces when stealth power-up is held', () => {
+  it('Spare Wire boost surfaces in ACTIVE when stealth power-up is held', () => {
     const store = makeDefuseStore(1, { stealthPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-stealth')).toBeInTheDocument();
   });
 
@@ -245,6 +259,7 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-charm')).not.toBeInTheDocument();
     expect(screen.queryByTestId('boost-stealth')).not.toBeInTheDocument();
   });
@@ -256,6 +271,7 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-charm');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -269,6 +285,7 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-stealth');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -282,6 +299,7 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('defuse-clear-channel-active')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-charm'));
     expect(screen.getByTestId('defuse-clear-channel-active')).toBeInTheDocument();
@@ -298,7 +316,7 @@ describe('MinigameHost — defuseTheAlarm wire cutting', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    // wire-0 is the first wire; tap it
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const wireCard = screen.getByTestId('card-wire-0');
     expect(wireCard.getAttribute('data-face-down')).toBe('false');
     fireEvent.click(wireCard);
@@ -312,14 +330,12 @@ describe('MinigameHost — defuseTheAlarm wire cutting', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const progressBefore = screen.getByTestId('defuse-progress').textContent;
-    // Cut wire-0 (may or may not be safe, but progress increments if safe)
     fireEvent.click(screen.getByTestId('card-wire-0'));
-    // The progress element should still be present
     expect(screen.getByTestId('defuse-progress')).toBeInTheDocument();
-    // If it was a safe cut, the count changed; either way the element is there
     expect(screen.getByTestId('defuse-progress').textContent).toBeTruthy();
-    void progressBefore; // used for reference only
+    void progressBefore;
   });
 });
 
@@ -334,7 +350,10 @@ describe('MinigameHost — defuseTheAlarm outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -354,7 +373,10 @@ describe('MinigameHost — defuseTheAlarm outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;

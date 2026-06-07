@@ -110,21 +110,22 @@ describe('resolveGameVariant — Crack the Tumblers variant loading', () => {
   });
 });
 
-// ── Solo run: crackTheTumblersSolo mounts ─────────────────────────────────────
+// ── ARMED state (timer guard) ─────────────────────────────────────────────────
 
-describe('MinigameHost — crackTheTumblersSolo (commit 1)', () => {
-  it('mounts CrackTheTumblersSolo component (not the stub)', () => {
+describe('MinigameHost — CrackTheTumblers ARMED state', () => {
+  it('game component not mounted in ARMED — no timer can run', () => {
     const store = makeCrackStore(1, { twoPlayers: false });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    expect(screen.getByTestId('crack-the-tumblers-solo')).toBeInTheDocument();
-    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('crack-the-tumblers-solo')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('crack-the-tumblers')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
   });
 
-  it('renders DialReadout alongside the game component', () => {
+  it('DialReadout visible in ARMED state (GM sees difficulty before START)', () => {
     const store = makeCrackStore(1, { twoPlayers: false });
     render(
       <StoreContext.Provider value={store}>
@@ -132,6 +133,22 @@ describe('MinigameHost — crackTheTumblersSolo (commit 1)', () => {
       </StoreContext.Provider>,
     );
     expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
+  });
+});
+
+// ── Solo run: crackTheTumblersSolo mounts ─────────────────────────────────────
+
+describe('MinigameHost — crackTheTumblersSolo (commit 1)', () => {
+  it('mounts CrackTheTumblersSolo component after START (not the stub)', () => {
+    const store = makeCrackStore(1, { twoPlayers: false });
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('crack-the-tumblers-solo')).toBeInTheDocument();
+    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
   });
 
   it('GM can confirm botched outcome → RESOLVE_MINIGAME → phase is offer', () => {
@@ -142,7 +159,11 @@ describe('MinigameHost — crackTheTumblersSolo (commit 1)', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    // In-game OutcomeJudge: pick botched and confirm
     fireEvent.click(screen.getByTestId('outcome-option-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE: pre-selected to botched, confirm to dispatch
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -158,25 +179,38 @@ describe('MinigameHost — crackTheTumblersSolo (commit 1)', () => {
 // ── Two-player run: crackTheTumblers (parent) mounts ─────────────────────────
 
 describe('MinigameHost — crackTheTumblers (commit 2)', () => {
-  it('mounts CrackTheTumblers component (not the stub or solo)', () => {
+  it('mounts CrackTheTumblers component after START (not the stub or solo)', () => {
     const store = makeCrackStore(1, { twoPlayers: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('crack-the-tumblers')).toBeInTheDocument();
     expect(screen.queryByTestId('crack-the-tumblers-solo')).not.toBeInTheDocument();
   });
 
-  it('Reset Pin boost surfaces when the Tech power-up is held', () => {
+  it('Reset Pin boost surfaces in ACTIVE when the Tech power-up is held', () => {
     const store = makeCrackStore(1, { twoPlayers: true, techPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
+  });
+
+  it('Reset Pin boost preview shown in ARMED when Tech power-up is held', () => {
+    const store = makeCrackStore(1, { twoPlayers: true, techPowerUp: true });
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    // ARMED state shows boost-holder preview
+    expect(screen.getByTestId('mg-boost-available-tech')).toBeInTheDocument();
   });
 
   it('Reset Pin fires once then disables', () => {
@@ -186,6 +220,7 @@ describe('MinigameHost — crackTheTumblers (commit 2)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-tech');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -199,6 +234,7 @@ describe('MinigameHost — crackTheTumblers (commit 2)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-tech')).not.toBeInTheDocument();
   });
 
@@ -210,7 +246,11 @@ describe('MinigameHost — crackTheTumblers (commit 2)', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    // In-game OutcomeJudge
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;
@@ -232,6 +272,7 @@ describe('MinigameHost — seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const countA = screen.getByTestId('ctt-solo-phase').textContent;
     unmountA();
 
@@ -241,6 +282,7 @@ describe('MinigameHost — seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const countB = screen.getByTestId('ctt-solo-phase').textContent;
 
     expect(countA).toBe(countB);

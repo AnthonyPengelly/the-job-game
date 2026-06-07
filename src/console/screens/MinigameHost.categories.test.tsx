@@ -90,21 +90,24 @@ function makeCategoriesStore(seed = 1, opts: MakeCategoriesStoreOpts = {}) {
   return store;
 }
 
-// ── Game mounting ─────────────────────────────────────────────────────────────
+// ── ARMED state (timer guard) ─────────────────────────────────────────────────
 
-describe('MinigameHost — categories game mounting', () => {
-  it('mounts CategoriesComponent instead of the stub', () => {
+describe('MinigameHost — Categories ARMED state', () => {
+  it('game component not mounted in ARMED — timer cannot run on load', () => {
     const store = makeCategoriesStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    expect(screen.getByTestId('categories')).toBeInTheDocument();
-    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+    // Game component (with timer) not mounted
+    expect(screen.queryByTestId('categories')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument();
+    // START CTA visible
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
   });
 
-  it('renders DialReadout alongside the game component', () => {
+  it('DialReadout visible in ARMED state', () => {
     const store = makeCategoriesStore();
     render(
       <StoreContext.Provider value={store}>
@@ -113,25 +116,54 @@ describe('MinigameHost — categories game mounting', () => {
     );
     expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
   });
+});
 
-  it('shows the category prompt and target count', () => {
+// ── Game mounting ─────────────────────────────────────────────────────────────
+
+describe('MinigameHost — categories game mounting', () => {
+  it('mounts CategoriesComponent after START instead of the stub', () => {
     const store = makeCategoriesStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('categories')).toBeInTheDocument();
+    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+  });
+
+  it('shows the category prompt and target count in ACTIVE', () => {
+    const store = makeCategoriesStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('categories-category')).toBeInTheDocument();
     expect(screen.getByTestId('categories-target')).toBeInTheDocument();
   });
 
-  it('shows a tally counter starting at 0', () => {
+  it('shows a timer in ACTIVE', () => {
     const store = makeCategoriesStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('timer')).toBeInTheDocument();
+  });
+
+  it('shows a tally counter starting at 0 in ACTIVE', () => {
+    const store = makeCategoriesStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('tally-count').textContent).toContain('0');
   });
 });
@@ -146,6 +178,7 @@ describe('MinigameHost — categories seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const categoryA = screen.getByTestId('categories-category').textContent;
     unmountA();
 
@@ -155,6 +188,7 @@ describe('MinigameHost — categories seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const categoryB = screen.getByTestId('categories-category').textContent;
 
     expect(categoryA).toBe(categoryB);
@@ -171,6 +205,7 @@ describe('MinigameHost — categories tally counter', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('tally-increment');
     fireEvent.click(btn);
     fireEvent.click(btn);
@@ -181,14 +216,25 @@ describe('MinigameHost — categories tally counter', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — categories boost (Skip)', () => {
-  it('Skip boost surfaces when charm power-up is held', () => {
+  it('Skip boost surfaces in ACTIVE when charm power-up is held', () => {
     const store = makeCategoriesStore(1, { charmPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
+  });
+
+  it('Skip boost preview shown in ARMED when charm power-up is held', () => {
+    const store = makeCategoriesStore(1, { charmPowerUp: true });
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    expect(screen.getByTestId('mg-boost-available-charm')).toBeInTheDocument();
   });
 
   it('no boost renders when no charm power-up is held', () => {
@@ -198,6 +244,7 @@ describe('MinigameHost — categories boost (Skip)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-charm')).not.toBeInTheDocument();
   });
 
@@ -208,6 +255,7 @@ describe('MinigameHost — categories boost (Skip)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-charm');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -221,13 +269,12 @@ describe('MinigameHost — categories boost (Skip)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    // Increment tally a few times
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const tallyBtn = screen.getByTestId('tally-increment');
     fireEvent.click(tallyBtn);
     fireEvent.click(tallyBtn);
     expect(screen.getByTestId('tally-count').textContent).toContain('2');
 
-    // Fire Skip
     fireEvent.click(screen.getByTestId('boost-charm'));
     expect(screen.getByTestId('tally-count').textContent).toContain('0');
   });
@@ -244,7 +291,11 @@ describe('MinigameHost — categories outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    // In-game OutcomeJudge
     fireEvent.click(screen.getByTestId('outcome-option-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -264,7 +315,11 @@ describe('MinigameHost — categories outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    // In-game OutcomeJudge: pick clean
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;

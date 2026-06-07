@@ -92,21 +92,22 @@ function makeInsideKnowledgeStore(seed = 1, opts: MakeStoreOpts = {}) {
   return store;
 }
 
-// ── Game mounting ─────────────────────────────────────────────────────────────
+// ── ARMED state (timer guard) ─────────────────────────────────────────────────
 
-describe('MinigameHost — inside-knowledge game mounting', () => {
-  it('mounts InsideKnowledgeComponent instead of the stub', () => {
+describe('MinigameHost — InsideKnowledge ARMED state', () => {
+  it('game component not mounted in ARMED — no timer can run on load', () => {
     const store = makeInsideKnowledgeStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    expect(screen.getByTestId('inside-knowledge')).toBeInTheDocument();
-    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('inside-knowledge')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
   });
 
-  it('renders DialReadout alongside the game component', () => {
+  it('DialReadout visible in ARMED state', () => {
     const store = makeInsideKnowledgeStore();
     render(
       <StoreContext.Provider value={store}>
@@ -115,26 +116,44 @@ describe('MinigameHost — inside-knowledge game mounting', () => {
     );
     expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
   });
+});
 
-  it('shows tier and first question', () => {
+// ── Game mounting ─────────────────────────────────────────────────────────────
+
+describe('MinigameHost — inside-knowledge game mounting', () => {
+  it('mounts InsideKnowledgeComponent after START instead of the stub', () => {
     const store = makeInsideKnowledgeStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('inside-knowledge')).toBeInTheDocument();
+    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+  });
+
+  it('shows tier and first question in ACTIVE', () => {
+    const store = makeInsideKnowledgeStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('ik-tier')).toBeInTheDocument();
     expect(screen.getByTestId('ik-question')).toBeInTheDocument();
     expect(screen.getByTestId('ik-answer')).toBeInTheDocument();
   });
 
-  it('shows progress header with score', () => {
+  it('shows progress header with score in ACTIVE', () => {
     const store = makeInsideKnowledgeStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('ik-progress')).toBeInTheDocument();
     expect(screen.getByTestId('ik-score')).toBeInTheDocument();
   });
@@ -150,6 +169,7 @@ describe('MinigameHost — inside-knowledge seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const questionA = screen.getByTestId('ik-question').textContent;
     unmountA();
 
@@ -159,6 +179,7 @@ describe('MinigameHost — inside-knowledge seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const questionB = screen.getByTestId('ik-question').textContent;
 
     expect(questionA).toBe(questionB);
@@ -175,6 +196,7 @@ describe('MinigameHost — inside-knowledge question marking', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const progressBefore = screen.getByTestId('ik-progress').textContent;
     fireEvent.click(screen.getByTestId('ik-mark-correct'));
     const progressAfter = screen.getByTestId('ik-progress').textContent;
@@ -188,6 +210,7 @@ describe('MinigameHost — inside-knowledge question marking', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const progressBefore = screen.getByTestId('ik-progress').textContent;
     fireEvent.click(screen.getByTestId('ik-mark-wrong'));
     const progressAfter = screen.getByTestId('ik-progress').textContent;
@@ -198,23 +221,25 @@ describe('MinigameHost — inside-knowledge question marking', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — inside-knowledge boosts', () => {
-  it('Cheat Sheet boost surfaces when tech power-up is held', () => {
+  it('Cheat Sheet boost surfaces in ACTIVE when tech power-up is held', () => {
     const store = makeInsideKnowledgeStore(1, { techPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
   });
 
-  it('Narrow It Down boost surfaces when charm power-up is held', () => {
+  it('Narrow It Down boost surfaces in ACTIVE when charm power-up is held', () => {
     const store = makeInsideKnowledgeStore(1, { charmPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 
@@ -225,6 +250,7 @@ describe('MinigameHost — inside-knowledge boosts', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-tech')).not.toBeInTheDocument();
     expect(screen.queryByTestId('boost-charm')).not.toBeInTheDocument();
   });
@@ -236,6 +262,7 @@ describe('MinigameHost — inside-knowledge boosts', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-tech');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -249,6 +276,7 @@ describe('MinigameHost — inside-knowledge boosts', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-charm');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -262,6 +290,7 @@ describe('MinigameHost — inside-knowledge boosts', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
     expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
@@ -278,7 +307,10 @@ describe('MinigameHost — inside-knowledge outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -298,7 +330,10 @@ describe('MinigameHost — inside-knowledge outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;

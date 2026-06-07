@@ -19,11 +19,6 @@ afterEach(() => {
 });
 
 // ── assemblyLine-only EngineConfig ────────────────────────────────────────────
-//
-// Profiles '3' extended to crewPerOption [2, 3] so a 3-player run can commit
-// all three crew members (commitSize=3 → resolveGameVariant → 'assemblyLine').
-// Default profiles only allow up to 2 committed, so for commit-2 tests we use
-// 2 players; for commit-3 tests we use 3 players with the extended profile.
 
 const assemblyLineCfg: EngineConfig = {
   ...testCfg,
@@ -152,21 +147,22 @@ describe('obstacleCommitRange — Assembly Line never below minCommit 2', () => 
   });
 });
 
-// ── assemblyLineNegotiated mounts at commit 2 ─────────────────────────────────
+// ── ARMED state (timer guard) ─────────────────────────────────────────────────
 
-describe('MinigameHost — assemblyLineNegotiated (commit 2)', () => {
-  it('mounts AssemblyLineNegotiatedComponent (not the stub)', () => {
+describe('MinigameHost — AssemblyLine ARMED state', () => {
+  it('game component not mounted in ARMED — no timer can run on load', () => {
     const store = makeAssemblyLineStore(1, { players: [{ name: 'Alice' }, { name: 'Bob' }] });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    expect(screen.getByTestId('assembly-line-negotiated')).toBeInTheDocument();
-    expect(screen.queryByTestId('assembly-line')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('assembly-line-negotiated')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
   });
 
-  it('renders DialReadout alongside the game component', () => {
+  it('DialReadout visible in ARMED state', () => {
     const store = makeAssemblyLineStore(1, { players: [{ name: 'Alice' }, { name: 'Bob' }] });
     render(
       <StoreContext.Provider value={store}>
@@ -175,25 +171,43 @@ describe('MinigameHost — assemblyLineNegotiated (commit 2)', () => {
     );
     expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
   });
+});
 
-  it('shows hand size and type count', () => {
+// ── assemblyLineNegotiated mounts at commit 2 ─────────────────────────────────
+
+describe('MinigameHost — assemblyLineNegotiated (commit 2)', () => {
+  it('mounts AssemblyLineNegotiatedComponent after START (not the stub)', () => {
     const store = makeAssemblyLineStore(1, { players: [{ name: 'Alice' }, { name: 'Bob' }] });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('assembly-line-negotiated')).toBeInTheDocument();
+    expect(screen.queryByTestId('assembly-line')).not.toBeInTheDocument();
+  });
+
+  it('shows hand size and type count in ACTIVE', () => {
+    const store = makeAssemblyLineStore(1, { players: [{ name: 'Alice' }, { name: 'Bob' }] });
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('aln-hand-size')).toBeInTheDocument();
     expect(screen.getByTestId('aln-type-count')).toBeInTheDocument();
   });
 
-  it('shows a timer', () => {
+  it('shows a timer in ACTIVE', () => {
     const store = makeAssemblyLineStore(1, { players: [{ name: 'Alice' }, { name: 'Bob' }] });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('timer')).toBeInTheDocument();
   });
 });
@@ -201,7 +215,7 @@ describe('MinigameHost — assemblyLineNegotiated (commit 2)', () => {
 // ── assemblyLine (parent) mounts at commit 3 ─────────────────────────────────
 
 describe('MinigameHost — assemblyLine (commit 3)', () => {
-  it('mounts AssemblyLineComponent (not the stub or negotiated)', () => {
+  it('mounts AssemblyLineComponent after START (not the stub or negotiated)', () => {
     const store = makeAssemblyLineStore(1, {
       players: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Charlie' }],
     });
@@ -210,20 +224,9 @@ describe('MinigameHost — assemblyLine (commit 3)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('assembly-line')).toBeInTheDocument();
     expect(screen.queryByTestId('assembly-line-negotiated')).not.toBeInTheDocument();
-  });
-
-  it('renders DialReadout alongside the game component', () => {
-    const store = makeAssemblyLineStore(1, {
-      players: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Charlie' }],
-    });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
   });
 });
 
@@ -237,6 +240,7 @@ describe('MinigameHost — seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const handA = screen.getByTestId('aln-hand-size').textContent;
     unmountA();
 
@@ -246,6 +250,7 @@ describe('MinigameHost — seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const handB = screen.getByTestId('aln-hand-size').textContent;
 
     expect(handA).toBe(handB);
@@ -255,7 +260,7 @@ describe('MinigameHost — seeded params stable', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
-  it('Quick Hands boost surfaces when physical power-up is held', () => {
+  it('Quick Hands boost surfaces in ACTIVE when physical power-up is held', () => {
     const store = makeAssemblyLineStore(1, {
       players: [{ name: 'Alice' }, { name: 'Bob' }],
       physicalPowerUp: true,
@@ -265,10 +270,11 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
   });
 
-  it('Tip-Off boost surfaces when charm power-up is held', () => {
+  it('Tip-Off boost surfaces in ACTIVE when charm power-up is held', () => {
     const store = makeAssemblyLineStore(1, {
       players: [{ name: 'Alice' }, { name: 'Bob' }],
       charmPowerUp: true,
@@ -278,6 +284,7 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 
@@ -288,6 +295,7 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-physical')).not.toBeInTheDocument();
     expect(screen.queryByTestId('boost-charm')).not.toBeInTheDocument();
   });
@@ -302,6 +310,7 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-physical');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -318,6 +327,7 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-charm');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -334,6 +344,7 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('aln-types-revealed')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-charm'));
     expect(screen.getByTestId('aln-types-revealed')).toBeInTheDocument();
@@ -349,6 +360,7 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('aln-quick-hands-active')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-physical'));
     expect(screen.getByTestId('aln-quick-hands-active')).toBeInTheDocument();
@@ -366,7 +378,10 @@ describe('MinigameHost — assemblyLineNegotiated outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -386,7 +401,10 @@ describe('MinigameHost — assemblyLineNegotiated outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;

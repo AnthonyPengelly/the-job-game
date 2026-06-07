@@ -57,10 +57,6 @@ interface MakeSafeCrackStoreOpts {
   twoPlayers?:    boolean;
 }
 
-/**
- * Build a store in the minigame phase at a safeCrack obstacle.
- * With twoPlayers=true a second player (Bob) is added and both are committed.
- */
 function makeSafeCrackStore(seed = 1, opts: MakeSafeCrackStoreOpts = {}) {
   const store = createGameStore({ cfg: safeCrackCfg, storage: makeStorage() });
   const playerSetup = opts.twoPlayers
@@ -110,28 +106,41 @@ function readDialLevel(): number {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
+describe('MinigameHost — safeCrack ARMED state', () => {
+  it('game component not mounted in ARMED — no timer can run on load', () => {
+    const store = makeSafeCrackStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    expect(screen.queryByTestId('safe-crack')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
+  });
+
+  it('DialReadout visible in ARMED state', () => {
+    const store = makeSafeCrackStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
+  });
+});
+
 describe('MinigameHost — safeCrack end-to-end', () => {
   describe('game resolution', () => {
-    it('mounts SafeCrackComponent instead of the stub', () => {
+    it('mounts SafeCrackComponent after START instead of the stub', () => {
       const store = makeSafeCrackStore();
       render(
         <StoreContext.Provider value={store}>
           <MinigameHost />
         </StoreContext.Provider>,
       );
-      // SafeCrackComponent has this testid; MinigameStub has btn-outcome-clean instead
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       expect(screen.getByTestId('safe-crack')).toBeInTheDocument();
       expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
-    });
-
-    it('renders DialReadout alongside the game component', () => {
-      const store = makeSafeCrackStore();
-      render(
-        <StoreContext.Provider value={store}>
-          <MinigameHost />
-        </StoreContext.Provider>,
-      );
-      expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
     });
   });
 
@@ -143,8 +152,10 @@ describe('MinigameHost — safeCrack end-to-end', () => {
           <MinigameHost />
         </StoreContext.Provider>,
       );
+      // Read dial from ARMED state (before START)
+      const dialA = readDialLevel();
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       const codeLenA = screen.getByTestId('code-length').textContent;
-      const dialA    = readDialLevel();
       unmountA();
 
       const storeB = makeSafeCrackStore(42);
@@ -153,8 +164,9 @@ describe('MinigameHost — safeCrack end-to-end', () => {
           <MinigameHost />
         </StoreContext.Provider>,
       );
+      const dialB = readDialLevel();
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       const codeLenB = screen.getByTestId('code-length').textContent;
-      const dialB    = readDialLevel();
 
       expect(codeLenA).toBe(codeLenB);
       expect(dialA).toBe(dialB);
@@ -167,6 +179,7 @@ describe('MinigameHost — safeCrack end-to-end', () => {
           <MinigameHost />
         </StoreContext.Provider>,
       );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       const codeLen1 = screen.getByTestId('code-length').textContent;
 
       rerender(
@@ -217,6 +230,7 @@ describe('MinigameHost — safeCrack end-to-end', () => {
           <MinigameHost />
         </StoreContext.Provider>,
       );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
       expect(screen.getByTestId('boost-stealth')).toBeInTheDocument();
     });
@@ -228,6 +242,7 @@ describe('MinigameHost — safeCrack end-to-end', () => {
           <MinigameHost />
         </StoreContext.Provider>,
       );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       expect(screen.queryByTestId('boost-tech')).not.toBeInTheDocument();
       expect(screen.queryByTestId('boost-stealth')).not.toBeInTheDocument();
     });
@@ -239,6 +254,7 @@ describe('MinigameHost — safeCrack end-to-end', () => {
           <MinigameHost />
         </StoreContext.Provider>,
       );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       const btn = screen.getByTestId('boost-tech');
       expect(btn).not.toBeDisabled();
       fireEvent.click(btn);
@@ -255,6 +271,7 @@ describe('MinigameHost — safeCrack end-to-end', () => {
           <MinigameHost />
         </StoreContext.Provider>,
       );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       const btn = screen.getByTestId('boost-stealth');
       expect(btn).not.toBeDisabled();
       fireEvent.click(btn);
@@ -271,7 +288,10 @@ describe('MinigameHost — safeCrack end-to-end', () => {
         </StoreContext.Provider>,
       );
 
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       fireEvent.click(screen.getByTestId('outcome-option-botched'));
+      fireEvent.click(screen.getByTestId('outcome-confirm'));
+      // Shell RESOLVE confirm
       fireEvent.click(screen.getByTestId('outcome-confirm'));
 
       expect(store.getState().session.present.phase).toBe('offer');
@@ -291,8 +311,10 @@ describe('MinigameHost — safeCrack end-to-end', () => {
         </StoreContext.Provider>,
       );
 
-      // Judge suggests botched (game not played); GM overrides to clean
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       fireEvent.click(screen.getByTestId('outcome-option-clean'));
+      fireEvent.click(screen.getByTestId('outcome-confirm'));
+      // Shell RESOLVE confirm
       fireEvent.click(screen.getByTestId('outcome-confirm'));
 
       const history = store.getState().session.present.history;
