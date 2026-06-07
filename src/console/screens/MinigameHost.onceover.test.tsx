@@ -283,9 +283,8 @@ describe('MinigameHost — the-once-over outcome flow', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    fireEvent.click(screen.getByTestId('outcome-option-botched'));
-    fireEvent.click(screen.getByTestId('outcome-confirm'));
-    // Shell RESOLVE confirm
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    // Shell RESOLVE: botched pre-selected (no flags = botched)
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -306,9 +305,8 @@ describe('MinigameHost — the-once-over outcome flow', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
-    fireEvent.click(screen.getByTestId('outcome-confirm'));
-    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;
