@@ -23,7 +23,7 @@ export function Hud() {
   }
 
   return (
-    <div data-testid="hud" style={{ display: 'contents' }}>
+    <div data-testid="crew-rail" style={{ display: 'contents' }}>
       {/* Crew rail header */}
       <div className="cockpit-crewrail-head">
         <span className="hl">

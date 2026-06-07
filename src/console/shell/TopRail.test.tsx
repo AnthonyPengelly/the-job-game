@@ -212,8 +212,10 @@ describe('TopRail — phase and room display', () => {
 
     await act(async () => {
       store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
-      // Force escape signal: heat >= runAtFraction * hMax AND roomIndex >= 2
-      // Use hMax so the signal is clearly above the threshold
+      // escapeSignal requires roomIndex >= 2 AND heat >= runAtFraction * hMax.
+      // Advance roomIndex to 2 via two skip overrides, then push heat above threshold.
+      store.getState().dispatch({ t: 'OVERRIDE_SKIP_ROOM' });
+      store.getState().dispatch({ t: 'OVERRIDE_SKIP_ROOM' });
       store.getState().dispatch({ t: 'OVERRIDE_SET_HEAT', value: testCfg.heat.hMax });
     });
     await act(async () => {
@@ -224,8 +226,7 @@ describe('TopRail — phase and room display', () => {
       );
     });
 
-    // The escape signal may or may not be visible depending on roomIndex,
-    // but the toprail should still mount correctly
-    expect(screen.getByTestId('hud')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: /escape signal active/i })).toBeInTheDocument();
+    expect(screen.getByText('Getting hot')).toBeInTheDocument();
   });
 });

@@ -153,17 +153,17 @@ describe('HUD — stays mounted across phase changes', () => {
       );
     });
 
-    expect(screen.getByTestId('hud')).toBeInTheDocument();
+    expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
 
     await act(async () => {
       store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'offer' });
     });
-    expect(screen.getByTestId('hud')).toBeInTheDocument();
+    expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
 
     await act(async () => {
       store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'result' });
     });
-    expect(screen.getByTestId('hud')).toBeInTheDocument();
+    expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
   });
 
   it('Hud and PhaseRouter are siblings — both present simultaneously', async () => {
@@ -182,7 +182,7 @@ describe('HUD — stays mounted across phase changes', () => {
     });
 
     // Both the HUD and the phase screen are present together
-    expect(screen.getByTestId('hud')).toBeInTheDocument();
+    expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
     expect(screen.getByTestId('screen-briefing')).toBeInTheDocument();
 
     const phases: RunPhase[] = ['briefing', 'offer', 'getaway', 'result'];
@@ -200,7 +200,7 @@ describe('HUD — stays mounted across phase changes', () => {
         store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase });
       });
       // HUD is always present regardless of phase
-      expect(screen.getByTestId('hud')).toBeInTheDocument();
+      expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
       // The correct phase screen is also shown
       expect(screen.getByTestId(phaseTestIds[phase])).toBeInTheDocument();
     }
