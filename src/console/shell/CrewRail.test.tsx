@@ -161,13 +161,22 @@ describe('CrewRail — detail popover', () => {
     const store = makeStore(['Alice']);
     await act(async () => { renderCrewRail(store); });
 
+    // Open with a realistic browser event sequence (mousedown then click)
+    const avatar = screen.getByTestId('crew-member-player-0');
     await act(async () => {
-      fireEvent.click(screen.getByTestId('crew-member-player-0'));
+      fireEvent.mouseDown(avatar);
+      fireEvent.click(avatar);
     });
     expect(screen.getByTestId('crew-detail-popover-player-0')).toBeInTheDocument();
 
+    // Second mousedown on the same avatar fires the Popover's capture-phase
+    // outside-click listener. The excludeRef (railRef) must exclude the avatar
+    // so onClose() is NOT called, leaving the toggle in handleAvatarClick free
+    // to set state to null. Without excludeRef the listener would call onClose()
+    // and the subsequent click would reopen the popover instead of closing it.
     await act(async () => {
-      fireEvent.click(screen.getByTestId('crew-member-player-0'));
+      fireEvent.mouseDown(avatar);
+      fireEvent.click(avatar);
     });
     expect(screen.queryByTestId('crew-detail-popover-player-0')).toBeNull();
   });

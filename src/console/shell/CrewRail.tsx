@@ -127,6 +127,7 @@ export function CrewRail() {
             left: 272,
           }}
           onClose={closePopover}
+          excludeRef={railRef}
         />
       )}
     </div>

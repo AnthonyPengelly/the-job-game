@@ -17,6 +17,8 @@ interface CrewDetailPopoverProps {
    */
   style?: React.CSSProperties;
   onClose: () => void;
+  /** Forwarded to Popover to exclude the trigger area from outside-click detection. */
+  excludeRef?: React.RefObject<HTMLElement | null>;
 }
 
 /**
@@ -36,6 +38,7 @@ export function CrewDetailPopover({
   dispatch,
   style,
   onClose,
+  excludeRef,
 }: CrewDetailPopoverProps) {
   const [statInputs, setStatInputs] = useState<Record<Lane, string>>({
     tech: '',
@@ -63,6 +66,7 @@ export function CrewDetailPopover({
   return (
     <Popover
       {...(style !== undefined ? { style } : {})}
+      {...(excludeRef !== undefined ? { excludeRef } : {})}
       anchor="left"
       onClose={onClose}
       data-testid={`crew-detail-popover-${player.id}`}

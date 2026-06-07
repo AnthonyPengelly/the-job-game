@@ -11,6 +11,15 @@ interface PopoverProps {
   anchor?: 'left' | 'right';
   /** Called when the popover should close (click outside or Esc). */
   onClose: () => void;
+  /**
+   * An element (or container of the trigger element) that should NOT be
+   * treated as "outside" for the outside-click dismissal. Clicks whose
+   * target is inside this ref do not call onClose — the caller's own
+   * click handler is responsible for toggling the popover. This prevents
+   * the capture-phase mousedown listener from racing with the caller's
+   * toggle logic.
+   */
+  excludeRef?: React.RefObject<HTMLElement | null>;
   children: React.ReactNode;
   'data-testid'?: string;
 }
@@ -26,6 +35,7 @@ export function Popover({
   style,
   anchor = 'left',
   onClose,
+  excludeRef,
   children,
   'data-testid': testId,
 }: PopoverProps) {
@@ -46,17 +56,17 @@ export function Popover({
   // Click outside to dismiss
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target as Node)
-      ) {
+      const target = e.target as Node;
+      const insidePopover = popoverRef.current?.contains(target) ?? false;
+      const insideExcluded = excludeRef?.current?.contains(target) ?? false;
+      if (!insidePopover && !insideExcluded) {
         onClose();
       }
     }
     // Use capture so we catch clicks before they're handled by content
     document.addEventListener('mousedown', handleClick, true);
     return () => document.removeEventListener('mousedown', handleClick, true);
-  }, [onClose]);
+  }, [onClose, excludeRef]);
 
   // Focus first focusable element on open
   useEffect(() => {
