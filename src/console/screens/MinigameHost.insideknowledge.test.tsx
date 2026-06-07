@@ -157,6 +157,30 @@ describe('MinigameHost — inside-knowledge game mounting', () => {
     expect(screen.getByTestId('ik-progress')).toBeInTheDocument();
     expect(screen.getByTestId('ik-score')).toBeInTheDocument();
   });
+
+  it('renders standard status/challenge/referee zones in ACTIVE', () => {
+    const store = makeInsideKnowledgeStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('mg-status-zone')).toBeInTheDocument();
+    expect(screen.getByTestId('mg-challenge-zone')).toBeInTheDocument();
+    expect(screen.getByTestId('mg-referee-zone')).toBeInTheDocument();
+  });
+
+  it('Call Outcome button is present in ACTIVE', () => {
+    const store = makeInsideKnowledgeStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('btn-call-outcome')).toBeInTheDocument();
+  });
 });
 
 // ── Seeded params reproducibility ─────────────────────────────────────────────
@@ -308,9 +332,9 @@ describe('MinigameHost — inside-knowledge outcome flow', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    fireEvent.click(screen.getByTestId('outcome-option-botched'));
-    fireEvent.click(screen.getByTestId('outcome-confirm'));
-    // Shell RESOLVE confirm
+    // judge yields botched (0 correct < threshold) — call outcome
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    // Shell RESOLVE pre-selected to botched — confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -331,9 +355,9 @@ describe('MinigameHost — inside-knowledge outcome flow', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    // Override to clean in Shell RESOLVE
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
-    fireEvent.click(screen.getByTestId('outcome-confirm'));
-    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;

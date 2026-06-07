@@ -156,6 +156,30 @@ describe('MinigameHost — steadyHands game mounting', () => {
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('timer')).toBeInTheDocument();
   });
+
+  it('renders standard status/challenge/referee zones in ACTIVE', () => {
+    const store = makeSteadyHandsStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('mg-status-zone')).toBeInTheDocument();
+    expect(screen.getByTestId('mg-challenge-zone')).toBeInTheDocument();
+    expect(screen.getByTestId('mg-referee-zone')).toBeInTheDocument();
+  });
+
+  it('Call Outcome button is present in ACTIVE', () => {
+    const store = makeSteadyHandsStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('btn-call-outcome')).toBeInTheDocument();
+  });
 });
 
 // ── Seeded params reproducibility ─────────────────────────────────────────────
@@ -314,9 +338,9 @@ describe('MinigameHost — steadyHands outcome flow', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    // Override to clean in Shell RESOLVE
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
-    fireEvent.click(screen.getByTestId('outcome-confirm'));
-    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -337,9 +361,9 @@ describe('MinigameHost — steadyHands outcome flow', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    // Override to botched in Shell RESOLVE
     fireEvent.click(screen.getByTestId('outcome-option-botched'));
-    fireEvent.click(screen.getByTestId('outcome-confirm'));
-    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;
