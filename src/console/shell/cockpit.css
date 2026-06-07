@@ -617,3 +617,264 @@
   flex-direction: column;
   gap: 14px;
 }
+
+/* ============================================================
+   CREW RAIL — E13.2
+   Bigger, legible avatars. Internally scrolling at 7 players.
+   ============================================================ */
+
+/* Crew avatar card */
+.crew-av {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--dur-fast), background var(--dur-fast);
+  position: relative;
+  user-select: none;
+}
+.crew-av:hover { border-color: var(--border-strong); background: var(--bg-panel-raised); }
+.crew-av.resting { opacity: .5; }
+.crew-av.selected-commit {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.crew-av.selected-attempter {
+  border-color: var(--data);
+  background: color-mix(in srgb, var(--data) 12%, transparent);
+  box-shadow: 0 0 0 1px var(--data);
+}
+
+/* Avatar row: initial box + name */
+.crew-av-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.crew-av-initial {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-3);
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--accent);
+}
+.crew-av.resting .crew-av-initial { color: var(--fg-faint); }
+.crew-av-name-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.crew-av-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  line-height: 1;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.crew-av-status {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.crew-av.resting .crew-av-status { color: var(--danger); }
+
+/* Lane stats row */
+.crew-av-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.crew-av-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.crew-av-stat .k {
+  font-family: var(--font-data);
+  font-size: 8px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.crew-av-stat .v {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Power-up pips */
+.crew-av-pips {
+  display: flex;
+  gap: 4px;
+}
+.crew-av-pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 4px var(--glow-accent);
+  flex: none;
+}
+
+/* ── Crew detail popover (per-player override) ──────────────── */
+
+.crew-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.crew-detail-section-label {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.crew-detail-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.crew-detail-stat-lane {
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  min-width: 62px;
+}
+.crew-detail-stat-val {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--fg);
+  min-width: 22px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.crew-detail-btn {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel-raised);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: all var(--dur-fast);
+  line-height: 1;
+}
+.crew-detail-btn:hover { border-color: var(--accent); color: var(--accent); }
+.crew-detail-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+.crew-detail-stat-input {
+  font-family: var(--font-data);
+  font-size: 12px;
+  padding: 4px 6px;
+  width: 46px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  color: var(--fg);
+  text-align: center;
+}
+.crew-detail-powerup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.crew-detail-powerup-btn {
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-panel-raised);
+  color: var(--fg-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--dur-fast);
+}
+.crew-detail-powerup-btn:hover { border-color: var(--accent); color: var(--accent); }
+.crew-detail-powerup-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+.crew-detail-rest-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.crew-detail-gear-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.crew-detail-gear-item {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--data);
+  background: var(--data-tint);
+  border: 1px solid var(--c-cyan-500);
+  border-radius: var(--radius-xs);
+  padding: 3px 8px;
+  align-self: flex-start;
+}
+.crew-detail-gear-empty {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--fg-faint);
+}
+.crew-detail-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel-raised);
+}
+.crew-detail-popover-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  color: var(--fg);
+}
+.crew-detail-popover-close {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-faint);
+  cursor: pointer;
+  transition: color var(--dur-fast);
+}
+.crew-detail-popover-close:hover { color: var(--fg); }

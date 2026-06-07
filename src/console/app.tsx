@@ -2,13 +2,13 @@ import { useEffect } from 'react';
 import { StoreProvider, useGameStore } from '@/console/store';
 import type { CreateGameStoreOptions } from '@/console/store';
 import { PhaseRouter, Setup } from '@/console/screens';
-import { Hud } from '@/console/hud';
 import { OverridePanel } from '@/console/overrides';
 import { DiceModeControl } from '@/console/settings';
 import { TuningPanel } from '@/console/tuning';
 import { AudioProvider } from '@/console/audio';
 import { Soundboard } from '@/console/soundboard';
-import { Cockpit } from '@/console/shell';
+import { Cockpit, CrewRail } from '@/console/shell';
+import { CrewRailModeProvider } from '@/console/shell/crewRailMode';
 
 // ── App shell ─────────────────────────────────────────────────────────────────
 
@@ -20,10 +20,10 @@ import { Cockpit } from '@/console/shell';
  *   - crew empty + no save     → Setup (blank new-run form)
  *   - crew non-empty           → PhaseRouter (in-run screens)
  *
- * The Hud component (crew content) is mounted in the cockpit left rail
- * until E13.2 replaces it with the proper CrewRail. The existing
- * OverridePanel/Soundboard/settings panels remain as cockpit overlays
- * until E13.3 restructures them into the right rail.
+ * The CrewRail (E13.2) populates the cockpit left rail. It is wrapped in
+ * CrewRailModeProvider so stage screens can activate commit / attempter modes
+ * (E13.8 will wire the stages). The OverridePanel/Soundboard/settings panels
+ * remain as cockpit overlays until E13.3 restructures them into the right rail.
  */
 function AppShell() {
   const hydrate = useGameStore(s => s.hydrate);
@@ -49,7 +49,7 @@ function AppShell() {
 
   return (
     <Cockpit
-      crewRail={crew.length > 0 ? <Hud /> : undefined}
+      crewRail={crew.length > 0 ? <CrewRail /> : undefined}
       overlays={overlays}
     >
       {showSetup ? <Setup /> : <PhaseRouter phase={phase} />}
@@ -68,7 +68,9 @@ export function App({ storeOptions }: AppProps) {
   return (
     <StoreProvider {...providerProps}>
       <AudioProvider>
-        <AppShell />
+        <CrewRailModeProvider>
+          <AppShell />
+        </CrewRailModeProvider>
       </AudioProvider>
     </StoreProvider>
   );

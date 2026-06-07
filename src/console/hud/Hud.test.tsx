@@ -7,6 +7,7 @@ import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
 import type { PlayerId, RunPhase } from '@/engine';
 import { PhaseRouter } from '@/console/screens';
+import { CrewRailModeProvider } from '@/console/shell/crewRailMode';
 import { Hud } from './Hud';
 
 afterEach(cleanup);
@@ -33,6 +34,27 @@ function HudWithPhaseRouter() {
   );
 }
 
+// Wrap with the providers required by CrewRail (which Hud now re-exports).
+function renderHud(store: ReturnType<typeof createGameStore>) {
+  return render(
+    <StoreContext.Provider value={store}>
+      <CrewRailModeProvider>
+        <Hud />
+      </CrewRailModeProvider>
+    </StoreContext.Provider>,
+  );
+}
+
+function renderHudWithRouter(store: ReturnType<typeof createGameStore>) {
+  return render(
+    <StoreContext.Provider value={store}>
+      <CrewRailModeProvider>
+        <HudWithPhaseRouter />
+      </CrewRailModeProvider>
+    </StoreContext.Provider>,
+  );
+}
+
 // ── CrewPanel tests ───────────────────────────────────────────────────────────
 
 describe('HUD — CrewPanel', () => {
@@ -44,11 +66,7 @@ describe('HUD — CrewPanel', () => {
       store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }, { name: 'Eve' }], 1);
     });
     await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
+      renderHud(store);
     });
 
     expect(screen.getByTestId('crew-member-player-0')).toBeInTheDocument();
@@ -71,11 +89,7 @@ describe('HUD — CrewPanel', () => {
       });
     });
     await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
+      renderHud(store);
     });
 
     expect(screen.getByTestId(`crew-exhausted-${playerId}`)).toBeInTheDocument();
@@ -90,11 +104,7 @@ describe('HUD — CrewPanel', () => {
       store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
     });
     await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
+      renderHud(store);
     });
 
     expect(screen.queryByTestId(`crew-exhausted-${playerId}`)).toBeNull();
@@ -114,11 +124,7 @@ describe('HUD — CrewPanel', () => {
       });
     });
     await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
+      renderHud(store);
     });
 
     expect(screen.getByTestId(`crew-exhausted-${playerId}`)).toBeInTheDocument();
@@ -146,11 +152,7 @@ describe('HUD — stays mounted across phase changes', () => {
       store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
     });
     await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
+      renderHud(store);
     });
 
     expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
@@ -174,11 +176,7 @@ describe('HUD — stays mounted across phase changes', () => {
       store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
     });
     await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <HudWithPhaseRouter />
-        </StoreContext.Provider>,
-      );
+      renderHudWithRouter(store);
     });
 
     // Both the HUD and the phase screen are present together
@@ -218,11 +216,7 @@ describe('HUD — player-view launcher', () => {
       store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
     });
     await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
+      renderHud(store);
     });
 
     expect(screen.getByTestId('open-player-view')).toBeInTheDocument();
@@ -237,11 +231,7 @@ describe('HUD — player-view launcher', () => {
       store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
     });
     await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
+      renderHud(store);
     });
 
     fireEvent.click(screen.getByTestId('open-player-view'));
