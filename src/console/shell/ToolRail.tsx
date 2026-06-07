@@ -151,7 +151,7 @@ export function ToolRail() {
           onClose={closeOverlay}
           data-testid="drawer-soundboard"
         >
-          <Soundboard />
+          <Soundboard fullBoard />
         </Drawer>
       )}
 

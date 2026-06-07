@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { useGameStore } from '@/console/store';
-import { useAudio } from '@/console/audio';
+import { useAudioSettings } from '@/console/audio';
 import type { DiceMode } from '@/content/schema/settings';
 import { Dialog } from '@/console/shell/overlays';
 import { Settings } from 'lucide-react';
@@ -22,24 +21,10 @@ export function SettingsDialog({ onClose, onNewJob }: SettingsDialogProps) {
   const runSeed = useGameStore(s => s.runSeed);
   const crew = useGameStore(s => s.session.present.crew);
 
-  const handle = useAudio();
-  const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(1);
+  const audioSettings = useAudioSettings();
 
   function handleDiceMode(e: React.ChangeEvent<HTMLSelectElement>) {
     setDiceMode(e.target.value as DiceMode);
-  }
-
-  function handleToggleMute() {
-    const next = !muted;
-    setMuted(next);
-    handle?.engine.mute(next);
-  }
-
-  function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const v = parseFloat(e.target.value);
-    setVolume(v);
-    handle?.engine.setMasterGain(v);
   }
 
   const hasRun = crew.length > 0;
@@ -102,7 +87,7 @@ export function SettingsDialog({ onClose, onNewJob }: SettingsDialogProps) {
       </section>
 
       {/* ── Audio ── */}
-      {handle !== null && (
+      {audioSettings !== null && (
         <section
           data-testid="settings-audio"
           style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
@@ -125,11 +110,11 @@ export function SettingsDialog({ onClose, onNewJob }: SettingsDialogProps) {
               type="button"
               className="btn btn-secondary"
               data-testid="btn-settings-mute"
-              onClick={handleToggleMute}
-              aria-pressed={muted}
+              onClick={() => audioSettings.setMuted(!audioSettings.muted)}
+              aria-pressed={audioSettings.muted}
               style={{ fontSize: 13, padding: '4px 12px' }}
             >
-              {muted ? 'Unmute' : 'Mute'}
+              {audioSettings.muted ? 'Unmute' : 'Mute'}
             </button>
             <label
               style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-data)', fontSize: 13, color: 'var(--fg-muted)' }}
@@ -141,8 +126,8 @@ export function SettingsDialog({ onClose, onNewJob }: SettingsDialogProps) {
                 min={0}
                 max={1}
                 step={0.01}
-                value={volume}
-                onChange={handleVolumeChange}
+                value={audioSettings.volume}
+                onChange={e => audioSettings.setVolume(parseFloat(e.target.value))}
                 style={{ flex: 1, minWidth: 100 }}
               />
             </label>

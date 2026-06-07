@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createAudioEngine, loadDefaultSoundManifest, createBundledFetchBuffer } from '@/platform';
 import type { AudioEngine } from '@/platform';
 import type { ParsedSoundManifest } from '@/content/schema';
@@ -6,17 +6,31 @@ import { AudioClockContext } from '@/minigames/primitives';
 import type { AudioClockHandle } from '@/minigames/primitives';
 import { useAmbientBed } from './useAmbientBed';
 
-// ── Public handle type ────────────────────────────────────────────────────────
+// ── Public handle types ───────────────────────────────────────────────────────
 
-/** The audio handle exposed to consumers via useAudio(). */
+/** The stable audio handle (engine + manifest) exposed via useAudio(). */
 export interface AudioHandle {
   engine: AudioEngine;
   manifest: ParsedSoundManifest;
 }
 
-// ── React context (audio handle only — never game state) ──────────────────────
+/**
+ * Shared, reactive audio master controls.
+ * Provided by AudioProvider alongside AudioHandleContext so that all consumers
+ * (Soundboard drawer, Settings dialog) read the same muted/volume state and
+ * never disagree about whether audio is muted.
+ */
+export interface AudioSettingsHandle {
+  muted: boolean;
+  volume: number;
+  setMuted: (v: boolean) => void;
+  setVolume: (v: number) => void;
+}
+
+// ── React contexts ────────────────────────────────────────────────────────────
 
 export const AudioHandleContext = createContext<AudioHandle | null>(null);
+export const AudioSettingsContext = createContext<AudioSettingsHandle | null>(null);
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
@@ -29,7 +43,9 @@ interface AudioProviderProps {
  * Loads the bundled default sound manifest, creates the engine, and:
  *   - Preloads all cue buffers on mount.
  *   - Resumes the AudioContext on the first user gesture (click or keydown).
- *   - Exposes the engine + manifest through AudioHandleContext (useAudio).
+ *   - Exposes the stable engine + manifest through AudioHandleContext (useAudio).
+ *   - Exposes shared reactive master-mute/volume through AudioSettingsContext
+ *     (useAudioSettings) so Soundboard and Settings dialog never disagree.
  *   - Provides clock + scheduleBeep through AudioClockContext so the shared
  *     Metronome primitive can ride the precise audio clock (E9.3+).
  *
@@ -37,14 +53,37 @@ interface AudioProviderProps {
  */
 export function AudioProvider({ children }: AudioProviderProps) {
   // Create the engine once; stable across re-renders via ref.
-  const handleRef = useRef<AudioHandle | null>(null);
-  if (handleRef.current === null) {
-    const manifest = loadDefaultSoundManifest();
-    const engine = createAudioEngine(manifest, { fetchBuffer: createBundledFetchBuffer() });
-    handleRef.current = { engine, manifest };
+  const engineRef = useRef<AudioEngine | null>(null);
+  const manifestRef = useRef<ParsedSoundManifest | null>(null);
+  if (engineRef.current === null) {
+    manifestRef.current = loadDefaultSoundManifest();
+    engineRef.current = createAudioEngine(manifestRef.current!, { fetchBuffer: createBundledFetchBuffer() });
   }
+  const engine = engineRef.current!;
+  const manifest = manifestRef.current!;
 
-  const { engine } = handleRef.current;
+  // Stable handle object for AudioHandleContext (reference never changes).
+  const handleRef = useRef<AudioHandle>({ engine, manifest });
+
+  // Reactive master audio controls — shared across all consumers.
+  const [muted, setMutedState] = useState(false);
+  const [volume, setVolumeState] = useState(1);
+
+  const setMuted = useCallback((v: boolean) => {
+    engine.mute(v);
+    setMutedState(v);
+  }, [engine]);
+
+  const setVolume = useCallback((v: number) => {
+    engine.setMasterGain(v);
+    setVolumeState(v);
+  }, [engine]);
+
+  // Reconstruct settings object only when muted/volume/callbacks change.
+  const settings = useMemo<AudioSettingsHandle>(
+    () => ({ muted, volume, setMuted, setVolume }),
+    [muted, volume, setMuted, setVolume],
+  );
 
   // Stable clock handle for AudioClockContext.
   const clockHandleRef = useRef<AudioClockHandle | null>(null);
@@ -73,10 +112,12 @@ export function AudioProvider({ children }: AudioProviderProps) {
 
   return (
     <AudioHandleContext.Provider value={handleRef.current}>
-      <AudioClockContext.Provider value={clockHandleRef.current}>
-        <AmbientBedWire />
-        {children}
-      </AudioClockContext.Provider>
+      <AudioSettingsContext.Provider value={settings}>
+        <AudioClockContext.Provider value={clockHandleRef.current}>
+          <AmbientBedWire />
+          {children}
+        </AudioClockContext.Provider>
+      </AudioSettingsContext.Provider>
     </AudioHandleContext.Provider>
   );
 }
@@ -94,7 +135,12 @@ function AmbientBedWire() {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-/** Returns the audio handle (engine + manifest), or null if not inside an AudioProvider. */
+/** Returns the stable audio handle (engine + manifest), or null if not inside an AudioProvider. */
 export function useAudio(): AudioHandle | null {
   return useContext(AudioHandleContext);
+}
+
+/** Returns shared reactive master-mute/volume, or null if not inside an AudioProvider. */
+export function useAudioSettings(): AudioSettingsHandle | null {
+  return useContext(AudioSettingsContext);
 }
