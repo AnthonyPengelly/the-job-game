@@ -8,15 +8,22 @@ import { DiceModeControl } from '@/console/settings';
 import { TuningPanel } from '@/console/tuning';
 import { AudioProvider } from '@/console/audio';
 import { Soundboard } from '@/console/soundboard';
+import { Cockpit } from '@/console/shell';
 
 // ── App shell ─────────────────────────────────────────────────────────────────
 
 /**
- * The app shell wraps everything in the `.console` design-system shell
- * (sticky HUD, scrolling stage, phase rail). Routing rules:
+ * The app shell renders the fixed cockpit frame.
+ *
+ * Routing rules:
  *   - hasResumableSave = true  → Setup (with Resume/New choice)
  *   - crew empty + no save     → Setup (blank new-run form)
  *   - crew non-empty           → PhaseRouter (in-run screens)
+ *
+ * The Hud component (crew content) is mounted in the cockpit left rail
+ * until E13.2 replaces it with the proper CrewRail. The existing
+ * OverridePanel/Soundboard/settings panels remain as cockpit overlays
+ * until E13.3 restructures them into the right rail.
  */
 function AppShell() {
   const hydrate = useGameStore(s => s.hydrate);
@@ -31,19 +38,22 @@ function AppShell() {
 
   const showSetup = hasResumableSave || crew.length === 0;
 
-  return (
-    <div className="console" data-accent="green" data-texture="clean">
-      {crew.length > 0 && <Hud />}
-      <main className="stage">
-        <div className="stage-inner">
-          {showSetup ? <Setup /> : <PhaseRouter phase={phase} />}
-        </div>
-      </main>
-      {crew.length > 0 && <OverridePanel />}
-      {crew.length > 0 && <Soundboard />}
+  const overlays = crew.length > 0 ? (
+    <>
+      <OverridePanel />
+      <Soundboard />
       {!showSetup && <DiceModeControl />}
       {!showSetup && <TuningPanel />}
-    </div>
+    </>
+  ) : null;
+
+  return (
+    <Cockpit
+      crewRail={crew.length > 0 ? <Hud /> : undefined}
+      overlays={overlays}
+    >
+      {showSetup ? <Setup /> : <PhaseRouter phase={phase} />}
+    </Cockpit>
   );
 }
 
