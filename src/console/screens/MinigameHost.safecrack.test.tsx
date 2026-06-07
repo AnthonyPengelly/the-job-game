@@ -279,8 +279,34 @@ describe('MinigameHost — safeCrack end-to-end', () => {
     });
   });
 
+  describe('zone layout', () => {
+    it('renders standard status/challenge/referee zones in ACTIVE', () => {
+      const store = makeSafeCrackStore();
+      render(
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>,
+      );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
+      expect(screen.getByTestId('mg-status-zone')).toBeInTheDocument();
+      expect(screen.getByTestId('mg-challenge-zone')).toBeInTheDocument();
+      expect(screen.getByTestId('mg-referee-zone')).toBeInTheDocument();
+    });
+
+    it('Call Outcome button is present in ACTIVE', () => {
+      const store = makeSafeCrackStore();
+      render(
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>,
+      );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
+      expect(screen.getByTestId('btn-call-outcome')).toBeInTheDocument();
+    });
+  });
+
   describe('outcome flow — GM confirm feeds the engine', () => {
-    it('GM selects botched and confirms → RESOLVE_MINIGAME → phase is offer', () => {
+    it('GM confirms botched → RESOLVE_MINIGAME → phase is offer', () => {
       const store = makeSafeCrackStore();
       render(
         <StoreContext.Provider value={store}>
@@ -289,9 +315,9 @@ describe('MinigameHost — safeCrack end-to-end', () => {
       );
 
       fireEvent.click(screen.getByTestId('btn-minigame-start'));
-      fireEvent.click(screen.getByTestId('outcome-option-botched'));
-      fireEvent.click(screen.getByTestId('outcome-confirm'));
-      // Shell RESOLVE confirm
+      // judge yields botched (not solved) — call outcome
+      fireEvent.click(screen.getByTestId('btn-call-outcome'));
+      // Shell RESOLVE pre-selected to botched — confirm
       fireEvent.click(screen.getByTestId('outcome-confirm'));
 
       expect(store.getState().session.present.phase).toBe('offer');
@@ -303,7 +329,7 @@ describe('MinigameHost — safeCrack end-to-end', () => {
       }
     });
 
-    it('GM overrides to clean outcome → RESOLVE_MINIGAME → recorded as clean', () => {
+    it('GM overrides to clean outcome → recorded as clean', () => {
       const store = makeSafeCrackStore();
       render(
         <StoreContext.Provider value={store}>
@@ -312,9 +338,9 @@ describe('MinigameHost — safeCrack end-to-end', () => {
       );
 
       fireEvent.click(screen.getByTestId('btn-minigame-start'));
+      fireEvent.click(screen.getByTestId('btn-call-outcome'));
+      // Override to clean in Shell RESOLVE
       fireEvent.click(screen.getByTestId('outcome-option-clean'));
-      fireEvent.click(screen.getByTestId('outcome-confirm'));
-      // Shell RESOLVE confirm
       fireEvent.click(screen.getByTestId('outcome-confirm'));
 
       const history = store.getState().session.present.history;
