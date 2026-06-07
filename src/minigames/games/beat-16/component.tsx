@@ -73,8 +73,6 @@ export function Beat16Component({
     }
     const nextState: Beat16State = { ...state, tapTimestampMs: now, measuredDeltaMs: delta };
     setState(nextState);
-    // Auto-resolve once the tap is recorded.
-    onResolve(judge(nextState, params));
   }
 
   function handleBoost(hook: BoostHook<Beat16State, Beat16Params>) {
