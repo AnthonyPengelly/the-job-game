@@ -171,10 +171,7 @@ export function SettingsDialog({ onClose, onNewJob }: SettingsDialogProps) {
   );
 }
 
-/**
- * @deprecated Direct dice-mode-only control. Replaced by SettingsDialog (E13.3).
- * Kept for backwards compatibility with any tests that render DiceModeControl directly.
- */
+/** Standalone dice-mode selector. Used by the Setup screen and in tests. */
 export function DiceModeControl() {
   const diceMode = useGameStore(s => s.diceMode);
   const setDiceMode = useGameStore(s => s.setDiceMode);

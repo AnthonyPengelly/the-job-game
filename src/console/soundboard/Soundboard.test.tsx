@@ -53,7 +53,7 @@ function makeMockEngine(): AudioEngine {
  * Renders Soundboard with a reactive AudioSettingsContext so that muted/volume
  * state updates from handler calls are reflected in the UI.
  */
-function renderSoundboard(phase: RunPhase, engine: AudioEngine) {
+function renderSoundboard(phase: RunPhase, engine: AudioEngine, fullBoard = false) {
   const storage = makeStorage();
   const store = createGameStore({ cfg: testCfg, storage });
   store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
@@ -76,7 +76,7 @@ function renderSoundboard(phase: RunPhase, engine: AudioEngine) {
       <StoreContext.Provider value={store}>
         <AudioHandleContext.Provider value={handle}>
           <AudioSettingsContext.Provider value={settings}>
-            <Soundboard />
+            <Soundboard fullBoard={fullBoard} />
           </AudioSettingsContext.Provider>
         </AudioHandleContext.Provider>
       </StoreContext.Provider>
@@ -239,6 +239,37 @@ describe('Soundboard — master mute / volume', () => {
 
     await act(async () => { fireEvent.click(muteBtn); });
     expect(muteBtn.textContent).toBe('Mute');
+  });
+});
+
+// ── fullBoard mode ────────────────────────────────────────────────────────────
+
+describe('Soundboard — fullBoard mode', () => {
+  it('shows all five channel groups in briefing phase (normally only ambient shows)', () => {
+    // briefing phase normally filters to ambient-only; fullBoard must override that
+    renderSoundboard('briefing', makeMockEngine(), true);
+
+    expect(screen.getByTestId('soundboard-group-ambient')).toBeInTheDocument();
+    expect(screen.getByTestId('soundboard-group-heistSfx')).toBeInTheDocument();
+    expect(screen.getByTestId('soundboard-group-sting')).toBeInTheDocument();
+    expect(screen.getByTestId('soundboard-group-danger')).toBeInTheDocument();
+    expect(screen.getByTestId('soundboard-group-finale')).toBeInTheDocument();
+  });
+
+  it('shows finale cues (phase-restricted to getaway/result) during briefing phase', () => {
+    renderSoundboard('briefing', makeMockEngine(), true);
+
+    expect(screen.getByTestId('btn-cue-finale-escape')).toBeInTheDocument();
+    expect(screen.getByTestId('btn-cue-finale-credits')).toBeInTheDocument();
+  });
+
+  it('shows sting cues (phase-restricted to result) during room phase', () => {
+    // room phase normally hides sting; fullBoard must show them
+    renderSoundboard('room', makeMockEngine(), true);
+
+    expect(screen.getByTestId('soundboard-group-sting')).toBeInTheDocument();
+    expect(screen.getByTestId('btn-cue-sting-win')).toBeInTheDocument();
+    expect(screen.getByTestId('btn-cue-sting-bust')).toBeInTheDocument();
   });
 });
 
