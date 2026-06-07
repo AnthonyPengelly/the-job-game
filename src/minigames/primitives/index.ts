@@ -18,3 +18,6 @@ export type { OutcomeJudgeProps } from './OutcomeJudge';
 
 export { DialReadout } from './DialReadout';
 export type { DialReadoutProps } from './DialReadout';
+
+export { MinigameShell, StatusZone, ChallengeZone, RefereeZone } from './MinigameShell';
+export type { MinigameShellProps, BoostPreviewEntry } from './MinigameShell';

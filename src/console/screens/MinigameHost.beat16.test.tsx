@@ -90,21 +90,21 @@ function makeBeat16Store(seed = 1, opts: MakeBeat16StoreOpts = {}) {
   return store;
 }
 
-// ── Game mounting ─────────────────────────────────────────────────────────────
+// ── ARMED state (timer guard) ─────────────────────────────────────────────────
 
-describe('MinigameHost — beat16 game resolution', () => {
-  it('mounts Beat16Component instead of the stub', () => {
+describe('MinigameHost — Beat 16 ARMED state', () => {
+  it('game component not mounted in ARMED — no timer can run on load', () => {
     const store = makeBeat16Store();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    expect(screen.getByTestId('beat-16')).toBeInTheDocument();
-    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('beat-16')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
   });
 
-  it('renders DialReadout alongside the game component', () => {
+  it('DialReadout visible in ARMED state', () => {
     const store = makeBeat16Store();
     render(
       <StoreContext.Provider value={store}>
@@ -113,14 +113,31 @@ describe('MinigameHost — beat16 game resolution', () => {
     );
     expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
   });
+});
 
-  it('shows target beat and BPM info', () => {
+// ── Game mounting ─────────────────────────────────────────────────────────────
+
+describe('MinigameHost — beat16 game resolution', () => {
+  it('mounts Beat16Component after START instead of the stub', () => {
     const store = makeBeat16Store();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('beat-16')).toBeInTheDocument();
+    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+  });
+
+  it('shows target beat and BPM info in ACTIVE', () => {
+    const store = makeBeat16Store();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('target-beat')).toBeInTheDocument();
   });
 });
@@ -135,6 +152,7 @@ describe('MinigameHost — beat16 seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const beatA = screen.getByTestId('target-beat').textContent;
     unmountA();
 
@@ -144,6 +162,7 @@ describe('MinigameHost — beat16 seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const beatB = screen.getByTestId('target-beat').textContent;
 
     expect(beatA).toBe(beatB);
@@ -153,13 +172,14 @@ describe('MinigameHost — beat16 seeded params stable', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — beat16 boost (In the Bones)', () => {
-  it('In the Bones boost surfaces when physical power-up is held', () => {
+  it('In the Bones boost surfaces in ACTIVE when physical power-up is held', () => {
     const store = makeBeat16Store(1, { physicalPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
   });
 
@@ -170,6 +190,7 @@ describe('MinigameHost — beat16 boost (In the Bones)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-physical')).not.toBeInTheDocument();
   });
 
@@ -180,6 +201,7 @@ describe('MinigameHost — beat16 boost (In the Bones)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-physical');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -193,6 +215,7 @@ describe('MinigameHost — beat16 boost (In the Bones)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const audibleBefore = screen.getByTestId('audible-beats').textContent ?? '';
     const countBefore = parseInt(audibleBefore.replace(/\D/g, ''), 10);
 
@@ -216,7 +239,10 @@ describe('MinigameHost — beat16 outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -236,7 +262,10 @@ describe('MinigameHost — beat16 outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;

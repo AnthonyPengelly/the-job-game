@@ -94,21 +94,21 @@ function makeFtcStore(seed = 1, opts: MakeFtcStoreOpts = {}) {
   return store;
 }
 
-// ── Game mounting ─────────────────────────────────────────────────────────────
+// ── ARMED state (timer guard) ─────────────────────────────────────────────────
 
-describe('MinigameHost — followTheCircuit game mounting', () => {
-  it('mounts FollowTheCircuitComponent instead of the stub', () => {
+describe('MinigameHost — FollowTheCircuit ARMED state', () => {
+  it('game component not mounted in ARMED — no timer can run on load', () => {
     const store = makeFtcStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    expect(screen.getByTestId('follow-the-circuit')).toBeInTheDocument();
-    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('follow-the-circuit')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
   });
 
-  it('renders DialReadout alongside the game component', () => {
+  it('DialReadout visible in ARMED state', () => {
     const store = makeFtcStore();
     render(
       <StoreContext.Provider value={store}>
@@ -117,24 +117,42 @@ describe('MinigameHost — followTheCircuit game mounting', () => {
     );
     expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
   });
+});
 
-  it('shows progress info', () => {
+// ── Game mounting ─────────────────────────────────────────────────────────────
+
+describe('MinigameHost — followTheCircuit game mounting', () => {
+  it('mounts FollowTheCircuitComponent after START instead of the stub', () => {
     const store = makeFtcStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('follow-the-circuit')).toBeInTheDocument();
+    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+  });
+
+  it('shows progress info in ACTIVE', () => {
+    const store = makeFtcStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('ftc-progress')).toBeInTheDocument();
   });
 
-  it('shows the 4-card grid', () => {
+  it('shows the 4-card grid in ACTIVE', () => {
     const store = makeFtcStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('card-spread')).toBeInTheDocument();
   });
 });
@@ -149,6 +167,7 @@ describe('MinigameHost — followTheCircuit seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const progressA = screen.getByTestId('ftc-progress').textContent;
     unmountA();
 
@@ -158,6 +177,7 @@ describe('MinigameHost — followTheCircuit seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const progressB = screen.getByTestId('ftc-progress').textContent;
 
     expect(progressA).toBe(progressB);
@@ -167,23 +187,25 @@ describe('MinigameHost — followTheCircuit seeded params stable', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — followTheCircuit boost surfacing', () => {
-  it('Photographic boost surfaces when tech power-up is held', () => {
+  it('Photographic boost surfaces in ACTIVE when tech power-up is held', () => {
     const store = makeFtcStore(1, { techPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
   });
 
-  it('Muscle Memory boost surfaces when physical power-up is held', () => {
+  it('Muscle Memory boost surfaces in ACTIVE when physical power-up is held', () => {
     const store = makeFtcStore(1, { physicalPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
   });
 
@@ -194,6 +216,7 @@ describe('MinigameHost — followTheCircuit boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-tech')).not.toBeInTheDocument();
     expect(screen.queryByTestId('boost-physical')).not.toBeInTheDocument();
   });
@@ -205,6 +228,7 @@ describe('MinigameHost — followTheCircuit boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-tech');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -218,6 +242,7 @@ describe('MinigameHost — followTheCircuit boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-physical');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -244,6 +269,7 @@ describe('MinigameHost — followTheCircuit boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
     expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
   });
@@ -260,7 +286,10 @@ describe('MinigameHost — followTheCircuit outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -280,7 +309,10 @@ describe('MinigameHost — followTheCircuit outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;

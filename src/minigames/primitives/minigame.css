@@ -1,0 +1,110 @@
+/* MinigameShell — zone layout and lifecycle state styles */
+
+/* ── Shell container ───────────────────────────────────────────────────────── */
+
+.mg-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+  height: 100%;
+}
+
+/* ── ARMED state ───────────────────────────────────────────────────────────── */
+
+.mg-armed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+  align-items: flex-start;
+}
+
+.mg-armed-title {
+  font-size: var(--font-size-xl, 1.25rem);
+  font-weight: var(--font-weight-semibold, 600);
+  letter-spacing: 0.02em;
+}
+
+.mg-boost-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
+}
+
+.mg-boost-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--surface-1, #f0f0f0);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.mg-start-btn {
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: var(--font-weight-bold, 700);
+  padding: 0.75rem 2.5rem;
+  border-radius: var(--radius-md, 6px);
+  background: var(--accent, #e85d04);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.mg-start-btn:hover {
+  opacity: 0.9;
+}
+
+/* ── ACTIVE state ──────────────────────────────────────────────────────────── */
+
+.mg-active {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+  height: 100%;
+}
+
+/* ── Zone primitives ───────────────────────────────────────────────────────── */
+
+.mg-status-zone {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-muted, #666);
+}
+
+.mg-challenge-zone {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.mg-referee-zone {
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+}
+
+/* ── RESOLVE state ─────────────────────────────────────────────────────────── */
+
+.mg-resolve {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+  align-items: flex-start;
+}
+
+.mg-resolve-back {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-muted, #666);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  text-decoration: underline;
+}

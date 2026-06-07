@@ -94,21 +94,22 @@ function makeSteadyHandsStore(seed = 1, opts: MakeSteadyHandsStoreOpts = {}) {
   return store;
 }
 
-// ── Game mounting ─────────────────────────────────────────────────────────────
+// ── ARMED state (timer guard) ─────────────────────────────────────────────────
 
-describe('MinigameHost — steadyHands game mounting', () => {
-  it('mounts SteadyHandsComponent instead of the stub', () => {
+describe('MinigameHost — SteadyHands ARMED state', () => {
+  it('game component not mounted in ARMED — no timer can run on load', () => {
     const store = makeSteadyHandsStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    expect(screen.getByTestId('steady-hands')).toBeInTheDocument();
-    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('steady-hands')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
   });
 
-  it('renders DialReadout alongside the game component', () => {
+  it('DialReadout visible in ARMED state', () => {
     const store = makeSteadyHandsStore();
     render(
       <StoreContext.Provider value={store}>
@@ -117,24 +118,42 @@ describe('MinigameHost — steadyHands game mounting', () => {
     );
     expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
   });
+});
 
-  it('shows target height', () => {
+// ── Game mounting ─────────────────────────────────────────────────────────────
+
+describe('MinigameHost — steadyHands game mounting', () => {
+  it('mounts SteadyHandsComponent after START instead of the stub', () => {
     const store = makeSteadyHandsStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('steady-hands')).toBeInTheDocument();
+    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+  });
+
+  it('shows target height in ACTIVE', () => {
+    const store = makeSteadyHandsStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('sh-target-height')).toBeInTheDocument();
   });
 
-  it('shows a timer', () => {
+  it('shows a timer in ACTIVE', () => {
     const store = makeSteadyHandsStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('timer')).toBeInTheDocument();
   });
 });
@@ -149,6 +168,7 @@ describe('MinigameHost — steadyHands seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const heightA = screen.getByTestId('sh-target-height').textContent;
     unmountA();
 
@@ -158,6 +178,7 @@ describe('MinigameHost — steadyHands seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const heightB = screen.getByTestId('sh-target-height').textContent;
 
     expect(heightA).toBe(heightB);
@@ -167,23 +188,25 @@ describe('MinigameHost — steadyHands seeded params stable', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — steadyHands boost surfacing', () => {
-  it('Extra Hands boost surfaces when physical power-up is held', () => {
+  it('Extra Hands boost surfaces in ACTIVE when physical power-up is held', () => {
     const store = makeSteadyHandsStore(1, { physicalPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
   });
 
-  it('Steady Breath boost surfaces when stealth power-up is held', () => {
+  it('Steady Breath boost surfaces in ACTIVE when stealth power-up is held', () => {
     const store = makeSteadyHandsStore(1, { stealthPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-stealth')).toBeInTheDocument();
   });
 
@@ -194,6 +217,7 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-physical')).not.toBeInTheDocument();
     expect(screen.queryByTestId('boost-stealth')).not.toBeInTheDocument();
   });
@@ -205,6 +229,7 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-physical');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -218,6 +243,7 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-stealth');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -231,6 +257,7 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('sh-extra-hands')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-physical'));
     expect(screen.getByTestId('sh-extra-hands')).toBeInTheDocument();
@@ -243,6 +270,7 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('sh-wobble-forgiven')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-stealth'));
     expect(screen.getByTestId('sh-wobble-forgiven')).toBeInTheDocument();
@@ -268,6 +296,7 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
     expect(screen.getByTestId('boost-stealth')).toBeInTheDocument();
   });
@@ -284,7 +313,10 @@ describe('MinigameHost — steadyHands outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -304,7 +336,10 @@ describe('MinigameHost — steadyHands outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;

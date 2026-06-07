@@ -180,12 +180,12 @@ describe('MinigameHost', () => {
     });
   });
 
-  describe('with a registered game', () => {
+  describe('ARMED state (game not yet started)', () => {
     beforeEach(() => {
       games.push(mockGame);
     });
 
-    it('renders DialReadout and the game Component', () => {
+    it('shows DialReadout and START button in ARMED state', () => {
       const store = makeMinigameStore();
       render(
         <StoreContext.Provider value={store}>
@@ -194,11 +194,70 @@ describe('MinigameHost', () => {
       );
 
       expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
+      expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
+    });
+
+    it('game component is NOT mounted in ARMED state (no timer can run)', () => {
+      const store = makeMinigameStore();
+      render(
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>,
+      );
+
+      expect(screen.queryByTestId('mock-game-component')).not.toBeInTheDocument();
+      // Confirm ARMED state is shown
+      expect(screen.getByTestId('mg-armed')).toBeInTheDocument();
+    });
+
+    it('shows game name in ARMED state', () => {
+      const store = makeMinigameStore();
+      render(
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>,
+      );
+
+      expect(screen.getByTestId('mg-game-name')).toBeInTheDocument();
+    });
+  });
+
+  describe('ACTIVE state (after START)', () => {
+    beforeEach(() => {
+      games.push(mockGame);
+    });
+
+    it('mounts game Component after clicking START', () => {
+      const store = makeMinigameStore();
+      render(
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>,
+      );
+
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
+
       expect(screen.getByTestId('mock-game-component')).toBeInTheDocument();
+      expect(screen.getByTestId('mg-active')).toBeInTheDocument();
+    });
+
+    it('standard zones present in ACTIVE state', () => {
+      const store = makeMinigameStore();
+      render(
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>,
+      );
+
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
+
+      expect(screen.getByTestId('mg-status-zone')).toBeInTheDocument();
+      expect(screen.getByTestId('mg-challenge-zone')).toBeInTheDocument();
+      expect(screen.getByTestId('mg-referee-zone')).toBeInTheDocument();
     });
 
     it('dial level decreases (easier) as committed player stats rise', () => {
-      // Low-stat player (tech=0)
+      // Dial is shown in ARMED state
       const storeLow = makeMinigameStore(1, 0);
       const { unmount: unmountLow } = render(
         <StoreContext.Provider value={storeLow}>
@@ -208,7 +267,6 @@ describe('MinigameHost', () => {
       const dialLow = readDialLevel();
       unmountLow();
 
-      // High-stat player (tech=5)
       const storeHigh = makeMinigameStore(1, 5);
       render(
         <StoreContext.Provider value={storeHigh}>
@@ -229,9 +287,9 @@ describe('MinigameHost', () => {
           <MinigameHost />
         </StoreContext.Provider>,
       );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       const value1 = screen.getByTestId('mock-params-value').textContent;
 
-      // Re-render with the same store state — params memo must not regenerate
       rerender(
         <StoreContext.Provider value={store}>
           <MinigameHost />
@@ -250,6 +308,7 @@ describe('MinigameHost', () => {
           <MinigameHost />
         </StoreContext.Provider>,
       );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       const valueA = screen.getByTestId('mock-params-value').textContent;
       unmountA();
 
@@ -259,12 +318,19 @@ describe('MinigameHost', () => {
           <MinigameHost />
         </StoreContext.Provider>,
       );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       const valueB = screen.getByTestId('mock-params-value').textContent;
 
       expect(valueA).toBe(valueB);
     });
+  });
 
-    it('forwards onResolve to RESOLVE_MINIGAME and advances to offer phase (no narration)', () => {
+  describe('RESOLVE state', () => {
+    beforeEach(() => {
+      games.push(mockGame);
+    });
+
+    it('RESOLVE pre-selects the suggested outcome (clean)', () => {
       const store = makeMinigameStore();
       render(
         <StoreContext.Provider value={store}>
@@ -272,7 +338,44 @@ describe('MinigameHost', () => {
         </StoreContext.Provider>,
       );
 
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
       fireEvent.click(screen.getByTestId('mock-resolve-clean'));
+
+      // Shell in RESOLVE: OutcomeJudge shown, clean pre-selected
+      expect(screen.getByTestId('mg-resolve')).toBeInTheDocument();
+      expect(screen.getByTestId('outcome-option-clean')).toHaveAttribute('data-selected', 'true');
+      // Game component unmounted
+      expect(screen.queryByTestId('mock-game-component')).not.toBeInTheDocument();
+    });
+
+    it('RESOLVE pre-selects the suggested outcome (botched)', () => {
+      const store = makeMinigameStore();
+      render(
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>,
+      );
+
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
+      fireEvent.click(screen.getByTestId('mock-resolve-botched'));
+
+      expect(screen.getByTestId('outcome-option-botched')).toHaveAttribute('data-selected', 'true');
+    });
+
+    it('only the shell confirm dispatches RESOLVE_MINIGAME (no narration)', () => {
+      const store = makeMinigameStore();
+      render(
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>,
+      );
+
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
+      fireEvent.click(screen.getByTestId('mock-resolve-clean'));
+      // RESOLVE state: game not dispatched yet
+      expect(store.getState().session.present.phase).toBe('minigame');
+      // GM confirms in shell
+      fireEvent.click(screen.getByTestId('outcome-confirm'));
 
       expect(store.getState().session.present.phase).toBe('offer');
       const lastResult =
@@ -283,6 +386,24 @@ describe('MinigameHost', () => {
       if (lastResult?.kind === 'obstacle') {
         expect(lastResult.outcome).toBe('clean');
       }
+    });
+
+    it('Back from RESOLVE returns to ACTIVE game (no dead-end)', () => {
+      const store = makeMinigameStore();
+      render(
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>,
+      );
+
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
+      fireEvent.click(screen.getByTestId('mock-resolve-clean'));
+      expect(screen.getByTestId('mg-resolve')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('btn-back-to-game'));
+
+      expect(screen.getByTestId('mock-game-component')).toBeInTheDocument();
+      expect(screen.queryByTestId('mg-resolve')).not.toBeInTheDocument();
     });
   });
 });
@@ -320,7 +441,7 @@ describe('MinigameHost — outcome quip narration', () => {
     return store;
   }
 
-  it('shows outcome-quip teleprompter after the game calls onResolve', () => {
+  it('shows outcome-quip teleprompter after GM confirms in RESOLVE', () => {
     const store = makeMinigameStoreWithNarration();
     render(
       <StoreContext.Provider value={store}>
@@ -328,7 +449,10 @@ describe('MinigameHost — outcome quip narration', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('mock-resolve-clean'));
+    // GM confirms in RESOLVE
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(screen.getByTestId('outcome-quip')).toBeInTheDocument();
     const line = screen.getByTestId('teleprompter-line').textContent ?? '';
@@ -343,7 +467,9 @@ describe('MinigameHost — outcome quip narration', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('mock-resolve-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const line = screen.getByTestId('teleprompter-line').textContent ?? '';
     expect(line).toContain('Botched quip');
@@ -357,13 +483,15 @@ describe('MinigameHost — outcome quip narration', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('mock-resolve-clean'));
-    fireEvent.click(screen.getByTestId('btn-confirm-outcome'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));  // RESOLVE confirm → quip
+    fireEvent.click(screen.getByTestId('btn-confirm-outcome'));  // quip confirm → dispatch
 
     expect(store.getState().session.present.phase).toBe('offer');
   });
 
-  it('back button returns to the game screen (no dead-end)', () => {
+  it('back button from quip returns to ARMED (no dead-end)', () => {
     const store = makeMinigameStoreWithNarration();
     render(
       <StoreContext.Provider value={store}>
@@ -371,12 +499,15 @@ describe('MinigameHost — outcome quip narration', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('mock-resolve-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));  // → quip
     expect(screen.getByTestId('outcome-quip')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('btn-back-outcome'));
 
-    expect(screen.getByTestId('mock-game-component')).toBeInTheDocument();
+    // Back from quip: shell remounts in ARMED, can START again
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
     expect(screen.queryByTestId('outcome-quip')).toBeNull();
   });
 
@@ -388,16 +519,17 @@ describe('MinigameHost — outcome quip narration', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('mock-resolve-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));  // → quip
+
     const advanceBtn = screen.getByTestId('teleprompter-advance');
     expect(advanceBtn).not.toBeDisabled();
-    const lineBefore = screen.getByTestId('teleprompter-line').textContent;
     fireEvent.click(advanceBtn);
     // After advance the line element is still present
     expect(screen.getByTestId('teleprompter-line')).toBeInTheDocument();
     // The text is still a clean quip
     const lineAfter = screen.getByTestId('teleprompter-line').textContent ?? '';
     expect(lineAfter).toContain('Clean quip');
-    void lineBefore; // used to silence unused var lint
   });
 });

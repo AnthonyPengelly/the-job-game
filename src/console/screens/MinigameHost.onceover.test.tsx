@@ -88,21 +88,22 @@ function makeOnceOverStore(seed = 1, opts: MakeOnceOverStoreOpts = {}) {
   return store;
 }
 
-// ── Game mounting ─────────────────────────────────────────────────────────────
+// ── ARMED state (timer guard) ─────────────────────────────────────────────────
 
-describe('MinigameHost — the-once-over game mounting', () => {
-  it('mounts TheOnceOverComponent instead of the stub', () => {
+describe('MinigameHost — TheOnceOver ARMED state', () => {
+  it('game component not mounted in ARMED — no timer can run on load', () => {
     const store = makeOnceOverStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
-    expect(screen.getByTestId('the-once-over')).toBeInTheDocument();
-    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('the-once-over')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-minigame-start')).toBeInTheDocument();
   });
 
-  it('renders DialReadout alongside the game component', () => {
+  it('DialReadout visible in ARMED state', () => {
     const store = makeOnceOverStore();
     render(
       <StoreContext.Provider value={store}>
@@ -110,6 +111,22 @@ describe('MinigameHost — the-once-over game mounting', () => {
       </StoreContext.Provider>,
     );
     expect(screen.getByTestId('dial-readout')).toBeInTheDocument();
+  });
+});
+
+// ── Game mounting ─────────────────────────────────────────────────────────────
+
+describe('MinigameHost — the-once-over game mounting', () => {
+  it('mounts TheOnceOverComponent after START instead of the stub', () => {
+    const store = makeOnceOverStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.getByTestId('the-once-over')).toBeInTheDocument();
+    expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
   });
 
   it('starts in Study phase showing card spread', () => {
@@ -119,6 +136,7 @@ describe('MinigameHost — the-once-over game mounting', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('onceover-phase')).toHaveTextContent('Study');
     expect(screen.getByTestId('card-spread')).toBeInTheDocument();
   });
@@ -130,6 +148,7 @@ describe('MinigameHost — the-once-over game mounting', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('onceover-change-count')).toBeInTheDocument();
   });
 });
@@ -144,6 +163,7 @@ describe('MinigameHost — the-once-over seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const countA = screen.getByTestId('onceover-change-count').textContent;
     unmountA();
 
@@ -153,6 +173,7 @@ describe('MinigameHost — the-once-over seeded params stable', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const countB = screen.getByTestId('onceover-change-count').textContent;
 
     expect(countA).toBe(countB);
@@ -171,13 +192,14 @@ async function drainStudyTimer(ticks: number): Promise<void> {
 }
 
 describe('MinigameHost — the-once-over study → identify phase', () => {
-  it('transitions to Identify phase when study timer expires', async () => {
+  it('transitions to Identify phase when study timer expires (after START)', async () => {
     const store = makeOnceOverStore();
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('onceover-phase')).toHaveTextContent('Study');
     // Max study time is 30s; advance 31 ticks to ensure expiry regardless of seed.
     await drainStudyTimer(31);
@@ -191,6 +213,7 @@ describe('MinigameHost — the-once-over study → identify phase', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     await drainStudyTimer(31);
     expect(screen.getByTestId('onceover-flagged')).toBeInTheDocument();
   });
@@ -199,13 +222,14 @@ describe('MinigameHost — the-once-over study → identify phase', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — the-once-over boost (Hunch)', () => {
-  it('Hunch boost surfaces when stealth power-up is held', () => {
+  it('Hunch boost surfaces in ACTIVE when stealth power-up is held', () => {
     const store = makeOnceOverStore(1, { stealthPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('boost-stealth')).toBeInTheDocument();
   });
 
@@ -216,6 +240,7 @@ describe('MinigameHost — the-once-over boost (Hunch)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-stealth')).not.toBeInTheDocument();
   });
 
@@ -226,6 +251,7 @@ describe('MinigameHost — the-once-over boost (Hunch)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-stealth');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -239,6 +265,7 @@ describe('MinigameHost — the-once-over boost (Hunch)', () => {
         <MinigameHost />
       </StoreContext.Provider>,
     );
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('boost-stealth'));
     expect(screen.getByTestId('hunch-active')).toBeInTheDocument();
   });
@@ -255,7 +282,10 @@ describe('MinigameHost — the-once-over outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -275,7 +305,10 @@ describe('MinigameHost — the-once-over outcome flow', () => {
       </StoreContext.Provider>,
     );
 
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;
