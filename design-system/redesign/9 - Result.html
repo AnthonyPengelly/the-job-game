@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 09 Result</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  .result{ display:flex; flex-direction:column; gap:14px; height:100%; min-height:0; }
+  .verdict{ display:flex; align-items:center; gap:18px; flex:none; }
+  .verdict .vbig{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:64px; line-height:.88; letter-spacing:-.02em; white-space:nowrap; }
+  .verdict.win .vbig{ color:var(--accent); }
+  .verdict.lose .vbig{ color:var(--danger); }
+  .verdict .vmark{ width:64px; height:64px; flex:none; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; border:1px solid; }
+  .verdict .vmark svg{ width:34px; height:34px; }
+  .verdict.win .vmark{ color:var(--accent); border-color:var(--c-green-700); background:var(--accent-tint); }
+  .verdict.lose .vmark{ color:var(--danger); border-color:var(--c-red-700); background:var(--danger-tint); }
+
+  .score-eq{ display:flex; align-items:stretch; gap:12px; flex:none; }
+  .score-cell{ flex:1; display:flex; flex-direction:column; gap:6px; padding:16px 18px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); }
+  .score-cell .k{ font-family:var(--font-data); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .score-cell .v{ font-family:var(--font-data); font-weight:800; font-size:38px; line-height:1; color:var(--fg); font-variant-numeric:tabular-nums; }
+  .score-cell .s{ font-family:var(--font-body); font-size:12px; color:var(--fg-muted); }
+  .score-op{ display:flex; align-items:center; font-family:var(--font-data); font-weight:800; font-size:30px; color:var(--fg-faint); }
+  .score-final{ flex:1.3; display:flex; flex-direction:column; gap:6px; padding:16px 20px; border-radius:var(--radius-lg); border:1px solid var(--c-green-700); background:var(--accent-tint); justify-content:center; }
+  .score-final.lose{ border-color:var(--c-red-700); background:var(--danger-tint); }
+  .score-final .k{ font-family:var(--font-data); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); }
+  .score-final.lose .k{ color:var(--danger); }
+  .score-final .v{ font-family:var(--font-data); font-weight:800; font-size:56px; line-height:.95; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .score-final.lose .v{ color:var(--danger); }
+
+  .rankpanel{ flex:1; min-height:0; display:flex; flex-direction:column; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); overflow:hidden; }
+  .rankpanel .rp-head{ display:flex; align-items:center; gap:10px; padding:11px 16px; border-bottom:1px solid var(--border); background:var(--bg-panel-raised); }
+  .rankpanel .rp-head svg{ width:17px; height:17px; color:var(--accent); }
+  .rankpanel .rp-head h3{ font-family:var(--font-display); font-weight:600; text-transform:uppercase; font-size:18px; }
+  .rankpanel .rp-head .you{ margin-left:auto; }
+  .rankpanel .rp-body{ flex:1; min-height:0; overflow-y:auto; }
+  .rankpanel .rp-body::-webkit-scrollbar{ width:8px; }
+  .rankpanel .rp-body::-webkit-scrollbar-thumb{ background:var(--c-surface-3); border-radius:var(--radius-pill); }
+  .lrow{ display:flex; align-items:center; gap:14px; padding:9px 16px; border-bottom:1px solid var(--border-faint); }
+  .lrow .rank{ font-family:var(--font-data); font-weight:800; font-size:16px; color:var(--fg-faint); width:26px; }
+  .lrow .lname{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:17px; color:var(--fg); flex:1; }
+  .lrow .lscore{ font-family:var(--font-data); font-weight:800; font-size:17px; color:var(--fg); font-variant-numeric:tabular-nums; }
+  .lrow .lheat{ font-family:var(--font-data); font-size:12px; color:var(--fg-faint); width:52px; text-align:right; }
+  .lrow.you{ background:var(--accent-tint); border-left:3px solid var(--accent); }
+  .lrow.you .rank, .lrow.you .lscore{ color:var(--accent); }
+  .lrow.you.lose{ background:var(--danger-tint); border-left-color:var(--danger); }
+  .lrow.you.lose .rank, .lrow.you.lose .lscore{ color:var(--c-red-300); }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  TJ.page({
+    num: '09', eyebrow: 'Screen 09 · After the Job',
+    title: 'Result',
+    desc: 'The verdict. WIN or BUST, big, with its sting in the teleprompter, then the score broken down transparently — Loot banked × the multiplier (set by Heat at the getaway) = the final score — and where it lands on the personal-best board. One GO AGAIN resets to a fresh job. Low Heat is rewarded with a fat multiplier; a blown cover guts it.',
+    crumbs: [
+      { label: '08 Getaway', href: '8 - Getaway.html' },
+      { label: '09 Result', href: '9 - Result.html', here: true },
+      { label: '01 Setup', href: '1 - Setup.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  var CREW_WIN = ['Lucy', 'Millie', 'George', 'Liv', 'Chris'].map(function (n) {
+    var p = { Lucy: 'tec', Millie: 'cha', George: 'phy', Liv: 'ste', Chris: null }[n];
+    return { name: n, powers: p ? [p] : [], gear: (n === 'Lucy' || n === 'George' || n === 'Liv'), state: 'in', stateLabel: 'CLEAR' };
+  });
+  var CREW_BUST = CREW_WIN.map(function (c) { return Object.assign({}, c, { state: 'rest', stateLabel: 'CAUGHT' }); });
+
+  /* 9 WIN */
+  TJ.frame(
+    { vnum: '09a', title: 'Result · WIN', note: 'Clean Getaway. Loot banked × low-Heat multiplier = final score, broken out so the crew sees how staying quiet paid. Lands a new personal best — the run is highlighted green on the board.' },
+    {
+      phaseNum: '08', phaseLabel: 'Result', roomLabel: 'The job',
+      heat: 12, loot: 137000, lootStr: '$137k', round: '6', totalRounds: '6',
+      crew: CREW_WIN, crewModeLabel: 'Made it', tools: { gearBadge: 0 },
+      tp: { text: 'Taillights on the motorway and the city shrinking behind you. Ashcombe won\u2019t know what it\u2019s missing until the morning count \u2014 and by then you\u2019re three counties gone. Split it fair.' },
+      stage:
+        '<div class="result">' +
+          '<div class="verdict win"><span class="vmark">' + TJ.icon('party-popper') + '</span><span class="vbig">Clean Getaway</span></div>' +
+          '<div class="score-eq">' +
+            '<div class="score-cell"><span class="k">Loot banked</span><span class="v">$98k</span><span class="s">across 5 rooms</span></div>' +
+            '<div class="score-op">\u00d7</div>' +
+            '<div class="score-cell"><span class="k">Multiplier</span><span class="v" style="color:var(--accent)">1.4</span><span class="s">Heat 12 / 20 \u2014 stayed cool</span></div>' +
+            '<div class="score-op">=</div>' +
+            '<div class="score-final"><span class="k">Final score</span><span class="v">$137k</span></div>' +
+          '</div>' +
+          '<div class="rankpanel"><div class="rp-head">' + TJ.icon('trophy') + '<h3>Personal best</h3><span class="badge b-live you"><span class="d"></span>New best · #2</span></div>' +
+            '<div class="rp-body">' +
+              '<div class="lrow"><span class="rank">1</span><span class="lname">The Foxes</span><span class="lscore">$186k</span><span class="lheat">H 6</span></div>' +
+              '<div class="lrow you"><span class="rank">2</span><span class="lname">The Magpies</span><span class="lscore">$137k</span><span class="lheat">H 12</span></div>' +
+              '<div class="lrow"><span class="rank">3</span><span class="lname">Night Shift</span><span class="lscore">$120k</span><span class="lheat">H 11</span></div>' +
+              '<div class="lrow"><span class="rank">4</span><span class="lname">Cold Callers</span><span class="lscore">$98k</span><span class="lheat">H 14</span></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>',
+      action: {
+        secondary: { label: 'Run summary', icon: 'list', kind: 'ghost' },
+        cues: [ { icon: 'party-popper', label: 'Win sting', cls: 'playing' }, { icon: 'music', label: 'Outro' } ],
+        primary: { label: 'Go again', icon: 'rotate-ccw', kind: 'primary', size: 'lg' }
+      }
+    }
+  );
+
+  /* 9 BUST */
+  TJ.frame(
+    { vnum: '09b', title: 'Result · BUST', note: 'Job Blown — Heat maxed and forced the getaway at the worst odds. Loot banked is slashed and the multiplier collapses; the run doesn\u2019t place on the board (greyed, no highlight). Failure is soft: GO AGAIN is right there.' },
+    {
+      hot: true,
+      phaseNum: '08', phaseLabel: 'Result', roomLabel: 'The job',
+      heat: 20, heatWarnFrom: 16, loot: 19000, lootStr: '$19k', round: '6', totalRounds: '6',
+      crew: CREW_BUST, crewModeLabel: 'Blown', tools: { gearBadge: 0 },
+      tp: { text: 'Blue light fills the van before the doors even close. Somebody talked, or the Heat just caught up \u2014 either way the night ends in cuffs and a story you\u2019ll tell for years. There\u2019s always the next job.' },
+      stage:
+        '<div class="result">' +
+          '<div class="verdict lose"><span class="vmark">' + TJ.icon('siren') + '</span><span class="vbig">Job Blown</span></div>' +
+          '<div class="score-eq">' +
+            '<div class="score-cell"><span class="k">Loot salvaged</span><span class="v">$48k</span><span class="s">dropped the rest running</span></div>' +
+            '<div class="score-op">\u00d7</div>' +
+            '<div class="score-cell"><span class="k">Multiplier</span><span class="v" style="color:var(--danger)">0.4</span><span class="s">Heat 20 / 20 \u2014 maxed out</span></div>' +
+            '<div class="score-op">=</div>' +
+            '<div class="score-final lose"><span class="k">Final score</span><span class="v">$19k</span></div>' +
+          '</div>' +
+          '<div class="rankpanel"><div class="rp-head">' + TJ.icon('trophy') + '<h3>Personal best</h3><span class="badge b-danger you"><span class="d"></span>Did not place</span></div>' +
+            '<div class="rp-body">' +
+              '<div class="lrow"><span class="rank">1</span><span class="lname">The Foxes</span><span class="lscore">$186k</span><span class="lheat">H 6</span></div>' +
+              '<div class="lrow"><span class="rank">2</span><span class="lname">Night Shift</span><span class="lscore">$120k</span><span class="lheat">H 11</span></div>' +
+              '<div class="lrow"><span class="rank">3</span><span class="lname">Cold Callers</span><span class="lscore">$98k</span><span class="lheat">H 14</span></div>' +
+              '<div class="lrow you lose"><span class="rank">\u2014</span><span class="lname">The Magpies</span><span class="lscore">$19k</span><span class="lheat">H 20</span></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>',
+      action: {
+        secondary: { label: 'Run summary', icon: 'list', kind: 'ghost' },
+        cues: [ { icon: 'siren', label: 'Bust sting', cls: 'danger' }, { icon: 'music', label: 'Outro' } ],
+        primary: { label: 'Go again', icon: 'rotate-ccw', kind: 'primary', size: 'lg' }
+      }
+    }
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

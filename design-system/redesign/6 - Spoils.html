@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 06 Spoils</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  .spoils{ display:flex; flex-direction:column; gap:13px; height:100%; min-height:0; }
+  .spoils-top{ display:grid; grid-template-columns:1.4fr 1fr; gap:13px; flex:none; }
+  .outcome-banner{ display:flex; flex-direction:column; gap:7px; padding:15px 20px; border-radius:var(--radius-lg); border:1px solid var(--c-green-700); background:var(--accent-tint); }
+  .outcome-banner .ob-k{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:8px; }
+  .outcome-banner .ob-k svg{ width:15px; height:15px; }
+  .outcome-banner .ob-v{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:42px; line-height:.95; letter-spacing:-.01em; color:var(--fg); }
+  .outcome-banner.comp{ border-color:var(--c-amber-700); background:var(--caution-tint); } .outcome-banner.comp .ob-k{ color:var(--caution); }
+  .loot-readout{ display:flex; flex-direction:column; justify-content:center; gap:6px; padding:15px 20px; border-radius:var(--radius-lg); border:1px solid var(--c-green-700); background:var(--bg-panel); }
+  .loot-readout .lr-k{ font-family:var(--font-data); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--fg-faint); }
+  .loot-readout .lr-v{ font-family:var(--font-data); font-weight:800; font-size:46px; line-height:1; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .loot-readout .lr-s{ font-family:var(--font-body); font-size:13px; color:var(--fg-muted); }
+
+  .gear-share{ flex:1; min-height:0; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); box-shadow:var(--elev-2); display:flex; flex-direction:column; overflow:hidden; }
+  .gear-share .gs-head{ display:flex; align-items:center; gap:11px; padding:12px 18px; border-bottom:1px solid var(--border); background:var(--bg-panel-raised); }
+  .gear-share .gs-head svg{ width:18px; height:18px; color:var(--data); }
+  .gear-share .gs-head h3{ font-family:var(--font-display); font-weight:600; text-transform:uppercase; font-size:20px; white-space:nowrap; }
+  .gear-share .gs-head .hint{ margin-left:auto; font-family:var(--font-body); font-size:14px; color:var(--fg-muted); display:flex; align-items:center; gap:7px; }
+  .gear-share .gs-head .hint svg{ width:15px; height:15px; color:var(--fg-faint); }
+  .gear-share .gs-body{ flex:1; min-height:0; padding:18px; display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; overflow-y:auto; }
+
+  .gearcard{ width:212px; padding:15px; border-radius:var(--radius-lg); border:1px solid; display:flex; flex-direction:column; gap:8px; background:var(--bg-panel); }
+  .gearcard .gc-type{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.1em; text-transform:uppercase; display:flex; align-items:center; gap:7px; }
+  .gearcard .gc-type svg{ width:14px; height:14px; }
+  .gearcard .gc-name{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:21px; line-height:.98; letter-spacing:-.01em; color:var(--fg); }
+  .gearcard .gc-desc{ font-family:var(--font-body); font-size:13px; line-height:1.4; color:var(--fg-muted); flex:1; }
+  .gc-lane{ display:flex; align-items:center; gap:9px; }
+  .ga-k{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-faint); white-space:nowrap; }
+  .gc-assign{ display:flex; align-items:center; gap:9px; padding-top:10px; border-top:1px solid var(--border); margin-top:auto; }
+  .gc-select{ flex:1; min-width:0; font-family:var(--font-data); font-weight:700; font-size:13px; color:var(--fg); background:var(--bg-input); border:1px solid var(--border-strong); border-radius:var(--radius-sm); padding:8px 10px; cursor:pointer; }
+  .gearcard.power{ border-color:var(--c-green-700); } .gearcard.power .gc-type{ color:var(--accent); }
+  .gearcard.boost{ border-color:var(--c-cyan-500); } .gearcard.boost .gc-type{ color:var(--data); }
+  .gearcard.choice{ border-color:var(--c-amber-700); } .gearcard.choice .gc-type{ color:var(--caution); }
+  .gearcard.assigned .gc-select{ border-color:var(--c-green-700); color:var(--accent); }
+  .lanepick{ display:flex; gap:5px; flex:1; }
+  .lanepick .lp{ flex:1; text-align:center; padding:5px 0; border:1px solid var(--border-strong); border-radius:var(--radius-xs); font-family:var(--font-data); font-weight:700; font-size:11px; color:var(--fg-muted); cursor:pointer; }
+  .lanepick .lp.sel{ border-color:var(--caution); background:var(--caution-tint); color:var(--caution); }
+
+  .all-shared{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; width:100%; color:var(--accent); }
+  .all-shared svg{ width:42px; height:42px; }
+  .all-shared .as-t{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:24px; color:var(--fg); }
+  .all-shared .as-s{ font-family:var(--font-body); font-size:15px; color:var(--fg-muted); }
+
+  .exhaust{ flex:none; display:flex; align-items:center; gap:14px; padding:12px 18px; border:1px solid var(--c-amber-700); border-radius:var(--radius-md); background:var(--caution-tint); }
+  .exhaust svg{ width:18px; height:18px; color:var(--caution); }
+  .exhaust .ex-k{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--caution); }
+  .exhaust .ex-who{ display:flex; gap:8px; margin-left:6px; }
+  .exhaust .ex-chip{ display:flex; align-items:center; gap:7px; padding:6px 11px; border-radius:var(--radius-md); background:var(--bg-panel); border:1px solid var(--border); }
+  .exhaust .ex-chip .av{ width:22px; height:22px; border-radius:var(--radius-xs); background:var(--c-surface-3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:12px; color:var(--caution); }
+  .exhaust .ex-chip .nm{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:15px; color:var(--fg); }
+  .exhaust .ex-note{ margin-left:auto; font-family:var(--font-body); font-size:13px; color:var(--fg-muted); }
+
+  /* dialog gear-assign list */
+  .assign-list{ display:flex; flex-direction:column; gap:10px; }
+  .assign-row{ display:flex; align-items:center; gap:12px; padding:11px 13px; border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--c-surface-2); }
+  .assign-row .gc-type{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
+  .assign-row .an{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:18px; color:var(--fg); }
+  .assign-row .to{ margin-left:auto; display:flex; align-items:center; gap:8px; font-family:var(--font-data); font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-faint); }
+  .assign-row select{ font-family:var(--font-data); font-weight:700; font-size:13px; color:var(--fg); background:var(--bg-input); border:1px solid var(--border-strong); border-radius:var(--radius-sm); padding:8px 10px; }
+  .drag-ghost{ position:absolute; z-index:25; left:300px; top:430px; pointer-events:none; }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  TJ.page({
+    num: '06', eyebrow: 'Screen 06 · After the room',
+    title: 'Spoils / Wrap-up',
+    desc: 'The closing beat after every room — and the ONE routine place gear is shared out. Outcome named with its sting (teleprompter), Loot and any dropped Gear announced face-up, then the GM picks who holds each card from a dropdown on the card before continuing. Power-ups snap to their lane; lane-of-choice cards let the GM pick the lane too. Exhaustion shows who rests next. CONTINUE → the Offer. If gear is left unassigned, the Gear launcher keeps a badge and reopens assignment as a dialog — no dead-ends.',
+    crumbs: [
+      { label: '05 The Ten', href: '5b - The Ten Games 1-5.html' },
+      { label: '06 Spoils', href: '6 - Spoils.html', here: true },
+      { label: '07 Offer', href: '7 - Offer.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  /* crew: Lucy + Liv just played the Stealth room */
+  function crewBase(opts) {
+    opts = opts || {};
+    return [
+      { name: 'Lucy',   powers: ['tec'], gear: opts.lucyGear, state: 'idle', stateLabel: 'PLAYED', cls: opts.drop, hotLanes: opts.lucyHot },
+      { name: 'Millie', powers: ['cha'], state: 'idle', stateLabel: '', cls: opts.drop },
+      { name: 'George', powers: ['phy'], state: 'idle', stateLabel: '', cls: opts.drop },
+      { name: 'Liv',    powers: ['ste'], gear: true, state: 'idle', stateLabel: 'PLAYED', cls: opts.drop },
+      { name: 'Chris',  powers: [], state: 'idle', stateLabel: '', cls: opts.drop }
+    ];
+  }
+
+  function crewSelect(sel) {
+    var names = ['Lucy', 'Millie', 'George', 'Liv', 'Chris'];
+    return '<select class="gc-select">' + '<option' + (!sel ? ' selected' : '') + '>— choose —</option>' +
+      names.map(function (n) { return '<option' + (sel === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>';
+  }
+  function gearCard(cls, type, typeIcon, name, desc, opts) {
+    opts = opts || {};
+    var lane = opts.lanePick ? '<div class="gc-lane"><span class="ga-k">Lane</span><div class="lanepick">' +
+      ['TEC', 'CHA', 'PHY', 'STE'].map(function (l) { return '<span class="lp' + (opts.laneSel === l ? ' sel' : '') + '">' + l + '</span>'; }).join('') + '</div></div>' : '';
+    return '<div class="gearcard ' + cls + (opts.assigned ? ' assigned' : '') + '">' +
+      '<div class="gc-type">' + TJ.icon(typeIcon) + type + '</div>' +
+      '<div class="gc-name">' + name + '</div>' +
+      '<div class="gc-desc">' + desc + '</div>' + lane +
+      '<div class="gc-assign"><span class="ga-k">Assign to</span>' + crewSelect(opts.assigned) + '</div></div>';
+  }
+
+  var techPower = gearCard('power', 'Power-up · unlocks the lane shout', 'zap', 'Tech Power-up', 'Whoever takes it can shout the Tech play in Tech games. One per lane — doesn’t stack.', {});
+  var physBoost = gearCard('boost', 'Stat boost · stacks', 'plus', '+1 Physical', 'A flat +1 to the holder’s Physical. Stat boosts stack as the run goes on.', {});
+
+  var base = {
+    phaseNum: '05', phaseLabel: 'Spoils', roomLabel: 'Room 3 cleared', kind: null,
+    heat: 8, loot: 53000, lootStr: '$53k', round: '3', totalRounds: '6', crewModeLabel: 'Share gear'
+  };
+
+  /* 6a — outcome + loot + gear in tray (unassigned) */
+  TJ.frame(
+    { vnum: '06a', title: 'Outcome + Loot announced', note: 'Clean outcome named with its sting, Loot gained, and two Gear cards dropped face-up — each with a dropdown to pick the holder. Exhaustion is shown. CONTINUE is live, but two gear are unassigned, so the Gear launcher carries a badge.' },
+    Object.assign({}, base, {
+      tools: { gearBadge: 2, active: null },
+      crew: crewBase({}),
+      tp: { text: 'The porter waves you through still chuckling \u2014 he\u2019ll swear blind tomorrow that nobody came past. Clean as they come. Now divvy up what fell out of the room.' },
+      stage:
+        '<div class="spoils">' +
+          '<div class="spoils-top">' +
+            '<div class="outcome-banner"><span class="ob-k">' + TJ.icon('check-check') + 'Outcome · The Side Door</span><span class="ob-v">Clean</span></div>' +
+            '<div class="loot-readout"><span class="lr-k">Loot banked</span><span class="lr-v">+$25k</span><span class="lr-s">Run total now $53k</span></div>' +
+          '</div>' +
+          '<div class="gear-share"><div class="gs-head">' + TJ.icon('briefcase') + '<h3>Share out the gear</h3><span class="hint">' + TJ.icon('users') + 'Pick who holds each card, then continue</span></div>' +
+            '<div class="gs-body">' + techPower + physBoost +
+              '<div style="font-family:var(--font-body);font-size:14px;color:var(--fg-faint);max-width:200px">Each drop is applied straight to a crew member &mdash; a power-up unlocks that lane&rsquo;s shout, a stat boost adds +1. Choose who gets each.</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="exhaust">' + TJ.icon('battery-low') + '<span class="ex-k">Rests next room</span>' +
+            '<div class="ex-who"><div class="ex-chip"><span class="av">L</span><span class="nm">Lucy</span></div><div class="ex-chip"><span class="av">L</span><span class="nm">Liv</span></div></div>' +
+            '<span class="ex-note">They just played the Gallery \u2014 they sit the next one out.</span></div>' +
+        '</div>',
+      action: {
+        cues: [ { icon: 'check', label: 'Clean sting', cls: 'playing' }, { icon: 'coins', label: 'Cash' } ],
+        primaryNote: '2 gear unassigned · Gear keeps a badge',
+        primary: { label: 'Continue', icon: 'chevron-right', kind: 'primary', size: 'lg' }
+      }
+    })
+  );
+
+  /* 6b — lane-of-choice gear */
+  TJ.frame(
+    { vnum: '06b', title: 'Assigning · lane-of-choice card', note: 'A power-up applies to one lane, so a single dropdown places it (the Tech power-up went to Lucy, done). A lane-of-choice stat boost needs one extra pick: the lane, then the holder. One card still open, so CONTINUE waits.' },
+    Object.assign({}, base, {
+      tools: { gearBadge: 1 },
+      crew: crewBase({ lucyHot: ['tec'] }),
+      tp: { text: 'The Tech power-up\u2019s gone to Lucy \u2014 she\u2019ll be shouting the play in Tech rooms now. The free +1 is next: pick a lane, then who gets it.' },
+      stage:
+        '<div class="spoils">' +
+          '<div class="spoils-top">' +
+            '<div class="outcome-banner"><span class="ob-k">' + TJ.icon('check-check') + 'Outcome · The Side Door</span><span class="ob-v">Clean</span></div>' +
+            '<div class="loot-readout"><span class="lr-k">Loot banked</span><span class="lr-v">+$25k</span><span class="lr-s">Run total now $53k</span></div>' +
+          '</div>' +
+          '<div class="gear-share"><div class="gs-head">' + TJ.icon('briefcase') + '<h3>Share out the gear</h3><span class="hint">' + TJ.icon('shuffle') + '1 lane-of-choice card to place</span></div>' +
+            '<div class="gs-body">' +
+              gearCard('power', 'Power-up · Tech', 'zap', 'Tech Power-up', 'Unlocks the Tech shout for the holder.', { assigned: 'Lucy' }) +
+              gearCard('choice', 'Stat boost · pick the lane', 'shuffle', '+1 Any Lane', '+1 to a lane of your choice. Pick the lane, then who gets it.', { lanePick: true, laneSel: 'CHA', assigned: null }) +
+              '<div style="font-family:var(--font-body);font-size:14px;color:var(--fg-faint);max-width:200px">CHA is picked for the +1 &mdash; now choose who gets it to finish.</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="exhaust">' + TJ.icon('battery-low') + '<span class="ex-k">Rests next room</span>' +
+            '<div class="ex-who"><div class="ex-chip"><span class="av">L</span><span class="nm">Lucy</span></div><div class="ex-chip"><span class="av">L</span><span class="nm">Liv</span></div></div>' +
+            '<span class="ex-note">Holding gear doesn\u2019t change who rests.</span></div>' +
+        '</div>',
+      action: {
+        cues: [ { icon: 'check', label: 'Clean sting', cls: 'playing' } ],
+        primaryNote: '1 gear still open',
+        primary: { label: 'Continue', icon: 'chevron-right', kind: 'primary', size: 'lg', disabled: true }
+      }
+    })
+  );
+
+  /* 6c — assigned + continue */
+  TJ.frame(
+    { vnum: '06c', title: 'Assigned + exhaustion · CONTINUE', note: 'Both drops applied directly — Lucy\u2019s Tech pip is lit and George\u2019s Physical bumped 6→7. No held items, no gear icon; gear just becomes a power-up or a stat. The Gear badge clears to zero and CONTINUE leads to the Offer.' },
+    Object.assign({}, base, {
+      tools: { gearBadge: 0 },
+      crew: [
+        { name: 'Lucy',   powers: ['tec'], state: 'idle', stateLabel: 'PLAYED', hotLanes: ['tec'] },
+        { name: 'Millie', powers: ['cha'], state: 'idle', stateLabel: '' },
+        { name: 'George', powers: ['phy'], lanes: { tec: 1, phy: 7, cha: 2, ste: 2 }, state: 'idle', stateLabel: '', hotLanes: ['phy'] },
+        { name: 'Liv',    powers: ['ste'], state: 'idle', stateLabel: 'PLAYED' },
+        { name: 'Chris',  powers: [], state: 'idle', stateLabel: '' }
+      ],
+      tp: { text: 'Lucy takes the Tech power-up, George the extra muscle \u2014 everyone knows their kit now. Two of you put your feet up; the rest, eyes open.' },
+      stage:
+        '<div class="spoils">' +
+          '<div class="spoils-top">' +
+            '<div class="outcome-banner"><span class="ob-k">' + TJ.icon('check-check') + 'Outcome · The Side Door</span><span class="ob-v">Clean</span></div>' +
+            '<div class="loot-readout"><span class="lr-k">Loot banked</span><span class="lr-v">+$25k</span><span class="lr-s">Run total now $53k</span></div>' +
+          '</div>' +
+          '<div class="gear-share"><div class="gs-head">' + TJ.icon('briefcase') + '<h3>Share out the gear</h3><span class="hint" style="color:var(--accent)">' + TJ.icon('check') + 'All gear assigned</span></div>' +
+            '<div class="gs-body">' +
+              gearCard('power', 'Power-up · Tech', 'zap', 'Tech Power-up', 'Applied to Lucy — Tech pip lit.', { assigned: 'Lucy' }) +
+              gearCard('boost', 'Stat boost · +1', 'plus', '+1 Physical', 'Applied to George — PHY 6 → 7.', { assigned: 'George' }) +
+              '<div class="all-shared" style="flex:1;align-items:flex-start;text-align:left"><div class="as-t" style="color:var(--accent)">Nothing left to share</div><div class="as-s">Both cards are on the board. Roll on.</div></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="exhaust">' + TJ.icon('battery-low') + '<span class="ex-k">Rests next room</span>' +
+            '<div class="ex-who"><div class="ex-chip"><span class="av">L</span><span class="nm">Lucy</span></div><div class="ex-chip"><span class="av">L</span><span class="nm">Liv</span></div></div>' +
+            '<span class="ex-note">Three fresh hands available for the next door.</span></div>' +
+        '</div>',
+      action: {
+        cues: [ { icon: 'coins', label: 'Cash', cls: 'playing' } ],
+        primaryNote: 'All gear assigned',
+        primary: { label: 'Continue to offer', icon: 'chevron-right', kind: 'primary', size: 'lg' }
+      }
+    })
+  );
+
+  /* 6d — gear left unassigned, reopened as dialog */
+  TJ.frame(
+    { vnum: '06d', title: 'Gear left unassigned · reopened as dialog', note: 'The GM continued with gear unassigned; later, the badged Gear launcher reopens assignment as a blocking dialog over the current stage. Each unassigned card gets a crew picker; the lane-of-choice card (Lucy’s Coin) also picks a lane. No dead-ends — gear is never stranded.' },
+    Object.assign({}, base, {
+      phaseLabel: 'Obstacle', roomLabel: 'Room 4', kind: 'OBSTACLE', heat: 9,
+      tools: { gearBadge: 2, active: 'gear' },
+      crew: crewBase({ drop: '' }),
+      tp: { text: 'Before you open this door \u2014 you never handed out the last room\u2019s gear. Sort it now; it could change who you send in.' },
+      stage:
+        '<div class="spoils" style="opacity:.5;filter:saturate(.6)">' +
+          '<div class="spoils-top">' +
+            '<div class="outcome-banner comp"><span class="ob-k">' + TJ.icon('door-open') + 'Room 4 · Obstacle</span><span class="ob-v">Choosing a door</span></div>' +
+            '<div class="loot-readout" style="border-color:var(--border)"><span class="lr-k">Run total</span><span class="lr-v" style="color:var(--fg)">$53k</span><span class="lr-s">Behind the dialog</span></div>' +
+          '</div>' +
+          '<div class="gear-share" style="flex:1"></div>' +
+        '</div>',
+      overlay:
+        '<div class="scrim"></div>' +
+        '<div class="dialog" style="width:600px"><div class="dialog-head">' + TJ.icon('briefcase') + '<h3>Assign the gear</h3><span class="x">' + TJ.icon('x') + '</span></div>' +
+          '<div class="dialog-body">' +
+            '<p class="prose sm muted">Two cards from Room 3 are still unassigned. Pick who holds each \u2014 the run won\u2019t hold them hostage.</p>' +
+            '<div class="assign-list">' +
+              '<div class="assign-row"><span class="gc-type" style="color:var(--accent)">' + TJ.icon('zap') + 'Power-up · Tech</span><span class="an">Tech Power-up</span>' +
+                '<span class="to">' + TJ.icon('arrow-right') + '<select><option>Lucy · Hacker</option><option>Millie</option><option>George</option><option>Liv</option><option>Chris</option></select></span></div>' +
+              '<div class="assign-row"><span class="gc-type" style="color:var(--caution)">' + TJ.icon('shuffle') + 'Stat boost · pick lane</span><span class="an">+1 Any Lane</span>' +
+                '<span class="to"><div class="lanepick"><span class="lp">TEC</span><span class="lp sel">CHA</span><span class="lp">PHY</span><span class="lp">STE</span></div>' + TJ.icon('arrow-right') + '<select><option>Millie · Grifter</option><option>Lucy</option><option>George</option><option>Liv</option><option>Chris</option></select></span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="dialog-foot"><button class="btn btn-ghost spread">' + TJ.icon('clock') + 'Later</button><button class="btn btn-secondary">Auto-assign</button><button class="btn btn-primary">' + TJ.icon('check') + 'Assign both</button></div>' +
+        '</div>',
+      action: {
+        back: { label: 'Back', icon: 'chevron-left', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Tension' } ],
+        primary: { label: 'Choose a door', icon: 'door-open', kind: 'primary', disabled: true }
+      }
+    })
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

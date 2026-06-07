@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 02 Briefing</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  .brief{ display:flex; flex-direction:column; gap:14px; height:100%; min-height:0; }
+  /* the briefing is the big intro — give the read-aloud room to breathe */
+  .tp p{ font-size:28px; line-height:1.5; max-width:72ch; }
+  /* image placeholder — striped, with a mono label (per system: no hand-drawn art) */
+  .ph-img{ position:relative; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;
+    background:
+      repeating-linear-gradient(135deg, rgba(170,200,195,.05) 0 2px, transparent 2px 11px),
+      linear-gradient(180deg, #10171a, #0b1012);
+    flex:1; min-height:150px; display:flex; align-items:flex-end; }
+  .ph-img .cap{ font-family:var(--font-data); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--fg-faint);
+    padding:8px 12px; background:linear-gradient(0deg, rgba(6,8,10,.85), transparent); width:100%; display:flex; align-items:center; gap:8px; }
+  .ph-img .cap svg{ width:14px; height:14px; }
+
+  .dossier{ display:flex; flex-direction:column; flex:1; min-height:0; }
+  .dossier .body{ padding:16px; display:flex; flex-direction:row; gap:16px; flex:1; min-height:0; }
+  .dstats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; width:300px; flex:none; align-content:start; }
+  .dstat{ display:flex; flex-direction:column; gap:4px; padding:11px 13px; background:var(--c-surface-2); border:1px solid var(--border); border-radius:var(--radius-md); }
+  .dstat .k{ font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .dstat .v{ font-family:var(--font-data); font-weight:800; font-size:24px; line-height:1; color:var(--fg); }
+
+  .payout{ flex:none; display:flex; align-items:center; gap:14px; padding:13px 18px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--c-surface-1); }
+  .payout svg{ width:18px; height:18px; color:var(--accent); }
+  .payout .pk{ font-family:var(--font-data); font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg); }
+  .payout .ps{ font-family:var(--font-body); font-size:14px; color:var(--fg-muted); }
+  .payout .pchips{ display:flex; gap:8px; margin-left:auto; }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  TJ.page({
+    num: '02', eyebrow: 'Screen 02 · The Run',
+    title: 'Briefing',
+    desc: 'The mark, dressed — and the big intro. The teleprompter strip carries the opening narration the GM performs to the table (the only flavour voice on screen), given room to breathe. Below it, the dossier: the mansion, the target, and a reminder that every room can pay in Loot, Gear, or both. There is no fixed turn order — they’re just a crew. One BEGIN closes the briefing and opens the first room.',
+    crumbs: [
+      { label: '01 Setup', href: '1 - Setup.html' },
+      { label: '02 Briefing', href: '2 - Briefing.html', here: true },
+      { label: '03 Obstacle', href: '3 - Obstacle Room.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  var ORDER = [
+    { name: 'Lucy', role: 'Hacker' },
+    { name: 'Millie', role: 'Grifter' },
+    { name: 'George', role: 'Muscle' },
+    { name: 'Liv', role: 'Ghost' },
+    { name: 'Chris', role: 'Wheelman' }
+  ];
+
+  var stage =
+    '<div class="brief">' +
+      '<div class="panel dossier">' +
+        '<div class="panel-head"><h3>Tonight\u2019s Mark</h3><span class="panel-tag">Ashcombe House</span></div>' +
+        '<div class="body">' +
+          '<div class="ph-img"><span class="cap">' + TJ.icon('image') + 'Drop: Ashcombe House \u2014 north face, dusk</span></div>' +
+          '<div class="dstats">' +
+            '<div class="dstat"><span class="k">Target haul</span><span class="v" style="color:var(--accent)">$120k</span></div>' +
+            '<div class="dstat"><span class="k">Security</span><span class="v" style="color:var(--caution)">HIGH</span></div>' +
+            '<div class="dstat"><span class="k">Rooms</span><span class="v">6</span></div>' +
+            '<div class="dstat"><span class="k">The vault</span><span class="v">Floor 3</span></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="payout">' + TJ.icon('gift') + '<div><div class="pk">Every room pays out</div><div class="ps">Loot, Gear, or both \u2014 obstacles and scenarios alike.</div></div>' +
+        '<div class="pchips"><span class="badge b-live"><span class="d"></span>Loot</span><span class="badge b-data"><span class="d"></span>Gear</span><span class="badge b-idle"><span class="d"></span>Whoever plays, rests next</span></div>' +
+      '</div>' +
+    '</div>';
+
+  TJ.frame(
+    { vnum: '02', title: 'Briefing', note: 'The opening narration owns the stage — larger read-aloud text, room to perform. Below it the mark dossier and a note that rooms pay in Loot, Gear, or both. No turn order: they’re just a crew. Heat and Loot still at zero.' },
+    {
+      phaseNum: '02', phaseLabel: 'Briefing', roomLabel: 'Pre-run',
+      heat: 0, loot: 0, lootStr: '$0', round: '0', totalRounds: '6',
+      crew: ORDER.map(function (o) { return { name: o.name, role: o.role, powers: [], state: 'idle', stateLabel: 'READY' }; }),
+      crewModeLabel: 'The crew', tools: { gearBadge: 0 },
+      tp: { text: 'Three floors of cold marble between you and the vault. Ashcombe doesn\u2019t trust cameras \u2014 it trusts people, and people can be moved. You\u2019ve got six rooms before the night staff change: clear them quiet and you walk out rich. Let the Heat climb\u2026 and you don\u2019t walk out at all.' },
+      stage: stage,
+      action: {
+        cues: [ { icon: 'music', label: 'Ambient', cls: 'playing' }, { icon: 'activity', label: 'Tension' } ],
+        primary: { label: 'Begin the job', icon: 'play', kind: 'primary', size: 'lg' }
+      }
+    }
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

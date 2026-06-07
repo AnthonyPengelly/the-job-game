@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 16 Player · Getaway Countdown</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<link rel="stylesheet" href="assets/player-view.css">
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  TJ.page({
+    num: '16', eyebrow: 'Screen 16 · Player View',
+    title: 'Getaway · Countdown',
+    desc: 'The big clock for the whole table during the finale — a second display the crew can all see while the GM runs the round on the laptop. No Heat, no chrome, just the time and how many cards are left. Calm green while there\u2019s room; red and draining as it runs out.',
+    crumbs: [
+      { label: '15 Defuse rulebook', href: '15 - Player Defuse.html' },
+      { label: '16 Getaway clock', href: '16 - Player Countdown.html', here: true },
+      { label: '08 GM Getaway', href: '8 - Getaway.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  function dots(total, cleared, danger) {
+    var s = '';
+    for (var i = 0; i < total; i++) s += '<span class="d ' + (i < cleared ? 'on' : (danger ? 'left' : '')) + '"></span>';
+    return '<div class="pv-progdots">' + s + '</div>';
+  }
+
+  /* 16a — calm */
+  TJ.frameRaw(
+    { vnum: '16a', title: 'Getaway countdown · calm', note: 'Plenty of road left. Clock calm green, the dots show 5 of 8 cleared. Type sized to read from anywhere in the room.' },
+    '<div class="pv"><div class="pv-inner center">' +
+      '<div class="pv-clock-label">Get to the van</div>' +
+      '<div class="pv-clock">0:48</div>' +
+      dots(8, 5, false) +
+      '<div class="pv-clock-sub">5 of 8 cleared</div>' +
+    '</div></div>'
+  );
+
+  /* 16b — near-bust */
+  TJ.frameRaw(
+    { vnum: '16b', title: 'Getaway countdown · near-bust', note: 'Time draining, one card left. Clock turns red and pulses; the remaining dot reads danger. Same surface, the colour does the talking — no words needed across the room.' },
+    '<div class="pv"><div class="pv-inner center">' +
+      '<div class="pv-clock-label" style="color:var(--c-red-300)">Get to the van</div>' +
+      '<div class="pv-clock danger">0:07</div>' +
+      dots(8, 7, true) +
+      '<div class="pv-clock-sub danger">One card left — go!</div>' +
+    '</div></div>'
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

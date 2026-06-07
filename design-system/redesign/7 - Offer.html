@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 07 Offer</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  .offer2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; height:100%; min-height:0; }
+  .offercard{ position:relative; padding:26px; border:1px solid var(--border-strong); border-radius:var(--radius-lg); background:var(--bg-panel); box-shadow:var(--elev-2); display:flex; flex-direction:column; gap:14px; cursor:pointer; transition:all var(--dur-base) var(--ease-out); }
+  .offercard:hover{ transform:translateY(-3px); box-shadow:var(--elev-3); }
+  .offercard .oc-ic{ width:58px; height:58px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; border:1px solid var(--border-strong); }
+  .offercard .oc-ic svg{ width:28px; height:28px; }
+  .offercard .oc-eyebrow{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--fg-faint); }
+  .offercard h3{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:38px; line-height:.92; letter-spacing:-.01em; color:var(--fg); }
+  .offercard p{ font-family:var(--font-body); font-size:16px; line-height:1.5; color:var(--fg-muted); flex:1; }
+  .offercard .oc-row{ display:flex; gap:18px; padding-top:14px; border-top:1px solid var(--border); }
+  .offercard .oc-row .c{ display:flex; flex-direction:column; gap:3px; }
+  .offercard .oc-row .c .k{ font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .offercard .oc-row .c .v{ font-family:var(--font-data); font-weight:800; font-size:20px; }
+  .offercard.push .oc-ic{ color:var(--accent); border-color:var(--c-green-700); background:var(--accent-tint); }
+  .offercard.push .oc-eyebrow{ color:var(--accent); }
+  .offercard.run .oc-ic{ color:var(--data); border-color:var(--c-cyan-500); background:var(--data-tint); }
+  .offercard.run .oc-eyebrow{ color:var(--data); }
+  .offercard.run.hot .oc-ic{ color:var(--caution); border-color:var(--c-amber-700); background:var(--caution-tint); }
+  .offercard.run.hot .oc-eyebrow{ color:var(--caution); }
+  .offercard.reco-green{ border-color:var(--accent); box-shadow:var(--glow-accent); }
+  .offercard.reco-amber{ border-color:var(--caution); box-shadow:0 0 0 1px var(--c-amber-700), 0 0 20px -3px rgba(247,184,75,.5); }
+  .offercard .reco-flag{ position:absolute; top:-10px; right:18px; font-family:var(--font-data); font-weight:800; font-size:10px; letter-spacing:.1em; text-transform:uppercase; padding:4px 10px; border-radius:var(--radius-pill); background:var(--bg-panel-raised); border:1px solid currentColor; }
+  .offercard.reco-green .reco-flag{ color:var(--accent); }
+  .offercard.reco-amber .reco-flag{ color:var(--caution); }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  TJ.page({
+    num: '07', eyebrow: 'Screen 07 · After the room',
+    title: 'The Offer',
+    desc: 'After every room the GM is offered the door: push on for more score, or call the Getaway and bank what the crew has. Two states. Cool — calm, the run is young, pushing on is the natural play. Hot — Heat is high, the escape signal is lit in the top rail (amber, “getting hot, we can roll”) and the Getaway card is flagged as the recommended line. Same screen, the recommendation just follows the Heat.',
+    crumbs: [
+      { label: '06 Spoils', href: '6 - Spoils.html' },
+      { label: '07 Offer', href: '7 - Offer.html', here: true },
+      { label: '08 Getaway', href: '8 - Getaway.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  var ROSTER = [
+    { name: 'Lucy',   powers: ['tec'], gear: true, state: 'rest', stateLabel: 'RESTED' },
+    { name: 'Millie', powers: ['cha'], state: 'idle', stateLabel: 'READY' },
+    { name: 'George', powers: ['phy'], gear: true, state: 'idle', stateLabel: 'READY' },
+    { name: 'Liv',    powers: ['ste'], gear: true, state: 'rest', stateLabel: 'RESTED' },
+    { name: 'Chris',  powers: [], state: 'idle', stateLabel: 'READY' }
+  ];
+
+  function pushCard(reco) {
+    return '<div class="offercard push' + (reco ? ' reco-green' : '') + '">' +
+      (reco ? '<span class="reco-flag">Recommended</span>' : '') +
+      '<div class="oc-ic">' + TJ.icon('door-open') + '</div>' +
+      '<span class="oc-eyebrow">Keep going</span>' +
+      '<h3>Push on</h3>' +
+      '<p>One more room. The vault\u2019s close \u2014 there\u2019s a bigger haul behind the next door, if the crew\u2019s nerve holds.</p>' +
+      '<div class="oc-row"><div class="c"><span class="k">Next</span><span class="v">Room 4</span></div>' +
+      '<div class="c"><span class="k">Heat</span><span class="v" style="color:var(--caution)">Will rise</span></div>' +
+      '<div class="c"><span class="k">Loot</span><span class="v" style="color:var(--accent)">More on offer</span></div></div></div>';
+  }
+  function runCard(hot, reco, bank) {
+    return '<div class="offercard run' + (hot ? ' hot' : '') + (reco ? ' reco-amber' : '') + '">' +
+      (reco ? '<span class="reco-flag">Recommended</span>' : '') +
+      '<div class="oc-ic">' + TJ.icon('siren') + '</div>' +
+      '<span class="oc-eyebrow">' + (hot ? 'We can roll' : 'Bank it') + '</span>' +
+      '<h3>Call the<br>getaway</h3>' +
+      '<p>' + (hot ? 'Heat\u2019s climbing fast. Take the ' + bank + ' that\u2019s already yours and run for the van while the odds still favour you.' : 'End it on your terms. Lock in the ' + bank + ' and make a clean run for the van.') + '</p>' +
+      '<div class="oc-row"><div class="c"><span class="k">Bank</span><span class="v" style="color:var(--accent)">' + bank + '</span></div>' +
+      '<div class="c"><span class="k">Then</span><span class="v" style="color:' + (hot ? 'var(--caution)' : 'var(--data)') + '">Getaway</span></div></div></div>';
+  }
+
+  /* 7a — cool */
+  TJ.frame(
+    { vnum: '07a', title: 'Offer · cool', note: 'Calm. Heat 8, escape signal dormant. Push-on is flagged as the recommended line; the getaway sits as the safe alternative. Teleprompter is green narration, action bar leads with PUSH ON.' },
+    {
+      phaseNum: '06', phaseLabel: 'The Offer', roomLabel: 'After Room 3',
+      heat: 8, loot: 53000, lootStr: '$53k', round: '3', totalRounds: '6',
+      crew: ROSTER, crewModeLabel: 'Roster', tools: { gearBadge: 0 },
+      tp: { text: 'You\u2019re at the stairwell door with three rooms behind you and the night still young. The vault\u2019s two floors up. Push your luck \u2014 or take the tidy little score and slip away?' },
+      stage: '<div class="offer2">' + pushCard(true) + runCard(false, false, '$53k') + '</div>',
+      action: {
+        secondary: { label: 'Call getaway', icon: 'siren', kind: 'secondary' },
+        cues: [ { icon: 'music', label: 'Ambient', cls: 'playing' }, { icon: 'wind', label: 'Calm' } ],
+        primary: { label: 'Push on', icon: 'door-open', kind: 'primary', size: 'lg' }
+      }
+    }
+  );
+
+  /* 7b — hot / escape signal */
+  TJ.frame(
+    { vnum: '07b', title: 'Offer · hot · escape signal', note: 'Heat 16 with the amber warn-band. The top rail raises the escape signal — “getting hot, we can roll.” The Getaway card is now the amber recommended line and the teleprompter turns amber; the action bar leads with CALL GETAWAY. Pushing on is still allowed (no blocking) but de-emphasised.' },
+    {
+      hot: true,
+      phaseNum: '06', phaseLabel: 'The Offer', roomLabel: 'After Room 5', escape: 'signal',
+      heat: 16, heatWarnFrom: 13, loot: 98000, lootStr: '$98k', round: '5', totalRounds: '6',
+      crew: ROSTER, crewModeLabel: 'Roster', tools: { gearBadge: 0 },
+      tp: { amber: true, text: 'A door slams two floors down and the radio chatter changes pitch. They haven\u2019t found you \u2014 yet \u2014 but the building knows it\u2019s been touched. Ninety-eight grand in the bags. The van\u2019s warm. This is the window.' },
+      stage: '<div class="offer2">' + pushCard(false) + runCard(true, true, '$98k') + '</div>',
+      action: {
+        secondary: { label: 'Push on anyway', icon: 'door-open', kind: 'ghost' },
+        cues: [ { icon: 'siren', label: 'Escape signal', cls: 'danger' }, { icon: 'activity', label: 'Tension', cls: 'playing' } ],
+        primary: { label: 'Call the getaway', icon: 'siren', kind: 'caution', size: 'lg' }
+      }
+    }
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

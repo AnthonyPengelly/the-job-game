@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 05 Mini-games</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<link rel="stylesheet" href="assets/minigame.css">
+<style>
+  .mg-section{ margin:78px 0 -18px; border-top:1px solid var(--border-strong); padding-top:30px; }
+  .mg-section h2{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:40px; letter-spacing:-.01em; color:var(--fg); }
+  .mg-section h2 .gr{ color:var(--accent); }
+  .mg-section p{ font-family:var(--font-body); font-size:17px; line-height:1.5; color:var(--fg-muted); max-width:80ch; margin-top:10px; }
+  /* beat dots */
+  .beatrow{ display:flex; gap:7px; }
+  .bdot{ width:18px; height:18px; border-radius:50%; background:var(--c-surface-3); border:1px solid var(--border-strong); }
+  .bdot.done{ background:var(--c-surface-4); }
+  .bdot.on{ background:var(--accent); border-color:var(--c-green-400); box-shadow:var(--glow-accent); }
+  .bdot.mute{ background:transparent; border-style:dashed; }
+  .bdot.target{ border-color:var(--caution); }
+  .feedback{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:64px; letter-spacing:-.01em; line-height:1; }
+  .feedback.hit{ color:var(--accent); } .feedback.early{ color:var(--caution); } .feedback.late{ color:var(--danger); }
+  .tally{ display:flex; align-items:center; gap:18px; }
+  .tally .tcount{ font-family:var(--font-data); font-weight:800; font-size:64px; line-height:1; color:var(--fg); font-variant-numeric:tabular-nums; }
+  .tally .tbtn{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:16px 26px; border:1px solid var(--c-green-700); border-radius:var(--radius-md); background:var(--accent-tint); cursor:pointer; }
+  .tally .tbtn .tl{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:24px; color:var(--accent); }
+  .tally .tbtn .ts{ font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .spread{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .qa{ display:flex; flex-direction:column; gap:14px; width:100%; max-width:660px; }
+  .qa .q{ font-family:var(--font-body); font-weight:600; font-size:26px; line-height:1.3; color:var(--fg); }
+  .qa .ans{ display:flex; align-items:center; gap:10px; padding:11px 15px; border:1px dashed var(--c-cyan-500); border-radius:var(--radius-md); background:var(--data-tint); }
+  .qa .ans svg{ width:16px; height:16px; color:var(--data); }
+  .qa .ans .al{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--data); }
+  .qa .ans .av{ font-family:var(--font-body); font-weight:600; font-size:19px; color:var(--c-cyan-300); }
+  .opts4{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .opt4{ display:flex; align-items:center; gap:11px; padding:12px 15px; border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--c-surface-2); }
+  .opt4 .ol{ width:26px; height:26px; flex:none; border-radius:var(--radius-xs); background:var(--c-surface-3); display:flex; align-items:center; justify-content:center; font-family:var(--font-data); font-weight:800; color:var(--fg-muted); }
+  .opt4 .ot{ font-family:var(--font-body); font-size:17px; color:var(--fg); }
+  .opt4.correct{ border-color:var(--c-cyan-500); background:var(--data-tint); }
+  .opt4.correct .ol{ background:var(--data); color:var(--c-fg-ink); }
+  .opt4.correct .ot{ color:var(--c-cyan-300); }
+  .judge{ display:flex; gap:10px; }
+  .tower{ display:flex; flex-direction:column-reverse; gap:4px; align-items:center; }
+  .tower .brick{ width:120px; height:18px; border-radius:2px; background:linear-gradient(180deg,var(--c-surface-4),var(--c-surface-3)); border:1px solid var(--border-strong); }
+  .tower .brick.target{ border-color:var(--caution); border-style:dashed; background:transparent; }
+  .burst{ display:flex; align-items:center; gap:10px; padding:8px 14px; border:1px solid var(--c-amber-700); border-radius:var(--radius-md); background:var(--caution-tint); }
+  .burst svg{ width:17px; height:17px; color:var(--caution); }
+  .burst .bk{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--caution); }
+  .burst .bv{ font-family:var(--font-data); font-weight:800; font-size:24px; color:var(--c-amber-300); font-variant-numeric:tabular-nums; }
+  .rulebook{ display:flex; flex-direction:column; gap:8px; padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--c-surface-1); max-width:300px; }
+  .rulebook .rh{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--fg-faint); display:flex; align-items:center; gap:7px; }
+  .rulebook .rh svg{ width:14px; height:14px; }
+  .rulebook .rl{ display:flex; align-items:center; gap:9px; font-family:var(--font-body); font-size:15px; color:var(--fg-muted); }
+  .rulebook .rl .sw{ width:12px; height:12px; border-radius:50%; flex:none; }
+  .defuse-2col{ display:flex; gap:24px; align-items:center; justify-content:center; }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script src="assets/minigame.js"></script>
+<script>
+  TJ.page({
+    num: '05', eyebrow: 'Screen 05 · The Mini-games',
+    title: 'Mini-game Lifecycle',
+    desc: 'Every obstacle resolves through one shared three-state lifecycle — ARMED (brief, nothing live, timer shown but stopped) → ACTIVE (the live challenge, state shown as colour not prose, progress as a meter, boosts that fire once) → RESOLVE (Clean / Complication / Botched, suggested tier pre-picked, GM confirms). The stage always splits into STATUS · CHALLENGE · REFEREE so the GM knows where to look. First the universal shell, then the ACTIVE screen for each of the ten games with the variants that matter.',
+    crumbs: [
+      { label: '04 Scenario', href: '4 - Scenario Room.html' },
+      { label: '05 Shell', href: '5 - Mini-games.html', here: true },
+      { label: 'The Ten · 1–5', href: '5b - The Ten Games 1-5.html' },
+      { label: 'The Ten · 6–10', href: '5c - The Ten Games 6-10.html' },
+      { label: '06 Spoils', href: '6 - Spoils.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  function section(t, s) {
+    var d = document.createElement('div'); d.className = 'mg-section';
+    d.innerHTML = '<h2>' + t + '</h2>' + (s ? '<p>' + s + '</p>' : '');
+    window.__TJ_G.appendChild(d);
+  }
+
+  /* crew helper: committed -> in-play (lane highlighted), resting -> rest, else watch */
+  var POWER = { Lucy: 'tec', Millie: 'cha', George: 'phy', Liv: 'ste', Chris: null };
+  function crew(committed, resting, lanes) {
+    return ['Lucy', 'Millie', 'George', 'Liv', 'Chris'].map(function (n) {
+      var c = { name: n, powers: POWER[n] ? [POWER[n]] : [], gear: (n === 'Lucy' || n === 'Liv') };
+      if (committed.indexOf(n) >= 0) { c.state = 'in'; c.stateLabel = 'IN PLAY'; c.hotLanes = lanes || []; }
+      else if ((resting || []).indexOf(n) >= 0) { c.state = 'rest'; c.stateLabel = 'RESTS'; }
+      else { c.state = 'idle'; c.stateLabel = 'WATCH'; }
+      return c;
+    });
+  }
+  function base(extra) {
+    return Object.assign({
+      heat: 9, loot: 5600, round: '4', totalRounds: '6', kind: 'OBSTACLE',
+      phaseNum: '05', phaseLabel: 'Obstacle', tools: { gearBadge: 0 }, crewModeLabel: 'Committed'
+    }, extra);
+  }
+  function dots(n, on) { var s = ''; for (var i = 0; i < 16; i++) { var c = 'bdot'; if (i < on - 1) c += ' done'; if (i === on - 1) c += ' on'; if (i === 11) c += ' target'; s += '<div class="' + c + '"></div>'; } return s; }
+
+  /* =========================================================
+     THE UNIVERSAL SHELL — demonstrated on Categories (Charm, timed)
+     ========================================================= */
+  section('The universal <span class="gr">shell</span>', 'One pattern, applied to all ten. Shown here on Categories (Charm, timed) so the timer rule reads: ARMED shows the clock stopped, ACTIVE starts it on START, RESOLVE never runs it. The space for boosts and state is always reserved, so nothing jumps when a shout fires.');
+
+  var SHELL_SCRIPT = 'Read the category off the card, loud and fast, then start the clock. Every answer that fits, tap the tally. When the buzzer goes, whatever\u2019s on the board is the score.';
+
+  /* 5a ARMED */
+  TJ.frame(
+    { vnum: '05a', title: 'Shell · ARMED (brief)', note: 'The default on entry. Game named, read-aloud script in the teleprompter, GM-only difficulty dial, the board laid out static, and which committed player holds the boost — so the GM can prompt the shout. Timer shown, NOT running. One big START.' },
+    base({
+      roomLabel: 'Room 4', crew: crew(['Millie', 'Lucy'], ['George'], ['cha']),
+      tp: { text: SHELL_SCRIPT },
+      stage: MG.stage({
+        status: [ MG.modeBadge('armed'), MG.timer('1:00', 'ready', 'Round'), MG.dial('Forgiving', 'CHA 6 · need 8'), MG.prog('Valid answers', '0 / 8', 0) ],
+        chal: { label: 'Challenge · category card (face-down until START)', body:
+          '<div class="cardrow">' + MG.card('?', 'face-down') + MG.card('?', 'face-down') + MG.card('?', 'face-down') + '</div>' +
+          '<div class="hero-sub">Top card is the category. Deal it, don\u2019t read it yet \u2014 the clock starts on START.</div>' },
+        ref: { label: 'Boost available', content: MG.boosts([ { holder: 'Millie', name: 'Skip', lane: 'Charm', state: 'armed' } ]) }
+      }),
+      action: { back: { label: 'Re-commit', icon: 'chevron-left', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Tension' }, { icon: 'timer', label: 'Buzzer' } ], primary: { label: 'Start', icon: 'play', kind: 'primary', size: 'lg' } }
+    })
+  );
+
+  /* 5b ACTIVE */
+  TJ.frame(
+    { vnum: '05b', title: 'Shell · ACTIVE', note: 'After START. Mode is colour (green, live + glow), the clock runs, progress is a meter not a buried count, and the boost button is now live for its holder — it fires once then disables. No layout shift when it fires; the space was already reserved.' },
+    base({
+      roomLabel: 'Room 4', crew: crew(['Millie', 'Lucy'], ['George'], ['cha']),
+      tp: { text: SHELL_SCRIPT },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active'), MG.timer('0:34', 'running', 'Round'), MG.dial('Forgiving', 'CHA 6 · need 8'), MG.prog('Valid answers', '6 / 8', 75) ],
+        chal: { live: true, label: 'Challenge · read the category, tally each valid answer', body:
+          '<div class="hero-word">Things in<br>a kitchen</div>' +
+          '<div class="tally"><span class="tcount">6</span><div class="tbtn"><span class="tl">+1</span><span class="ts">Valid answer</span></div></div>' },
+        ref: { label: 'Boost', content: MG.boosts([ { holder: 'Millie', name: 'Skip', lane: 'Charm', state: 'ready' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Tension', cls: 'playing' }, { icon: 'timer', label: 'Buzzer' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+
+  /* 5c RESOLVE */
+  TJ.frame(
+    { vnum: '05c', title: 'Shell · RESOLVE', note: 'The outcome control: Clean / Complication / Botched, with the suggested tier pre-selected (here Clean — they beat the count) and the comedic middle one tap away. The GM confirms; the app never overrides. Confirm → the Spoils beat.' },
+    base({
+      roomLabel: 'Room 4', crew: crew(['Millie', 'Lucy'], ['George'], ['cha']),
+      tp: { text: 'Eight answers before the buzzer \u2014 the porter\u2019s laughing now, waving you through like old friends. Clean.' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('resolve'), MG.timer('0:00', 'ready', 'Time up'), MG.prog('Final tally', '8 / 8', 100) ],
+        chal: { label: 'Referee · pick the outcome, then confirm', body: MG.outcomes([
+          { tier: 'clean', name: 'Clean', desc: 'Met the count. Full reward, low Heat.', loot: '+$25k', lootColor: 'var(--accent)', heat: '+1', heatColor: 'var(--caution)', suggested: true },
+          { tier: 'comp', name: 'Complication', desc: 'Close, but it got loud. Partial reward, extra Heat.', loot: '+$12k', lootColor: 'var(--accent)', heat: '+3', heatColor: 'var(--danger)' },
+          { tier: 'botch', name: 'Botched', desc: 'Froze up. Little or nothing, Heat spikes.', loot: '+$0', lootColor: 'var(--fg-faint)', heat: '+5', heatColor: 'var(--danger)' }
+        ]) }
+      }),
+      action: { back: { label: 'Re-open', icon: 'rotate-ccw', kind: 'ghost' }, cues: [ { icon: 'check', label: 'Clean sting', cls: 'playing' } ], primaryNote: 'GM confirms · never overridden', primary: { label: 'Confirm · Clean', icon: 'check', kind: 'primary', size: 'lg' } }
+    })
+  );
+
+
+  TJ.render();
+</script>
+</body>
+</html>

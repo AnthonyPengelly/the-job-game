@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 00 Cockpit Shell</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  /* empty-stage placeholder, only used to "establish the edges" */
+  .stage-empty{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    border:1.5px dashed var(--border); border-radius:var(--radius-lg); color:var(--fg-faint); }
+  .stage-empty .ring{ width:62px; height:62px; border-radius:50%; border:1.5px solid var(--border-strong);
+    display:flex; align-items:center; justify-content:center; }
+  .stage-empty .ring svg{ width:26px; height:26px; color:var(--fg-faint); }
+  .stage-empty .t{ font-family:var(--font-data); font-weight:700; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--fg-faint); }
+  .stage-empty .s{ font-family:var(--font-body); font-size:14px; color:var(--fg-faint); }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  var EMPTY_STAGE =
+    '<div class="stage-empty">' +
+      '<span class="ring">' + TJ.icon('square-dashed') + '</span>' +
+      '<span class="t">Work stage</span>' +
+      '<span class="s">Phase content, mini-games and the getaway mount here — one idea at a time.</span>' +
+    '</div>';
+
+  var CUES = [
+    { icon: 'music', label: 'Ambient' },
+    { icon: 'activity', label: 'Tension', cls: '' }
+  ];
+
+  TJ.page({
+    num: '00', eyebrow: 'Screen 00 · The Frame',
+    title: 'Cockpit Shell',
+    desc: 'The fixed cockpit that fills the viewport and never scrolls the page. Persistent meters and control-launchers live around the edges; one calm work stage sits in the middle and is the only thing that swaps per phase. Established here empty so the edges read clearly. Top rail = the meters · left rail = the crew · right rail = the tools · bottom = the action bar · centre = the stage (teleprompter strip + work area).',
+    crumbs: [
+      { label: '00 Shell', href: '0 - Cockpit Shell.html', here: true },
+      { label: '01 Setup', href: '1 - Setup.html' },
+      { label: 'Index', href: 'index.html' },
+      { label: 'Spec sheet', href: 'Spec Sheet.html' }
+    ]
+  });
+
+  /* shared default roster (5) */
+  var ROSTER5 = [
+    { name: 'Lucy',   powers: ['tec'], gear: true,  state: 'idle' },
+    { name: 'Millie', powers: ['cha'], state: 'idle' },
+    { name: 'George', powers: ['phy'], state: 'rest' },
+    { name: 'Liv',    powers: ['ste'], gear: true,  state: 'idle' },
+    { name: 'Chris',  powers: [],      state: 'idle' }
+  ];
+
+  var baseAction = {
+    back: { label: 'Back', icon: 'chevron-left', kind: 'ghost', disabled: true },
+    cues: CUES,
+    primary: { label: 'Open a room', icon: 'door-open', kind: 'primary' }
+  };
+
+  /* 0a — Heat cool */
+  TJ.frame(
+    { vnum: '00a', title: 'Heat cool', note: 'Low Heat, green-lit. The default calm of an early run — escape signal dormant, stage clean.' },
+    {
+      phaseNum: '02', phaseLabel: 'Briefing', roomLabel: 'Pre-run',
+      heat: 4, loot: 0, lootStr: '$0', round: '0', totalRounds: '6',
+      crew: ROSTER5, tools: { gearBadge: 0 },
+      tp: { text: 'You\u2019re parked two streets back with the engine ticking. Everyone breathe \u2014 the night is long and the marble is cold.' },
+      stage: EMPTY_STAGE,
+      action: baseAction
+    }
+  );
+
+  /* 0b — Heat hot */
+  TJ.frame(
+    { vnum: '00b', title: 'Heat hot · escape signal', note: 'High Heat. The track runs red (amber warn band before the live edge), the canvas warms, and the top rail raises the amber escape signal — “getting hot, we can roll.”' },
+    {
+      hot: true,
+      phaseNum: '05', phaseLabel: 'Obstacle', roomLabel: 'Room 4', kind: 'OBSTACLE',
+      heat: 16, heatWarnFrom: 13, escape: 'signal', loot: 8400, round: '4', totalRounds: '6',
+      crew: ROSTER5, tools: { gearBadge: 1 },
+      tp: { amber: true, text: 'Somewhere above you a radio crackles, then goes quiet. They know something\u2019s off \u2014 not what, not yet. The van is ninety seconds away if you want it.' },
+      stage: EMPTY_STAGE,
+      action: {
+        back: { label: 'Back', icon: 'chevron-left', kind: 'ghost' },
+        cues: [ { icon: 'siren', label: 'Alarm', cls: 'danger' }, { icon: 'activity', label: 'Tension', cls: 'playing' } ],
+        secondary: { label: 'Call getaway', icon: 'siren', kind: 'caution' },
+        primary: { label: 'Push on', icon: 'door-open', kind: 'primary' }
+      }
+    }
+  );
+
+  /* 0c — 3 players */
+  TJ.frame(
+    { vnum: '00c', title: 'Crew rail · 3 players', note: 'The minimum table. Cards grow to fill the rail comfortably; no scroll. Scaling 2–7 is invisible to the GM.' },
+    {
+      phaseNum: '03', phaseLabel: 'Obstacle', roomLabel: 'Room 2', kind: 'OBSTACLE',
+      heat: 7, loot: 3200, round: '2', totalRounds: '5',
+      crew: [
+        { name: 'Lucy',   powers: ['tec'], gear: true, state: 'idle' },
+        { name: 'Millie', powers: ['cha'], state: 'idle' },
+        { name: 'George', powers: ['phy'], state: 'rest' }
+      ],
+      tools: { gearBadge: 0 },
+      tp: { text: 'Three of you against a building that was built to keep out three hundred. Tight crew, tight margins \u2014 nobody wanders.' },
+      stage: EMPTY_STAGE,
+      action: baseAction
+    }
+  );
+
+  /* 0d — 7 players (internal scroll) */
+  TJ.frame(
+    { vnum: '00d', title: 'Crew rail · 7 players', note: 'The full table. The rail scrolls inside its own border with a top/bottom edge fade — the document never moves. (Scroll the left rail to see Alison & Dave.)' },
+    {
+      phaseNum: '03', phaseLabel: 'Obstacle', roomLabel: 'Room 2', kind: 'OBSTACLE',
+      heat: 9, loot: 5600, round: '2', totalRounds: '6',
+      crew: [
+        { name: 'Lucy',   powers: ['tec'], gear: true, state: 'idle' },
+        { name: 'Millie', powers: ['cha'], state: 'idle' },
+        { name: 'George', powers: ['phy'], state: 'rest' },
+        { name: 'Liv',    powers: ['ste'], gear: true, state: 'idle' },
+        { name: 'Chris',  powers: [], state: 'idle' },
+        { name: 'Alison', powers: ['tec'], gear: true, state: 'idle' },
+        { name: 'Dave',   powers: [], state: 'rest' }
+      ],
+      tools: { gearBadge: 2 },
+      tp: { text: 'Seven sets of hands, seven ways for this to go loud. Keep them spread, keep them quiet, and rotate who\u2019s burning shoe-leather each room.' },
+      stage: EMPTY_STAGE,
+      action: baseAction
+    }
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

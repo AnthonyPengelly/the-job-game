@@ -1,0 +1,63 @@
+/* ============================================================
+   THE JOB — PLAYER VIEW  ·  the isolated, chrome-less surface
+   No GM chrome. Huge type. Glanceable from across the room.
+   Sized for the 1280×800 review frame (scaled by the gallery).
+   ============================================================ */
+.pv{ width:1280px; height:800px; position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; padding:74px;
+  background:radial-gradient(128% 118% at 50% -10%, #16201e 0%, var(--bg) 50%, var(--bg-app) 100%); }
+.pv::before{ content:""; position:absolute; inset:0; pointer-events:none; opacity:.4;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px); }
+.pv > * { position:relative; z-index:1; }
+.pv-inner{ width:100%; max-width:1100px; display:flex; flex-direction:column; gap:30px; }
+.pv-inner.center{ align-items:center; text-align:center; }
+
+.pv-eyebrow{ display:flex; align-items:center; gap:14px; font-family:var(--font-data); font-weight:700; font-size:19px;
+  letter-spacing:.2em; text-transform:uppercase; color:var(--accent); }
+.pv-eyebrow .sq{ width:15px; height:15px; border-radius:2px; background:var(--accent); box-shadow:var(--glow-accent); }
+.pv-eyebrow .div{ width:1px; height:20px; background:var(--border-strong); }
+.pv-eyebrow .muted{ color:var(--fg-faint); letter-spacing:.16em; }
+
+.pv-title{ font-family:var(--font-display); font-weight:800; text-transform:uppercase;
+  font-size:118px; line-height:.86; letter-spacing:-.02em; color:var(--fg); }
+.pv-lede{ font-family:var(--font-body); font-size:34px; line-height:1.4; color:var(--fg-muted); max-width:26ch; text-wrap:pretty; }
+.pv-lede b{ color:var(--fg); font-weight:600; }
+
+.pv-steps{ display:flex; flex-direction:column; gap:18px; }
+.pv-step{ display:flex; align-items:flex-start; gap:20px; }
+.pv-step .num{ flex:none; width:56px; height:56px; border:1px solid var(--border-strong); border-radius:var(--radius-md);
+  display:flex; align-items:center; justify-content:center; font-family:var(--font-data); font-weight:800; font-size:26px;
+  color:var(--accent); background:var(--accent-tint); }
+.pv-step .txt{ font-family:var(--font-body); font-size:30px; line-height:1.35; color:var(--fg); padding-top:.1em; }
+.pv-step .txt b{ font-weight:600; }
+.pv-step.danger .num{ color:var(--danger); background:var(--danger-tint); border-color:var(--c-red-700); }
+.pv-step.danger .txt b{ color:var(--c-red-300); }
+.pv-step.go .num{ color:var(--accent); }
+.pv-step.go .txt b{ color:var(--accent); }
+
+.pv-check{ display:inline-flex; align-items:baseline; gap:18px; align-self:flex-start;
+  border:1px solid color-mix(in srgb, var(--accent) 45%, transparent); background:var(--accent-tint);
+  border-radius:var(--radius-lg); padding:22px 34px; }
+.pv-check .k{ font-family:var(--font-data); font-weight:700; font-size:19px; letter-spacing:.14em; text-transform:uppercase; color:var(--fg-muted); }
+.pv-check .v{ font-family:var(--font-data); font-weight:800; font-size:54px; line-height:1; color:var(--accent); white-space:nowrap; }
+
+/* wire legend swatches for the rulebook */
+.pv-wirekey{ display:flex; gap:14px; flex-wrap:wrap; }
+.pv-wire{ display:flex; align-items:center; gap:12px; padding:14px 20px; border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--c-surface-2); }
+.pv-wire .dot{ width:22px; height:22px; border-radius:50%; flex:none; }
+.pv-wire .wl{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:26px; color:var(--fg); }
+.pv-wire .tag{ font-family:var(--font-data); font-size:15px; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+.pv-wire.safe{ border-color:var(--c-green-700); } .pv-wire.safe .tag{ color:var(--accent); }
+.pv-wire.danger{ border-color:var(--c-red-700); } .pv-wire.danger .tag{ color:var(--danger); }
+
+/* countdown */
+.pv-clock-label{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:62px; letter-spacing:.02em; color:var(--fg-muted); text-align:center; }
+.pv-clock{ font-family:var(--font-data); font-weight:800; font-variant-numeric:tabular-nums; font-size:380px; line-height:.82;
+  letter-spacing:-.05em; text-align:center; color:var(--accent); text-shadow:0 0 90px color-mix(in srgb,var(--accent) 30%, transparent); }
+.pv-clock.danger{ color:var(--danger); text-shadow:0 0 100px rgba(240,70,58,.42); }
+.pv-clock-sub{ font-family:var(--font-data); font-weight:700; font-size:30px; letter-spacing:.16em; text-transform:uppercase; color:var(--fg-faint); text-align:center; }
+.pv-clock-sub.danger{ color:var(--c-red-300); }
+.pv-progdots{ display:flex; gap:14px; justify-content:center; }
+.pv-progdots .d{ width:30px; height:30px; border-radius:50%; background:var(--c-surface-3); border:1px solid var(--border-strong); }
+.pv-progdots .d.on{ background:var(--accent); border-color:var(--c-green-400); box-shadow:var(--glow-accent); }
+.pv-progdots .d.left{ border-color:var(--c-red-700); }

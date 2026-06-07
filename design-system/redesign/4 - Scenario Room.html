@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 04 Scenario Room</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  /* blind choice cards */
+  .choices2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; height:100%; min-height:0; }
+  .choice{ display:flex; flex-direction:column; gap:12px; padding:22px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); box-shadow:var(--elev-2); cursor:pointer; transition:all var(--dur-base) var(--ease-out); }
+  .choice:hover{ transform:translateY(-3px); border-color:var(--c-amber-700); box-shadow:var(--elev-3); }
+  .choice .ltr{ width:42px; height:42px; border-radius:var(--radius-md); border:1px solid var(--c-amber-700); background:var(--caution-tint); color:var(--caution); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:22px; }
+  .choice h4{ font-family:var(--font-display); text-transform:uppercase; font-weight:700; font-size:28px; line-height:.98; letter-spacing:-.01em; color:var(--fg); }
+  .choice p{ font-family:var(--font-body); font-size:16px; line-height:1.5; color:var(--fg-muted); flex:1; }
+  .choice .hidden-foot{ display:flex; align-items:center; gap:8px; padding-top:12px; border-top:1px solid var(--border); font-family:var(--font-data); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .choice .hidden-foot svg{ width:14px; height:14px; }
+  .choice.chosen{ border-color:var(--caution); box-shadow:var(--glow-accent); cursor:default; }
+  .console-amber{ } /* placeholder */
+
+  /* reveal equation */
+  .scwrap{ display:flex; flex-direction:column; gap:14px; height:100%; min-height:0; }
+  .actionhdr{ display:flex; align-items:center; gap:12px; padding:14px 18px; border:1px solid var(--c-amber-700); border-radius:var(--radius-md); background:var(--caution-tint); }
+  .actionhdr .ltr{ width:34px; height:34px; flex:none; border-radius:var(--radius-sm); background:var(--caution); color:var(--c-fg-ink); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:18px; }
+  .actionhdr .t{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:22px; color:var(--fg); }
+  .actionhdr .lanechip{ margin-left:auto; }
+  .lanechip{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:4px 8px; border-radius:var(--radius-xs); background:var(--data-tint); color:var(--data); border:1px solid var(--c-cyan-500); }
+
+  .reveal{ display:flex; flex-direction:column; gap:16px; padding:20px; border:1px solid var(--data); border-radius:var(--radius-lg); background:var(--bg-panel); box-shadow:var(--glow-data); }
+  .reveal .rk{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--data); display:flex; align-items:center; gap:8px; }
+  .reveal .rk svg{ width:15px; height:15px; }
+  .equation{ display:flex; align-items:stretch; gap:12px; }
+  .eqcell{ flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; padding:14px 10px; background:var(--c-surface-2); border:1px solid var(--border); border-radius:var(--radius-md); }
+  .eqcell .ek{ font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .eqcell .ev{ font-family:var(--font-data); font-weight:800; font-size:32px; line-height:1; color:var(--fg); }
+  .eqcell .es{ font-family:var(--font-body); font-size:12px; color:var(--fg-faint); }
+  .eqop{ display:flex; align-items:center; font-family:var(--font-data); font-weight:800; font-size:24px; color:var(--fg-faint); }
+  .eqcell.dc{ border-color:var(--c-amber-700); background:var(--caution-tint); }
+  .eqcell.dc .ev{ color:var(--caution); }
+  .eqcell.target{ border-color:var(--data); background:var(--data-tint); }
+  .eqcell.target .ev{ color:var(--data); }
+
+  .odds{ display:flex; align-items:center; gap:14px; }
+  .odds .olabel{ font-family:var(--font-data); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); white-space:nowrap; }
+  .odds .otrack{ flex:1; height:12px; border-radius:var(--radius-pill); background:var(--c-surface-3); overflow:hidden; border:1px solid var(--border); }
+  .odds .ofill{ height:100%; background:linear-gradient(90deg,var(--accent),var(--c-green-400)); }
+  .odds .oval{ font-family:var(--font-data); font-weight:800; font-size:20px; color:var(--accent); }
+
+  /* roll controls */
+  .rollctl{ display:flex; align-items:center; gap:14px; }
+  .die{ width:84px; height:84px; flex:none; border-radius:var(--radius-md); border:1px solid var(--border-strong); background:var(--c-surface-2); display:flex; align-items:center; justify-content:center; font-family:var(--font-data); font-weight:800; font-size:42px; color:var(--fg-faint); }
+  .die.armed{ border-style:dashed; }
+  .rollctl .rc-note{ font-family:var(--font-body); font-size:14px; color:var(--fg-muted); }
+  .keypad{ display:grid; grid-template-columns:repeat(10,1fr); gap:7px; }
+  .key{ padding:16px 0; border:1px solid var(--border-strong); border-radius:var(--radius-sm); background:var(--c-surface-3); color:var(--fg); font-family:var(--font-data); font-weight:800; font-size:20px; text-align:center; cursor:pointer; }
+  .key:hover{ background:var(--c-surface-4); }
+  .key.sel{ border-color:var(--data); background:var(--data-tint); color:var(--data); box-shadow:var(--glow-data); }
+
+  /* non-roll reveal effect */
+  .effect{ display:flex; flex-direction:column; gap:14px; padding:28px 32px; border:1px solid var(--c-green-700); border-radius:var(--radius-lg); background:var(--bg-panel); box-shadow:var(--glow-accent); align-items:flex-start; width:840px; max-width:100%; }
+  .effect .eyebrow{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:8px; }
+  .effect h3{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:34px; line-height:1; letter-spacing:-.01em; color:var(--fg); white-space:nowrap; }
+  .effect p{ font-family:var(--font-body); font-size:17px; line-height:1.5; color:var(--fg-muted); max-width:60ch; }
+  .effect .consq{ display:flex; gap:14px; }
+  .consq .c{ display:flex; flex-direction:column; gap:4px; padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--c-surface-2); }
+  .consq .c .k{ font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .consq .c .v{ font-family:var(--font-data); font-weight:800; font-size:24px; white-space:nowrap; }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  TJ.page({
+    num: '04', eyebrow: 'Screen 04 · The Run',
+    title: 'Scenario Room',
+    desc: 'A short narrated dilemma with two blind choices — flavour only, no odds shown. Some choices ask for a roll: pick an attempter, then the console reveals the maths transparently (lane · rating · base difficulty · resulting DC and odds) before the roll — app-roll or physical-die entry. Other choices are non-roll: the hidden effect simply surfaces. Amber is the scenario voice; cyan carries the revealed telemetry.',
+    crumbs: [
+      { label: '03 Obstacle', href: '3 - Obstacle Room.html' },
+      { label: '04 Scenario', href: '4 - Scenario Room.html', here: true },
+      { label: '05 Mini-games', href: '5 - Mini-games.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  var ROSTER = [
+    { name: 'Lucy',   powers: ['tec'], gear: true, state: 'idle' },
+    { name: 'Millie', powers: ['cha'], state: 'idle' },
+    { name: 'George', powers: ['phy'], state: 'idle' },
+    { name: 'Liv',    powers: ['ste'], gear: true, state: 'rest' },
+    { name: 'Chris',  powers: [],      state: 'idle' }
+  ];
+  function railPick(onName) {
+    return ROSTER.map(function (r) {
+      var c = { name: r.name, powers: r.powers, gear: r.gear };
+      if (r.state === 'rest') { c.state = 'rest'; c.stateLabel = 'RESTS'; }
+      else if (r.name === onName) { c.state = 'idle'; c.cls = 'commit-on'; c.stateLabel = 'ATTEMPTS'; }
+      else { c.state = 'idle'; c.cls = 'pick'; c.stateLabel = 'PICK'; }
+      return c;
+    });
+  }
+
+  var baseTop = {
+    phaseNum: '04', phaseLabel: 'Scenario', roomLabel: 'Room 4', kind: 'SCENARIO',
+    heat: 9, loot: 5200, round: '4', totalRounds: '6', tools: { gearBadge: 0 }
+  };
+
+  /* 4a — blind choices */
+  TJ.frame(
+    { vnum: '04a', title: 'Set-up + two blind choices', note: 'Flavour only. No lane, no odds, no Heat shown — the crew chooses on instinct. Amber SCENARIO tag in the rail; the footer reminds the GM the outcome is hidden until they pick.' },
+    Object.assign({}, baseTop, {
+      crew: ROSTER.map(function (r) { return { name: r.name, powers: r.powers, gear: r.gear, state: r.state === 'rest' ? 'rest' : 'idle', stateLabel: r.state === 'rest' ? 'RESTS' : 'READY' }; }),
+      crewModeLabel: 'Roster',
+      tp: { amber: true, text: 'A service corridor, and a door that shouldn\u2019t be locked but is. Behind it, something\u2019s moving \u2014 a cleaner, maybe, or a guard who can\u2019t sleep. You can force it, or you can find another way and lose time you might not have.' },
+      stage:
+        '<div class="choices2">' +
+          '<div class="choice"><span class="ltr">A</span><h4>Force the door</h4>' +
+            '<p>Shoulder it and move before anyone reacts. Fast, certain to make noise \u2014 if it even gives.</p>' +
+            '<div class="hidden-foot">' + TJ.icon('eye-off') + 'Outcome hidden \u00b7 may need a roll</div></div>' +
+          '<div class="choice"><span class="ltr">B</span><h4>Find another way</h4>' +
+            '<p>Back out and try the laundry chute two doors down. Slower, quieter, and who knows what\u2019s at the bottom.</p>' +
+            '<div class="hidden-foot">' + TJ.icon('eye-off') + 'Outcome hidden \u00b7 no roll</div></div>' +
+        '</div>',
+      action: {
+        back: { label: 'Back', icon: 'chevron-left', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Tension', cls: 'playing' }, { icon: 'door-closed', label: 'Door' } ],
+        primaryNote: 'Let the crew decide',
+        primary: { label: 'Lock in choice', icon: 'chevron-right', kind: 'caution', disabled: true }
+      }
+    })
+  );
+
+  /* 4b — pick attempter */
+  TJ.frame(
+    { vnum: '04b', title: 'Roll → pick attempter', note: 'Choice A is a roll. The rail flips to ATTEMPTER mode (amber) — exactly one pickable. Resting Liv is locked. The stage names the action and the lane it tests; no maths yet.' },
+    Object.assign({}, baseTop, {
+      crewMode: 'attempter', crewModeLabel: 'Pick one',
+      crew: railPick(null),
+      tp: { amber: true, text: 'It\u2019s going to take muscle and it\u2019s going to be loud. Pick who throws their shoulder into it \u2014 choose well, the door tests raw strength and nothing else.' },
+      stage:
+        '<div class="scwrap">' +
+          '<div class="actionhdr"><span class="ltr">A</span><span class="t">Force the door</span><span class="lanechip">Physical lane</span></div>' +
+          '<div class="reveal" style="border-color:var(--c-amber-700);box-shadow:none;background:var(--c-surface-1)">' +
+            '<span class="rk" style="color:var(--caution)">' + TJ.icon('hand') + 'Who attempts it?</span>' +
+            '<p class="prose muted">Tap one of the crew on the left rail. Their <b>Physical</b> rating becomes the bonus on the roll \u2014 so send your strongest. Resting crew can\u2019t attempt.</p>' +
+            '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
+              '<span class="badge b-warn"><span class="d"></span>Waiting for a pick</span>' +
+              '<span class="badge b-idle"><span class="d"></span>George PHY 6 \u00b7 strongest</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>',
+      action: {
+        back: { label: 'Back', icon: 'chevron-left', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Tension', cls: 'playing' }, { icon: 'door-closed', label: 'Door' } ],
+        primaryNote: 'Pick an attempter first',
+        primary: { label: 'Reveal the roll', icon: 'dice-5', kind: 'caution', disabled: true }
+      }
+    })
+  );
+
+  /* reveal equation builder */
+  function revealEq() {
+    return '<div class="actionhdr"><span class="ltr">A</span><span class="t">Force the door \u00b7 George</span><span class="lanechip">Physical</span></div>' +
+      '<div class="reveal">' +
+        '<span class="rk">' + TJ.icon('scan-eye') + 'The roll, in full \u2014 GM transparency</span>' +
+        '<div class="equation">' +
+          '<div class="eqcell"><span class="ek">Lane</span><span class="ev" style="font-size:22px;color:var(--data)">PHY</span><span class="es">tested stat</span></div>' +
+          '<div class="eqcell"><span class="ek">George rating</span><span class="ev">+6</span><span class="es">the bonus</span></div>' +
+          '<div class="eqop">+</div>' +
+          '<div class="eqcell"><span class="ek">App roll d20</span><span class="ev" style="color:var(--fg-faint)">?</span><span class="es">1\u201320</span></div>' +
+          '<div class="eqop">vs</div>' +
+          '<div class="eqcell dc"><span class="ek">Base difficulty</span><span class="ev">14</span><span class="es">the door</span></div>' +
+        '</div>' +
+        '<div class="odds"><span class="olabel">Clean odds \u00b7 need 8+</span><div class="otrack"><div class="ofill" style="width:65%"></div></div><span class="oval">65%</span></div>' +
+      '</div>';
+  }
+
+  /* 4c — transparent reveal · app roll */
+  TJ.frame(
+    { vnum: '04c', title: 'Transparent reveal · app-roll', note: 'Everything on the table: tested lane, attempter\u2019s rating as the bonus, the base difficulty, and the resulting odds. App-roll mode shows a die ready to roll; the result space is reserved so nothing jumps.' },
+    Object.assign({}, baseTop, {
+      crewMode: 'attempter', crewModeLabel: 'Attempting',
+      crew: railPick('George'),
+      tp: { amber: true, text: 'George sets his feet. Six points of muscle behind him and a door that needs a fourteen. Read them the odds, then roll.' },
+      stage:
+        '<div class="scwrap">' + revealEq() +
+          '<div class="reveal" style="box-shadow:none;border-color:var(--border)">' +
+            '<span class="rk" style="color:var(--accent)">' + TJ.icon('cpu') + 'App roll</span>' +
+            '<div class="rollctl"><div class="die armed">d20</div><span class="rc-note">The console rolls a d20 and adds George\u2019s +6. Hit 14 to force it clean; 8\u201313 total is a complication.</span></div>' +
+          '</div>' +
+        '</div>',
+      action: {
+        back: { label: 'Back', icon: 'chevron-left', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Tension', cls: 'playing' }, { icon: 'drum', label: 'Sting' } ],
+        secondary: { label: 'Switch to die', icon: 'dice-5', kind: 'ghost' },
+        primary: { label: 'Roll d20', icon: 'dice-5', kind: 'primary', size: 'lg' }
+      }
+    })
+  );
+
+  /* 4d — transparent reveal · physical die entry */
+  TJ.frame(
+    { vnum: '04d', title: 'Transparent reveal · physical-die entry', note: 'Same maths, physical-die mode: the crew rolls a real d20 at the table and the GM taps the number in. The keypad reserves all twenty slots; 12 is shown selected.' },
+    Object.assign({}, baseTop, {
+      crewMode: 'attempter', crewModeLabel: 'Attempting',
+      crew: railPick('George'),
+      tp: { amber: true, text: 'Hand George the die. Whatever it reads, add his six \u2014 say the number out loud so the table hears it land.' },
+      stage:
+        '<div class="scwrap">' + revealEq() +
+          '<div class="reveal" style="box-shadow:none;border-color:var(--border)">' +
+            '<span class="rk" style="color:var(--data)">' + TJ.icon('dice-5') + 'Enter the die roll</span>' +
+            '<div class="keypad">' +
+              [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(function (n) { return '<div class="key' + (n === 12 ? ' sel' : '') + '">' + n + '</div>'; }).join('') +
+            '</div>' +
+            '<div class="odds"><span class="olabel">12 + 6 = 18 vs 14</span><div class="otrack"><div class="ofill" style="width:100%"></div></div><span class="oval">CLEAN</span></div>' +
+          '</div>' +
+        '</div>',
+      action: {
+        back: { label: 'Back', icon: 'chevron-left', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Tension', cls: 'playing' }, { icon: 'drum', label: 'Sting' } ],
+        secondary: { label: 'Switch to app roll', icon: 'cpu', kind: 'ghost' },
+        primary: { label: 'Resolve · 18', icon: 'check', kind: 'primary', size: 'lg' }
+      }
+    })
+  );
+
+  /* 4e — non-roll reveal */
+  TJ.frame(
+    { vnum: '04e', title: 'Non-roll reveal', note: 'Choice B had no roll — the hidden effect just surfaces, named, with its consequence as plain readouts. Green because it broke the crew\u2019s way; the same frame turns red when an effect bites.' },
+    Object.assign({}, baseTop, {
+      crew: ROSTER.map(function (r) { return { name: r.name, powers: r.powers, gear: r.gear, state: r.state === 'rest' ? 'rest' : 'idle', stateLabel: r.state === 'rest' ? 'RESTS' : 'READY' }; }),
+      crewModeLabel: 'Roster',
+      tp: { amber: true, text: 'The chute drops you into a dim utility room \u2014 and there, on a hook by the door, a ring of keys with the manager\u2019s tag still on it. Sometimes the quiet way pays.' },
+      stage:
+        '<div class="scwrap" style="justify-content:center">' +
+          '<div class="effect">' +
+            '<span class="eyebrow">' + TJ.icon('sparkles') + 'Hidden effect revealed</span>' +
+            '<h3>The Manager\u2019s Keys</h3>' +
+            '<p>A clean find. The next obstacle can be skipped outright \u2014 no game, no Heat \u2014 or saved for a tighter spot later.</p>' +
+            '<div class="consq">' +
+              '<div class="c"><span class="k">Loot</span><span class="v" style="color:var(--fg-faint)">\u00b10</span></div>' +
+              '<div class="c"><span class="k">Heat</span><span class="v" style="color:var(--accent)">\u22121</span></div>' +
+              '<div class="c"><span class="k">Bonus</span><span class="v" style="color:var(--accent)">Skip 1 room</span></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>',
+      stageClass: 'center',
+      action: {
+        back: { label: 'Back', icon: 'chevron-left', kind: 'ghost' },
+        cues: [ { icon: 'sparkles', label: 'Find', cls: 'playing' }, { icon: 'music', label: 'Tension' } ],
+        primary: { label: 'Take the keys', icon: 'check', kind: 'primary', size: 'lg' }
+      }
+    })
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

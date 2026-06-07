@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 15 Player · Defuse Manual</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<link rel="stylesheet" href="assets/player-view.css">
+<style>
+  .rb{ display:flex; flex-direction:column; gap:22px; }
+  .rb-head{ display:flex; align-items:center; gap:34px; }
+  .rb-timer{ flex:none; display:flex; flex-direction:column; align-items:center; gap:2px; padding:14px 30px; border:1px solid var(--c-green-700); border-radius:var(--radius-lg); background:var(--accent-tint); }
+  .rb-timer .tk{ font-family:var(--font-data); font-weight:700; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); }
+  .rb-timer .tv{ font-family:var(--font-data); font-weight:800; font-size:104px; line-height:.92; color:var(--accent); font-variant-numeric:tabular-nums; text-shadow:0 0 44px color-mix(in srgb,var(--accent) 32%, transparent); }
+  .rb-timer.danger{ border-color:var(--c-red-700); background:var(--danger-tint); }
+  .rb-timer.danger .tk{ color:var(--danger); } .rb-timer.danger .tv{ color:var(--danger); text-shadow:0 0 50px rgba(240,70,58,.45); animation:rbpulse 1s steps(1) infinite; }
+  @keyframes rbpulse{ 0%,100%{opacity:1} 50%{opacity:.6} }
+  .rb-titleblock{ display:flex; flex-direction:column; gap:12px; }
+  .rb-title{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:60px; line-height:.84; color:var(--fg); }
+  .rb-intro{ font-family:var(--font-body); font-size:23px; line-height:1.32; color:var(--fg-muted); max-width:32ch; }
+  .rb-intro b{ color:var(--fg); font-weight:600; }
+  .rules{ display:flex; flex-direction:column; gap:12px; }
+  .rule{ display:flex; align-items:flex-start; gap:16px; }
+  .rule .rn{ flex:none; width:42px; height:42px; border:1px solid var(--border-strong); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; font-family:var(--font-data); font-weight:800; font-size:20px; color:var(--accent); background:var(--accent-tint); }
+  .rule .rt{ font-family:var(--font-body); font-size:24px; line-height:1.3; color:var(--fg-muted); padding-top:.1em; }
+  .rule .rt .if{ color:var(--fg); font-weight:600; }
+  .rule .rt .cut{ color:var(--c-green-300); font-weight:700; }
+  .rb-foot{ display:flex; align-items:center; gap:24px; padding-top:16px; border-top:1px solid var(--border); }
+  .suitkey{ display:flex; gap:20px; }
+  .suitkey .sk{ font-family:var(--font-data); font-size:17px; letter-spacing:.04em; text-transform:uppercase; color:var(--fg-muted); display:flex; align-items:center; gap:9px; }
+  .suitkey .sk .rd{ color:var(--c-red-400); font-size:22px; }
+  .suitkey .sk .bk{ color:var(--fg); font-size:22px; }
+  .rb-note{ font-family:var(--font-body); font-size:16px; color:var(--fg-faint); margin-left:auto; max-width:30ch; text-align:right; }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  TJ.page({
+    num: '15', eyebrow: 'Screen 15 · Player View',
+    title: 'Defuse · Manual',
+    desc: 'The isolated player-facing surface for Defuse the Alarm \u2014 the manual one player reads while the rest of the crew describe the row of cards (the device) to them. Modelled on a Keep-Talking-style lookup: the rules are conditional and read in order, first match wins, so the crew genuinely has to talk it through \u2014 not just recite three flat rules. The fuse timer is the most prominent thing on the surface. Cards are the real mechanic; the "wires" are only flavour.',
+    crumbs: [
+      { label: '10\u201314 Overlays', href: '10 - Overlays.html' },
+      { label: '15 Defuse manual', href: '15 - Player Defuse.html', here: true },
+      { label: '16 Getaway clock', href: '16 - Player Countdown.html' },
+      { label: '05\u00b710 GM view', href: '5c - The Ten Games 6-10.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  function rule(n, body) { return '<div class="rule"><span class="rn">' + n + '</span><span class="rt">' + body + '</span></div>'; }
+  var RULES =
+    rule('1', 'If there are <span class="if">no red cards</span> in the row \u2014 cut the <span class="cut">2nd card</span>.') +
+    rule('2', 'Otherwise, if the <span class="if">last card is a face</span> (J, Q, K) \u2014 cut the <span class="cut">4th card</span>.') +
+    rule('3', 'Otherwise, if there is <span class="if">exactly one red card</span> and the <span class="if">1st card is odd</span> \u2014 cut the <span class="cut">1st card</span>.') +
+    rule('4', 'Otherwise, if <span class="if">two or more cards are red</span> \u2014 cut the <span class="cut">last red card</span>.') +
+    rule('5', 'Otherwise \u2014 cut the <span class="cut">3rd card</span>.');
+
+  function manual(timer, danger) {
+    return '<div class="pv"><div class="pv-inner">' +
+      '<div class="pv-eyebrow"><span class="sq"></span>Player View<span class="div"></span><span class="muted">Room 6 \u00b7 You hold the manual</span></div>' +
+      '<div class="rb">' +
+        '<div class="rb-head">' +
+          '<div class="rb-timer' + (danger ? ' danger' : '') + '"><span class="tk">Fuse</span><span class="tv">' + timer + '</span></div>' +
+          '<div class="rb-titleblock"><div class="rb-title">Defuse<br>the Alarm</div>' +
+            '<div class="rb-intro">You can\u2019t see the cards. The crew reads you the row, <b>left to right</b>. Find the <b>first rule that fits</b> \u2014 name that card.</div></div>' +
+        '</div>' +
+        '<div class="rules">' + RULES + '</div>' +
+        '<div class="rb-foot"><div class="suitkey">' +
+          '<span class="sk"><span class="rd">\u2665 \u2666</span> red</span>' +
+          '<span class="sk"><span class="bk">\u2660 \u2663</span> black</span>' +
+        '</div><div class="rb-note">Aces count as odd. Re-read the whole row after every cut.</div></div>' +
+      '</div>' +
+    '</div></div>';
+  }
+
+  TJ.frameRaw(
+    { vnum: '15a', title: 'Defuse manual · running', note: 'The reader\u2019s surface. Prominent green fuse timer, then a conditional lookup: read the rules top to bottom, stop at the first that matches, name the card. The crew must describe suits, ranks and order accurately \u2014 that conversation is the game.' },
+    manual('1:24', false)
+  );
+
+  TJ.frameRaw(
+    { vnum: '15b', title: 'Defuse manual · fuse low', note: 'Same surface, fuse running out \u2014 the timer turns red and pulses so the whole table feels the pressure. The rules don\u2019t change; the clock does the talking.' },
+    manual('0:09', true)
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

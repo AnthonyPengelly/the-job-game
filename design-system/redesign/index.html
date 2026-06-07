@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · Screen Set</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  .hero{ max-width:1336px; margin:0 auto; padding:72px 28px 8px; }
+  .hero .wm{ display:flex; align-items:center; gap:14px; }
+  .hero .wm .sq{ width:22px; height:22px; background:var(--accent); border-radius:3px; box-shadow:var(--glow-accent); }
+  .hero .wm .t{ font-family:var(--font-data); font-weight:800; font-size:24px; letter-spacing:.04em; }
+  .hero .wm .t em{ color:var(--accent); font-style:normal; }
+  .hero h1{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:88px; line-height:.9; letter-spacing:-.02em; margin:26px 0 0; }
+  .hero h1 .gr{ color:var(--accent); }
+  .hero p{ font-family:var(--font-body); font-size:19px; line-height:1.55; color:var(--fg-muted); max-width:74ch; margin-top:20px; }
+  .hero .meta{ display:flex; gap:10px; flex-wrap:wrap; margin-top:24px; }
+
+  .grid{ max-width:1336px; margin:0 auto; padding:44px 28px 120px; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .sec-label{ grid-column:1/-1; font-family:var(--font-data); font-weight:700; font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--fg-faint); margin-top:24px; border-top:1px solid var(--border); padding-top:22px; }
+  .sec-label:first-child{ margin-top:0; border-top:none; padding-top:0; }
+  a.card{ display:flex; flex-direction:column; gap:10px; padding:22px; background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--elev-2); text-decoration:none; transition:all var(--dur-base) var(--ease-out); }
+  a.card:hover{ border-color:var(--c-green-700); box-shadow:var(--glow-accent); transform:translateY(-2px); }
+  a.card .num{ font-family:var(--font-data); font-weight:800; font-size:13px; letter-spacing:.1em; color:var(--accent); }
+  a.card h3{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:25px; letter-spacing:.01em; color:var(--fg); line-height:1; }
+  a.card p{ font-family:var(--font-body); font-size:14px; line-height:1.45; color:var(--fg-muted); }
+  a.card .v{ margin-top:auto; padding-top:6px; font-family:var(--font-data); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-faint); }
+  a.card.wip{ opacity:.5; }
+  a.card.wip:hover{ transform:none; border-color:var(--border); box-shadow:var(--elev-2); }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<div class="hero">
+  <div class="wm"><span class="sq"></span><span class="t"><em>THE</em>_JOB</span></div>
+  <h1>The Job<br><span class="gr">Screen Set</span></h1>
+  <p>The full GM-console redraw, built on the existing design system — a fixed cockpit, the mini-game lifecycle, the spoils beat, the offer, the getaway and the isolated player-view. Every screen is a high-fidelity static artifact at the 1280×800 laptop baseline; variants are laid out as distinct frames. Dark-first, daylight-legible. State is colour.</p>
+  <div class="meta">
+    <span class="badge b-live"><span class="d"></span>16 screen groups</span>
+    <span class="badge b-data"><span class="d"></span>1280 × 800 baseline</span>
+    <span class="badge b-idle"><span class="d"></span>+ Spec sheet</span>
+  </div>
+</div>
+<div class="grid" id="grid"></div>
+<script>
+  var GROUPS = [
+    ['The cockpit', [
+      ['00', 'Cockpit Shell', 'The fixed frame, stage empty. Heat cool · hot · 3-up · 7-up.', '0 - Cockpit Shell.html', 1]
+    ]],
+    ['The run', [
+      ['01', 'Setup', 'Assemble the crew · advanced disclosure · resume-or-new.', '1 - Setup.html', 1],
+      ['02', 'Briefing', 'Mansion dressing, opening narration, order of play.', '2 - Briefing.html', 1],
+      ['03', 'Obstacle Room', 'Option cards · commit-crew state.', '3 - Obstacle Room.html', 1],
+      ['04', 'Scenario Room', 'Blind choices · attempter pick · transparent reveal.', '4 - Scenario Room.html', 1]
+    ]],
+    ['The mini-games', [
+      ['05', 'Mini-game Lifecycle', 'ARMED · ACTIVE · RESOLVE — the universal shell.', '5 - Mini-games.html', 1],
+      ['05', 'The Ten · 1–5', 'Tumblers, Beat 16, Categories, Once-Over, Circuit.', '5b - The Ten Games 1-5.html', 1],
+      ['05', 'The Ten · 6–10', 'Inside Knowledge, Safe-Crack, Assembly, Steady Hands, Defuse.', '5c - The Ten Games 6-10.html', 1]
+    ]],
+    ['After the room', [
+      ['06', 'Spoils / Wrap-up', 'Outcome · gear drop & assign · exhaustion.', '6 - Spoils.html', 1],
+      ['07', 'Offer', 'Push-or-run. Cool · hot escape-signal.', '7 - Offer.html', 1],
+      ['08', 'Getaway', 'Armed · active · near-bust finale.', '8 - Getaway.html', 1],
+      ['09', 'Result', 'Win · bust. Verdict, breakdown, go again.', '9 - Result.html', 1]
+    ]],
+    ['Overlays', [
+      ['10', 'Soundboard', 'Quick-cue row + full board drawer.', '10 - Overlays.html', 1],
+      ['11', 'GM Overrides', 'Heat · Loot · Room · Phase, with Undo.', '10 - Overlays.html', 1],
+      ['12', 'Crew Detail', 'Per-player override popover.', '10 - Overlays.html', 1],
+      ['13', 'Settings', 'Dice-mode · audio · seed dialog.', '10 - Overlays.html', 1],
+      ['14', 'Confirm', 'Destructive confirm dialog.', '10 - Overlays.html', 1]
+    ]],
+    ['Player-view', [
+      ['15', 'Defuse Rulebook', 'The rulebook one player reads.', '15 - Player Defuse.html', 1],
+      ['16', 'Getaway Countdown', 'Big clock for the table.', '16 - Player Countdown.html', 1]
+    ]],
+    ['Reference', [
+      ['SPEC', 'Spec Sheet', 'Zone annotations, tokens & build notes.', 'Spec Sheet.html', 1]
+    ]]
+  ];
+  var grid = document.getElementById('grid');
+  GROUPS.forEach(function (sec) {
+    var l = document.createElement('div'); l.className = 'sec-label'; l.textContent = sec[0]; grid.appendChild(l);
+    sec[1].forEach(function (c) {
+      var a = document.createElement('a'); a.className = 'card' + (c[4] ? '' : ' wip'); a.href = c[3];
+      a.innerHTML = '<span class="num">' + c[0] + '</span><h3>' + c[1] + '</h3><p>' + c[2] + '</p><span class="v">' + (c[4] ? 'Open →' : 'Coming up') + '</span>';
+      grid.appendChild(a);
+    });
+  });
+  lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });
+</script>
+</body>
+</html>

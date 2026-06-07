@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 01 Setup</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  /* ---- setup form ---- */
+  .setup{ display:flex; flex-direction:column; gap:12px; height:100%; }
+  .setup .toprow{ display:grid; grid-template-columns:auto 1fr; gap:16px; }
+  .field{ display:flex; flex-direction:column; gap:7px; }
+  .field > label{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-muted); }
+  .inp{ font-family:var(--font-body); font-size:18px; color:var(--fg); background:var(--bg-input); border:1px solid var(--border-strong); border-radius:var(--radius-sm); padding:11px 14px; outline:none; }
+  .inp:focus{ border-color:var(--focus-ring); box-shadow:0 0 0 3px rgba(79,214,224,.22); }
+  .stepper{ display:flex; align-items:stretch; }
+  .stepper button{ font-family:var(--font-display); font-size:24px; width:50px; background:var(--c-surface-3); color:var(--fg); border:1px solid var(--border-strong); cursor:pointer; }
+  .stepper button:first-child{ border-radius:var(--radius-sm) 0 0 var(--radius-sm); }
+  .stepper button:last-child{ border-radius:0 var(--radius-sm) var(--radius-sm) 0; }
+  .stepper .val{ font-family:var(--font-data); font-weight:800; font-size:24px; min-width:74px; display:flex; align-items:center; justify-content:center; border-top:1px solid var(--border-strong); border-bottom:1px solid var(--border-strong); background:var(--bg-input); }
+  .stepper .val small{ color:var(--fg-faint); font-size:13px; margin-left:6px; }
+
+  .players{ display:flex; flex-direction:column; gap:7px; }
+  .prow{ display:grid; grid-template-columns:34px 38px 1fr 268px; gap:12px; align-items:center; background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius-md); padding:9px 12px; }
+  .prow .idx{ font-family:var(--font-data); font-weight:800; font-size:15px; color:var(--fg-faint); text-align:center; }
+  .prow .av{ width:38px; height:38px; border-radius:var(--radius-sm); background:var(--c-surface-3); border:1px solid var(--border-strong); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:18px; color:var(--accent); }
+  .prow .nameinp{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:.01em; font-size:19px; color:var(--fg); background:transparent; border:none; border-bottom:1px solid var(--border); padding:6px 2px; outline:none; }
+  .prow .nameinp:focus{ border-bottom-color:var(--focus-ring); }
+  .quirk{ display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--bg-input); border:1px solid var(--border-strong); border-radius:var(--radius-sm); padding:8px 12px; cursor:pointer; }
+  .quirk .ql{ font-family:var(--font-body); font-size:14px; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .quirk .qe{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.06em; color:var(--accent); }
+  .quirk svg{ width:15px; height:15px; color:var(--fg-faint); }
+
+  .disclosure{ border:1px solid var(--border); border-radius:var(--radius-md); background:var(--c-surface-1); }
+  .disc-bar{ display:flex; align-items:center; gap:10px; padding:13px 16px; cursor:pointer; }
+  .disc-bar svg{ width:18px; height:18px; color:var(--fg-faint); }
+  .disc-bar .dt{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:18px; letter-spacing:.02em; color:var(--fg); }
+  .disc-bar .dh{ font-family:var(--font-body); font-size:14px; color:var(--fg-faint); margin-left:auto; }
+  .disc-body{ border-top:1px solid var(--border); padding:16px; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+  .modecards{ display:flex; gap:10px; }
+  .modecard{ flex:1; display:flex; flex-direction:column; gap:6px; padding:13px; border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--bg-panel); cursor:pointer; }
+  .modecard.sel{ border-color:var(--accent); background:var(--accent-tint); box-shadow:var(--glow-accent); }
+  .modecard .mt{ display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:16px; color:var(--fg); }
+  .modecard .mt svg{ width:17px; height:17px; color:var(--fg-muted); }
+  .modecard.sel .mt svg{ color:var(--accent); }
+  .modecard .md{ font-family:var(--font-body); font-size:13px; color:var(--fg-muted); }
+
+  /* ---- resume-or-new ---- */
+  .resume{ display:grid; grid-template-columns:1.4fr 1fr; gap:18px; height:100%; }
+  .resume .choices{ display:flex; flex-direction:column; gap:14px; }
+  .choicecard{ display:flex; flex-direction:column; gap:12px; padding:20px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); box-shadow:var(--elev-2); cursor:pointer; transition:all var(--dur-base) var(--ease-out); }
+  .choicecard.primary{ border-color:var(--c-green-700); box-shadow:var(--glow-accent); }
+  .choicecard:hover{ transform:translateY(-2px); }
+  .choicecard .cc-eyebrow{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; display:flex; align-items:center; gap:8px; }
+  .choicecard.primary .cc-eyebrow{ color:var(--accent); }
+  .choicecard .cc-eyebrow svg{ width:15px; height:15px; }
+  .choicecard h3{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:30px; letter-spacing:-.01em; color:var(--fg); }
+  .choicecard p{ font-family:var(--font-body); font-size:15px; color:var(--fg-muted); }
+  .savemeta{ display:flex; gap:18px; padding-top:12px; border-top:1px solid var(--border); margin-top:2px; }
+  .savemeta .c{ display:flex; flex-direction:column; gap:2px; }
+  .savemeta .c .k{ font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .savemeta .c .v{ font-family:var(--font-data); font-weight:800; font-size:21px; color:var(--fg); }
+
+  .lboard{ display:flex; flex-direction:column; }
+  .lboard .lb-head{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:18px; padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:9px; }
+  .lboard .lb-head svg{ width:18px; height:18px; color:var(--accent); }
+  .lrow{ display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border-faint); }
+  .lrow .rank{ font-family:var(--font-data); font-weight:800; font-size:16px; color:var(--fg-faint); width:24px; }
+  .lrow.top .rank{ color:var(--accent); }
+  .lrow .lname{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:17px; color:var(--fg); flex:1; }
+  .lrow .lscore{ font-family:var(--font-data); font-weight:800; font-size:18px; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .lrow .lheat{ font-family:var(--font-data); font-size:12px; color:var(--fg-faint); width:54px; text-align:right; }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  TJ.page({
+    num: '01', eyebrow: 'Screen 01 · The Run',
+    title: 'Setup',
+    desc: 'Assemble the crew. Setup is configuration, not performance — so the teleprompter strip is suppressed and the form owns the full stage. The left rail mirrors the table as it fills; Heat and Loot sit at zero. Variants: new job · advanced disclosure open · resume-or-new.',
+    crumbs: [
+      { label: '00 Shell', href: '0 - Cockpit Shell.html' },
+      { label: '01 Setup', href: '1 - Setup.html', here: true },
+      { label: '02 Briefing', href: '2 - Briefing.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  var ROSTER = [
+    { name: 'Lucy',   role: 'Hacker',   quirk: 'Grease Monkey', qe: '+1 TEC', state: 'idle', stateLabel: 'READY' },
+    { name: 'Millie', role: 'Grifter',  quirk: 'Silver Tongue', qe: '+1 CHA', state: 'idle', stateLabel: 'READY' },
+    { name: 'George', role: 'Muscle',   quirk: 'Ex-Bouncer',    qe: '+1 PHY', state: 'idle', stateLabel: 'READY' },
+    { name: 'Liv',    role: 'Ghost',    quirk: 'Light Fingers', qe: '+1 STE', state: 'idle', stateLabel: 'READY' },
+    { name: 'Chris',  role: 'Wheelman', quirk: 'Cool Head',     qe: '\u00b10',  state: 'idle', stateLabel: 'READY' }
+  ];
+
+  function playerRow(p, i) {
+    return '<div class="prow">' +
+      '<span class="idx">' + (i + 1) + '</span>' +
+      '<span class="av">' + p.name[0] + '</span>' +
+      '<input class="nameinp" value="' + p.name + '">' +
+      '<div class="quirk"><span class="ql">' + p.quirk + '</span><span class="qe">' + p.qe + '</span>' + TJ.icon('chevron-down') + '</div>' +
+    '</div>';
+  }
+
+  function setupForm(advancedOpen) {
+    var disc = advancedOpen
+      ? '<div class="disclosure">' +
+          '<div class="disc-bar">' + TJ.icon('chevron-down') + '<span class="dt">Advanced</span><span class="dh">Seed &amp; dice mode \u2014 optional</span></div>' +
+          '<div class="disc-body">' +
+            '<div class="field"><label>Dice mode</label><div class="modecards">' +
+              '<div class="modecard sel"><span class="mt">' + TJ.icon('cpu') + 'App roll</span><span class="md">The console rolls and shows the result. Fastest.</span></div>' +
+              '<div class="modecard"><span class="mt">' + TJ.icon('dice-5') + 'Physical die</span><span class="md">Roll at the table; type the number in.</span></div>' +
+            '</div></div>' +
+            '<div class="field"><label>Seed <span style="color:var(--fg-faint);text-transform:none;letter-spacing:0">(optional \u2014 reproduces a run)</span></label>' +
+              '<input class="inp" placeholder="leave blank for random" value="MERIDIAN-0719">' +
+              '<div style="display:flex;gap:8px;margin-top:8px"><span class="badge b-data"><span class="d"></span>Deterministic</span></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      : '<div class="disclosure"><div class="disc-bar">' + TJ.icon('chevron-right') + '<span class="dt">Advanced</span><span class="dh">Seed &amp; dice mode \u2014 optional</span></div></div>';
+
+    return '<div class="setup">' +
+      '<div class="toprow">' +
+        '<div class="field"><label>Players at the table</label>' +
+          '<div class="stepper"><button>\u2212</button><span class="val">5<small>/ 2\u20137</small></span><button>+</button></div></div>' +
+        '<div class="field"><label>Crew name</label><input class="inp" value="The Magpies"></div>' +
+      '</div>' +
+      '<div class="players">' + ROSTER.map(playerRow).join('') + '</div>' +
+      disc +
+    '</div>';
+  }
+
+  var crewRail = ROSTER.map(function (r) { return { name: r.name, role: r.role, powers: [], state: 'idle', stateLabel: 'READY' }; });
+
+  var baseTop = {
+    phaseNum: '01', phaseLabel: 'Setup', roomLabel: 'New job',
+    heat: 0, loot: 0, lootStr: '$0', round: '0', totalRounds: '6',
+    crew: crewRail, crewModeLabel: 'Assembling', tools: { gearBadge: 0 }
+  };
+
+  /* 1a — new job */
+  TJ.frame(
+    { vnum: '01a', title: 'New job', note: 'Crew-size stepper (2–7), a name per player and a starter-quirk that nudges one lane. The rail fills as you go; Advanced sits collapsed below.' },
+    Object.assign({}, baseTop, {
+      stage: setupForm(false),
+      action: {
+        secondary: { label: 'Randomise', icon: 'shuffle', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Ambient' } ],
+        primary: { label: 'To briefing', icon: 'chevron-right', kind: 'primary' }
+      }
+    })
+  );
+
+  /* 1b — advanced open */
+  TJ.frame(
+    { vnum: '01b', title: 'Advanced disclosure open', note: 'Optional seed (reproduces a run) and dice-mode — app-roll vs physical-die — as two selectable mode cards. Disclosure expands in place; nothing else moves.' },
+    Object.assign({}, baseTop, {
+      stage: setupForm(true),
+      action: {
+        secondary: { label: 'Randomise', icon: 'shuffle', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Ambient' } ],
+        primary: { label: 'To briefing', icon: 'chevron-right', kind: 'primary' }
+      }
+    })
+  );
+
+  /* 1c — resume or new */
+  var resumeStage =
+    '<div class="resume">' +
+      '<div class="choices">' +
+        '<div class="choicecard primary">' +
+          '<span class="cc-eyebrow">' + TJ.icon('rotate-ccw') + 'Saved job found</span>' +
+          '<h3>Resume \u00b7 The Magpies</h3>' +
+          '<p>The Meridian Private Bank. Picked up mid-run, exactly where the van left it.</p>' +
+          '<div class="savemeta">' +
+            '<div class="c"><span class="k">Room</span><span class="v">3 / 6</span></div>' +
+            '<div class="c"><span class="k">Heat</span><span class="v" style="color:var(--danger)">08</span></div>' +
+            '<div class="c"><span class="k">Loot</span><span class="v" style="color:var(--accent)">$42k</span></div>' +
+            '<div class="c"><span class="k">Crew</span><span class="v">5</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="choicecard">' +
+          '<span class="cc-eyebrow" style="color:var(--fg-faint)">' + TJ.icon('plus') + 'Fresh start</span>' +
+          '<h3>Start a new job</h3>' +
+          '<p>Clears the save. Assemble a new crew and pick a new mark.</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="panel lboard">' +
+        '<div class="lb-head">' + TJ.icon('trophy') + 'Personal best</div>' +
+        '<div class="lrow top"><span class="rank">1</span><span class="lname">The Foxes</span><span class="lscore">$186k</span><span class="lheat">H 6</span></div>' +
+        '<div class="lrow"><span class="rank">2</span><span class="lname">Night Shift</span><span class="lscore">$154k</span><span class="lheat">H 11</span></div>' +
+        '<div class="lrow"><span class="rank">3</span><span class="lname">The Magpies</span><span class="lscore">$120k</span><span class="lheat">H 9</span></div>' +
+        '<div class="lrow"><span class="rank">4</span><span class="lname">Cold Callers</span><span class="lscore">$98k</span><span class="lheat">H 14</span></div>' +
+        '<div class="lrow"><span class="rank">5</span><span class="lname">The Tidy</span><span class="lscore">$71k</span><span class="lheat">H 20</span></div>' +
+      '</div>' +
+    '</div>';
+
+  TJ.frame(
+    { vnum: '01c', title: 'Resume-or-new', note: 'On launch with a resumable save: a green-lit resume card (showing where the run paused) over a fresh-start card, with the personal-best leaderboard alongside. The rail shows the saved crew.' },
+    Object.assign({}, baseTop, {
+      phaseLabel: 'Setup', roomLabel: 'Welcome back', heat: 8, loot: 42000, lootStr: '$42k', round: '3',
+      crew: ROSTER.map(function (r, i) { return { name: r.name, role: r.role, powers: i < 2 ? ['tec'] : [], gear: i < 2, state: 'idle', stateLabel: 'SAVED' }; }),
+      stage: resumeStage, stageClass: '',
+      action: {
+        secondary: { label: 'Delete save', icon: 'trash-2', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Ambient' } ],
+        primary: { label: 'Resume run', icon: 'play', kind: 'primary' }
+      }
+    })
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

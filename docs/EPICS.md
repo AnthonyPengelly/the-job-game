@@ -17,10 +17,11 @@ E0 → E1 → E2 ┐
              │       └→ E9
              └──────────→ E10
 E1 → E11   (anytime after engine)
+E5..E10 → E13   (frontend redesign; needs the functional app + games + getaway + audio)
 all → E12  (last, optional)
 ```
 
-Critical path: **E0 → E1 → E2 → E3 → E4 → E5**. E6–E9 fan out from E3/E4 and can be built in any order (or in parallel by separate agent runs). E10 needs E3. E11 needs E1. E12 is last.
+Critical path: **E0 → E1 → E2 → E3 → E4 → E5**. E6–E9 fan out from E3/E4 and can be built in any order (or in parallel by separate agent runs). E10 needs E3. E11 needs E1. **E13 supersedes E10's visual pass** and needs the functional surfaces it redraws (E5 games, E6 Getaway, E7 scenarios, E8 narration, E9 audio, E10 leaderboard/resume). E12 is last.
 
 ---
 
@@ -206,6 +207,66 @@ Each game includes: procedural generator, judging (app-assist + GM-confirm per `
 - Service worker / static `file://`-friendly build so the app double-clicks to play offline.
 
 **Acceptance gate:** built artifact runs fully offline with no `localhost` server; all features intact.
+
+---
+
+## E13 — GM Console & player-view redesign (cockpit) *(depends: E5–E10)*
+
+**Goal:** replace the original screens (built against a faulty layout) with a single **cockpit** GM
+console — persistent meters/crew/launchers around the edges, one calm work stage in the middle, no
+document scroll — plus a reworked mini-game lifecycle, a new spoils/wrap-up beat, and a clean overlay
+system. **Supersedes E10's visual pass.** The design is produced in **Claude Design web** from
+`docs/FRONTEND-REDESIGN-BRIEF.md` and lands in **`design-system/redesign/`** (the screen set +
+variants is the input spec — see `design-system/redesign/README.md`); the design system
+(`design-system/`) stays the source of truth — do not invent tokens, colours or type. This is a
+**presentation/IA** epic: do not change engine rules, the `MiniGame` contract shape, content/presets,
+or the design tokens. If a screen genuinely needs one of those touched, **`PIPELINE_BLOCKED`** rather
+than fork it.
+
+**Stories**
+- **Cockpit shell.** Viewport-locked layout that never scrolls the page: top rail = meters (Heat
+  track hero + Loot + phase/room), left rail = crew, right rail = tool launchers + Undo, bottom =
+  action bar (primary CTA + contextual sound cues), centre = the work stage with a fixed-height
+  teleprompter strip. Over-full regions scroll **internally** with an edge fade — never the document.
+  Build each phase stage (Setup, Briefing, Obstacle, Scenario, Offer, Getaway, Result) into it.
+- **Crew rail + crew-detail popover.** Bigger, legible avatars (four lane stats, power-up pips,
+  exhaustion). Click → a popover that is also the **per-player override** surface (stats ±/set, the
+  four power-up toggles, rest, gear held, rename). The rail doubles as the **commit** surface
+  (obstacles) and **attempter-picker** (scenario rolls). This decentralises the old monolithic
+  override panel.
+- **Overlay system.** Drawers (full Soundboard; run-level GM Overrides — Heat/Loot/Room/Phase),
+  popovers (crew detail, gear-assign target, commit, dial info), dialogs (Settings, confirm-destructive,
+  reopened gear assignment). Nothing dense is permanently mounted; **Undo** stays a first-class
+  persistent button.
+- **Universal mini-game shell + START.** One shared three-state lifecycle wrapping every game:
+  **ARMED** (script + GM-only `DialReadout` + static setup + boosts-available + a big **`START`**;
+  the clock does **not** run on load) → **ACTIVE** (visible mode/state via colour, progress as a
+  meter, boosts that fire once then disable, **no layout shift** on boost/state change) → **RESOLVE**
+  (`OutcomeJudge`, suggested tier pre-set, GM confirms — app never overrides). Standard zones:
+  status / challenge / referee. Rework all ten game components (+ solo/negotiated variants) into it,
+  fixing the per-game presentation faults (text-only state, unreadable card affordances, cryptic
+  feedback) per the brief. Soundboard quick-cues live in the action bar; the full board is a drawer.
+- **Spoils / Wrap-up stage (new).** After every obstacle (and rewarding scenario): name the outcome +
+  sting, announce Loot/Gear dropped, and **share gear out in the moment** (drag a dropped card onto a
+  crew member; tap-card→tap-crew accessible equivalent; lane-of-choice boosts pick a lane), show who
+  **rests next room**, then `CONTINUE`. **Delete the persistent gear tray entirely**; gear left
+  unassigned re-opens via a badged Gear launcher (no dead-ends).
+- **Getaway declutter.** Clock as hero, compact horizontal round bar (target · cleared meter ·
+  clue-giver), clear action row, START-to-begin; optional player-view countdown mirror.
+- **Player-view.** Redraw from `design-system/ui_kits/player-view/`: Defuse rulebook + Getaway
+  countdown. Isolated, read-only, leaks no GM state.
+
+**Acceptance gate:** the app is a single cockpit screen and **the document never scrolls** (only
+over-full regions scroll internally); the edges show Heat + Loot + phase/room + crew at all times and
+controls open as drawers/popovers/dialogs that are summoned and dismissed; **every timed mini-game
+arms and waits for `START`** (none auto-run on load); after every room/scenario a **Spoils/Wrap-up**
+beat announces Loot/Gear and lets the GM share gear out in the moment, and **there is no persistent
+gear tray**; mini-game screens read at a glance (visible mode/state, meter progress, no layout shift
+on boosts, clear card affordances, standard status/challenge/referee zones); **no dead-ends** — Heat,
+Loot, stats, power-ups, exhaustion, outcome and phase are all GM-editable and `Undo` is always one
+tap; the player-view leaks no GM state; tokens, type, colour-semantics, iconography and the two voices
+match the design system and verify against `design-system/preview/*`; the design reviewer approves
+against the Claude Design screen set; and `npm run check:full` passes.
 
 ---
 

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · Spec Sheet</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  .spec{ max-width:1180px; margin:0 auto; padding:56px 28px 140px; }
+  .spec .eyebrow{ font-family:var(--font-data); font-weight:700; font-size:13px; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:10px; }
+  .spec .eyebrow .sq{ width:12px; height:12px; border-radius:2px; background:var(--accent); box-shadow:var(--glow-accent); }
+  .spec h1{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:64px; line-height:.92; letter-spacing:-.015em; margin:14px 0 0; }
+  .spec .lede{ font-family:var(--font-body); font-size:19px; line-height:1.55; color:var(--fg-muted); max-width:80ch; margin-top:16px; }
+  .crumbs{ margin-top:22px; display:flex; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-family:var(--font-data); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-muted); background:var(--c-surface-1); border:1px solid var(--border); border-radius:var(--radius-pill); padding:6px 14px; text-decoration:none; }
+  .crumb:hover{ color:var(--fg); border-color:var(--border-strong); }
+
+  .sec{ margin-top:64px; }
+  .sec > h2{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:30px; letter-spacing:.01em; color:var(--fg); display:flex; align-items:baseline; gap:14px; border-bottom:1px solid var(--border); padding-bottom:14px; }
+  .sec > h2 .n{ font-family:var(--font-data); font-size:15px; color:var(--accent); font-weight:800; }
+  .sec > p.intro{ font-family:var(--font-body); font-size:17px; line-height:1.55; color:var(--fg-muted); max-width:82ch; margin-top:16px; }
+
+  /* zone map schematic */
+  .zonemap{ display:grid; grid-template-columns:218px 1fr 96px; grid-template-rows:auto 1fr auto; gap:10px; height:440px; margin-top:22px;
+    grid-template-areas:"top top top" "crew stage tools" "action action action"; }
+  .zone{ border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--bg-panel); padding:14px 16px; display:flex; flex-direction:column; gap:7px; position:relative; }
+  .zone .zn{ display:flex; align-items:center; gap:9px; }
+  .zone .zn .num{ width:24px; height:24px; flex:none; border-radius:var(--radius-xs); background:var(--accent); color:var(--fg-on-accent); display:flex; align-items:center; justify-content:center; font-family:var(--font-data); font-weight:800; font-size:13px; }
+  .zone .zn .name{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:17px; letter-spacing:.02em; color:var(--fg); }
+  .zone .zd{ font-family:var(--font-body); font-size:13px; line-height:1.4; color:var(--fg-muted); }
+  .zone .ztok{ font-family:var(--font-data); font-size:11px; letter-spacing:.04em; color:var(--fg-faint); margin-top:auto; }
+  .zone.z-top{ grid-area:top; } .zone.z-crew{ grid-area:crew; } .zone.z-stage{ grid-area:stage; border-color:var(--c-green-700); } .zone.z-tools{ grid-area:tools; align-items:center; text-align:center; } .zone.z-action{ grid-area:action; }
+  .zone.z-stage .zd{ color:var(--c-green-200); }
+
+  .grid-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:22px; }
+  .grid-cards.two{ grid-template-columns:1fr 1fr; }
+  .card2{ border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); padding:18px; display:flex; flex-direction:column; gap:10px; box-shadow:var(--elev-1); }
+  .card2 h3{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:20px; letter-spacing:.01em; color:var(--fg); display:flex; align-items:center; gap:9px; }
+  .card2 h3 svg{ width:18px; height:18px; }
+  .card2 p{ font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(--fg-muted); }
+  .card2 .step-k{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); }
+
+  table.spec-t{ width:100%; border-collapse:collapse; margin-top:20px; font-family:var(--font-body); }
+  table.spec-t th{ text-align:left; font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--fg-faint); padding:10px 14px; border-bottom:1px solid var(--border-strong); }
+  table.spec-t td{ padding:13px 14px; border-bottom:1px solid var(--border-faint); font-size:15px; color:var(--fg); vertical-align:top; }
+  table.spec-t td .sw{ width:16px; height:16px; border-radius:4px; display:inline-block; vertical-align:-3px; margin-right:9px; }
+  table.spec-t td .mono{ font-family:var(--font-data); font-size:13px; color:var(--fg-muted); }
+  table.spec-t td.meaning{ color:var(--fg-muted); }
+  table.spec-t .name{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
+
+  .typ-row{ display:flex; align-items:baseline; gap:20px; padding:16px 0; border-bottom:1px solid var(--border-faint); }
+  .typ-row .label{ width:200px; flex:none; }
+  .typ-row .label .fn{ font-family:var(--font-data); font-weight:700; font-size:13px; letter-spacing:.06em; color:var(--accent); text-transform:uppercase; }
+  .typ-row .label .role{ font-family:var(--font-body); font-size:13px; color:var(--fg-muted); margin-top:3px; }
+  .typ-row .sample{ flex:1; color:var(--fg); }
+
+  .tokrow{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-top:18px; }
+  .tok{ border:1px solid var(--border); border-radius:var(--radius-md); background:var(--c-surface-1); padding:12px 14px; }
+  .tok .tk{ font-family:var(--font-data); font-size:11px; letter-spacing:.06em; color:var(--fg-faint); }
+  .tok .tv{ font-family:var(--font-data); font-weight:800; font-size:18px; color:var(--fg); margin-top:4px; }
+
+  .responsive{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:22px; }
+  .rcol{ border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); padding:18px; display:flex; flex-direction:column; gap:10px; }
+  .rcol .rh{ font-family:var(--font-data); font-weight:800; font-size:15px; color:var(--accent); }
+  .rcol .rh small{ color:var(--fg-faint); font-weight:500; display:block; font-size:11px; letter-spacing:.08em; margin-top:3px; }
+  .rcol ul{ list-style:none; display:flex; flex-direction:column; gap:9px; }
+  .rcol li{ font-family:var(--font-body); font-size:14px; line-height:1.4; color:var(--fg-muted); padding-left:16px; position:relative; }
+  .rcol li::before{ content:"\2014"; position:absolute; left:0; color:var(--fg-faint); }
+  .rcol.now{ border-color:var(--c-green-700); box-shadow:var(--glow-accent); }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<div class="spec">
+  <div class="eyebrow"><span class="sq"></span>The Job · Build Spec</div>
+  <h1>Spec Sheet</h1>
+  <p class="lede">How the screen set maps to the build. The cockpit zone map, the colour semantics that carry state, the type voices, the mini-game lifecycle, the overlay strategy, the two interaction rules the old design got wrong, and responsive notes. Every artifact in this set is a 1280×800 static frame; this page is the legend that ties them together.</p>
+  <div class="crumbs">
+    <a class="crumb" href="index.html">← All screens</a>
+    <a class="crumb" href="0 - Cockpit Shell.html">00 Cockpit</a>
+    <a class="crumb" href="5 - Mini-games.html">05 Lifecycle</a>
+    <a class="crumb" href="10 - Overlays.html">Overlays</a>
+  </div>
+
+  <!-- ZONE MAP -->
+  <div class="sec">
+    <h2><span class="n">A</span> The cockpit zone map</h2>
+    <p class="intro">One fixed cockpit fills the viewport and never scrolls the page. Persistent information and control-launchers live around the edges; one calm work stage sits in the middle and is the only thing that swaps per phase. Only an over-full region (a 7-player crew rail, an opened drawer) scrolls inside its own border.</p>
+    <div class="zonemap">
+      <div class="zone z-top"><div class="zn"><span class="num">1</span><span class="name">Top rail · the meters</span></div>
+        <div class="zd">Brand · phase · room, the 20-slot Heat track (glow on the live slot, single pulse on change), and Loot. The two hero numbers are always visible; the amber escape signal raises here at ~Heat 11.</div>
+        <div class="ztok">always on · <span style="color:var(--heat)">heat-red</span> fill · <span style="color:var(--accent)">green</span> brand</div></div>
+      <div class="zone z-crew"><div class="zn"><span class="num">2</span><span class="name">Left rail · the crew</span></div>
+        <div class="zd">Avatars with the four lane stats, power-up pips and exhaustion/in-play state. Click → crew-detail popover (per-player overrides). Doubles as the commit surface (obstacles) and attempter-picker (scenario rolls).</div>
+        <div class="ztok">scrolls internally at 7 · cyan = committing</div></div>
+      <div class="zone z-stage"><div class="zn"><span class="num">3</span><span class="name">Centre · the work stage</span></div>
+        <div class="zd">The interesting bit — one idea at a time. A fixed-height teleprompter strip at the top (the only flavour voice, green-200), the phase content / mini-game / getaway below. Never grows to push content off-screen.</div>
+        <div class="ztok">green border + glow when LIVE</div></div>
+      <div class="zone z-tools"><div class="zn"><span class="num">4</span><span class="name">Right · tools</span></div>
+        <div class="zd">Launcher icons that open overlays as needed — Soundboard, GM Overrides, Gear (badged when unassigned), Settings — plus the always-present Undo.</div>
+        <div class="ztok">clean by default</div></div>
+      <div class="zone z-action"><div class="zn"><span class="num">5</span><span class="name">Bottom · the action bar</span></div>
+        <div class="zd">The phase's single obvious primary CTA (right), secondary/back (left), and a thin row of the 2–5 contextual soundboard cues for this exact moment, near the GM's hands.</div>
+        <div class="ztok">one primary · one accent</div></div>
+    </div>
+  </div>
+
+  <!-- COLOUR -->
+  <div class="sec">
+    <h2><span class="n">B</span> State is colour</h2>
+    <p class="intro">A GM reads the room's state from six feet away by colour alone. These five are never decorative — each one means exactly one thing.</p>
+    <table class="spec-t">
+      <thead><tr><th style="width:170px">Signal</th><th>Means</th><th>Where it does the work</th><th style="width:200px">Tokens</th></tr></thead>
+      <tbody>
+        <tr><td><span class="sw" style="background:var(--accent)"></span><span class="name">Green</span></td><td class="meaning">Live / go / the one active element</td><td class="meaning">Primary CTA, LIVE panel glow, ACTIVE mini-game, power-up held, win verdict, the phosphor clock</td><td><span class="mono">--accent · --glow-accent · green-200</span></td></tr>
+        <tr><td><span class="sw" style="background:var(--caution)"></span><span class="name">Amber</span></td><td class="meaning">Caution / pending / the escape signal</td><td class="meaning">Heat warn-band, "getting hot we can roll", scenario voice, Complication tier, exhaustion / rests-next</td><td><span class="mono">--caution · amber-900 tint</span></td></tr>
+        <tr><td><span class="sw" style="background:var(--heat)"></span><span class="name">Red</span></td><td class="meaning">Heat / danger / blown</td><td class="meaning">Heat track fill, alarm-tripped, near-bust clock, Botched tier, the single destructive button</td><td><span class="mono">--heat · --danger · --glow-heat</span></td></tr>
+        <tr><td><span class="sw" style="background:var(--data)"></span><span class="name">Cyan</span></td><td class="meaning">Telemetry / the reveal / GM-only</td><td class="meaning">Obstacle tag, difficulty dial, transparent roll reveal, committing mode, gear, the GM-only answer strip</td><td><span class="mono">--data · --glow-data · cyan-900</span></td></tr>
+        <tr><td><span class="sw" style="background:var(--c-surface-3);border:1px solid var(--border-strong)"></span><span class="name">Neutral</span></td><td class="meaning">Idle / inert / structure</td><td class="meaning">Empty slots, resting crew, hairline borders, secondary buttons, everything not currently meaningful</td><td><span class="mono">surface-1..4 · --border</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TYPE -->
+  <div class="sec">
+    <h2><span class="n">C</span> Two voices, three faces</h2>
+    <p class="intro">UI chrome tells the GM what to do — terse, uppercase, literal. The teleprompter tells the GM what to say — cinematic second person, the only place with flavour. Never mix them in one element.</p>
+    <div class="typ-row"><div class="label"><div class="fn">Saira Condensed</div><div class="role">Tactical signage · headers, buttons, the wordmark. Always uppercase.</div></div><div class="sample" style="font-family:var(--font-display);font-weight:700;text-transform:uppercase;font-size:38px;letter-spacing:-.01em">Crack the Tumblers</div></div>
+    <div class="typ-row"><div class="label"><div class="fn">JetBrains Mono</div><div class="role">Every number & machine label. Tabular figures so counters don't jitter.</div></div><div class="sample" style="font-family:var(--font-data);font-weight:800;font-size:34px">HEAT 16 / 20 · $137k · 0:07</div></div>
+    <div class="typ-row"><div class="label"><div class="fn">IBM Plex Sans</div><div class="role">Rules prose + the read-aloud teleprompter (green-200).</div></div><div class="sample" style="font-family:var(--font-body);font-size:23px;line-height:1.4;color:var(--c-green-200)">You're between floors. The patrol loops back in ninety seconds.</div></div>
+  </div>
+
+  <!-- LIFECYCLE -->
+  <div class="sec">
+    <h2><span class="n">D</span> The mini-game lifecycle</h2>
+    <p class="intro">Every obstacle uses one shared three-state lifecycle, designed once and applied to all ten. The stage always splits into STATUS (mode · timer · progress) · CHALLENGE (the hero) · REFEREE (boosts · outcome) so the GM always knows where to look.</p>
+    <div class="grid-cards">
+      <div class="card2"><span class="step-k" style="color:var(--caution)">1 · Armed / brief</span><h3>Nothing runs yet</h3><p>Game name, the GM's read-aloud script, a GM-only difficulty readout, the cards laid out static, and which committed player holds which boost. The timer is shown but NOT running. One big START in the action bar.</p></div>
+      <div class="card2"><span class="step-k">2 · Active</span><h3>The live challenge</h3><p>Mode shown as colour + iconography (not prose), progress as a meter (not a buried count), boost buttons that surface only for committed holders and fire once then disable — with no layout shift when a boost or state fires (the space is reserved).</p></div>
+      <div class="card2"><span class="step-k" style="color:var(--data)">3 · Resolve</span><h3>Outcome control</h3><p>Clean / Complication / Botched, with the suggested tier pre-selected and the comedic middle one tap away. The GM confirms — the app never overrides — then the Spoils / Wrap-up beat.</p></div>
+    </div>
+  </div>
+
+  <!-- OVERLAYS -->
+  <div class="sec">
+    <h2><span class="n">E</span> Overlay strategy</h2>
+    <p class="intro">Pop controls out only as needed; the stage stays behind. Three patterns, each with a clear job.</p>
+    <div class="grid-cards">
+      <div class="card2"><h3>Drawer</h3><p><b style="color:var(--fg)">Slides from an edge, stage stays visible.</b> The full Soundboard and the GM Overrides panel — things the GM dips into mid-performance. Soft scrim.</p></div>
+      <div class="card2"><h3>Popover</h3><p><b style="color:var(--fg)">Anchored to its trigger.</b> Crew detail / override (from a rail avatar), gear-assign target, commit-crew, dial info.</p></div>
+      <div class="card2"><h3>Dialog</h3><p><b style="color:var(--fg)">Centred, blocking, scrim.</b> Settings, confirm-destructive (new job / abandon run), reopened gear assignment. The only place the app slows the GM down.</p></div>
+    </div>
+  </div>
+
+  <!-- INTERACTION RULES -->
+  <div class="sec">
+    <h2><span class="n">F</span> Two interaction rules</h2>
+    <p class="intro">The things the old design got wrong, designed here explicitly.</p>
+    <div class="grid-cards two">
+      <div class="card2"><h3 style="color:var(--accent)">Arm, then START</h3><p>Mini-games never run on load. They open ARMED — setup static, timer stopped — and only START makes anything live. Timed rooms must never start the clock until START. (Screens 05a–c, and every game in 05·1–10.)</p></div>
+      <div class="card2"><h3 style="color:var(--accent)">Spoils is the only gear moment</h3><p>No permanent "add gear to whom?" tray. After a room, a short closing stage: outcome + sting, Loot and dropped Gear face-up, then pick the holder from a dropdown on each card. Power-ups snap to lane; lane-of-choice cards let the GM pick the lane too. Left unassigned, the Gear launcher badges and reopens as a dialog. (Screen 06.)</p></div>
+    </div>
+    <div class="grid-cards two" style="margin-top:14px">
+      <div class="card2"><h3 style="color:var(--data)">No dead-ends</h3><p>Every tracked value — Heat, Loot, stats, power-ups, exhaustion, outcome, phase — is GM-editable at any time via GM Overrides and the crew popover, with Undo on every change. Any state the app reaches, the GM can edit out of. (Screens 11, 12.)</p></div>
+      <div class="card2"><h3 style="color:var(--data)">Transparent rolls</h3><p>Scenario rolls show the maths before the roll: lane · attempter's rating · base difficulty · resulting DC and odds — in app-roll or physical-die-entry mode. Nothing hidden from the GM. (Screen 04c–d.)</p></div>
+    </div>
+  </div>
+
+  <!-- RESPONSIVE -->
+  <div class="sec">
+    <h2><span class="n">G</span> Responsive notes</h2>
+    <p class="intro">The deliverable artifacts are at the 1280×800 baseline. The cockpit grid holds at the other laptop sizes the GM might travel with.</p>
+    <div class="responsive">
+      <div class="rcol"><div class="rh">1024 × 640<small>small / old laptop</small></div><ul>
+        <li>Left rail 264 → 220; lane stats drop their labels to value-only with a tooltip.</li>
+        <li>Right tools rail 88 → 72; labels under icons hide below 1100.</li>
+        <li>Teleprompter caps at 3 lines then scrolls inside its strip.</li>
+        <li>Option / offer cards stack to a 1-up carousel if 3 won't fit.</li>
+      </ul></div>
+      <div class="rcol now"><div class="rh">1280 × 800<small>baseline · this set</small></div><ul>
+        <li>Crew rail 264 · tools 88 · stage fluid between.</li>
+        <li>Text floor 15px; HUD numbers 22–28px; hero clock 168px.</li>
+        <li>Crew rail scrolls internally at 6+ players; document never scrolls.</li>
+        <li>Every frame in this set is authored here.</li>
+      </ul></div>
+      <div class="rcol"><div class="rh">1920 × 1080<small>external display</small></div><ul>
+        <li>Cockpit centres with a max-width; edges widen, stage gains breathing room — it does not stretch text.</li>
+        <li>Crew rail 264 → 300; avatars and stats scale up one step.</li>
+        <li>Hero clock and verdicts scale with the stage; teleprompter to ~26px.</li>
+        <li>Player-view surfaces fill the display edge-to-edge (fluid type).</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <!-- TOKENS -->
+  <div class="sec">
+    <h2><span class="n">H</span> Token quick-reference</h2>
+    <p class="intro">Crisp small radii, hairline borders, restrained motion. Pulled from <span class="mono" style="font-family:var(--font-data);color:var(--fg-muted)">colors_and_type.css</span> — the source of truth.</p>
+    <div class="tokrow">
+      <div class="tok"><div class="tk">radius</div><div class="tv">2 · 4 · 7 · 12 · 999</div></div>
+      <div class="tok"><div class="tk">space (4px grid)</div><div class="tv">4 · 8 · 12 · 16 · 24 · 32</div></div>
+      <div class="tok"><div class="tk">motion</div><div class="tv">90 · 160 · 280 ms</div></div>
+      <div class="tok"><div class="tk">easing</div><div class="tv">ease-out (decel)</div></div>
+      <div class="tok"><div class="tk">borders</div><div class="tv">hairline · 0.10 α</div></div>
+      <div class="tok"><div class="tk">glows</div><div class="tv">LIVE element only</div></div>
+      <div class="tok"><div class="tk">icons</div><div class="tv">Lucide · 1.75 stroke</div></div>
+      <div class="tok"><div class="tk">emoji</div><div class="tv">never</div></div>
+    </div>
+  </div>
+</div>
+<script>lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });</script>
+</body>
+</html>

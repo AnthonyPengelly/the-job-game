@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 03 Obstacle Room</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  .opts{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; height:100%; min-height:0; }
+  .opt{ display:flex; flex-direction:column; gap:11px; padding:18px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); box-shadow:var(--elev-2); cursor:pointer; transition:all var(--dur-base) var(--ease-out); }
+  .opt:hover{ transform:translateY(-3px); box-shadow:var(--elev-3); }
+  .opt.risk:hover{ border-color:color-mix(in srgb, var(--danger) 60%, transparent); }
+  .opt.safe:hover{ border-color:color-mix(in srgb, var(--accent) 60%, transparent); }
+  .opt .opt-tag{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; display:flex; align-items:center; gap:7px; }
+  .opt .opt-tag svg{ width:14px; height:14px; }
+  .opt.risk .opt-tag{ color:var(--danger); }
+  .opt.safe .opt-tag{ color:var(--accent); }
+  .opt h4{ font-family:var(--font-display); text-transform:uppercase; font-weight:700; font-size:25px; line-height:.95; letter-spacing:-.01em; color:var(--fg); }
+  .opt .game{ display:flex; align-items:center; gap:8px; }
+  .opt .game .gn{ font-family:var(--font-body); font-size:15px; color:var(--fg-muted); }
+  .lanechip{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:4px 8px; border-radius:var(--radius-xs); background:var(--data-tint); color:var(--data); border:1px solid var(--c-cyan-500); }
+  .opt .desc{ font-family:var(--font-body); font-size:14px; line-height:1.45; color:var(--fg-muted); flex:1; }
+  .opt .opt-cost{ display:flex; gap:16px; padding-top:12px; border-top:1px solid var(--border); }
+  .opt .opt-cost .c{ display:flex; flex-direction:column; gap:3px; }
+  .opt .opt-cost .c .k{ font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .opt .opt-cost .c .v{ font-family:var(--font-data); font-weight:800; font-size:19px; }
+  .gpill{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.06em; text-transform:uppercase; padding:3px 7px; border-radius:var(--radius-xs); background:var(--data-tint); color:var(--data); border:1px solid var(--c-cyan-500); white-space:nowrap; }
+
+  /* committing state */
+  .commit{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; height:100%; min-height:0; }
+  .opt.selected{ border-color:var(--c-cyan-500); box-shadow:var(--glow-data); cursor:default; }
+  .opt.selected:hover{ transform:none; }
+  .opt.selected .selflag{ margin-left:auto; }
+  .commit-side{ display:flex; flex-direction:column; gap:14px; }
+  .commit-instruct{ padding:16px; border:1px solid var(--c-cyan-500); border-radius:var(--radius-lg); background:var(--data-tint); display:flex; flex-direction:column; gap:8px; }
+  .commit-instruct .ci-k{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--data); display:flex; align-items:center; gap:8px; }
+  .commit-instruct .ci-k svg{ width:15px; height:15px; }
+  .commit-instruct p{ font-family:var(--font-body); font-size:16px; line-height:1.5; color:var(--fg); }
+  .committed{ display:flex; flex-direction:column; gap:8px; padding:16px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); }
+  .committed .ch{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--fg-faint); }
+  .commchips{ display:flex; gap:8px; flex-wrap:wrap; }
+  .commchip{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-md); background:var(--data-tint); border:1px solid var(--c-cyan-500); }
+  .commchip .av{ width:24px; height:24px; border-radius:var(--radius-xs); background:var(--c-surface-3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--data); }
+  .commchip .nm{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:15px; color:var(--fg); }
+  .commchip .x{ color:var(--fg-faint); display:flex; }
+  .commchip .x svg{ width:14px; height:14px; }
+  .dialbar{ display:flex; align-items:center; gap:12px; }
+  .dialbar .dlabel{ font-family:var(--font-data); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-faint); }
+  .dialbar .dtrack{ flex:1; height:8px; border-radius:var(--radius-pill); background:var(--c-surface-3); overflow:hidden; }
+  .dialbar .dfill{ height:100%; background:var(--data); border-radius:var(--radius-pill); }
+  .dialbar .dval{ font-family:var(--font-data); font-weight:800; font-size:15px; color:var(--data); }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  TJ.page({
+    num: '03', eyebrow: 'Screen 03 · The Run',
+    title: 'Obstacle Room',
+    desc: 'A security problem with two or three ways through. Each option card states the mini-game, its lane(s), the reward and the Heat cost. Rewards vary — a room can pay in Loot, Gear, or both, and the safe line often pays less. Pick one and the left rail flips to commit-crew mode: choose who plays (they rest next room), then COMMIT into the mini-game. Cyan is the obstacle/telemetry voice doing the work here.',
+    crumbs: [
+      { label: '02 Briefing', href: '2 - Briefing.html' },
+      { label: '03 Obstacle', href: '3 - Obstacle Room.html', here: true },
+      { label: '04 Scenario', href: '4 - Scenario Room.html' },
+      { label: '05 Mini-games', href: '5 - Mini-games.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  var ROSTER = [
+    { name: 'Lucy',   powers: ['tec'], gear: true,  state: 'idle' },
+    { name: 'Millie', powers: ['cha'], state: 'idle' },
+    { name: 'George', powers: ['phy'], state: 'rest' },
+    { name: 'Liv',    powers: ['ste'], gear: true,  state: 'idle' },
+    { name: 'Chris',  powers: [],      state: 'idle' }
+  ];
+
+  /* 3a — options before selection */
+  var optionsStage =
+    '<div class="opts">' +
+      '<div class="opt safe">' +
+        '<span class="opt-tag">' + TJ.icon('shield') + 'Safe line</span>' +
+        '<h4>The Service Lift</h4>' +
+        '<div class="game"><span class="lanechip">Tech</span><span class="gn">Crack the Tumblers</span></div>' +
+        '<p class="desc">Override the lift\u2019s pin board. Quiet, mechanical, forgiving \u2014 the obvious way up.</p>' +
+        '<div class="opt-cost">' +
+          '<div class="c"><span class="k">Reward</span><span class="v" style="color:var(--accent)">$30k</span></div>' +
+          '<div class="c"><span class="k">Heat</span><span class="v" style="color:var(--caution)">+2</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="opt risk">' +
+        '<span class="opt-tag">' + TJ.icon('flame') + 'High risk</span>' +
+        '<h4>The Gallery Floor</h4>' +
+        '<div class="game"><span class="lanechip">Stealth</span><span class="gn">The Once-Over</span></div>' +
+        '<p class="desc">Walk the wired floor and clock what moved. Bigger score, louder if you slip.</p>' +
+        '<div class="opt-cost">' +
+          '<div class="c"><span class="k">Reward</span><span class="v" style="color:var(--accent);display:inline-flex;align-items:center;gap:7px">$45k<span class="gpill">+ Gear</span></span></div>' +
+          '<div class="c"><span class="k">Heat</span><span class="v" style="color:var(--danger)">+4</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="opt safe">' +
+        '<span class="opt-tag">' + TJ.icon('shield') + 'Safe line</span>' +
+        '<h4>The Side Door</h4>' +
+        '<div class="game"><span class="lanechip">Charm</span><span class="gn">Categories</span></div>' +
+        '<p class="desc">Talk the night porter in a circle until he waves you through. Small take, low noise.</p>' +
+        '<div class="opt-cost">' +
+          '<div class="c"><span class="k">Reward</span><span class="v" style="display:inline-flex;align-items:center;gap:7px"><span class="gpill">Gear only</span></span></div>' +
+          '<div class="c"><span class="k">Heat</span><span class="v" style="color:var(--caution)">+1</span></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  TJ.frame(
+    { vnum: '03a', title: 'Clue + option cards', note: 'Before selection. Two or three doors, each a mini-game with reward, Heat cost and a risk/safe read. Hover lifts the card; the safe/risk edge tints on hover.' },
+    {
+      phaseNum: '03', phaseLabel: 'Obstacle', roomLabel: 'Room 3', kind: 'OBSTACLE',
+      heat: 7, loot: 3200, round: '3', totalRounds: '6',
+      crew: ROSTER, tools: { gearBadge: 0 },
+      tp: { text: 'Stairwell B is a dead end \u2014 the floor above is the only way to the vault corridor. Three ways up from here, and each one wants something different from you.' },
+      stage: optionsStage,
+      action: {
+        back: { label: 'Back', icon: 'chevron-left', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Ambient', cls: 'playing' }, { icon: 'footprints', label: 'Footsteps' } ],
+        primaryNote: 'Pick a door to continue',
+        primary: { label: 'Choose a door', icon: 'chevron-right', kind: 'primary', disabled: true }
+      }
+    }
+  );
+
+  /* 3b — selected + commit-crew */
+  var commitStage =
+    '<div class="commit">' +
+      '<div class="opt selected">' +
+        '<span class="opt-tag" style="color:var(--data)">' + TJ.icon('check') + 'Selected door</span>' +
+        '<h4>The Gallery Floor</h4>' +
+        '<div class="game"><span class="lanechip">Stealth</span><span class="gn">The Once-Over \u00b7 spot what changed</span></div>' +
+        '<p class="desc">Study the spread, then call the card that moved. The crew\u2019s Stealth sets how subtle the swap is.</p>' +
+        '<div class="dialbar"><span class="dlabel">Difficulty dial</span><div class="dtrack"><div class="dfill" style="width:46%"></div></div><span class="dval">GM only</span></div>' +
+        '<div class="opt-cost">' +
+          '<div class="c"><span class="k">Reward</span><span class="v" style="color:var(--accent);display:inline-flex;align-items:center;gap:7px">$45k<span class="gpill">+ Gear</span></span></div>' +
+          '<div class="c"><span class="k">Heat</span><span class="v" style="color:var(--danger)">+4</span></div>' +
+          '<div class="c"><span class="k">Lane</span><span class="v" style="color:var(--data)">STE</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="commit-side">' +
+        '<div class="commit-instruct">' +
+          '<span class="ci-k">' + TJ.icon('users') + 'Commit the crew</span>' +
+          '<p>This is a <b>Stealth</b> room \u2014 tap 2\u20133 on the left rail to send them in. Whoever plays <b>rests next room</b>. George is resting and can\u2019t be picked.</p>' +
+        '</div>' +
+        '<div class="committed">' +
+          '<span class="ch">Going in \u00b7 2 of 3</span>' +
+          '<div class="commchips">' +
+            '<div class="commchip"><span class="av">L</span><span class="nm">Lucy</span><span class="x">' + TJ.icon('x') + '</span></div>' +
+            '<div class="commchip"><span class="av">L</span><span class="nm">Liv</span><span class="x">' + TJ.icon('x') + '</span></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  TJ.frame(
+    { vnum: '03b', title: 'Option selected → commit-crew', note: 'Door chosen (cyan glow). The left rail is in COMMIT mode: pickable members get a dashed cyan edge, committed ones glow, resting George is dimmed/locked. The chosen door shows its GM-only difficulty dial. COMMIT launches the mini-game.' },
+    {
+      phaseNum: '03', phaseLabel: 'Obstacle', roomLabel: 'Room 3', kind: 'OBSTACLE',
+      heat: 7, loot: 3200, round: '3', totalRounds: '6',
+      crewMode: 'committing', crewModeLabel: 'Commit 2\u20133',
+      crew: [
+        { name: 'Lucy',   powers: ['tec'], gear: true, state: 'idle', cls: 'commit-on', stateLabel: 'GOING' },
+        { name: 'Millie', powers: ['cha'], state: 'idle', cls: 'pick', stateLabel: 'PICK' },
+        { name: 'George', powers: ['phy'], state: 'rest', stateLabel: 'RESTS' },
+        { name: 'Liv',    powers: ['ste'], gear: true, state: 'idle', cls: 'commit-on', stateLabel: 'GOING' },
+        { name: 'Chris',  powers: [],      state: 'idle', cls: 'pick', stateLabel: 'PICK' }
+      ],
+      tools: { gearBadge: 0 },
+      tp: { text: 'Two of you on the floor, the rest holding the door. Move slow, memorise the room, and trust whoever\u2019s got the sharpest eyes tonight.' },
+      stage: commitStage,
+      action: {
+        back: { label: 'Change door', icon: 'chevron-left', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Ambient', cls: 'playing' }, { icon: 'footprints', label: 'Footsteps' } ],
+        primaryNote: '2 committed · rest next room',
+        primary: { label: 'Commit', icon: 'check', kind: 'primary', size: 'lg' }
+      }
+    }
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

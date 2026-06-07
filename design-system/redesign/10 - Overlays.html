@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 10–14 Overlays</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<link rel="stylesheet" href="assets/minigame.css">
+<style>
+  .ov-section{ margin:70px 0 -18px; border-top:1px solid var(--border-strong); padding-top:28px; }
+  .ov-section h2{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:38px; letter-spacing:-.01em; color:var(--fg); }
+  .ov-section h2 .gr{ color:var(--accent); }
+  .ov-section p{ font-family:var(--font-body); font-size:16px; line-height:1.5; color:var(--fg-muted); max-width:80ch; margin-top:8px; }
+
+  /* soundboard */
+  .sb-channel{ border:1px solid var(--border); border-radius:var(--radius-md); background:var(--c-surface-1); padding:12px 13px; display:flex; flex-direction:column; gap:10px; }
+  .sb-channel .sc-head{ display:flex; align-items:center; gap:9px; }
+  .sb-channel .sc-dot{ width:9px; height:9px; border-radius:50%; }
+  .sb-channel .sc-name{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:16px; letter-spacing:.02em; color:var(--fg); }
+  .sb-channel .sc-mute{ margin-left:auto; color:var(--fg-faint); cursor:pointer; display:flex; }
+  .sb-channel .sc-mute svg{ width:16px; height:16px; }
+  .sb-cues{ display:flex; flex-wrap:wrap; gap:7px; }
+  .sbcue{ display:inline-flex; align-items:center; gap:7px; padding:7px 11px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--c-surface-2); color:var(--fg-muted); font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; }
+  .sbcue svg{ width:13px; height:13px; }
+  .sbcue.playing{ border-color:var(--c-green-700); background:var(--accent-tint); color:var(--accent); }
+  .vol{ display:flex; align-items:center; gap:10px; }
+  .vol svg{ width:15px; height:15px; color:var(--fg-faint); }
+  .voltrack{ flex:1; height:6px; border-radius:var(--radius-pill); background:var(--c-surface-3); overflow:hidden; }
+  .volfill{ height:100%; background:var(--accent); border-radius:var(--radius-pill); }
+  .vol .vn{ font-family:var(--font-data); font-weight:700; font-size:12px; color:var(--fg-muted); width:34px; text-align:right; }
+
+  /* override / settings rows */
+  .ov-block{ display:flex; flex-direction:column; gap:9px; }
+  .ov-ctl{ display:flex; align-items:center; gap:12px; }
+  .ov-ctl .ov-name{ display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:17px; color:var(--fg); }
+  .ov-ctl .ov-name svg{ width:17px; }
+  .ov-ctl .ov-name .cur{ font-family:var(--font-data); font-weight:800; font-size:15px; color:var(--fg-faint); }
+  .ov-ctl .sp{ margin-left:auto; }
+  .ov-setfield{ width:64px; font-family:var(--font-data); font-weight:800; font-size:15px; color:var(--fg); background:var(--bg-input); border:1px solid var(--border-strong); border-radius:var(--radius-sm); padding:8px 10px; text-align:center; }
+  .phase-jump{ display:flex; gap:6px; flex-wrap:wrap; }
+  .pj{ font-family:var(--font-display); text-transform:uppercase; font-weight:600; font-size:13px; padding:6px 12px; border-radius:var(--radius-sm); background:var(--c-surface-2); color:var(--fg-faint); border:1px solid var(--border); cursor:pointer; }
+  .pj.now{ background:var(--accent); color:var(--fg-on-accent); border-color:var(--accent); }
+
+  /* crew popover */
+  .stat-rows{ display:flex; flex-direction:column; gap:8px; }
+  .stat-row{ display:flex; align-items:center; gap:12px; }
+  .stat-row .sl{ font-family:var(--font-data); font-weight:700; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-muted); width:64px; }
+  .stat-row .sp{ margin-left:auto; }
+  .pwr-toggles{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .pwr-row{ display:flex; align-items:center; gap:9px; padding:8px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--c-surface-2); }
+  .pwr-row .pn{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-muted); }
+  .pwr-row .sp{ margin-left:auto; }
+  .mini-toggle{ width:38px; height:22px; border-radius:var(--radius-pill); background:var(--c-surface-3); border:1px solid var(--border-strong); position:relative; cursor:pointer; }
+  .mini-toggle::after{ content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--fg-faint); transition:all var(--dur-fast); }
+  .mini-toggle.on{ background:var(--accent-tint); border-color:var(--c-green-700); }
+  .mini-toggle.on::after{ left:18px; background:var(--accent); }
+  .rename{ display:flex; align-items:center; gap:8px; }
+  .rename input{ flex:1; font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:18px; color:var(--fg); background:transparent; border:none; border-bottom:1px solid var(--border); padding:4px 2px; outline:none; }
+  .gearheld{ display:flex; align-items:center; gap:9px; padding:9px 12px; border:1px solid var(--c-cyan-500); border-radius:var(--radius-sm); background:var(--data-tint); }
+  .gearheld svg{ width:15px; height:15px; color:var(--data); }
+  .gearheld .gn{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:15px; color:var(--c-cyan-300); }
+
+  .set-row{ display:flex; flex-direction:column; gap:9px; }
+  .set-row > label{ font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-muted); }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script src="assets/minigame.js"></script>
+<script>
+  TJ.page({
+    num: '10', eyebrow: 'Screens 10–14 · Overlays',
+    title: 'Overlays',
+    desc: 'Controls pop out only as needed; the stage stays behind. Drawers slide from an edge for things the GM dips into mid-performance (Soundboard, GM Overrides). Popovers anchor to their trigger (crew detail from a rail avatar). Dialogs centre and block for Settings and destructive confirms. Undo is a persistent button, never a modal — every tracked value is GM-editable with no dead-ends.',
+    crumbs: [
+      { label: '09 Result', href: '9 - Result.html' },
+      { label: '10–14 Overlays', href: '10 - Overlays.html', here: true },
+      { label: '15 Player rulebook', href: '15 - Player Defuse.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  function section(t, s) { var d = document.createElement('div'); d.className = 'ov-section'; d.innerHTML = '<h2>' + t + '</h2>' + (s ? '<p>' + s + '</p>' : ''); window.__TJ_G.appendChild(d); }
+
+  var CREW = ['Lucy', 'Millie', 'George', 'Liv', 'Chris'].map(function (n) {
+    var p = { Lucy: 'tec', Millie: 'cha', George: 'phy', Liv: 'ste', Chris: null }[n];
+    return { name: n, powers: p ? [p] : [], gear: (n === 'Lucy' || n === 'Liv'), state: n === 'George' ? 'rest' : 'idle', stateLabel: n === 'George' ? 'RESTS' : '' };
+  });
+
+  /* a realistic mini-game backdrop */
+  function backdrop(dim) {
+    return MG.stage({
+      status: [ MG.modeBadge('active'), MG.timer('0:34', 'running', 'Round'), MG.dial('Tight', 'TEC 5 · 7 pins'), MG.prog('Pins set', '4 / 7', 57) ],
+      chal: { live: true, label: 'Challenge · play ascending', body:
+        '<div class="cardrow">' + MG.card('3', 'lit') + MG.card('6', 'lit') + MG.card('9', 'lit') + '<span class="cardplus">\u2192</span>' + MG.card('?', 'next') + MG.card('', 'face-down') + MG.card('', 'face-down') + '</div>' +
+        '<div class="hero-sub">Next card must beat 9</div>' },
+      ref: { label: 'Boost', content: MG.boosts([ { holder: 'Lucy', name: 'Reset Pin', lane: 'Tech', state: 'ready' } ]) }
+    });
+  }
+  function baseTop(extra) {
+    return Object.assign({
+      phaseNum: '05', phaseLabel: 'Obstacle', roomLabel: 'Room 4', kind: 'OBSTACLE',
+      heat: 9, loot: 5600, round: '4', totalRounds: '6', crew: CREW, crewModeLabel: 'Committed', tools: { gearBadge: 0 },
+      tp: { text: 'Low to high, no skips. One pin out of order and the board screams.' }, stage: backdrop()
+    }, extra);
+  }
+
+  /* ---- 10 · SOUNDBOARD ---- */
+  section('10 · <span class="gr">Soundboard</span>', 'The quick-cue row sits in the action bar near the GM\u2019s hands; the full board lives in a right-edge drawer with five channels — Ambient/tension · Heist SFX · Stings · Danger · Finale — each with its cues, mute and volume.');
+  var sbChannels = [
+    ['Ambient / tension', 'var(--accent)', [['Vault hum', 1], ['Tension bed', 1], ['Clock ticks', 0]], 70],
+    ['Heist SFX', 'var(--data)', [['Lockpick', 0], ['Footsteps', 0], ['Drill', 0]], 55],
+    ['Stings', 'var(--c-cyan-400)', [['Clean!', 0], ['Caught', 0], ['Reveal', 0]], 80],
+    ['Danger', 'var(--danger)', [['Alarm', 0], ['Sirens', 0], ['Heartbeat', 0]], 65],
+    ['Finale', 'var(--caution)', [['Engine', 0], ['Tyres', 0], ['Win theme', 0]], 75]
+  ];
+  function sbDrawer() {
+    return '<div class="scrim soft"></div><aside class="drawer right wide"><div class="drawer-head">' + TJ.icon('volume-2') + '<h3>Soundboard</h3><span class="x">' + TJ.icon('x') + '</span></div>' +
+      '<div class="drawer-body">' +
+        sbChannels.map(function (ch) {
+          return '<div class="sb-channel"><div class="sc-head"><span class="sc-dot" style="background:' + ch[1] + '"></span><span class="sc-name">' + ch[0] + '</span><span class="sc-mute">' + TJ.icon('volume-x') + '</span></div>' +
+            '<div class="sb-cues">' + ch[2].map(function (c) { return '<span class="sbcue' + (c[1] ? ' playing' : '') + '">' + (c[1] ? TJ.icon('volume-2') : TJ.icon('play')) + c[0] + '</span>'; }).join('') + '</div>' +
+            '<div class="vol">' + TJ.icon('volume-1') + '<div class="voltrack"><div class="volfill" style="width:' + ch[3] + '%"></div></div><span class="vn">' + ch[3] + '</span></div></div>';
+        }).join('') +
+      '</div><div class="drawer-foot"><span class="ov-sec">Master</span><div class="voltrack" style="flex:1"><div class="volfill" style="width:80%"></div></div><button class="btn btn-ghost btn-sm">' + TJ.icon('volume-x') + 'Mute all</button></div></aside>';
+  }
+  TJ.frame(
+    { vnum: '10', title: 'Soundboard · quick cues + full drawer', note: 'Drawer slides from the right; the mini-game stage stays visible (soft scrim). The action bar keeps the 2–5 contextual cues for this moment. Currently playing cues glow green.' },
+    baseTop({ tools: { gearBadge: 0, active: 'sound' }, overlay: sbDrawer(),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' },
+        cues: [ { icon: 'volume-2', label: 'Vault hum', cls: 'playing' }, { icon: 'play', label: 'Lockpick' }, { icon: 'bell', label: 'Alarm', cls: 'danger' } ],
+        primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } } })
+  );
+
+  /* ---- 11 · GM OVERRIDES ---- */
+  section('11 · <span class="gr">GM Overrides</span>', 'Every tracked value, editable mid-run. Sectioned: Heat, Loot, Room (re-roll / skip), Phase (jump). Undo is persistent at the foot. The GM is always in charge; the app never blocks.');
+  function ovDrawer() {
+    return '<div class="scrim soft"></div><aside class="drawer right"><div class="drawer-head">' + TJ.icon('sliders-horizontal') + '<h3>GM Overrides</h3><span class="x">' + TJ.icon('x') + '</span></div>' +
+      '<div class="drawer-body">' +
+        '<div class="ov-block"><span class="ov-sec">Heat</span>' +
+          '<div class="ov-ctl"><span class="ov-name">' + TJ.icon('flame') + 'Heat <span class="cur">9 / 20</span></span><div class="adjust sp danger"><button>\u2212</button><span class="av">9</span><button>+</button></div></div>' +
+          '<div class="ov-ctl"><span class="prose sm muted">Set exact</span><input class="ov-setfield sp" value="9"></div></div>' +
+        '<div class="ov-block"><span class="ov-sec">Loot</span>' +
+          '<div class="ov-ctl"><span class="ov-name">' + TJ.icon('banknote') + 'Loot <span class="cur">$5,600</span></span><div class="adjust sp"><button>\u2212</button><span class="av">$5.6k</span><button>+</button></div></div>' +
+          '<div class="ov-ctl"><span class="prose sm muted">Set exact</span><input class="ov-setfield sp" style="width:88px" value="5600"></div></div>' +
+        '<div class="ov-block"><span class="ov-sec">Room</span>' +
+          '<div class="ov-ctl" style="gap:8px"><button class="btn btn-secondary btn-sm">' + TJ.icon('dice-5') + 'Re-roll room</button><button class="btn btn-ghost btn-sm">' + TJ.icon('skip-forward') + 'Skip room</button></div></div>' +
+        '<div class="ov-block"><span class="ov-sec">Phase · jump to</span>' +
+          '<div class="phase-jump"><span class="pj">Setup</span><span class="pj">Brief</span><span class="pj now">Obstacle</span><span class="pj">Offer</span><span class="pj">Getaway</span><span class="pj">Result</span></div></div>' +
+      '</div><div class="drawer-foot"><button class="btn btn-ghost" style="flex:1">' + TJ.icon('rotate-ccw') + 'Undo last change</button></div></aside>';
+  }
+  TJ.frame(
+    { vnum: '11', title: 'GM Overrides drawer', note: 'Heat & Loot get both a ± stepper and a set-exact field; Room re-rolls or skips; Phase jumps anywhere. The persistent Undo lives at the foot — never a modal. No state the app reaches that the GM can\u2019t edit out of.' },
+    baseTop({ tools: { gearBadge: 0, active: 'gm' }, overlay: ovDrawer(),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'volume-2', label: 'Vault hum', cls: 'playing' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } } })
+  );
+
+  /* ---- 12 · CREW DETAIL POPOVER ---- */
+  section('12 · <span class="gr">Crew detail</span>', 'Tap a rail avatar for the per-player override surface: the four lane stats (± / set), the four power-up toggles, rested / un-rested, and rename. Gear isn’t held as an item — a dropped power-up lights a pip here, a stat boost bumps a lane number. Anchored to the avatar it came from.');
+  function crewPopover() {
+    function statRow(l, v) { return '<div class="stat-row"><span class="sl">' + l + '</span><div class="adjust sp"><button>\u2212</button><span class="av">' + v + '</span><button>+</button></div></div>'; }
+    function pwrRow(l, on) { return '<div class="pwr-row"><span class="pn">' + l + '</span><span class="mini-toggle sp ' + (on ? 'on' : '') + '"></span></div>'; }
+    return '<div class="scrim soft"></div><div class="popover anchor-left" style="left:280px;top:128px;width:360px">' +
+      '<div class="popover-head"><span class="av" style="width:34px;height:34px;border-radius:var(--radius-sm);background:var(--c-surface-3);border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;color:var(--accent)">L</span>' +
+        '<div class="rename"><input value="LUCY"></div><span class="ov-sec" style="margin-left:auto">Hacker</span></div>' +
+      '<div class="popover-body">' +
+        '<span class="ov-sec">Lane stats</span><div class="stat-rows">' + statRow('Tech', 5) + statRow('Physical', 2) + statRow('Charm', 3) + statRow('Stealth', 4) + '</div>' +
+        '<span class="ov-sec">Power-ups</span><div class="pwr-toggles">' + pwrRow('Tech', 1) + pwrRow('Physical', 0) + pwrRow('Charm', 0) + pwrRow('Stealth', 0) + '</div>' +
+        '<div class="ov-ctl"><span class="ov-name" style="font-size:15px">' + TJ.icon('battery-low') + 'Rested</span><span class="mini-toggle sp"></span></div>' +
+      '</div></div>';
+  }
+  TJ.frame(
+    { vnum: '12', title: 'Crew detail popover', note: 'Anchored to Lucy\u2019s avatar on the left rail (arrow points back to it). Four lane ± steppers, four power-up toggles, a rested switch and an inline rename. No “gear held” — power-ups show as pips, stat boosts as the lane numbers. The same surface the Spoils beat reopens to adjust.' },
+    baseTop({ overlay: crewPopover(),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'volume-2', label: 'Vault hum', cls: 'playing' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } } })
+  );
+
+  /* ---- 13 · SETTINGS DIALOG ---- */
+  section('13 · <span class="gr">Settings</span>', 'Centred, blocking dialog over a dimmed stage: dice mode, audio and seed. The infrequent, run-level switches that don\u2019t belong in a drawer.');
+  function settingsDialog() {
+    return '<div class="scrim"></div><div class="dialog"><div class="dialog-head">' + TJ.icon('settings') + '<h3>Settings</h3><span class="x">' + TJ.icon('x') + '</span></div>' +
+      '<div class="dialog-body">' +
+        '<div class="set-row"><label>Dice mode</label><div class="toggle data"><button class="on">App roll</button><button>Physical die</button></div></div>' +
+        '<div class="set-row"><label>Audio</label><div class="vol">' + TJ.icon('volume-2') + '<div class="voltrack"><div class="volfill" style="width:80%"></div></div><span class="vn">80</span></div></div>' +
+        '<div class="set-row"><label>Seed <span style="text-transform:none;letter-spacing:0;color:var(--fg-faint)">(reproduces a run)</span></label><div style="display:flex;gap:8px"><input class="inp" style="flex:1;font-family:var(--font-data)" value="MERIDIAN-0719"><button class="btn btn-secondary btn-sm">' + TJ.icon('dice-5') + 'New</button></div></div>' +
+      '</div><div class="dialog-foot"><button class="btn btn-ghost">Cancel</button><button class="btn btn-primary">' + TJ.icon('check') + 'Save</button></div></div>';
+  }
+  TJ.frame(
+    { vnum: '13', title: 'Settings dialog', note: 'Dice-mode as a segmented toggle (app-roll / physical-die), master audio, and the seed with a re-roll. Blocking scrim — these aren\u2019t mid-performance edits.' },
+    baseTop({ tools: { gearBadge: 0, active: 'settings' }, overlay: settingsDialog(),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'volume-2', label: 'Vault hum', cls: 'playing' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary', disabled: true } } })
+  );
+
+  /* ---- 14 · CONFIRM DESTRUCTIVE ---- */
+  section('14 · <span class="gr">Confirm</span>', 'The one place the app slows the GM down: destructive, irreversible actions. Backdrop-blur scrim, red dialog, the safe option as the default focus.');
+  function confirmDialog() {
+    return '<div class="scrim"></div><div class="dialog danger"><div class="dialog-head">' + TJ.icon('alert-triangle') + '<h3>Abandon this run?</h3></div>' +
+      '<div class="dialog-body">' +
+        '<p class="prose">The Magpies are mid-job \u2014 Room 4, $5,600 banked, Heat 9. Abandoning clears the run and the save. This can\u2019t be undone.</p>' +
+        '<div style="display:flex;gap:10px"><span class="badge b-danger"><span class="d"></span>Save will be cleared</span><span class="badge b-idle"><span class="d"></span>Leaderboard kept</span></div>' +
+      '</div><div class="dialog-foot"><button class="btn btn-secondary">Keep playing</button><button class="btn btn-danger">' + TJ.icon('trash-2') + 'Abandon run</button></div></div>';
+  }
+  TJ.frame(
+    { vnum: '14', title: 'Confirm-destructive dialog', note: 'New job / abandon run. States exactly what is lost (save) and what is kept (leaderboard); the safe choice is the quiet default, the destructive one is the only red button on screen.' },
+    baseTop({ overlay: confirmDialog(),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'volume-2', label: 'Vault hum', cls: 'playing' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary', disabled: true } } })
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

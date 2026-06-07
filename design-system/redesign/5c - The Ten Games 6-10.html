@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 05 The Ten Games 6–10</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<link rel="stylesheet" href="assets/minigame.css">
+<style>
+  .mg-section{ margin:78px 0 -18px; border-top:1px solid var(--border-strong); padding-top:30px; }
+  .mg-section h2{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:40px; letter-spacing:-.01em; color:var(--fg); }
+  .mg-section h2 .gr{ color:var(--accent); }
+  .mg-section p{ font-family:var(--font-body); font-size:17px; line-height:1.5; color:var(--fg-muted); max-width:80ch; margin-top:10px; }
+  /* beat dots */
+  .beatrow{ display:flex; gap:7px; }
+  .bdot{ width:18px; height:18px; border-radius:50%; background:var(--c-surface-3); border:1px solid var(--border-strong); }
+  .bdot.done{ background:var(--c-surface-4); }
+  .bdot.on{ background:var(--accent); border-color:var(--c-green-400); box-shadow:var(--glow-accent); }
+  .bdot.mute{ background:transparent; border-style:dashed; }
+  .bdot.target{ border-color:var(--caution); }
+  .feedback{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:64px; letter-spacing:-.01em; line-height:1; }
+  .feedback.hit{ color:var(--accent); } .feedback.early{ color:var(--caution); } .feedback.late{ color:var(--danger); }
+  .tally{ display:flex; align-items:center; gap:18px; }
+  .tally .tcount{ font-family:var(--font-data); font-weight:800; font-size:64px; line-height:1; color:var(--fg); font-variant-numeric:tabular-nums; }
+  .tally .tbtn{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:16px 26px; border:1px solid var(--c-green-700); border-radius:var(--radius-md); background:var(--accent-tint); cursor:pointer; }
+  .tally .tbtn .tl{ font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:24px; color:var(--accent); }
+  .tally .tbtn .ts{ font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .spread{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .qa{ display:flex; flex-direction:column; gap:14px; width:100%; max-width:660px; }
+  .qa .q{ font-family:var(--font-body); font-weight:600; font-size:26px; line-height:1.3; color:var(--fg); }
+  .qa .ans{ display:flex; align-items:center; gap:10px; padding:11px 15px; border:1px dashed var(--c-cyan-500); border-radius:var(--radius-md); background:var(--data-tint); }
+  .qa .ans svg{ width:16px; height:16px; color:var(--data); }
+  .qa .ans .al{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--data); }
+  .qa .ans .av{ font-family:var(--font-body); font-weight:600; font-size:19px; color:var(--c-cyan-300); }
+  .opts4{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .opt4{ display:flex; align-items:center; gap:11px; padding:12px 15px; border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--c-surface-2); }
+  .opt4 .ol{ width:26px; height:26px; flex:none; border-radius:var(--radius-xs); background:var(--c-surface-3); display:flex; align-items:center; justify-content:center; font-family:var(--font-data); font-weight:800; color:var(--fg-muted); }
+  .opt4 .ot{ font-family:var(--font-body); font-size:17px; color:var(--fg); }
+  .opt4.correct{ border-color:var(--c-cyan-500); background:var(--data-tint); }
+  .opt4.correct .ol{ background:var(--data); color:var(--c-fg-ink); }
+  .opt4.correct .ot{ color:var(--c-cyan-300); }
+  .judge{ display:flex; gap:10px; }
+  .tower{ display:flex; flex-direction:column-reverse; gap:4px; align-items:center; }
+  .tower .brick{ width:120px; height:18px; border-radius:2px; background:linear-gradient(180deg,var(--c-surface-4),var(--c-surface-3)); border:1px solid var(--border-strong); }
+  .tower .brick.target{ border-color:var(--caution); border-style:dashed; background:transparent; }
+  .burst{ display:flex; align-items:center; gap:10px; padding:8px 14px; border:1px solid var(--c-amber-700); border-radius:var(--radius-md); background:var(--caution-tint); }
+  .burst svg{ width:17px; height:17px; color:var(--caution); }
+  .burst .bk{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--caution); }
+  .burst .bv{ font-family:var(--font-data); font-weight:800; font-size:24px; color:var(--c-amber-300); font-variant-numeric:tabular-nums; }
+  .rulebook{ display:flex; flex-direction:column; gap:8px; padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--c-surface-1); max-width:300px; }
+  .rulebook .rh{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--fg-faint); display:flex; align-items:center; gap:7px; }
+  .rulebook .rh svg{ width:14px; height:14px; }
+  .rulebook .rl{ display:flex; align-items:center; gap:9px; font-family:var(--font-body); font-size:15px; color:var(--fg-muted); }
+  .rulebook .rl .sw{ width:12px; height:12px; border-radius:50%; flex:none; }
+  .defuse-2col{ display:flex; gap:24px; align-items:center; justify-content:center; }
+  /* Defuse — the "device" is a normal stack of cards; wires are flavour */
+  .devicewrap{ display:flex; flex-direction:column; gap:14px; align-items:center; width:100%; }
+  .device{ display:flex; gap:12px; align-items:flex-start; }
+  .dcard{ display:flex; flex-direction:column; align-items:center; gap:7px; }
+  .dcard .face{ width:66px; height:92px; border-radius:7px; background:linear-gradient(160deg,var(--c-surface-3),var(--c-surface-2)); border:1px solid var(--border-strong); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; box-shadow:var(--elev-1); position:relative; }
+  .dcard .face .rank{ font-family:var(--font-data); font-weight:800; font-size:30px; line-height:1; color:var(--fg); }
+  .dcard .face .suit{ font-size:22px; line-height:1; }
+  .dcard .face .suit.red{ color:var(--c-red-400); }
+  .dcard .face .suit.blk{ color:var(--fg-muted); }
+  .dcard .pos{ font-family:var(--font-data); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-faint); }
+  .dcard.correct .face{ border-color:var(--c-cyan-500); box-shadow:var(--glow-data); }
+  .dcard.correct .pos{ color:var(--data); }
+  .dcard.cut .face{ border-color:var(--c-green-700); background:var(--accent-tint); }
+  .dcard.cut .face::after{ content:""; position:absolute; inset:0; background:linear-gradient(135deg, transparent 46%, var(--c-green-700) 47% 53%, transparent 54%); opacity:.5; }
+  .dcard.cut .pos{ color:var(--accent); }
+  .dcard.badcut .face{ border-color:var(--c-red-700); background:var(--danger-tint); }
+  .dcard.badcut .face::after{ content:""; position:absolute; inset:0; background:linear-gradient(135deg, transparent 46%, var(--danger) 47% 53%, transparent 54%); opacity:.6; }
+  .dcard.badcut .pos{ color:var(--danger); }
+  .gmcut{ display:flex; align-items:center; gap:11px; padding:10px 15px; border:1px dashed var(--c-cyan-500); border-radius:var(--radius-md); background:var(--data-tint); max-width:560px; }
+  .gmcut.danger{ border-style:solid; border-color:var(--c-red-700); background:var(--danger-tint); }
+  .gmcut svg{ width:16px; height:16px; color:var(--data); flex:none; }
+  .gmcut.danger svg{ color:var(--danger); }
+  .gmcut .gk{ font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--data); }
+  .gmcut.danger .gk{ color:var(--danger); }
+  .gmcut .gv{ font-family:var(--font-body); font-size:15px; color:var(--fg); }
+  .gmcut .gv b{ color:var(--c-cyan-300); font-weight:600; }
+  .manualref{ display:flex; align-items:center; gap:9px; font-family:var(--font-body); font-size:13px; color:var(--fg-faint); }
+  .manualref svg{ width:14px; height:14px; }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script src="assets/minigame.js"></script>
+<script>
+  TJ.page({
+    num: '05', eyebrow: 'Screen 05 · The Mini-games',
+    title: 'The Ten Games · 6–10',
+    desc: 'Each of the ten obstacle resolvers in its ACTIVE state, sitting in the universal shell (see 05a–c). State is colour and iconography, never prose; progress is always a meter; boosts surface only for the committed holder and fire once. ARMED and RESOLVE reuse the shell. The lane(s) tested are highlighted cyan on the in-play crew.',
+    crumbs: [
+      { label: '04 Scenario', href: '4 - Scenario Room.html' },
+      { label: '05 Shell', href: '5 - Mini-games.html' },
+      { label: '05 The Ten · 1–5', href: '5b - The Ten Games 1-5.html' },
+      { label: '05 The Ten · 6–10', href: '5c - The Ten Games 6-10.html', here: true },
+      { label: '06 Spoils', href: '6 - Spoils.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  function section(t, s) {
+    var d = document.createElement('div'); d.className = 'mg-section';
+    d.innerHTML = '<h2>' + t + '</h2>' + (s ? '<p>' + s + '</p>' : '');
+    window.__TJ_G.appendChild(d);
+  }
+
+  /* crew helper: committed -> in-play (lane highlighted), resting -> rest, else watch */
+  var POWER = { Lucy: 'tec', Millie: 'cha', George: 'phy', Liv: 'ste', Chris: null };
+  function crew(committed, resting, lanes) {
+    return ['Lucy', 'Millie', 'George', 'Liv', 'Chris'].map(function (n) {
+      var c = { name: n, powers: POWER[n] ? [POWER[n]] : [], gear: (n === 'Lucy' || n === 'Liv') };
+      if (committed.indexOf(n) >= 0) { c.state = 'in'; c.stateLabel = 'IN PLAY'; c.hotLanes = lanes || []; }
+      else if ((resting || []).indexOf(n) >= 0) { c.state = 'rest'; c.stateLabel = 'RESTS'; }
+      else { c.state = 'idle'; c.stateLabel = 'WATCH'; }
+      return c;
+    });
+  }
+  function base(extra) {
+    return Object.assign({
+      heat: 9, loot: 5600, round: '4', totalRounds: '6', kind: 'OBSTACLE',
+      phaseNum: '05', phaseLabel: 'Obstacle', tools: { gearBadge: 0 }, crewModeLabel: 'Committed'
+    }, extra);
+  }
+  function dots(n, on) { var s = ''; for (var i = 0; i < 16; i++) { var c = 'bdot'; if (i < on - 1) c += ' done'; if (i === on - 1) c += ' on'; if (i === 11) c += ' target'; s += '<div class="' + c + '"></div>'; } return s; }
+
+
+  section('The ten games · <span class="gr">6–10</span>', 'The dual-lane resolvers and the player-view game. Same shell, same rules: state is colour, progress is a meter, boosts fire once.');
+
+  /* 6 — INSIDE KNOWLEDGE (Tech+Charm) */
+  TJ.frame(
+    { vnum: '05·6', title: 'Inside Knowledge · ACTIVE', note: 'Tech + Charm. Rapid trivia: the GM reads Q, sees the answer (cyan, GM-only, clear hierarchy), marks Correct / Wrong against the clock. Progress = questions answered. Cheat Sheet / Narrow It Down are the shouts.' },
+    base({
+      roomLabel: 'Room 4 · Tech+Charm', crew: crew(['Lucy', 'Millie'], ['George'], ['tec', 'cha']),
+      tp: { text: 'Quickfire \u2014 I ask, you answer, no conferring. Get six of eight and the guard buys that you work here.' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active'), MG.timer('0:21', 'running', 'Round'), MG.dial('Brisk', '8 Qs · need 6'), MG.prog('Answered', '4 / 8 · 3 right', 50) ],
+        chal: { live: true, label: 'Challenge · read Q, mark it (answer is GM-only)', body:
+          '<div class="qa"><div class="q">Which floor of the building holds the records room, according to the lease plans?</div>' +
+          '<div class="ans">' + TJ.icon('eye') + '<div><span class="al">Answer · GM only</span><br><span class="av">The second floor (Mezzanine B)</span></div></div></div>' },
+        ref: { label: 'Mark it', content: '<div class="judge"><button class="btn btn-primary btn-sm">' + TJ.icon('check') + 'Correct</button><button class="btn btn-danger btn-sm">' + TJ.icon('x') + 'Wrong</button></div>' +
+          MG.boosts([ { holder: 'Lucy', name: 'Cheat Sheet', lane: 'Tech', state: 'ready' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Tension', cls: 'playing' }, { icon: 'timer', label: 'Buzzer' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+  TJ.frame(
+    { vnum: '05·6v', title: 'Inside Knowledge · Narrow It Down', note: 'Variant. The Narrow It Down shout (Millie, Charm) turns the open question into four options with the correct one marked for the GM — the crew now guesses from a shortlist.' },
+    base({
+      roomLabel: 'Room 4 · Tech+Charm', crew: crew(['Lucy', 'Millie'], ['George'], ['tec', 'cha']),
+      tp: { text: 'Alright \u2014 I\u2019ll give you four. Only one\u2019s right, and you\u2019ve still got a clock.' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active', 'Active · narrowed'), MG.timer('0:18', 'running', 'Round'), MG.dial('Brisk', '8 Qs · need 6'), MG.prog('Answered', '4 / 8 · 3 right', 50) ],
+        chal: { live: true, label: 'Challenge · four options, correct marked for GM', body:
+          '<div class="qa"><div class="q">Which floor holds the records room?</div>' +
+          '<div class="opts4"><div class="opt4"><span class="ol">A</span><span class="ot">Ground floor</span></div>' +
+          '<div class="opt4 correct"><span class="ol">B</span><span class="ot">Second floor (Mezz B)</span></div>' +
+          '<div class="opt4"><span class="ol">C</span><span class="ot">Third floor</span></div>' +
+          '<div class="opt4"><span class="ol">D</span><span class="ot">The basement</span></div></div></div>' },
+        ref: { label: 'Mark it', content: '<div class="judge"><button class="btn btn-primary btn-sm">' + TJ.icon('check') + 'Correct</button><button class="btn btn-danger btn-sm">' + TJ.icon('x') + 'Wrong</button></div>' +
+          MG.boosts([ { holder: 'Millie', name: 'Narrow It Down', lane: 'Charm', state: 'used' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Tension', cls: 'playing' }, { icon: 'timer', label: 'Buzzer' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+
+  /* 7 — SAFE-CRACK (Tech+Stealth) */
+  TJ.frame(
+    { vnum: '05·7', title: 'Safe-Crack · ACTIVE', note: 'Tech + Stealth. Mastermind: guesses against a hidden code, with feedback as pips — green = right digit & place, amber = right digit wrong place. Readable history, current guess highlighted. Stethoscope / Patient Touch are the shouts.' },
+    base({
+      roomLabel: 'Room 6 · Tech+Stealth', crew: crew(['Lucy', 'Liv'], ['George'], ['tec', 'ste']),
+      tp: { text: 'Four digits. Each go, I\u2019ll tell you how many are right and how many are just in the wrong spot. Make them count \u2014 you get six.' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active'), MG.dial('Hidden code', 'TEC+STE · 6 tries'), MG.prog('Guesses used', '3 / 6', 50, 'data') ],
+        chal: { live: true, label: 'Challenge · crack the 4-digit code', body:
+          '<div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:440px">' +
+          '<div class="guessrow"><span class="gnum">1 4 8 2</span><div class="pegs"><span class="peg place"></span><span class="peg digit"></span><span class="peg"></span><span class="peg"></span></div></div>' +
+          '<div class="guessrow"><span class="gnum">7 4 2 9</span><div class="pegs"><span class="peg place"></span><span class="peg place"></span><span class="peg"></span><span class="peg"></span></div></div>' +
+          '<div class="guessrow current"><span class="gnum">7 4 6 1</span><div class="pegs"><span class="peg place"></span><span class="peg place"></span><span class="peg digit"></span><span class="peg"></span></div></div>' +
+          '<div class="peglegend"><span class="pl"><span class="peg place"></span>Right digit &amp; place</span><span class="pl"><span class="peg digit"></span>Right digit, wrong place</span></div></div>' },
+        ref: { label: 'Boost', content: MG.boosts([ { holder: 'Lucy', name: 'Stethoscope', lane: 'Tech', state: 'ready' }, { holder: 'Liv', name: 'Patient Touch', lane: 'Stealth', state: 'ready' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Tension', cls: 'playing' }, { icon: 'lock', label: 'Tumbler' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+  TJ.frame(
+    { vnum: '05·7v', title: 'Safe-Crack · Stethoscope reveal', note: 'Variant. Stethoscope (Lucy, Tech) reveals one digit of the hidden code to the GM only — shown in the cyan GM-only strip — so the GM can steer the table toward it without saying it outright.' },
+    base({
+      roomLabel: 'Room 6 · Tech+Stealth', crew: crew(['Lucy', 'Liv'], ['George'], ['tec', 'ste']),
+      tp: { text: 'Lucy\u2019s got an ear on it. \u201cThe second one\u2019s a four,\u201d she mutters \u2014 now nudge them there.' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active', 'Active · tip'), MG.dial('Hidden code', 'TEC+STE · 6 tries'), MG.prog('Guesses used', '3 / 6', 50, 'data') ],
+        chal: { live: true, label: 'Challenge · one digit revealed (GM only)', body:
+          '<div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:440px">' +
+          '<div class="ans" style="justify-content:center;gap:14px">' + TJ.icon('eye') + '<span class="al">Code · GM only</span><span class="gnum" style="font-size:30px">_ 4 _ _</span></div>' +
+          '<div class="guessrow"><span class="gnum">7 4 2 9</span><div class="pegs"><span class="peg place"></span><span class="peg place"></span><span class="peg"></span><span class="peg"></span></div></div>' +
+          '<div class="guessrow current"><span class="gnum">7 4 6 1</span><div class="pegs"><span class="peg place"></span><span class="peg place"></span><span class="peg digit"></span><span class="peg"></span></div></div></div>' },
+        ref: { label: 'Boost', content: MG.boosts([ { holder: 'Lucy', name: 'Stethoscope', lane: 'Tech', state: 'used' }, { holder: 'Liv', name: 'Patient Touch', lane: 'Stealth', state: 'ready' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Tension', cls: 'playing' }, { icon: 'lock', label: 'Tumbler' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+
+  /* 8 — ASSEMBLY LINE (Physical+Charm) */
+  TJ.frame(
+    { vnum: '05·8', title: 'Assembly Line · ACTIVE', note: 'Physical + Charm. Frantic card-trading at the table; the GM tallies completed sets against the clock — sets-complete is the hero number. Quick Hands / Tip-Off are the shouts.' },
+    base({
+      roomLabel: 'Room 5 · Phys+Charm', crew: crew(['George', 'Millie'], ['Lucy'], ['phy', 'cha']),
+      tp: { text: 'Trade fast, trade loud \u2014 doesn\u2019t matter how you get the sets, just get them. Tell me every time one\u2019s complete.' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active'), MG.timer('0:28', 'running', 'Round'), MG.dial('Brisk', 'need 9 sets'), MG.prog('Sets complete', '6 / 9', 66) ],
+        chal: { live: true, label: 'Challenge · tally each completed set', body:
+          '<div style="display:flex;align-items:center;gap:30px"><div style="text-align:center"><div class="hero-num">6</div><div class="hero-sub">sets complete</div></div>' +
+          '<div class="tally"><div class="tbtn"><span class="tl">+1</span><span class="ts">Set done</span></div><button class="btn btn-ghost btn-sm">' + TJ.icon('minus') + 'Undo</button></div></div>' },
+        ref: { label: 'Boost', content: MG.boosts([ { holder: 'George', name: 'Quick Hands', lane: 'Phys', state: 'ready' }, { holder: 'Millie', name: 'Tip-Off', lane: 'Charm', state: 'ready' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Bustle', cls: 'playing' }, { icon: 'timer', label: 'Buzzer' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+  TJ.frame(
+    { vnum: '05·8v', title: 'Assembly Line · Tip-Off (types revealed)', note: 'Variant. Tip-Off (Millie, Charm) reveals which card types are in play so the crew stops chasing dead sets — shown as a glanceable type strip. The same language covers its negotiated 2-player variant.' },
+    base({
+      roomLabel: 'Room 5 · Phys+Charm', crew: crew(['George', 'Millie'], ['Lucy'], ['phy', 'cha']),
+      tp: { text: 'Millie\u2019s clocked the deck \u2014 only three types are even out there. Stop hunting the fourth and go.' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active', 'Active · tip-off'), MG.timer('0:24', 'running', 'Round'), MG.dial('Brisk', 'need 9 sets'), MG.prog('Sets complete', '6 / 9', 66) ],
+        chal: { live: true, label: 'Challenge · types in play revealed', body:
+          '<div class="ans" style="justify-content:center;gap:18px;max-width:520px">' + TJ.icon('eye') + '<span class="al">Types in play</span>' +
+          '<span style="font-family:var(--font-data);font-weight:800;font-size:26px;color:var(--c-cyan-300);letter-spacing:.1em">\u25B2 \u25CF \u25A0</span>' +
+          '<span class="hero-sub" style="margin:0">no \u2666 \u2014 don\u2019t chase it</span></div>' +
+          '<div style="display:flex;align-items:center;gap:30px;margin-top:6px"><div style="text-align:center"><div class="hero-num" style="font-size:80px">6</div><div class="hero-sub">sets complete</div></div>' +
+          '<div class="tally"><div class="tbtn"><span class="tl">+1</span><span class="ts">Set done</span></div></div></div>' },
+        ref: { label: 'Boost', content: MG.boosts([ { holder: 'George', name: 'Quick Hands', lane: 'Phys', state: 'ready' }, { holder: 'Millie', name: 'Tip-Off', lane: 'Charm', state: 'used' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Bustle', cls: 'playing' }, { icon: 'timer', label: 'Buzzer' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+
+  /* 9 — STEADY HANDS (Physical+Stealth) */
+  TJ.frame(
+    { vnum: '05·9', title: 'Steady Hands · ACTIVE', note: 'Physical + Stealth. The crew builds a card tower to a target height (physical, off-screen); the GM reads the target, times it and judges. Extra Hands / Steady Breath are the shouts.' },
+    base({
+      roomLabel: 'Room 6 · Phys+Stealth', crew: crew(['George', 'Liv'], ['Lucy'], ['phy', 'ste']),
+      tp: { text: 'Eight storeys of folded cards, no breathing on it. Slow is smooth, smooth is fast \u2014 I\u2019m timing you, not rushing you.' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active'), MG.timer('0:46', 'running', 'Build'), MG.dial('Tall', 'target 8 tiers'), MG.prog('Height built', '6 / 8 tiers', 75) ],
+        chal: { live: true, label: 'Challenge · build to the target (judged at the table)', body:
+          '<div style="display:flex;align-items:flex-end;gap:34px"><div class="tower"><div class="brick"></div><div class="brick"></div><div class="brick"></div><div class="brick"></div><div class="brick"></div><div class="brick"></div><div class="brick target"></div><div class="brick target"></div></div>' +
+          '<div style="text-align:center"><div class="hero-num" style="font-size:72px">6<small style="font-size:30px;color:var(--fg-faint)">/8</small></div><div class="hero-sub">tiers \u00b7 two to go</div></div></div>' },
+        ref: { label: 'Boost', content: MG.boosts([ { holder: 'George', name: 'Extra Hands', lane: 'Phys', state: 'ready' }, { holder: 'Liv', name: 'Steady Breath', lane: 'Stealth', state: 'ready' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Held breath', cls: 'playing' }, { icon: 'timer', label: 'Clock' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+  TJ.frame(
+    { vnum: '05·9v', title: 'Steady Hands · Extra Hands 10s burst', note: 'Variant. Extra Hands (George, Phys) opens a 10-second burst — a clear SECONDARY countdown (amber) distinct from the main build timer, during which extra placements are allowed.' },
+    base({
+      roomLabel: 'Room 6 · Phys+Stealth', crew: crew(['George', 'Liv'], ['Lucy'], ['phy', 'ste']),
+      tp: { text: 'Ten seconds, all hands in \u2014 stack everything you can while the window\u2019s open. Go, go, go!' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active', 'Active · burst'), MG.timer('0:41', 'running', 'Build'), MG.dial('Tall', 'target 8 tiers'), MG.prog('Height built', '7 / 8 tiers', 87) ],
+        chal: { live: true, label: 'Challenge · Extra Hands burst is open', body:
+          '<div style="display:flex;align-items:center;gap:30px"><div class="burst">' + TJ.icon('zap') + '<div><div class="bk">Extra Hands · burst</div><div class="bv">0:08</div></div></div>' +
+          '<div style="text-align:center"><div class="hero-num" style="font-size:72px">7<small style="font-size:30px;color:var(--fg-faint)">/8</small></div><div class="hero-sub">one tier to clean</div></div></div>' +
+          '<div class="hero-sub" style="color:var(--c-amber-300)">Secondary clock \u2014 separate from the 0:41 build timer above</div>' },
+        ref: { label: 'Boost', content: MG.boosts([ { holder: 'George', name: 'Extra Hands', lane: 'Phys', state: 'used' }, { holder: 'Liv', name: 'Steady Breath', lane: 'Stealth', state: 'ready' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'zap', label: 'Burst', cls: 'playing' }, { icon: 'timer', label: 'Clock' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+
+  /* Defuse helpers — the device is a normal row of cards */
+  function dcard(r, s, c, pos, state) {
+    return '<div class="dcard ' + (state || '') + '"><div class="face"><span class="rank">' + r + '</span><span class="suit ' + c + '">' + s + '</span></div><span class="pos">' + pos + '</span></div>';
+  }
+  function manualRef() { return '<div class="manualref">' + TJ.icon('book-open') + 'Player-view holds the manual \u00b7 the crew describes this row, the reader names the cut</div>'; }
+
+  /* 10 — DEFUSE THE ALARM (Charm+Stealth) — GM referee view */
+  TJ.frame(
+    { vnum: '05·10', title: 'Defuse the Alarm · GM referee view', note: 'Charm + Stealth. One player reads the manual (screen 15) and can\u2019t see the cards; the rest see this row of cards and describe it. The manual is a conditional lookup \u2014 not a few flat rules \u2014 so the crew has to talk. The GM sees the timer, the row, and (GM-only) which card the manual resolves to. Clear Channel / Spare Wire are the shouts.' },
+    base({
+      roomLabel: 'Room 6 · Charm+Stealth', crew: crew(['Millie', 'Liv'], ['George'], ['cha', 'ste']),
+      tp: { text: 'One of you reads the manual and can\u2019t see the cards; the rest can see the cards and not the manual. Describe the row \u2014 suits, ranks, order \u2014 and let the manual tell you what to cut.' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active'), MG.timer('1:24', 'running', 'Fuse'), MG.dial('Next cut \u00b7 4th', 'last red · rule 4'), MG.prog('Safe cuts', '1 / 3', 33, 'data') ],
+        chal: { live: true, label: 'Challenge · referee the cuts (GM sees the answer)', body:
+          '<div class="devicewrap">' +
+            '<div class="device">' + dcard('7', '\u2663', 'blk', '1 · cut', 'cut') + dcard('K', '\u2666', 'red', '2', '') + dcard('3', '\u2660', 'blk', '3', '') + dcard('9', '\u2665', 'red', '4', 'correct') + dcard('4', '\u2663', 'blk', '5', '') + '</div>' +
+            '<div class="gmcut">' + TJ.icon('eye') + '<div><span class="gk">Manual resolves to \u00b7 GM only</span><br><span class="gv">Two or more red cards in the row \u2192 cut the <b>last red: 9\u2665 (position 4)</b>. [Rule 4]</span></div></div>' +
+            manualRef() +
+          '</div>' },
+        ref: { label: 'Boost', content: MG.boosts([ { holder: 'Millie', name: 'Clear Channel', lane: 'Charm', state: 'ready' }, { holder: 'Liv', name: 'Spare Wire', lane: 'Stealth', state: 'ready' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Fuse hum', cls: 'playing' }, { icon: 'scissors', label: 'Snip' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+  TJ.frame(
+    { vnum: '05·10v1', title: 'Defuse the Alarm · alarm-tripped', note: 'Variant. The crew talked it out wrong and cut the 2nd card when the manual resolved to the 4th \u2014 that card flags red, progress goes danger and the alarm fires. Spare Wire can forgive it (next variant); otherwise it resolves toward Botched.' },
+    base({
+      roomLabel: 'Room 6 · Charm+Stealth', crew: crew(['Millie', 'Liv'], ['George'], ['cha', 'ste']),
+      tp: { amber: true, text: 'Snip \u2014 and it\u2019s the wrong card. The fuse spits sparks. Somebody read the row wrong, or the manual was misheard. Spare Wire can undo it, if Liv\u2019s still holding one.' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active', 'Active · tripped'), MG.timer('0:58', 'danger', 'Fuse'), MG.dial('Wrong cut', 'rule said 4th'), MG.prog('Bad cut', 'ALARM', 100, 'danger') ],
+        chal: { label: 'Challenge · wrong card cut', body:
+          '<div class="devicewrap">' +
+            '<div class="device">' + dcard('7', '\u2663', 'blk', '1 · cut', 'cut') + dcard('K', '\u2666', 'red', '2 · cut!', 'badcut') + dcard('3', '\u2660', 'blk', '3', '') + dcard('9', '\u2665', 'red', '4', 'correct') + dcard('4', '\u2663', 'blk', '5', '') + '</div>' +
+            '<div class="gmcut danger">' + TJ.icon('alert-triangle') + '<div><span class="gk">Mis-cut \u00b7 GM only</span><br><span class="gv">They cut the <b style="color:var(--c-red-300)">2nd</b> \u2014 the manual pointed to the <b>4th</b> (last red). The fuse trips.</span></div></div>' +
+            manualRef() +
+          '</div>' },
+        ref: { label: 'Boost', content: MG.boosts([ { holder: 'Liv', name: 'Spare Wire', lane: 'Stealth', state: 'ready' }, { holder: 'Millie', name: 'Clear Channel', lane: 'Charm', state: 'ready' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'siren', label: 'Alarm', cls: 'danger' }, { icon: 'music', label: 'Fuse hum', cls: 'playing' } ], secondary: { label: 'Spare Wire', icon: 'rotate-ccw', kind: 'secondary' }, primary: { label: 'Resolve', icon: 'flag', kind: 'danger' } }
+    })
+  );
+  TJ.frame(
+    { vnum: '05·10v2', title: 'Defuse the Alarm · wrong-cut forgiven', note: 'Variant. Spare Wire (Liv, Stealth) splices the mis-cut card back \u2014 it returns to play, the meter recovers to data-green, the boost shows USED. The manual still resolves to the 4th. No dead-end: the run continues.' },
+    base({
+      roomLabel: 'Room 6 · Charm+Stealth', crew: crew(['Millie', 'Liv'], ['George'], ['cha', 'ste']),
+      tp: { text: 'Liv slips a spare card into the row before the fuse catches. The sparks die. \u201cThe FOURTH,\u201d she hisses, \u201cthe last red one.\u201d' },
+      stage: MG.stage({
+        status: [ MG.modeBadge('active', 'Active · spliced'), MG.timer('0:52', 'running', 'Fuse'), MG.dial('Next cut \u00b7 4th', 'last red · rule 4'), MG.prog('Safe cuts', '1 / 3', 33, 'data') ],
+        chal: { live: true, label: 'Challenge · mis-cut forgiven, back in play', body:
+          '<div class="devicewrap">' +
+            '<div class="device">' + dcard('7', '\u2663', 'blk', '1 · cut', 'cut') + dcard('K', '\u2666', 'red', '2', '') + dcard('3', '\u2660', 'blk', '3', '') + dcard('9', '\u2665', 'red', '4', 'correct') + dcard('4', '\u2663', 'blk', '5', '') + '</div>' +
+            '<div class="gmcut">' + TJ.icon('rotate-ccw') + '<div><span class="gk">Spliced \u00b7 GM only</span><br><span class="gv">Spare Wire restored the K\u2666. The manual still says cut the <b>last red: 9\u2665 (position 4)</b>.</span></div></div>' +
+            manualRef() +
+          '</div>' },
+        ref: { label: 'Boost', content: MG.boosts([ { holder: 'Liv', name: 'Spare Wire', lane: 'Stealth', state: 'used' }, { holder: 'Millie', name: 'Clear Channel', lane: 'Charm', state: 'ready' } ]) }
+      }),
+      action: { back: { label: 'Hold', icon: 'pause', kind: 'ghost' }, cues: [ { icon: 'music', label: 'Fuse hum', cls: 'playing' }, { icon: 'scissors', label: 'Snip' } ], primary: { label: 'Resolve', icon: 'flag', kind: 'primary' } }
+    })
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>

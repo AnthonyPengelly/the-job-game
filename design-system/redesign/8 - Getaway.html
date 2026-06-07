@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Job · 08 Getaway</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="assets/the-job.css">
+<style>
+  .gaway{ display:flex; flex-direction:column; gap:16px; height:100%; min-height:0; }
+  .roundbar{ display:flex; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; background:var(--c-surface-1); flex:none; }
+  .roundbar .rc{ flex:1; padding:12px 18px; display:flex; flex-direction:column; gap:6px; border-right:1px solid var(--border); }
+  .roundbar .rc:last-child{ border-right:none; }
+  .roundbar .rc .k{ font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+  .roundbar .rc .v{ font-family:var(--font-data); font-weight:800; font-size:22px; line-height:1; color:var(--fg); }
+  .roundbar .rc .v small{ color:var(--fg-faint); font-size:14px; }
+  .roundbar .meter{ height:8px; border-radius:var(--radius-pill); background:var(--c-surface-3); overflow:hidden; margin-top:2px; }
+  .roundbar .meter .f{ height:100%; background:var(--accent); border-radius:var(--radius-pill); }
+  .roundbar .rc .who{ display:flex; align-items:center; gap:8px; }
+  .roundbar .rc .who .av{ width:24px; height:24px; border-radius:var(--radius-xs); background:var(--c-surface-3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--accent); }
+  .roundbar .rc .who .nm{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:18px; color:var(--fg); }
+
+  .clockzone{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-height:0; }
+  .gclock{ font-family:var(--font-data); font-weight:800; font-size:168px; line-height:.9; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
+  .gclock.calm{ color:var(--accent); text-shadow:0 0 60px color-mix(in srgb,var(--accent) 32%, transparent); }
+  .gclock.danger{ color:var(--danger); text-shadow:0 0 60px rgba(240,70,58,.4); animation:bustpulse 1s steps(1) infinite; }
+  @keyframes bustpulse{ 0%,100%{opacity:1} 50%{opacity:.62} }
+  .gclock.ready{ color:var(--fg-faint); }
+  .clock-sub{ font-family:var(--font-data); font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--fg-faint); }
+  .clock-sub.danger{ color:var(--danger); }
+
+  .gctrls{ display:flex; gap:12px; justify-content:center; flex:none; }
+  .gctrl{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 22px; border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--c-surface-2); cursor:pointer; min-width:150px; transition:all var(--dur-fast); }
+  .gctrl:hover{ background:var(--c-surface-3); }
+  .gctrl svg{ width:22px; height:22px; }
+  .gctrl .gl{ font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:17px; letter-spacing:.02em; white-space:nowrap; }
+  .gctrl .gs{ font-family:var(--font-data); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-faint); white-space:nowrap; }
+  .gctrl.cleared{ border-color:var(--c-green-700); background:var(--accent-tint); } .gctrl.cleared svg, .gctrl.cleared .gl{ color:var(--accent); }
+  .gctrl.ditch{ border-color:var(--c-amber-700); } .gctrl.ditch svg, .gctrl.ditch .gl{ color:var(--caution); }
+  .gctrl.skip{ border-color:var(--c-cyan-500); } .gctrl.skip svg, .gctrl.skip .gl{ color:var(--data); }
+  .gctrl.disabled{ opacity:.4; cursor:not-allowed; }
+
+  .armed-note{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .armed-note .badge{ } 
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="assets/cockpit.js"></script>
+<script>
+  TJ.page({
+    num: '08', eyebrow: 'Screen 08 · The Finale',
+    title: 'The Getaway',
+    desc: 'The finale, decluttered to a single hero clock. ARMED never runs the clock until START. ACTIVE makes the clock the hero (calm green) over a compact round bar — target · cleared · skips left · clues — with the action row under the GM\u2019s hands: Cleared · Skip card (one per power-up held, usable on anyone) · Ditch (drop loot to skip a card; Heat\u2019s already spent). Near-bust turns the clock red and draining. Crew are all-in for the run; exhaustion is suspended.',
+    crumbs: [
+      { label: '07 Offer', href: '7 - Offer.html' },
+      { label: '08 Getaway', href: '8 - Getaway.html', here: true },
+      { label: '09 Result', href: '9 - Result.html' },
+      { label: '16 Player clock', href: '16 - Player Countdown.html' },
+      { label: 'Index', href: 'index.html' }
+    ]
+  });
+
+  var ALLIN = ['Lucy', 'Millie', 'George', 'Liv', 'Chris'].map(function (n) {
+    var p = { Lucy: 'tec', Millie: 'cha', George: 'phy', Liv: 'ste', Chris: null }[n];
+    return { name: n, powers: p ? [p] : [], gear: (n === 'Lucy' || n === 'George' || n === 'Liv'), state: 'in', stateLabel: 'IN VAN RUN' };
+  });
+
+  function roundbar(cleared, target, pct, skips) {
+    return '<div class="roundbar">' +
+      '<div class="rc"><span class="k">Target</span><span class="v">Clear ' + target + ' cards</span></div>' +
+      '<div class="rc"><span class="k">Cleared</span><span class="v">' + cleared + ' <small>/ ' + target + '</small></span><div class="meter"><div class="f" style="width:' + pct + '%"></div></div></div>' +
+      '<div class="rc"><span class="k">Skips left</span><span class="v" style="color:var(--data)">' + skips + ' <small>from power-ups</small></span></div>' +
+      '<div class="rc"><span class="k">Reading clues</span><div class="who">' + TJ.icon('rotate-cw') + '<span class="nm" style="font-size:17px">Round the table</span></div></div>' +
+    '</div>';
+  }
+  function controls(disabled, skips) {
+    var d = disabled ? ' disabled' : '';
+    return '<div class="gctrls">' +
+      '<div class="gctrl cleared' + d + '">' + TJ.icon('check') + '<span class="gl">Cleared</span><span class="gs">+1 card</span></div>' +
+      '<div class="gctrl skip' + d + (skips <= 0 ? ' disabled' : '') + '">' + TJ.icon('skip-forward') + '<span class="gl">Skip card</span><span class="gs">' + skips + ' left &middot; 1 per power-up</span></div>' +
+      '<div class="gctrl ditch' + d + '">' + TJ.icon('banknote') + '<span class="gl">Ditch</span><span class="gs">drop loot, skip</span></div>' +
+    '</div>';
+  }
+
+  /* 8a — ARMED */
+  TJ.frame(
+    { vnum: '08a', title: 'Getaway · ARMED', note: 'Set up but not running. The clock shows the start time muted, the round bar previews target / cleared / skips / clues, the controls are inert. One START begins the run — and only then does the clock move.' },
+    {
+      phaseNum: '07', phaseLabel: 'Getaway', roomLabel: 'To the van',
+      heat: 12, loot: 98000, lootStr: '$98k', round: '6', totalRounds: '6',
+      crew: ALLIN, crewModeLabel: 'All in', tools: { gearBadge: 0 },
+      tp: { text: 'Van\u2019s idling on the loading dock, side door open. The second this clock starts, you\u2019ve got ninety seconds to clear the run of cards between you and the seats. Clues go round the table \u2014 next player each card. Everyone ready? Then go.' },
+      stage:
+        '<div class="gaway">' + roundbar(0, 8, 0, 4) +
+          '<div class="clockzone"><div class="gclock ready">1:30</div><div class="clock-sub">Clock ready \u00b7 starts on START</div>' +
+            '<div style="display:flex;gap:8px;margin-top:8px"><span class="badge b-idle"><span class="d"></span>8 cards to clear</span><span class="badge b-data"><span class="d"></span>4 skips &middot; 1 per power-up</span><span class="badge b-idle"><span class="d"></span>Clues pass round the table</span></div></div>' +
+          controls(true, 4) +
+        '</div>',
+      action: {
+        back: { label: 'Back', icon: 'chevron-left', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Engine' }, { icon: 'siren', label: 'Sirens' } ],
+        primary: { label: 'Start the run', icon: 'play', kind: 'primary', size: 'lg' }
+      }
+    }
+  );
+
+  /* 8b — ACTIVE */
+  TJ.frame(
+    { vnum: '08b', title: 'Getaway · ACTIVE', note: 'The clock is the hero, calm green and ticking. The compact round bar reads target · cleared (5/8) · skips left · clues at a glance. The action row sits under the GM\u2019s hands: Cleared · Skip card (one per power-up held, usable on anyone) · Ditch (drop loot to skip a card).' },
+    {
+      phaseNum: '07', phaseLabel: 'Getaway', roomLabel: 'Run to the van',
+      heat: 12, loot: 98000, lootStr: '$98k', round: '6', totalRounds: '6',
+      crew: ALLIN, crewModeLabel: 'All in', tools: { gearBadge: 0 },
+      tp: { text: 'Three down, keep them coming \u2014 next reader, next card, fast. Don\u2019t overthink it, just clear and move.' },
+      stage:
+        '<div class="gaway">' + roundbar(5, 8, 62, 3) +
+          '<div class="clockzone"><div class="gclock calm">0:48</div><div class="clock-sub">Ticking &middot; 5 of 8 cleared &middot; three to go</div></div>' +
+          controls(false, 3) +
+        '</div>',
+      action: {
+        back: { label: 'Hold', icon: 'pause', kind: 'ghost' },
+        cues: [ { icon: 'music', label: 'Engine', cls: 'playing' }, { icon: 'siren', label: 'Sirens' } ],
+        primary: { label: 'Made it out', icon: 'check', kind: 'primary' }
+      }
+    }
+  );
+
+  /* 8c — near-bust */
+  TJ.frame(
+    { vnum: '08c', title: 'Getaway · near-bust', note: 'Time draining, one card left. The clock turns red and pulses; the sub-line and Heat both read danger. Clear the last card — or burn a skip on it if any remain. If the clock hits zero first, the run resolves toward BUST.' },
+    {
+      hot: true,
+      phaseNum: '07', phaseLabel: 'Getaway', roomLabel: 'Run to the van', escape: 'forced',
+      heat: 18, heatWarnFrom: 15, loot: 98000, lootStr: '$98k', round: '6', totalRounds: '6',
+      crew: ALLIN, crewModeLabel: 'All in', tools: { gearBadge: 0 },
+      tp: { amber: true, text: 'One card. Seven seconds. Blue light\u2019s already bouncing off the far wall \u2014 clear it, or burn a skip on it, but decide NOW.' },
+      stage:
+        '<div class="gaway">' + roundbar(7, 8, 87, 1) +
+          '<div class="clockzone"><div class="gclock danger">0:07</div><div class="clock-sub danger">Time draining &middot; one card left &middot; clear it or skip it</div></div>' +
+          controls(false, 1) +
+        '</div>',
+      action: {
+        back: { label: 'Hold', icon: 'pause', kind: 'ghost' },
+        cues: [ { icon: 'siren', label: 'Sirens', cls: 'danger' }, { icon: 'activity', label: 'Tension', cls: 'playing' } ],
+        primaryNote: 'Clear the last card, or burn a skip',
+        primary: { label: 'Made it out', icon: 'check', kind: 'primary' }
+      }
+    }
+  );
+
+  TJ.render();
+</script>
+</body>
+</html>
