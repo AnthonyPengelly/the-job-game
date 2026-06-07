@@ -13,7 +13,7 @@ cd "$(git rev-parse --show-toplevel)"
 source scripts/agents/lib/common.sh
 
 # Dependency-ordered epic sequence (critical path then fan-out). See docs/EPICS.md.
-DEFAULT_ORDER=(E0 E1 E2 E3 E4 E5 E6 E7 E8 E9 E10 E11 E12)
+DEFAULT_ORDER=(E0 E1 E2 E3 E4 E5 E6 E7 E8 E9 E10 E11 E12 E13)
 
 if [ "$#" -gt 0 ]; then
   ORDER=("$@")

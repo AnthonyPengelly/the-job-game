@@ -2,7 +2,7 @@
 
 The authoritative work breakdown. The orchestrator builds these **in dependency order**. Each epic lists its goal, stories, dependencies, and a hard **acceptance gate** (what must be true to call it done). The planner agent turns each epic into numbered tasks; the builder implements task-by-task; reviewers gate each merge; a QA pass closes the epic. See `docs/ORCHESTRATION.md`.
 
-Epic IDs are stable (`E0`–`E12`). Never renumber — scripts, branches (`epic/E5-...`), and reviews reference them.
+Epic IDs are stable (`E0`–`E13`). Never renumber — scripts, branches (`epic/E5-...`), and reviews reference them.
 
 ---
 
