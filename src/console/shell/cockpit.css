@@ -580,6 +580,62 @@
   gap: 10px;
 }
 
+/* ============================================================
+   TOOL RAIL — E13.3
+   Right-rail icon launchers + persistent Undo button.
+   ============================================================ */
+
+.cockpit-tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+  flex: none;
+}
+.cockpit-tool-btn:hover {
+  background: var(--bg-panel-raised);
+  border-color: var(--border-strong);
+  color: var(--fg);
+}
+.cockpit-tool-btn.active {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.cockpit-tool-btn.undo {
+  border-color: transparent;
+}
+.cockpit-tool-btn.undo:hover {
+  border-color: var(--border-strong);
+}
+
+/* Gear badge */
+.cockpit-tool-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 10px;
+  line-height: 16px;
+  border-radius: var(--radius-pill);
+  text-align: center;
+  box-shadow: 0 0 6px var(--glow-accent);
+  pointer-events: none;
+}
+
 /* Popover — anchored to a trigger */
 .cockpit-popover {
   position: absolute;

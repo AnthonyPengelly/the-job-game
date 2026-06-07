@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useGameStore } from '@/console/store';
-import { useAudio } from '@/console/audio';
-import type { SoundChannel } from '@/content/schema';
+import { useAudio, useAudioSettings } from '@/console/audio';
+import type { ParsedSoundManifest, SoundChannel } from '@/content/schema';
 import { relevantCues } from './relevantCues';
+import type { CueGroups } from './relevantCues';
 
 // ── Channel display config ────────────────────────────────────────────────────
 
@@ -16,44 +17,68 @@ const CHANNEL_LABELS: Record<SoundChannel, string> = {
 
 const CHANNEL_ORDER: SoundChannel[] = ['ambient', 'heistSfx', 'sting', 'danger', 'finale'];
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Groups every cue in the manifest by channel, ignoring phase restrictions. */
+function groupAllCues(manifest: ParsedSoundManifest): CueGroups {
+  const result: CueGroups = {};
+  for (const cue of manifest.cues) {
+    if (result[cue.channel] === undefined) result[cue.channel] = [];
+    result[cue.channel]!.push(cue);
+  }
+  return result;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
+interface SoundboardProps {
+  /**
+   * When true, shows all channels and cues regardless of current run phase.
+   * Used by the ToolRail drawer (the full board). The phase-contextual quick-cue
+   * row in the action bar (E13.7) uses the default phase-filtered mode.
+   */
+  fullBoard?: boolean;
+}
+
 /**
- * Context-sensitive soundboard for the GM.
+ * GM soundboard.
  *
- * Renders only the cue buttons relevant to the current run phase (derived from
- * the manifest's `phases` field per cue). Looping cues toggle on/off; one-shot
- * cues fire immediately. Includes a master mute/volume control so the GM is
- * never stuck with sound on.
+ * In default mode (fullBoard=false) renders only the cues relevant to the
+ * current run phase (derived from the manifest's `phases` field per cue).
+ * In fullBoard mode renders all channels' cues regardless of phase.
+ *
+ * Looping cues toggle on/off; one-shot cues fire immediately.
+ * Master mute/volume are sourced from the shared AudioSettingsContext so that
+ * the Soundboard drawer and the Settings dialog always agree on the audio state.
  *
  * Returns null when there is no AudioProvider above this component in the tree,
- * or when the current phase has no relevant cues.
+ * or when there are no cues to display.
  */
-export function Soundboard(): JSX.Element | null {
+export function Soundboard({ fullBoard = false }: SoundboardProps): JSX.Element | null {
   const handle = useAudio();
+  const audioSettings = useAudioSettings();
   const phase = useGameStore(s => s.session.present.phase);
-
-  const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(1);
   const [activeCues, setActiveCues] = useState<ReadonlySet<string>>(new Set());
 
   if (!handle) return null;
 
   const { engine, manifest } = handle;
-  const groups = relevantCues(phase, manifest);
+  const muted = audioSettings?.muted ?? false;
+  const volume = audioSettings?.volume ?? 1;
+  const setMuted = audioSettings?.setMuted ?? (() => { /* no-op without AudioSettingsContext */ });
+  const setVolume = audioSettings?.setVolume ?? (() => { /* no-op without AudioSettingsContext */ });
+
+  const groups = fullBoard ? groupAllCues(manifest) : relevantCues(phase, manifest);
 
   const hasAnyCues = CHANNEL_ORDER.some(ch => (groups[ch]?.length ?? 0) > 0);
   if (!hasAnyCues) return null;
 
   function handleToggleMute() {
-    const next = !muted;
-    setMuted(next);
-    engine.mute(next);
+    setMuted(!muted);
   }
 
   function handleVolumeChange(v: number) {
     setVolume(v);
-    engine.setMasterGain(v);
   }
 
   function handleCueClick(cueId: string, loop: boolean) {

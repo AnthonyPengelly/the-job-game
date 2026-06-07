@@ -17,6 +17,12 @@ interface CockpitProps {
    */
   crewRail?: React.ReactNode;
   /**
+   * Content for the right tool rail. Filled by ToolRail in E13.3.
+   * ToolRail renders both the static icon buttons and any open
+   * overlays (position: absolute relative to the cockpit root).
+   */
+  toolRail?: React.ReactNode;
+  /**
    * Additional content mounted at the cockpit root (overlays, panels,
    * soundboard, etc. that are absolutely positioned over the grid).
    */
@@ -32,7 +38,7 @@ interface CockpitProps {
  * Overlays are rendered at the cockpit root so they position absolutely
  * over the grid.
  */
-export function Cockpit({ children, crewRail, overlays }: CockpitProps) {
+export function Cockpit({ children, crewRail, toolRail, overlays }: CockpitProps) {
   const escapeSignal = useGameStore(s => s.session.present.escapeSignal);
 
   return (
@@ -55,12 +61,14 @@ export function Cockpit({ children, crewRail, overlays }: CockpitProps) {
         {children}
       </Stage>
 
-      {/* Right rail — tools placeholder, filled by ToolRail in E13.3 */}
+      {/* Right rail — filled by ToolRail (E13.3) */}
       <aside
         className="cockpit-toolsrail"
         aria-label="Tools"
         data-testid="cockpit-toolsrail"
-      />
+      >
+        {toolRail}
+      </aside>
 
       <CockpitActionBar />
 
