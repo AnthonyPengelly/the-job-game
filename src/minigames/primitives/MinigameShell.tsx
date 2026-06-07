@@ -164,13 +164,10 @@ export function MinigameShell({
   }
 
   // ── ACTIVE ─────────────────────────────────────────────────────────────────
+  // Game components render their own StatusZone / ChallengeZone / RefereeZone.
   return (
     <div className="mg-shell mg-active" data-testid="mg-active">
-      <StatusZone>
-        <span data-testid="mg-mode-label">Active</span>
-      </StatusZone>
-      <ChallengeZone>{children(handleResolve)}</ChallengeZone>
-      <RefereeZone />
+      {children(handleResolve)}
     </div>
   );
 }
