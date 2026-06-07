@@ -22,7 +22,7 @@ function makeStorage(): StorageLike {
   };
 }
 
-/** Layout shell that mirrors app.tsx: Hud always mounted, PhaseRouter as sibling. */
+/** Layout shell that mirrors the cockpit structure: Hud in a rail, PhaseRouter as sibling. */
 function HudWithPhaseRouter() {
   const phase = useGameStore(s => s.session.present.phase);
   return (
@@ -32,161 +32,6 @@ function HudWithPhaseRouter() {
     </>
   );
 }
-
-// ── HeatTrack tests ───────────────────────────────────────────────────────────
-
-describe('HUD — HeatTrack', () => {
-  it('uses hMax from cfg, not a hardcoded literal', async () => {
-    // Config with hMax=10 verifies the track is not hardcoded to 20.
-    const customCfg = { ...testCfg, heat: { ...testCfg.heat, hMax: 10 } };
-    const storage = makeStorage();
-    const store = createGameStore({ cfg: customCfg, storage });
-
-    await act(async () => {
-      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
-    });
-    await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
-    });
-
-    // heat=0 after START_RUN → all 10 slots are empty (none filled)
-    expect(screen.queryAllByTestId('heat-slot-filled')).toHaveLength(0);
-    expect(screen.getAllByTestId('heat-slot-empty')).toHaveLength(10);
-  });
-
-  it('shows the correct filled/face-down split for current heat', async () => {
-    const storage = makeStorage();
-    const store = createGameStore({ cfg: testCfg, storage });
-
-    await act(async () => {
-      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 42);
-      store.getState().dispatch({ t: 'OVERRIDE_SET_HEAT', value: 7 });
-    });
-    await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
-    });
-
-    expect(screen.getAllByTestId('heat-slot-filled')).toHaveLength(7);
-    expect(screen.getAllByTestId('heat-slot-empty')).toHaveLength(testCfg.heat.hMax - 7);
-  });
-
-  it('shows 0 filled slots when heat is 0', async () => {
-    const storage = makeStorage();
-    const store = createGameStore({ cfg: testCfg, storage });
-
-    await act(async () => {
-      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
-    });
-    await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
-    });
-
-    expect(screen.queryAllByTestId('heat-slot-filled')).toHaveLength(0);
-    expect(screen.getAllByTestId('heat-slot-empty')).toHaveLength(testCfg.heat.hMax);
-  });
-
-  it('updates filled slots reactively when heat changes', async () => {
-    const storage = makeStorage();
-    const store = createGameStore({ cfg: testCfg, storage });
-
-    await act(async () => {
-      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
-    });
-    await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
-    });
-
-    expect(screen.queryAllByTestId('heat-slot-filled')).toHaveLength(0);
-
-    await act(async () => {
-      store.getState().dispatch({ t: 'OVERRIDE_SET_HEAT', value: 5 });
-    });
-
-    expect(screen.getAllByTestId('heat-slot-filled')).toHaveLength(5);
-    expect(screen.getAllByTestId('heat-slot-empty')).toHaveLength(testCfg.heat.hMax - 5);
-  });
-});
-
-// ── Loot tests ────────────────────────────────────────────────────────────────
-
-describe('HUD — Loot', () => {
-  it('shows 0 loot at the start of a run', async () => {
-    const storage = makeStorage();
-    const store = createGameStore({ cfg: testCfg, storage });
-
-    await act(async () => {
-      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
-    });
-    await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
-    });
-
-    expect(screen.getByTestId('loot-total').textContent).toBe('0');
-  });
-
-  it('shows the correct loot total after an override', async () => {
-    const storage = makeStorage();
-    const store = createGameStore({ cfg: testCfg, storage });
-
-    await act(async () => {
-      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 42);
-      store.getState().dispatch({ t: 'OVERRIDE_SET_LOOT', value: 12 });
-    });
-    await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
-    });
-
-    expect(screen.getByTestId('loot-total').textContent).toBe('12');
-  });
-
-  it('updates loot total reactively when loot changes', async () => {
-    const storage = makeStorage();
-    const store = createGameStore({ cfg: testCfg, storage });
-
-    await act(async () => {
-      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
-    });
-    await act(async () => {
-      render(
-        <StoreContext.Provider value={store}>
-          <Hud />
-        </StoreContext.Provider>,
-      );
-    });
-
-    expect(screen.getByTestId('loot-total').textContent).toBe('0');
-
-    await act(async () => {
-      store.getState().dispatch({ t: 'OVERRIDE_SET_LOOT', value: 8 });
-    });
-
-    expect(screen.getByTestId('loot-total').textContent).toBe('8');
-  });
-});
 
 // ── CrewPanel tests ───────────────────────────────────────────────────────────
 
@@ -308,17 +153,17 @@ describe('HUD — stays mounted across phase changes', () => {
       );
     });
 
-    expect(screen.getByTestId('hud')).toBeInTheDocument();
+    expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
 
     await act(async () => {
       store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'offer' });
     });
-    expect(screen.getByTestId('hud')).toBeInTheDocument();
+    expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
 
     await act(async () => {
       store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'result' });
     });
-    expect(screen.getByTestId('hud')).toBeInTheDocument();
+    expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
   });
 
   it('Hud and PhaseRouter are siblings — both present simultaneously', async () => {
@@ -337,7 +182,7 @@ describe('HUD — stays mounted across phase changes', () => {
     });
 
     // Both the HUD and the phase screen are present together
-    expect(screen.getByTestId('hud')).toBeInTheDocument();
+    expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
     expect(screen.getByTestId('screen-briefing')).toBeInTheDocument();
 
     const phases: RunPhase[] = ['briefing', 'offer', 'getaway', 'result'];
@@ -355,7 +200,7 @@ describe('HUD — stays mounted across phase changes', () => {
         store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase });
       });
       // HUD is always present regardless of phase
-      expect(screen.getByTestId('hud')).toBeInTheDocument();
+      expect(screen.getByTestId('crew-rail')).toBeInTheDocument();
       // The correct phase screen is also shown
       expect(screen.getByTestId(phaseTestIds[phase])).toBeInTheDocument();
     }

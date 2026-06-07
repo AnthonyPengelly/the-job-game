@@ -1,0 +1,619 @@
+/* ============================================================
+   THE JOB — Cockpit shell CSS
+   Viewport-locked grid. Document never scrolls; only inner
+   regions scroll inside their own border with an edge fade.
+   Prefixed `.cockpit-*` to avoid conflicts with kit.css.
+   ============================================================ */
+
+/* ---- Cockpit grid ---------------------------------------- */
+.cockpit {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 264px 1fr 88px;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "top   top    top"
+    "crew  stage  tools"
+    "action action action";
+  background: radial-gradient(128% 118% at 50% -14%, #16201e 0%, var(--bg) 45%, var(--bg-app) 100%);
+  overflow: hidden;
+  position: relative;
+}
+/* subtle scanline texture */
+.cockpit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 30;
+  opacity: 0.4;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px);
+}
+.cockpit.hot {
+  background: radial-gradient(128% 118% at 50% -14%, #241413 0%, var(--bg) 46%, var(--bg-app) 100%);
+}
+
+/* ---- Top rail -------------------------------------------- */
+.cockpit-toprail {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--border-strong);
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  box-shadow: var(--elev-2);
+  z-index: 6;
+  min-width: 0;
+}
+.cockpit.hot .cockpit-toprail {
+  border-bottom-color: color-mix(in srgb, var(--danger) 38%, var(--border-strong));
+}
+
+/* logo lockup */
+.cockpit-lockup {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: none;
+}
+.cockpit-lockup .sq {
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 2px;
+  box-shadow: var(--glow-accent);
+}
+.cockpit-lockup .wm {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: .03em;
+  color: var(--fg);
+  line-height: 1;
+}
+.cockpit-lockup .wm em { color: var(--accent); font-style: normal; }
+.cockpit-lockup .sub {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  margin-top: 3px;
+}
+
+.cockpit-rail-div {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+  margin: 2px 0;
+  flex: none;
+}
+
+/* phase + room info block */
+.cockpit-phaseblock {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.cockpit-phaseblock .k {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  white-space: nowrap;
+}
+.cockpit-phaseblock .k b { color: var(--accent); font-weight: 700; }
+.cockpit-phaseblock .ph {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: .9;
+  text-transform: uppercase;
+  letter-spacing: -.01em;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+/* heat track section */
+.cockpit-heat-section {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.cockpit-heat-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.cockpit-hlabel {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cockpit-hlabel .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--heat);
+  box-shadow: 0 0 8px var(--heat-glow);
+}
+.cockpit-heat-count {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 21px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.cockpit-heat-count .lit { color: var(--heat); }
+.cockpit-heat-count .tot { color: var(--fg-faint); font-size: 15px; }
+
+/* escape signal pill */
+.cockpit-escape-sig {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  background: var(--caution-tint);
+  border: 1px solid var(--c-amber-700);
+  animation: cockpit-escbreath 2.4s ease-in-out infinite;
+}
+.cockpit-escape-sig svg { width: 18px; height: 18px; color: var(--caution); }
+.cockpit-escape-sig .t { display: flex; flex-direction: column; gap: 2px; }
+.cockpit-escape-sig .t .k {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--caution);
+}
+.cockpit-escape-sig .t .v {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--c-amber-300);
+  font-style: italic;
+}
+@keyframes cockpit-escbreath {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(247,184,75,0); }
+  50% { box-shadow: 0 0 16px -3px rgba(247,184,75,.55); }
+}
+
+/* loot chip */
+.cockpit-loot-chip {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--c-green-700);
+  border-radius: var(--radius-md);
+  padding: 9px 15px;
+  box-shadow: var(--elev-1);
+  flex: none;
+}
+.cockpit-loot-chip svg { width: 19px; height: 19px; color: var(--accent); }
+.cockpit-loot-chip .stk { display: flex; flex-direction: column; gap: 2px; }
+.cockpit-loot-chip .k {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.cockpit-loot-chip .v {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 23px;
+  line-height: 1;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* room chip */
+.cockpit-room-chip {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 9px 15px;
+  box-shadow: var(--elev-1);
+  flex: none;
+}
+.cockpit-room-chip svg { width: 19px; height: 19px; color: var(--fg-faint); }
+.cockpit-room-chip .stk { display: flex; flex-direction: column; gap: 2px; }
+.cockpit-room-chip .k {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.cockpit-room-chip .v {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 23px;
+  line-height: 1;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- Left rail (crew placeholder) ----------------------- */
+.cockpit-crewrail {
+  grid-area: crew;
+  border-right: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--c-surface-1), var(--bg-panel));
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.cockpit-crewrail-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.cockpit-crewrail-head .hl {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cockpit-crewrail-head .hl svg { width: 15px; height: 15px; }
+.cockpit-crewrail-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+.cockpit-crewrail-body::-webkit-scrollbar { width: 7px; }
+.cockpit-crewrail-body::-webkit-scrollbar-thumb { background: var(--c-surface-3); border-radius: var(--radius-pill); }
+.cockpit-crewrail-foot {
+  flex: none;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---- Centre stage ---------------------------------------- */
+.cockpit-stage {
+  grid-area: stage;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 26px;
+  gap: 18px;
+  overflow: hidden;
+}
+
+/* Fixed-height teleprompter strip at top of stage */
+.cockpit-tp {
+  flex: none;
+  border-left: 3px solid var(--accent);
+  padding: 14px 20px;
+  background: linear-gradient(90deg, var(--accent-tint), transparent 84%);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  overflow: hidden;
+}
+.cockpit-tp .tp-label {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.cockpit-tp .tp-label svg { width: 13px; height: 13px; }
+.cockpit-tp p {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.45;
+  color: var(--c-green-200);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cockpit-tp.amber { border-left-color: var(--caution); background: linear-gradient(90deg, var(--caution-tint), transparent 84%); }
+.cockpit-tp.amber .tp-label { color: var(--caution); }
+.cockpit-tp.amber p { color: var(--c-amber-300); }
+.cockpit-tp-next {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  cursor: pointer;
+  flex: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  transition: all var(--dur-fast);
+}
+.cockpit-tp-next svg { width: 12px; height: 12px; }
+.cockpit-tp-next:hover { color: var(--fg); border-color: var(--border-strong); }
+
+/* Work area — scrolls internally, never the document */
+.cockpit-work {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.cockpit-work::-webkit-scrollbar { width: 8px; }
+.cockpit-work::-webkit-scrollbar-thumb { background: var(--c-surface-3); border-radius: var(--radius-pill); }
+
+/* ---- Right rail (tools placeholder) --------------------- */
+.cockpit-toolsrail {
+  grid-area: tools;
+  border-left: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--c-surface-1), var(--bg-panel));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+}
+
+/* ---- Action bar ------------------------------------------ */
+.cockpit-actionbar {
+  grid-area: action;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 22px;
+  border-top: 1px solid var(--border-strong);
+  background: linear-gradient(0deg, var(--bg-panel-raised), var(--bg-panel));
+  box-shadow: 0 -6px 18px rgba(0,0,0,.35);
+  z-index: 6;
+}
+.cockpit-actionbar .grp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cockpit-actionbar .grp-cues {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ============================================================
+   OVERLAYS — scrim · dialog · drawer · popover
+   Always children of .cockpit (position: relative).
+   ============================================================ */
+
+/* Scrim */
+.cockpit-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(4,6,7,.62);
+  backdrop-filter: blur(4px);
+}
+.cockpit-scrim.soft { background: rgba(4,6,7,.35); }
+
+/* Dialog — centred, blocking */
+.cockpit-dialog {
+  position: absolute;
+  z-index: 21;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 560px;
+  max-width: calc(100% - 80px);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.cockpit-dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel-raised);
+}
+.cockpit-dialog-head svg { width: 20px; height: 20px; color: var(--fg-muted); }
+.cockpit-dialog-head h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 23px;
+  letter-spacing: .01em;
+  color: var(--fg);
+  white-space: nowrap;
+  margin: 0;
+}
+.cockpit-dialog-head .x {
+  margin-left: auto;
+  color: var(--fg-faint);
+  cursor: pointer;
+  display: flex;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color var(--dur-fast);
+}
+.cockpit-dialog-head .x:hover { color: var(--fg); }
+.cockpit-dialog-head .x svg { width: 18px; height: 18px; }
+.cockpit-dialog-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+.cockpit-dialog-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel-raised);
+}
+
+/* Drawer — slides from an edge, scrim behind, stage stays visible */
+.cockpit-drawer {
+  position: absolute;
+  z-index: 21;
+  top: 0;
+  bottom: 0;
+  width: 420px;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+  box-shadow: var(--elev-3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.cockpit-drawer.right {
+  right: 0;
+  border-left: 1px solid var(--border-strong);
+}
+.cockpit-drawer.left {
+  left: 0;
+  border-right: 1px solid var(--border-strong);
+}
+.cockpit-drawer.wide { width: 520px; }
+.cockpit-drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+.cockpit-drawer-head svg { width: 20px; height: 20px; color: var(--accent); }
+.cockpit-drawer-head h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 22px;
+  letter-spacing: .01em;
+  color: var(--fg);
+  white-space: nowrap;
+  margin: 0;
+}
+.cockpit-drawer-head .x {
+  margin-left: auto;
+  color: var(--fg-faint);
+  cursor: pointer;
+  display: flex;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color var(--dur-fast);
+}
+.cockpit-drawer-head .x:hover { color: var(--fg); }
+.cockpit-drawer-head .x svg { width: 18px; height: 18px; }
+.cockpit-drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.cockpit-drawer-foot {
+  flex: none;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Popover — anchored to a trigger */
+.cockpit-popover {
+  position: absolute;
+  z-index: 21;
+  width: 340px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-3);
+  overflow: hidden;
+}
+.cockpit-popover::before {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-strong);
+  transform: rotate(45deg);
+}
+.cockpit-popover.anchor-left::before { left: -8px; top: 38px; }
+.cockpit-popover.anchor-right::before { right: -8px; top: 38px; transform: rotate(225deg); }
+.cockpit-popover-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel-raised);
+}
+.cockpit-popover-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}

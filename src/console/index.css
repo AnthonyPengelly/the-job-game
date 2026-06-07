@@ -1,6 +1,7 @@
 @import './theme/fonts.css';
 @import './theme/tokens.css';
 @import './theme/kit.css';
+@import './shell/cockpit.css';
 
 /* Accessible hide — present in DOM and accessible to screen readers / tests,
    but not visible on screen. */
