@@ -108,3 +108,167 @@
   padding: 0.25rem 0;
   text-decoration: underline;
 }
+
+/* ── Status badge ──────────────────────────────────────────────────────────── */
+
+.mg-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-sm, 4px);
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--bg-panel, #141a1d);
+  color: var(--fg, #eef4f1);
+  border: 1px solid var(--border, rgba(170, 200, 195, 0.10));
+}
+
+.mg-status-badge--clean {
+  background: var(--c-green-900, #0a2c1c);
+  color: var(--c-green-200, #b6f7d2);
+  border-color: var(--c-green-700, #0c7b40);
+}
+
+.mg-status-badge--complication {
+  background: var(--caution-tint, #2e2008);
+  color: var(--caution, #f7b84b);
+  border-color: var(--c-amber-700, #8a560c);
+}
+
+.mg-status-badge--botched {
+  background: var(--danger-tint, #2c0d0b);
+  color: var(--danger, #f0463a);
+  border-color: var(--c-red-700, #8f1c16);
+}
+
+.mg-status-badge--active {
+  background: var(--bg-panel, #141a1d);
+  color: var(--fg-muted, #a4b2ad);
+  border-color: var(--border, rgba(170, 200, 195, 0.10));
+}
+
+/* ── Progress bar ──────────────────────────────────────────────────────────── */
+
+.mg-progress-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 80px;
+}
+
+.mg-progress-bar__track {
+  height: 6px;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--bg-panel, #141a1d);
+  border: 1px solid var(--border, rgba(170, 200, 195, 0.10));
+  overflow: hidden;
+}
+
+.mg-progress-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--accent, #1fd06e);
+  transition: width 150ms ease-out;
+}
+
+.mg-progress-bar__label {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  color: var(--fg-muted, #a4b2ad);
+  letter-spacing: 0.04em;
+}
+
+/* ── Call-outcome button ───────────────────────────────────────────────────── */
+
+.mg-call-outcome-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-md, 7px);
+  background: var(--bg-panel, #141a1d);
+  color: var(--fg, #eef4f1);
+  border: 1px solid var(--border, rgba(170, 200, 195, 0.10));
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background var(--dur-fast, 90ms) ease-out;
+}
+
+.mg-call-outcome-btn:hover {
+  background: var(--bg-hover, #36434a);
+}
+
+/* ── Big TAP button (Beat 16) ──────────────────────────────────────────────── */
+
+.mg-big-tap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 3rem;
+  border-radius: var(--radius-md, 7px);
+  background: var(--accent, #1fd06e);
+  color: var(--fg-on-accent, #05140c);
+  border: none;
+  font-family: var(--font-data);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform var(--dur-fast, 90ms) ease-out, opacity var(--dur-fast, 90ms) ease-out;
+}
+
+.mg-big-tap:hover {
+  opacity: 0.92;
+}
+
+.mg-big-tap:active {
+  transform: scale(0.97);
+}
+
+/* ── Boost slot (prevents layout shift when boost fires) ───────────────────── */
+
+.mg-boost-slot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  min-height: 2.5rem;
+}
+
+/* ── Card label ────────────────────────────────────────────────────────────── */
+
+.mg-card-label {
+  display: inline-block;
+  font-family: var(--font-data);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fg, #eef4f1);
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--bg-panel, #141a1d);
+  border: 1px solid var(--border, rgba(170, 200, 195, 0.10));
+}
+
+/* ── Mode label ────────────────────────────────────────────────────────────── */
+
+.mg-mode-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted, #a4b2ad);
+}

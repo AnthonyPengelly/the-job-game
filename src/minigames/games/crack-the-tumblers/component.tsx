@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { ShieldCheck, Siren } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { CardSpread } from '@/minigames/primitives/CardSpread';
 import type { CardId } from '@/minigames/primitives/CardSpread';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
-import { OutcomeJudge } from '@/minigames/primitives/OutcomeJudge';
+import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { CrackTheTumblersParams } from './generate';
 import { judge, resetPinBoost } from './judge';
 import type { CrackTheTumblersState } from './judge';
@@ -26,6 +27,14 @@ export function CrackTheTumblersComponent({
   const gameComplete = state.alarmTripped || state.playedSequence.length === params.cards.length;
   const suggested = judge(state, params);
 
+  // Auto-resolve when game is complete
+  useEffect(() => {
+    if (gameComplete) {
+      onResolve(suggested);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameComplete]);
+
   function handleCardTap(id: CardId) {
     if (gameComplete) return;
     if (state.playedSequence.includes(id)) return;
@@ -46,43 +55,89 @@ export function CrackTheTumblersComponent({
     setState(s => hook.apply(s, params));
   }
 
+  function handleCallOutcome() {
+    onResolve(judge(state, params));
+  }
+
+  const played = state.playedSequence.length;
+  const total = params.cards.length;
+  const progressPct = total > 0 ? (played / total) * 100 : 0;
+
   return (
     <div data-testid="crack-the-tumblers">
-      <div data-testid="crack-tumblers-info">
-        <span data-testid="card-count">Pins: {params.cards.length}</span>
-        <span> | Played: {state.playedSequence.length}/{params.cards.length}</span>
-        {state.alarmTripped && (
-          <span data-testid="alarm-tripped"> — ALARM TRIPPED</span>
+      <StatusZone>
+        {state.alarmTripped ? (
+          <span
+            className="mg-status-badge mg-status-badge--botched"
+            data-testid="alarm-tripped"
+          >
+            <Siren size={14} />
+            ALARM TRIPPED
+          </span>
+        ) : (
+          <span className="mg-status-badge mg-status-badge--active">
+            <ShieldCheck size={14} />
+            Armed
+          </span>
         )}
-      </div>
 
-      <CardSpread
-        cards={params.cards}
-        layout="row"
-        faceDown={state.playedSequence}
-        {...(!gameComplete && { onTap: handleCardTap })}
-      />
+        <div className="mg-progress-bar" aria-label="Progress">
+          <div className="mg-progress-bar__label">
+            <span data-testid="card-count">Pins: {total}</span>
+            {' · '}
+            <span>Played: {played}/{total}</span>
+          </div>
+          <div className="mg-progress-bar__track">
+            <div
+              className="mg-progress-bar__fill"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
 
-      <div data-testid="played-sequence">
-        {state.playedSequence.map((id, i) => {
-          const card = params.cards.find(c => c.id === id);
-          return (
-            <span key={id} data-testid={`played-${i}`}>
-              {i > 0 ? ' → ' : ''}{card?.label ?? '?'}
-            </span>
-          );
-        })}
-      </div>
+        <span className="mg-mode-label" data-testid="mg-mode-label">
+          Crack
+        </span>
+      </StatusZone>
 
-      <div data-testid="boosts">
-        <BoostButton<CrackTheTumblersState, CrackTheTumblersParams>
-          hook={resetPinBoost}
-          committed={committed}
-          onFire={handleBoost}
+      <ChallengeZone>
+        <CardSpread
+          cards={params.cards}
+          layout="row"
+          faceDown={state.playedSequence}
+          {...(!gameComplete && { onTap: handleCardTap })}
         />
-      </div>
 
-      <OutcomeJudge key={suggested} suggested={suggested} onConfirm={onResolve} />
+        <div data-testid="played-sequence">
+          {state.playedSequence.map((id, i) => {
+            const card = params.cards.find(c => c.id === id);
+            return (
+              <span key={id} data-testid={`played-${i}`}>
+                {i > 0 ? ' → ' : ''}{card?.label ?? '?'}
+              </span>
+            );
+          })}
+        </div>
+      </ChallengeZone>
+
+      <RefereeZone>
+        <div className="mg-boost-slot">
+          <BoostButton<CrackTheTumblersState, CrackTheTumblersParams>
+            hook={resetPinBoost}
+            committed={committed}
+            onFire={handleBoost}
+          />
+        </div>
+
+        <button
+          type="button"
+          className="mg-call-outcome-btn"
+          data-testid="btn-call-outcome"
+          onClick={handleCallOutcome}
+        >
+          Call Outcome
+        </button>
+      </RefereeZone>
     </div>
   );
 }
