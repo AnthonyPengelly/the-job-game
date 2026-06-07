@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ShieldCheck, Siren } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { CardSpread } from '@/minigames/primitives/CardSpread';
@@ -25,15 +25,6 @@ export function CrackTheTumblersComponent({
   const [state, setState] = useState<CrackTheTumblersState>(initState);
 
   const gameComplete = state.alarmTripped || state.playedSequence.length === params.cards.length;
-  const suggested = judge(state, params);
-
-  // Auto-resolve when game is complete
-  useEffect(() => {
-    if (gameComplete) {
-      onResolve(suggested);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameComplete]);
 
   function handleCardTap(id: CardId) {
     if (gameComplete) return;

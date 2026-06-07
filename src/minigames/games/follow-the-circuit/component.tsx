@@ -80,14 +80,6 @@ export function FollowTheCircuitComponent({
 
   const isDone = phase === 'done' || state.chainBroke;
 
-  // Auto-resolve when game is done
-  useEffect(() => {
-    if (isDone) {
-      onResolve(judge(state, params));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDone]);
-
   function handleCardTap(id: CardId) {
     if (phase !== 'inputting' || isDone) return;
 

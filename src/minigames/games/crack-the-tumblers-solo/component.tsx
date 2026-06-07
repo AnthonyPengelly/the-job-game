@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Eye, RotateCcw, ShieldCheck, Siren } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { CardSpread } from '@/minigames/primitives/CardSpread';
@@ -27,15 +27,6 @@ export function CrackTheTumblersSoloComponent({
   const [state, setState] = useState<CrackTheTumblersSoloState>(initState);
 
   const gameComplete = state.alarmTripped || state.recallSequence.length === params.correctOrder.length;
-  const suggested = judge(state, params);
-
-  // Auto-resolve when game is complete
-  useEffect(() => {
-    if (gameComplete) {
-      onResolve(suggested);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameComplete]);
 
   function handleStudyExpire() {
     setState(s => ({ ...s, phase: 'recall' }));
