@@ -1,1 +1,1 @@
-export { DiceModeControl } from './DiceModeControl';
+export { DiceModeControl, SettingsDialog } from './DiceModeControl';
