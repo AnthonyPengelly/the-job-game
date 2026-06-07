@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { Eye, RotateCcw, ShieldCheck, Siren } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { CardSpread } from '@/minigames/primitives/CardSpread';
 import type { CardId } from '@/minigames/primitives/CardSpread';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
-import { OutcomeJudge } from '@/minigames/primitives/OutcomeJudge';
+import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { CrackTheTumblersSoloParams } from './generate';
 import { judge, resetPinBoost } from './judge';
 import type { CrackTheTumblersSoloState } from './judge';
@@ -26,7 +27,6 @@ export function CrackTheTumblersSoloComponent({
   const [state, setState] = useState<CrackTheTumblersSoloState>(initState);
 
   const gameComplete = state.alarmTripped || state.recallSequence.length === params.correctOrder.length;
-  const suggested = judge(state, params);
 
   function handleStudyExpire() {
     setState(s => ({ ...s, phase: 'recall' }));
@@ -54,61 +54,121 @@ export function CrackTheTumblersSoloComponent({
     setState(s => hook.apply(s, params));
   }
 
+  function handleCallOutcome() {
+    onResolve(judge(state, params));
+  }
+
+  const recalled = state.recallSequence.length;
+  const total = params.correctOrder.length;
+  const progressPct = total > 0 ? (recalled / total) * 100 : 0;
+
   return (
     <div data-testid="crack-the-tumblers-solo">
-      <div data-testid="ctt-solo-info">
-        <span data-testid="ctt-solo-phase">Phase: {state.phase}</span>
-        {state.phase === 'recall' && (
-          <span> | Recalled: {state.recallSequence.length}/{params.correctOrder.length}</span>
+      <StatusZone>
+        {state.phase === 'study' ? (
+          <span className="mg-status-badge mg-status-badge--active">
+            <Eye size={14} />
+            <span data-testid="ctt-solo-phase">Phase: study</span>
+          </span>
+        ) : (
+          <span className={`mg-status-badge ${state.alarmTripped ? 'mg-status-badge--botched' : 'mg-status-badge--active'}`}>
+            <RotateCcw size={14} />
+            <span data-testid="ctt-solo-phase">Phase: recall</span>
+          </span>
         )}
-        {state.alarmTripped && <span data-testid="solo-alarm-tripped"> — ALARM TRIPPED</span>}
-      </div>
 
-      {state.phase === 'study' ? (
-        <div data-testid="study-phase">
-          <p>Memorise this sequence:</p>
-          <CardSpread cards={params.studyCards} layout="row" />
-          <Timer
-            seconds={params.studySeconds}
-            running
-            onExpire={handleStudyExpire}
-            audible={false}
+        {state.phase === 'recall' && (
+          <div className="mg-progress-bar" aria-label="Recall progress">
+            <div className="mg-progress-bar__label">
+              Recalled: {recalled}/{total}
+            </div>
+            <div className="mg-progress-bar__track">
+              <div
+                className="mg-progress-bar__fill"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {state.alarmTripped ? (
+          <span className="mg-status-badge mg-status-badge--botched" data-testid="solo-alarm-tripped">
+            <Siren size={14} />
+            ALARM
+          </span>
+        ) : (
+          <span className="mg-status-badge mg-status-badge--clean">
+            <ShieldCheck size={14} />
+            Clear
+          </span>
+        )}
+      </StatusZone>
+
+      <ChallengeZone>
+        {state.phase === 'study' ? (
+          <div data-testid="study-phase">
+            <p>Memorise this sequence:</p>
+            <CardSpread cards={params.studyCards} layout="row" />
+            <Timer
+              seconds={params.studySeconds}
+              running
+              onExpire={handleStudyExpire}
+              audible={false}
+            />
+          </div>
+        ) : (
+          <div data-testid="recall-phase">
+            <p>Recall the sequence — tap in ascending order:</p>
+            <CardSpread
+              cards={params.recallCards}
+              layout="row"
+              faceDown={state.recallSequence}
+              {...(!gameComplete && state.phase === 'recall' && { onTap: handleRecallTap })}
+            />
+            <div data-testid="recall-sequence">
+              {state.recallSequence.map((id, i) => {
+                const card = params.recallCards.find(c => c.id === id);
+                return (
+                  <span key={id} data-testid={`recalled-${i}`}>
+                    {i > 0 ? ' → ' : ''}{card?.label ?? '?'}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </ChallengeZone>
+
+      <RefereeZone>
+        <div className="mg-boost-slot">
+          <BoostButton<CrackTheTumblersSoloState, CrackTheTumblersSoloParams>
+            hook={resetPinBoost}
+            committed={committed}
+            onFire={handleBoost}
           />
-          <button data-testid="start-recall" onClick={handleStartRecall}>
+        </div>
+
+        {state.phase === 'study' && (
+          <button
+            type="button"
+            data-testid="start-recall"
+            onClick={handleStartRecall}
+          >
             Start Recall
           </button>
-        </div>
-      ) : (
-        <div data-testid="recall-phase">
-          <p>Recall the sequence — tap in ascending order:</p>
-          <CardSpread
-            cards={params.recallCards}
-            layout="row"
-            faceDown={state.recallSequence}
-            {...(!gameComplete && state.phase === 'recall' && { onTap: handleRecallTap })}
-          />
-          <div data-testid="recall-sequence">
-            {state.recallSequence.map((id, i) => {
-              const card = params.recallCards.find(c => c.id === id);
-              return (
-                <span key={id} data-testid={`recalled-${i}`}>
-                  {i > 0 ? ' → ' : ''}{card?.label ?? '?'}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      )}
+        )}
 
-      <div data-testid="boosts">
-        <BoostButton<CrackTheTumblersSoloState, CrackTheTumblersSoloParams>
-          hook={resetPinBoost}
-          committed={committed}
-          onFire={handleBoost}
-        />
-      </div>
-
-      <OutcomeJudge key={suggested} suggested={suggested} onConfirm={onResolve} />
+        {state.phase === 'recall' && (
+          <button
+            type="button"
+            className="mg-call-outcome-btn"
+            data-testid="btn-call-outcome"
+            onClick={handleCallOutcome}
+          >
+            Call Outcome
+          </button>
+        )}
+      </RefereeZone>
     </div>
   );
 }

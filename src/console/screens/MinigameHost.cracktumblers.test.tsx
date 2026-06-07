@@ -160,10 +160,11 @@ describe('MinigameHost — crackTheTumblersSolo (commit 1)', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    // In-game OutcomeJudge: pick botched and confirm
-    fireEvent.click(screen.getByTestId('outcome-option-botched'));
-    fireEvent.click(screen.getByTestId('outcome-confirm'));
-    // Shell RESOLVE: pre-selected to botched, confirm to dispatch
+    // Move to recall phase so btn-call-outcome is available
+    fireEvent.click(screen.getByTestId('start-recall'));
+    // Call outcome (nothing recalled → botched suggested)
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    // Shell RESOLVE: pre-selected to botched — confirm to dispatch
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -247,10 +248,10 @@ describe('MinigameHost — crackTheTumblers (commit 2)', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    // In-game OutcomeJudge
+    // Call outcome (nothing played → botched suggested)
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    // Shell RESOLVE: override to clean, then confirm
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
-    fireEvent.click(screen.getByTestId('outcome-confirm'));
-    // Shell RESOLVE confirm
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     const history = store.getState().session.present.history;

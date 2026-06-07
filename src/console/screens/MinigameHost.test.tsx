@@ -10,6 +10,7 @@ import type { GameId } from '@/engine';
 import type { StorageLike } from '@/platform';
 import type { ParsedNarration } from '@/content/schema';
 import { MinigameHost } from './MinigameHost';
+import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 
 afterEach(cleanup);
 
@@ -30,13 +31,20 @@ const mockGame: MiniGame<MockParams, MockState> = {
   generate: (rng) => ({ value: rng.int(1, 10000) }),
   Component: ({ params, onResolve }) => (
     <div data-testid="mock-game-component">
-      <span data-testid="mock-params-value">{params.value}</span>
-      <button data-testid="mock-resolve-clean" onClick={() => onResolve('clean')}>
-        Resolve Clean
-      </button>
-      <button data-testid="mock-resolve-botched" onClick={() => onResolve('botched')}>
-        Resolve Botched
-      </button>
+      <StatusZone>
+        <span data-testid="mock-params-value">{params.value}</span>
+      </StatusZone>
+      <ChallengeZone>
+        <span>Challenge area</span>
+      </ChallengeZone>
+      <RefereeZone>
+        <button data-testid="mock-resolve-clean" onClick={() => onResolve('clean')}>
+          Resolve Clean
+        </button>
+        <button data-testid="mock-resolve-botched" onClick={() => onResolve('botched')}>
+          Resolve Botched
+        </button>
+      </RefereeZone>
     </div>
   ),
   judge: () => 'clean',

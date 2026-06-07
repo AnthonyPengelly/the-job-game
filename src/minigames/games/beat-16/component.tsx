@@ -1,14 +1,29 @@
 import { useState, useRef, useEffect } from 'react';
+import { ShieldCheck, Clock, XCircle } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { useMetronome, useAudioClock, useScheduleBeep } from '@/minigames/primitives';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
-import { OutcomeJudge } from '@/minigames/primitives/OutcomeJudge';
+import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { Beat16Params } from './generate';
 import { judge, inTheBonesBoost } from './judge';
 import type { Beat16State } from './judge';
 
 function initState(): Beat16State {
   return { tapTimestampMs: null, measuredDeltaMs: null, boostUsed: false };
+}
+
+type FeedbackKind = 'hit' | 'close' | 'miss' | 'recorded' | null;
+
+function classifyFeedback(
+  delta: number | null,
+  cleanWindowMs: number,
+  complicationWindowMs: number,
+): FeedbackKind {
+  if (delta === null) return 'recorded';
+  const abs = Math.abs(delta);
+  if (abs <= cleanWindowMs) return 'hit';
+  if (abs <= complicationWindowMs) return 'close';
+  return 'miss';
 }
 
 export function Beat16Component({
@@ -45,7 +60,6 @@ export function Beat16Component({
   });
 
   const hasTapped = state.tapTimestampMs !== null;
-  const suggested = judge(state, params);
 
   function handleTap() {
     if (hasTapped) return;
@@ -57,50 +71,87 @@ export function Beat16Component({
       const expectedTargetBeatTime = beat1Time + (params.targetBeat - 1) * beatIntervalMs;
       delta = now - expectedTargetBeatTime;
     }
-    setState(s => ({
-      ...s,
-      tapTimestampMs: now,
-      measuredDeltaMs: delta,
-    }));
+    const nextState: Beat16State = { ...state, tapTimestampMs: now, measuredDeltaMs: delta };
+    setState(nextState);
   }
 
   function handleBoost(hook: BoostHook<Beat16State, Beat16Params>) {
     setState(s => hook.apply(s, params));
   }
 
+  function handleCallOutcome() {
+    onResolve(judge(state, params));
+  }
+
+  const feedback = hasTapped
+    ? classifyFeedback(state.measuredDeltaMs, params.cleanWindowMs, params.complicationWindowMs)
+    : null;
+
   return (
     <div data-testid="beat-16">
-      <div data-testid="beat16-info">
+      <StatusZone>
         <span data-testid="target-beat">Count to: {params.targetBeat}</span>
         <span> | BPM: {params.bpm}</span>
         <span data-testid="audible-beats"> | Audible: {effectiveAudibleBeats}</span>
-      </div>
+      </StatusZone>
 
-      <button
-        data-testid="btn-tap"
-        onClick={handleTap}
-        disabled={hasTapped}
-      >
-        TAP
-      </button>
+      <ChallengeZone>
+        <button
+          data-testid="btn-tap"
+          className="mg-big-tap"
+          onClick={handleTap}
+          disabled={hasTapped}
+        >
+          TAP
+        </button>
 
-      {hasTapped && (
-        <div data-testid="tap-result">
-          {state.measuredDeltaMs !== null
-            ? `Delta: ${state.measuredDeltaMs.toFixed(0)} ms`
-            : 'Tap recorded (timing unavailable)'}
+        {hasTapped && (
+          <div data-testid="tap-result">
+            {state.measuredDeltaMs !== null
+              ? `Delta: ${state.measuredDeltaMs.toFixed(0)} ms`
+              : 'Tap recorded (timing unavailable)'}
+          </div>
+        )}
+
+        {feedback === 'hit' && (
+          <span className="mg-status-badge mg-status-badge--clean">
+            <ShieldCheck size={14} /> HIT
+          </span>
+        )}
+        {feedback === 'close' && (
+          <span className="mg-status-badge mg-status-badge--complication">
+            <Clock size={14} /> CLOSE
+          </span>
+        )}
+        {feedback === 'miss' && (
+          <span className="mg-status-badge mg-status-badge--botched">
+            <XCircle size={14} /> MISS
+          </span>
+        )}
+        {feedback === 'recorded' && (
+          <span className="mg-status-badge mg-status-badge--active">
+            Tap recorded
+          </span>
+        )}
+      </ChallengeZone>
+
+      <RefereeZone>
+        <div className="mg-boost-slot">
+          <BoostButton<Beat16State, Beat16Params>
+            hook={inTheBonesBoost}
+            committed={committed}
+            onFire={handleBoost}
+          />
         </div>
-      )}
-
-      <div data-testid="boosts">
-        <BoostButton<Beat16State, Beat16Params>
-          hook={inTheBonesBoost}
-          committed={committed}
-          onFire={handleBoost}
-        />
-      </div>
-
-      <OutcomeJudge key={suggested} suggested={suggested} onConfirm={onResolve} />
+        <button
+          type="button"
+          data-testid="btn-call-outcome"
+          className="mg-call-outcome-btn"
+          onClick={handleCallOutcome}
+        >
+          Call Outcome
+        </button>
+      </RefereeZone>
     </div>
   );
 }
