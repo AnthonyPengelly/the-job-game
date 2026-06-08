@@ -3,7 +3,7 @@ import { useGameStore } from '@/console/store';
 import { PhaseHead, ActionBar, Button } from '@/console/ui';
 import { Teleprompter } from '@/console/teleprompter';
 import { useCrewRailMode } from '@/console/shell';
-import type { PlayerId, ScenarioChoice } from '@/engine';
+import type { ScenarioChoice } from '@/engine';
 
 // ── Stage-one choice card ─────────────────────────────────────────────────────
 
@@ -36,11 +36,11 @@ interface AttempterPickerProps {
 function AttempterPicker({ choiceId, onBack }: AttempterPickerProps) {
   const crew = useGameStore(s => s.session.present.crew);
   const dispatch = useGameStore(s => s.dispatch);
-  const { pickAttempter } = useCrewRailMode();
+  const { pickAttempter, selectedAttempter } = useCrewRailMode();
 
-  function handlePick(playerId: PlayerId) {
-    pickAttempter(playerId);
-    dispatch({ t: 'CHOOSE_SCENARIO', choiceId, attemptedBy: playerId });
+  function handleConfirm() {
+    if (selectedAttempter === null) return;
+    dispatch({ t: 'CHOOSE_SCENARIO', choiceId, attemptedBy: selectedAttempter });
   }
 
   return (
@@ -55,7 +55,7 @@ function AttempterPicker({ choiceId, onBack }: AttempterPickerProps) {
               key={player.id}
               kind="secondary"
               data-testid={`btn-attempter-${player.id}`}
-              onClick={() => handlePick(player.id)}
+              onClick={() => pickAttempter(player.id)}
             >
               {player.name}
             </Button>
@@ -66,6 +66,16 @@ function AttempterPicker({ choiceId, onBack }: AttempterPickerProps) {
         left={
           <Button kind="ghost" data-testid="btn-back" onClick={onBack}>
             Back
+          </Button>
+        }
+        right={
+          <Button
+            kind="primary"
+            data-testid="btn-attempter-confirm"
+            onClick={handleConfirm}
+            disabled={selectedAttempter === null}
+          >
+            Select
           </Button>
         }
       />

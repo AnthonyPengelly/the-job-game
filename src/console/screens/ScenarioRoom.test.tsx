@@ -352,13 +352,34 @@ describe('ScenarioRoom attempter picker — roll choice', () => {
     expect(screen.getByTestId('scenario-choices')).toBeInTheDocument();
   });
 
-  it('selecting an attempter dispatches CHOOSE_SCENARIO and shows roll reveal', () => {
+  it('selecting an attempter highlights them but does not dispatch until confirmed', () => {
     const { store } = renderRollRoom();
     fireEvent.click(screen.getByTestId('btn-choice-sr-roll'));
     const alice = store.getState().session.present.crew[0]!;
     fireEvent.click(screen.getByTestId(`btn-attempter-${alice.id}`));
+    // Highlight only — roll-reveal must not appear yet
+    expect(screen.queryByTestId('roll-reveal')).toBeNull();
+    expect(screen.getByTestId('attempter-select')).toBeInTheDocument();
+  });
+
+  it('clicking Select after picking an attempter dispatches CHOOSE_SCENARIO and shows roll reveal', () => {
+    const { store } = renderRollRoom();
+    fireEvent.click(screen.getByTestId('btn-choice-sr-roll'));
+    const alice = store.getState().session.present.crew[0]!;
+    fireEvent.click(screen.getByTestId(`btn-attempter-${alice.id}`));
+    fireEvent.click(screen.getByTestId('btn-attempter-confirm'));
     // Engine should have set pendingRoll; roll-reveal appears
     expect(screen.getByTestId('roll-reveal')).toBeInTheDocument();
+  });
+
+  it('Select button is disabled until a crew member is picked (rail path)', () => {
+    const { store } = renderRollRoom();
+    fireEvent.click(screen.getByTestId('btn-choice-sr-roll'));
+    expect(screen.getByTestId('btn-attempter-confirm')).toBeDisabled();
+    // Simulate a rail pick by clicking an inline attempter button
+    const bob = store.getState().session.present.crew[1]!;
+    fireEvent.click(screen.getByTestId(`btn-attempter-${bob.id}`));
+    expect(screen.getByTestId('btn-attempter-confirm')).not.toBeDisabled();
   });
 });
 
