@@ -69,6 +69,8 @@ function makeNarrationFixture(): ParsedNarration {
     getawayCountdown: variants('gc', 6),
     winSting: variants('ws', 6),
     bustSting: variants('bs', 6),
+    roomApproach: variants('ra', 4),
+    scenarioReveal: variants('sr', 4),
   };
 }
 

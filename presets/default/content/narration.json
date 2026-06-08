@@ -635,5 +635,57 @@
       "id": "bust-sting-6",
       "text": "Not the ending we planned. Still beats the alternative. Walk it off and come back sharper."
     }
+  ],
+  "roomApproach": [
+    {
+      "id": "room-approach-1",
+      "text": "Room {roomNum}. Stay tight, stay quiet. {mark} has no idea we're here."
+    },
+    {
+      "id": "room-approach-2",
+      "text": "Next room — {crew} stacks up. This is what we trained for."
+    },
+    {
+      "id": "room-approach-3",
+      "text": "Moving to room {roomNum}. {mark} — {vault} — that's the prize. Keep your heads."
+    },
+    {
+      "id": "room-approach-4",
+      "text": "Here we go. {crew}, on my signal. {mark} doesn't know what's coming."
+    },
+    {
+      "id": "room-approach-5",
+      "text": "Room {roomNum}. The {lane} approach is what gets us through this one."
+    },
+    {
+      "id": "room-approach-6",
+      "text": "Stack up. Room {roomNum} — inside is what we came to {mark} for. Focus."
+    }
+  ],
+  "scenarioReveal": [
+    {
+      "id": "scenario-reveal-1",
+      "text": "That's the call. {outcome}. {mark} is none the wiser — or very, very wiser. Either way, move."
+    },
+    {
+      "id": "scenario-reveal-2",
+      "text": "{crew} made the call. {outcome}. Room {roomNum} is behind us."
+    },
+    {
+      "id": "scenario-reveal-3",
+      "text": "Decision made, consequences landing. {outcome} — that's the tally. Keep moving."
+    },
+    {
+      "id": "scenario-reveal-4",
+      "text": "Scenario closed. {outcome}. {attempter} took the heat on that one — noted."
+    },
+    {
+      "id": "scenario-reveal-5",
+      "text": "The {mark} job has one less complication. {outcome}. On to the next."
+    },
+    {
+      "id": "scenario-reveal-6",
+      "text": "That's how it plays at {mark}. {outcome}. Van's watching — keep the pace."
+    }
   ]
 }

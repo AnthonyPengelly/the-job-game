@@ -26,7 +26,8 @@ Pure data, expanded without touching logic, authored across later epics:
 |------|----------|-------|
 | `scenarios` | E7 | The 44 scenarios: set-up, two choices, hidden effects, lane-weighted rolls, carried effects. |
 | `gear` | E2 | The gear/power-up catalogue: lane, effect hooks, where it may be spent. |
-| `narration` | E8 | Variant lines per beat (briefing, clues, option blurbs, push/run, the three outcome quips, scenario set-ups, Getaway intro/countdown, win/bust stings). |
+| `narration` | E8 | Variant lines per beat (briefing, roomApproach, clues, option blurbs, push/run, outcomeQuip, scenario set-ups, scenarioReveal, Getaway intro/countdown, win/bust stings). See §10 for template tokens. |
+| `spine` | E17 | Mark (dossier) bank: `markName`, `vault`, `security`, `targetHaul`, `dropCaption`, `dressing` — keyed by `mansionType`. The director commits one `MarkSpine` per run from this bank. |
 | `banks` | E5 | Trivia question bank (Inside Knowledge) and category bank (Categories). |
 | `sound` | E9 | The sound manifest: buffer ids → files, grouped by moment (ambient, SFX, stings, danger, finale). |
 | `roomTemplates` | E1/E3 | Room/obstacle templates: which option menus the generator may draw (game · reward · Heat-cost shapes). |
@@ -262,3 +263,80 @@ it lives in a preset. The harness builds `Config` straight from these fields.
 - [ ] New tuning field added with a default + schema-version bump (or a
       migration for a rename/removal).
 - [ ] `_meta.json` updated (description, content-pack references, version).
+
+---
+
+## 10. Spine schema and narration templating (E17)
+
+### The spine bank
+
+`presets/<id>/content/spine.json` holds the **mark bank** — a validated array of
+`MarkSpine` records filtered by `mansionType`. At run-start, the narration
+director commits exactly one `MarkSpine` (seeded from `runSeed`) and exposes it
+as `director.spine`.
+
+**`MarkSpine` fields (all required):**
+
+| Field | Example | Purpose |
+|-------|---------|---------|
+| `id` | `"villa-1"` | Unique within the bank |
+| `mansionType` | `"villa"` | Filter key — must match the engine-chosen mansion |
+| `markName` | `"Ashcombe House"` | Full name used in narration and dossier |
+| `vault` | `"East Wing, Ground Floor"` | Where the haul lives (dossier + narration) |
+| `security` | `"MODERATE"` | Flavour label for the dossier strip |
+| `targetHaul` | `"$85k"` | Flavour haul estimate for the dossier strip |
+| `dropCaption` | `"A hillside villa…"` | One-line image-strip caption for the Briefing |
+| `dressing` | `"Manicured grounds…"` | Opening scene-setting text (GM read-aloud) |
+
+Schema: `spineBankSchema` / `MarkSpine` in `src/content/schema/spine.ts`.
+Loader: `loadDefaultSpine()` (browser) / `loadSpine(id)` (Node.js) in
+`src/platform/presets/`.
+
+**Bank minimum:** ≥3 marks per `mansionType` (`villa`, `estate`, `penthouse`) so
+the director always has variety.
+
+### Narration beats
+
+The narration bank (`presets/<id>/content/narration.json`) now has **12 beats**:
+
+| Beat | When shown |
+|------|-----------|
+| `briefing` | Briefing screen — read-aloud before the run begins |
+| `roomApproach` | **New (E17)** — scene-set as the crew approaches a room (both obstacle and scenario) |
+| `obstacleClue` | Obstacle screen — the "what's ahead" tension line |
+| `optionDescription` | Option card descriptions |
+| `pushRun` | Offer screen — push-or-run framing |
+| `outcomeQuip` | Spoils screen — obstacle payoff line |
+| `scenarioSetup` | Scenario screen — the choice-ahead line |
+| `scenarioReveal` | **New (E17)** — scenario payoff on reveal |
+| `getawayIntro` | Getaway screen — opening |
+| `getawayCountdown` | Getaway screen — countdown phase |
+| `winSting` | Result screen — win payoff |
+| `bustSting` | Result screen — bust payoff |
+
+### Template tokens
+
+Narration variant `text` fields may contain `{token}` placeholders that are
+resolved at render time by `fillTemplate(text, ctx)` in
+`src/content/narration/template.ts`.
+
+**Canonical token set** (`ALLOWED_TOKENS`):
+
+| Token | Resolved from |
+|-------|--------------|
+| `{mark}` | `spine.markName` (committed at run-start) |
+| `{vault}` | `spine.vault` |
+| `{security}` | `spine.security` |
+| `{targetHaul}` | `spine.targetHaul` |
+| `{lane}` | The obstacle's lane (tech/physical/charm/stealth) |
+| `{crew}` | Committed crew names joined (e.g. `"Ghost & Spark"`) |
+| `{attempter}` | Name of the crew member who attempted the challenge |
+| `{outcome}` | `"clean"`, `"complication"`, or `"botched"` |
+| `{heatBand}` | `"cool"`, `"warm"`, or `"hot"` |
+| `{runTotal}` | Total Loot accrued this run (formatted string) |
+| `{roomNum}` | Current room number (1-based string) |
+
+**Unknown tokens fail loudly at parse** (golden rule 7): `narrationVariantSchema`
+rejects any `{foo}` where `foo` is not in the allowed set. A missing context
+value at render time renders to an empty string — never the literal `{token}` at
+the table.
