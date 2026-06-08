@@ -52,5 +52,5 @@
     "safeCrack":  { "base": 1.5, "perLanePoint": -0.3,  "tightenPerExtraCrew": 0.15 }
   },
 
-  "heatDial": { "perHeat": 0, "perRoom": 0 }
+  "heatDial": { "perHeat": 0.05, "perRoom": 0.05 }
 }

@@ -125,13 +125,15 @@ describe('runMonteCarlo', () => {
     expect(result.earlyCleanRate).toBeGreaterThan(result.lateCleanRate);
   });
 
-  it('E15.3: at default heatDial=0 levelled vs un-levelled results are identical', () => {
-    // Default preset has heatDial={perHeat:0,perRoom:0} and DIAL_LEVEL_TO_P=0.05,
-    // so heatPenalty=0 always. levelled only affects growthBonus.
-    // These runs will differ in distribution (levelled earns growth bonus)
-    // but both should complete without error. This test guards the no-op contract:
-    // existing sim:check cells (all levelled=true by default) are unaffected.
-    const cfg = loadDefaultConfig();
+  it('E15.3: at heatDial=0 levelled vs un-levelled results are identical', () => {
+    // Build an explicit zero-heatDial config to guard the no-op contract:
+    // when heatDial={0,0}, heatPenalty=0 always, so levelled only affects growthBonus.
+    // (The default preset now has non-zero heatDial after E15.4, so we can't use it here.)
+    const baseCfg = loadDefaultConfig();
+    const cfg = {
+      ...baseCfg,
+      scaling: { ...baseCfg.scaling, heatDial: { perHeat: 0, perRoom: 0 } },
+    };
     const opts = { n: 200, baseSeed: 1312, skill: 'avg' as const, headcount: 4 };
 
     const levelled   = runMonteCarlo(cfg, { ...opts, levelled: true });

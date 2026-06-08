@@ -132,7 +132,7 @@ export function nextModelEvent(
   // p = min(0.95, base + growth − heatPenalty)
   // growth: levelled crew earns full room-growth offset; un-levelled crew earns none.
   // heatPenalty: dial-level contribution from heatDial preset curve mapped to probability
-  //   via DIAL_LEVEL_TO_P. At default heatDial={0,0} the penalty is always 0.
+  //   via DIAL_LEVEL_TO_P. When heatDial={0,0} the penalty is always 0.
   const base = SKILL_VALUES[skill] + playerBonus(state.crew.length);
   const growth = levelled ? growthBonus(state.roomIndex + 1) : 0;
   const hd = cfg.scaling.heatDial;
