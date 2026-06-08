@@ -80,7 +80,7 @@ export function Result() {
 
       {/* Final score */}
       <p data-testid="result-final-score" className="prose" style={{ textAlign: 'center', fontSize: 22 }}>
-        Final score: {finalScore.toFixed(2)}
+        Final score: {formatLoot(Math.round(finalScore))}
       </p>
 
       {/* Score breakdown stat tiles */}
