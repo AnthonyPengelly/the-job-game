@@ -3,7 +3,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { StoreContext, createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
-import type { EngineConfig } from '@/engine';
+import type { EngineConfig, PlayerId, ScenarioChoiceDef } from '@/engine';
 import type { StorageLike } from '@/platform';
 import type { ParsedNarration } from '@/content/schema';
 import { Spoils } from './Spoils';
@@ -470,5 +470,127 @@ describe('store — pendingSpoils transitions', () => {
     expect(store.getState().pendingSpoils).toBe(true);
     store.getState().clearPendingSpoils();
     expect(store.getState().pendingSpoils).toBe(false);
+  });
+});
+
+// ── Scenario reveal narration ──────────────────────────────────────────────────
+
+/**
+ * Config that always generates scenario rooms with a single roll-choice scenario.
+ * baseDifficulty=13 and Alice starts charm=0 → DC=13.
+ * externalRoll=20 → success; externalRoll=1 → failure.
+ */
+const scenarioRevealCfg: EngineConfig = {
+  ...testCfg,
+  generation: { obstacleRatio: 0.0 },
+  roomTemplates: {
+    ...testCfg.roomTemplates,
+    scenarios: [
+      {
+        id: 'scen-reveal',
+        setup: 'The guard turns.',
+        choices: [
+          {
+            id: 'sr-roll',
+            label: 'Talk your way out',
+            roll: {
+              lane: 'charm' as const,
+              baseDifficulty: 13,
+              success: { heatDelta: -1, lootDelta: 1 },
+              failure: { heatDelta: 2, lootDelta: 0 },
+            },
+          },
+          {
+            id: 'sr-effect',
+            label: 'Hide quietly',
+            effect: { heatDelta: 0, lootDelta: 0 },
+          },
+        ] as [ScenarioChoiceDef, ScenarioChoiceDef],
+      },
+    ],
+  },
+};
+
+function makeScenarioNarrationFixture(): ParsedNarration {
+  const variants = (prefix: string, count: number) =>
+    Array.from({ length: count }, (_, i) => ({ id: `${prefix}-${i}`, text: `${prefix} text ${i}` }));
+  return {
+    ...makeNarrationFixture(),
+    scenarioReveal: [
+      { id: 'sr-clean-0', text: 'Scenario clean reveal', when: { outcome: 'clean' } },
+      { id: 'sr-complication-0', text: 'Scenario complication reveal', when: { outcome: 'complication' } },
+      ...variants('sr-unfiltered', 2),
+    ],
+  };
+}
+
+/**
+ * Build a store in the 'offer' phase after resolving a scenario roll.
+ * externalRoll=20 → success=true; externalRoll=1 → success=false.
+ */
+function makeScenarioSpoilsStore(opts: { externalRoll: number; narration?: ParsedNarration }) {
+  const { externalRoll, narration } = opts;
+  const storage = makeStorage();
+  const store = createGameStore({
+    cfg: scenarioRevealCfg,
+    storage,
+    ...(narration !== undefined ? { narration } : {}),
+  });
+  store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+
+  const room = store.getState().session.present.currentRoom;
+  if (room === null || room.kind !== 'scenario') {
+    throw new Error('Expected scenario room');
+  }
+  const alice = store.getState().session.present.crew[0]!;
+  store.getState().dispatch({
+    t: 'CHOOSE_SCENARIO',
+    choiceId: 'sr-roll',
+    attemptedBy: alice.id as PlayerId,
+  });
+  store.getState().dispatch({ t: 'RESOLVE_SCENARIO_ROLL', externalRoll });
+  return store;
+}
+
+describe('Spoils — scenario reveal narration', () => {
+  it('shows scenarioReveal teleprompter for scenario rooms', () => {
+    const store = makeScenarioSpoilsStore({
+      externalRoll: 20,
+      narration: makeScenarioNarrationFixture(),
+    });
+    render(
+      <StoreContext.Provider value={store}>
+        <Spoils />
+      </StoreContext.Provider>,
+    );
+    expect(screen.getByTestId('outcome-quip')).toBeInTheDocument();
+  });
+
+  it('success=true maps to clean outcome → shows clean scenarioReveal line', () => {
+    const store = makeScenarioSpoilsStore({
+      externalRoll: 20,
+      narration: makeScenarioNarrationFixture(),
+    });
+    render(
+      <StoreContext.Provider value={store}>
+        <Spoils />
+      </StoreContext.Provider>,
+    );
+    const line = screen.getByTestId('teleprompter-line').textContent ?? '';
+    expect(line).toContain('Scenario clean reveal');
+  });
+
+  it('success=false maps to complication outcome → shows complication scenarioReveal line', () => {
+    const store = makeScenarioSpoilsStore({
+      externalRoll: 1,
+      narration: makeScenarioNarrationFixture(),
+    });
+    render(
+      <StoreContext.Provider value={store}>
+        <Spoils />
+      </StoreContext.Provider>,
+    );
+    const line = screen.getByTestId('teleprompter-line').textContent ?? '';
+    expect(line).toContain('Scenario complication reveal');
   });
 });
