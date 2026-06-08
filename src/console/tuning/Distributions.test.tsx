@@ -21,6 +21,8 @@ const SAMPLE_RESULT: MonteCarloResult = {
   pObstTight: 0.68,
   meanLoot: 8.4,
   meanScore: 310.5,
+  earlyCleanRate: 0.65,
+  lateCleanRate: 0.58,
 };
 
 // ── null result (idle) ────────────────────────────────────────────────────────
