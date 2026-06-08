@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { cwd } from 'node:process';
 import { ZodError } from 'zod';
-import { loadPreset, loadNarration, loadSoundManifest } from './load';
+import { loadPreset, loadNarration, loadSoundManifest, loadSpine } from './load';
 
 describe('loadPreset', () => {
   describe('default preset', () => {
@@ -341,5 +341,18 @@ describe('loadSoundManifest', () => {
 
   it('throws ZodError when sound.json is malformed', () => {
     expect(() => loadSoundManifest('test-malformed-sound')).toThrow(ZodError);
+  });
+});
+
+describe('loadSpine', () => {
+  it('parses the default spine bank without throwing', () => {
+    const bank = loadSpine('default');
+    expect(bank).toBeDefined();
+    expect(Array.isArray(bank.marks)).toBe(true);
+    expect(bank.marks.length).toBeGreaterThan(0);
+  });
+
+  it('throws ZodError when spine.json is malformed', () => {
+    expect(() => loadSpine('test-malformed-spine')).toThrow(ZodError);
   });
 });
