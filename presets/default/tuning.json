@@ -85,6 +85,8 @@
     "heatDC": { "perHeat": 0, "perRoom": 0 }
   },
 
+  "rewardScale": { "perHeat": 0, "perRoom": 0 },
+
   "gearSellValue": {
     "base": 5000,
     "perRoom": 3000

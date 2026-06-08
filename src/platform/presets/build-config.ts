@@ -107,6 +107,7 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
       critFumble: tuning.scenario.critFumble,
       heatDC: tuning.scenario.heatDC,
     },
+    rewardScale: tuning.rewardScale,
     gearSellValue: tuning.gearSellValue,
     scaling: {
       profiles,

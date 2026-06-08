@@ -304,6 +304,7 @@ describe('scenarios pack — no-repeat draw within the run', () => {
     // Force all rooms to be scenario rooms for this test.
     generation: { obstacleRatio: 0.0 },
     scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
+    rewardScale: { perHeat: 0, perRoom: 0 },
     gearSellValue: { base: 1000, perRoom: 500 },
     gear: {},
     banks: { categories: [], trivia: [] },

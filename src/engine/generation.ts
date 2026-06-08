@@ -125,13 +125,17 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
     const range: [number, number] | undefined =
       headcount >= 2 ? obstacleCommitRange(template.gameId, headcount, cfg) : undefined;
 
+    // Reward multiplier: m = 1 + perHeat*heat + perRoom*roomIndex. Defaults to 1 (no-op at 0/0).
+    const { perHeat, perRoom } = cfg.rewardScale;
+    const m = 1 + perHeat * stateAfterPayoffs.heat + perRoom * stateAfterPayoffs.roomIndex;
+
     const options: [ObstacleOption, ObstacleOption] = [
       {
         id: template.options[0].id,
         gameId: template.gameId as GameId,
         greedy: template.options[0].greedy,
         heatCost: template.options[0].heatCost,
-        reward: template.options[0].reward,
+        reward: Math.round(template.options[0].reward * m),
         ...(template.options[0].gear !== undefined && { gear: template.options[0].gear }),
         ...(range !== undefined && { commitRange: range }),
       },
@@ -140,7 +144,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         gameId: template.gameId as GameId,
         greedy: template.options[1].greedy,
         heatCost: template.options[1].heatCost,
-        reward: template.options[1].reward,
+        reward: Math.round(template.options[1].reward * m),
         ...(template.options[1].gear !== undefined && { gear: template.options[1].gear }),
         ...(range !== undefined && { commitRange: range }),
       },

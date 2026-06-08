@@ -70,6 +70,7 @@ export const tuningSchema = z.object({
     critFumble: z.boolean(),
     heatDC: z.object({ perHeat: z.number(), perRoom: z.number() }).strict(),
   }).strict(),
+  rewardScale: z.object({ perHeat: z.number(), perRoom: z.number() }).strict(),
   gearSellValue: z.object({
     base: z.number().nonnegative(),
     perRoom: z.number().nonnegative(),
