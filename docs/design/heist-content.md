@@ -25,24 +25,28 @@ There are exactly **four power-ups — one per lane: Tech, Physical, Charm, Stea
 
 - **Rare**, and **one per lane per player** — a player can hold up to four (one of each); they don't stack.
 - Different flavour items (Hacker's Rig, Burner Phone, Skeleton Key…) may all grant the **same** power-up — mechanically identical.
-- In a **combo game** you benefit from whichever of its two lane power-ups you hold (or both, if the playing crew holds both).
+- In a **combo game**, holding **either** of its two lane power-ups unlocks that game's one ability (revised v0.9 — *not* a different effect per lane).
 
 ### What each power-up does, per game
 
-| Game | Lane(s) | Effect if you hold the lane power-up |
-|------|---------|--------------------------------------|
-| Crack the Tumblers | Tech | **Tech:** Reset Pin — undo a misplay, no alarm |
-| Beat 16 | Physical | **Physical:** In the Bones — two extra audible beats before the mute |
-| Categories | Charm | **Charm:** Skip — swap a category |
-| The Once-Over | Stealth | **Stealth:** Hunch — the narrator gives a clue |
-| Follow the Circuit | Tech + Physical | **Tech:** Photographic — replay the sequence once · **Physical:** Muscle Memory — slower playback, one fumble forgiven |
-| Inside Knowledge | Tech + Charm | **Tech:** Cheat Sheet — skip a question, counted right · **Charm:** Narrow It Down — multiple choice |
-| Safe-Crack | Tech + Stealth | **Tech:** Stethoscope — reveal a digit's position · **Stealth:** Patient Touch — one extra guess |
-| Assembly Line | Physical + Charm | **Physical:** Quick Hands — one 2-for-1 trade · **Charm:** Tip-Off — reveal the loot types in play |
-| Steady Hands | Physical + Stealth | **Physical:** Extra Hands — 10s, everyone helps build · **Stealth:** Steady Breath — one wobble forgiven |
-| Defuse the Alarm | Charm + Stealth | **Charm:** Clear Channel — one full sentence allowed · **Stealth:** Spare Wire — one wrong cut forgiven |
+> **Revised v0.9 (E18):** each *game* has **one** signature ability, triggered by holding a power-up in
+> **any lane the game uses**. The old per-lane dual boosts are collapsed; *Muscle Memory, Cheat Sheet,
+> Patient Touch, Quick Hands, Steady Breath and Spare Wire are retired.*
 
-So a Tech specialist's single power-up shows up as Reset Pin, Photographic, Cheat Sheet, or Stethoscope depending on the room — one ability, many faces.
+| Game | Lane(s) | The game's one ability (hold a power-up in any listed lane) |
+|------|---------|--------------------------------------|
+| Crack the Tumblers | Tech | **Reset Pin** — undo a misplay, no alarm |
+| Beat 16 | Physical | **In the Bones** — two extra audible beats before the mute |
+| Categories | Charm | **Skip** — swap a category |
+| The Once-Over | Stealth | **Hunch** — the narrator gives a clue |
+| Follow the Circuit | Tech + Physical | **Photographic** — replay the whole sequence once |
+| Inside Knowledge | Tech + Charm | **Narrow It Down** — turn one question into multiple choice |
+| Safe-Crack | Tech + Stealth | **Stethoscope** — reveal one digit's position |
+| Assembly Line | Physical + Charm | **Tip-Off** — reveal which loot types are in play |
+| Steady Hands | Physical + Stealth | **Extra Hands** — 10s, everyone (benched included) helps build |
+| Defuse the Alarm | Charm + Stealth | **Clear Channel** — one full spoken sentence allowed through |
+
+So a Tech specialist's single power-up shows up as Reset Pin, Photographic, Narrow It Down, or Stethoscope depending on the room — one ability, many faces.
 
 ---
 

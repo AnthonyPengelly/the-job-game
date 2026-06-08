@@ -1,6 +1,18 @@
-# The Job — Design Doc (v0.8)
+# The Job — Design Doc (v0.9)
 
 A co-op heist roguelike. One laptop (the narrator/"van"), a deck of cards, a tabletop. 2–7 players, ~30 minutes per run. Trivial to learn, different every time, built on push-your-luck: *grab more, or get out before the Heat catches you.*
+
+> **v0.9 (build-era) revisions** — driven by first full-build playtest, implemented by EPICS **E14–E20**:
+> 1. **Loot reads as a real haul** (dramatic figures, e.g. `$3.6k … $137k`), not single digits. *(E14)*
+> 2. **Every room offers Gear, not just Loot** — and the crew can decline a piece of gear to bank **more Loot instead** (sell-don't-use), so the build is a live decision. *(E14)*
+> 3. **Difficulty and reward ride Heat/depth** — early rooms forgiving and thin, later rooms punishing and rich; staying clean late requires having levelled the right lanes. *(E15)*
+> 4. **Getaway ditch drops Loot, not Heat**, and **buying seconds is removed** (power-up *skips* remain). *(E20)*
+> 5. **One signature power-up ability per game**, triggered by holding a power-up in *any* lane that game
+>    uses — *not* a different effect per lane. Combo games keep a single ability (e.g. Steady Hands =
+>    **Extra Hands**; *Steady Breath, Muscle Memory, Cheat Sheet, Patient Touch, Quick Hands and Spare
+>    Wire are retired*). *(E18)*
+>
+> These points **override** the corresponding text below where they conflict.
 
 ---
 
@@ -36,7 +48,7 @@ Two kinds of reward, both **mechanically transparent** — you always see what y
 
 **Stat boosts — common, and they stack.** A +1 to a lane of the crew's choice (*Better Tools* → Tech, *Hit the Gym* → Physical, *Did the Homework* → Charm, *Soft Shoes* → Stealth). Your lane rating is the passive **difficulty dial** for every game in that lane, so any boost helps all of it — scaling, not prerequisites, and no build-killers. Stacking these is how you specialise.
 
-**Power-ups — rare, the shouted plays. There are exactly four: one per lane.** Holding the Tech power-up means "you're an ace at Tech games" — whenever a game uses that lane it gives you a game-specific effect you shout to use (Reset Pin in Crack the Tumblers, Stethoscope in Safe-Crack, and so on; full per-game list in the Content Library). **One per lane per player; they don't stack** — you can hold up to four, one of each. Different flavour items may grant the same power-up. In a combo game you benefit from whichever of its two lanes you hold.
+**Power-ups — rare, the shouted plays. There are exactly four: one per lane.** Holding the Tech power-up means "you're an ace at Tech games." **Each *game* has exactly one signature power-up ability** (Reset Pin in Crack the Tumblers, Stethoscope in Safe-Crack, Extra Hands in Steady Hands, and so on — full list below), and a committed player may **shout it once** if they hold a power-up in **any lane that game uses**. So in a combo game, holding *either* of its two lane power-ups unlocks that game's one ability — it is not a different effect per lane. **One per lane per player; they don't stack** — you can hold up to four, one of each. Different flavour items may grant the same power-up.
 
 **Who gets it.** The crew assigns each reward to a player, so you build your specialists together ("give Sara the Tech boost — she's our hacker"). Exhaustion rotation means everyone develops, and the Getaway puts the whole built-up crew to work.
 
@@ -50,7 +62,7 @@ A **procedurally generated stream** of rooms — no fixed length, no boss. Heat 
 
 ### Two room types
 
-- **Obstacle** — a security problem beaten with a mini-game. The room offers 2–3 **options**, each tied to a specific game, a **reward** (Loot or Gear), and a **Heat cost**. Greedy options pay more and burn hotter.
+- **Obstacle** — a security problem beaten with a mini-game. The room offers 2–3 **options**, each tied to a specific game, a **reward** (Loot, Gear, or both), and a **Heat cost**. Greedy options pay more and burn hotter. **Most rooms put Gear on the table** — and when a reward includes Gear the crew may **decline the piece to bank more Loot instead** (sell-don't-use), making "specialise or cash out" a live, recurring decision rather than a passive drop. *(v0.9 — E14.)*
 - **Scenario** — short and fun. The narrator reads a situation with **two choices**. Each hides a **secret effect** revealed only after you commit — it can move *anything*: Heat, Loot, Gear, or *info*. Some choices resolve as a hidden **lane-weighted roll**: the crew picks who attempts it, and that player's (concealed) stat in a relevant lane tips the odds, so sending the right specialist matters. A quick gamble and a palate-cleanser between obstacles.
 
 ### The room loop (obstacles)
@@ -95,6 +107,7 @@ A Monte Carlo of ~1M runs (model saved as `heat-model-simulation.py`) settled th
 - **Scenarios:** small ↑/↓ = ±2, big ⇈/⇊ = ±4; loot/gear/info = 0 Heat.
 - **Escape signal at Heat 11 (~55%):** the van calls *"it's getting hot — we can roll."* Run now, or push deeper for more Loot as the Getaway worsens. **Heat 20 = forced emergency Getaway** at the worst odds.
 - **Getaway success rides on Heat** (plus Articulate skill and headcount): ~90%+ when cool, ~50/50 at the escape signal, ~15–25% near max.
+- **Difficulty & reward ride Heat/depth (v0.9):** on top of the per-game stat dial, both mini-game difficulty *and* the Loot/Gear on offer scale up with Heat and how deep the run is — early rooms are forgiving and thin, later rooms punishing and rich. Pushing your luck therefore means harder games for bigger numbers, and a crew that hasn't levelled the relevant lanes can no longer stay clean late. Exact curves are tuning data, re-asserted by the balance harness (E15).
 
 **What the model showed:**
 
@@ -111,8 +124,8 @@ The finale: a **whole-team** game, deliberately different from everything else, 
 
 - The crew sits in a circle. The narrator starts the clock; **length and target are set by Heat** (low Heat = generous; high Heat = short and steep).
 - **Round the circle:** each player in turn flips the top card and gives clues (describe it, Catch Phrase style — no saying the word) until the team shouts it right, then play passes on to the next person and the next card.
-- Clear the **target number of cards** (Heat-scaled) before time runs out to escape clean. Stuck on one? **Ditch it** for a small Heat tick and move on.
-- Banked **Gear** can be spent here too (skip a card, buy seconds).
+- Clear the **target number of cards** (Heat-scaled) before time runs out to escape clean. Stuck on one? **Ditch it** — skip the card but **drop some banked Loot** (ditching costs *Loot*, not Heat — revised v0.9), and move on.
+- Banked **Gear** can be spent here too: a power-up holder can **skip a card** (one skip per power-up). *(Buying seconds was removed in v0.9 — see E20.)*
 
 Why it works: everyone clues, so the whole table is in it; it's fast, loud, and celebratory — the right energy for a climax; and the Heat scaling is what makes greed genuinely risky. (Describe-to-guess is verbal cluing, not acting — sanctioned for the finale.)
 
@@ -128,7 +141,7 @@ Each obstacle is resolved by a short tabletop mini-game — Crystal Maze meets e
 - **Replayable, never one-shot.** Games are procedurally parameterised — layout, code, questions, sequence regenerate each run. You learn the *method* once; the *answer* is always fresh. (A few — Beat 16, Steady Hands — are pure-skill and simply repeat with the dial; that's fine.)
 - **Stats dial difficulty; boosts are shouted plays.**
   - **Stats (passive).** Your build eases the game automatically — more time, fewer items, wider tolerance, slower tempo. Specialising turns the dial down.
-  - **Boosts (active).** There are exactly four power-ups — one per lane. Holding a lane's power-up means that whenever a game uses that lane you get a game-specific effect you **shout** to trigger ("Reset Pin!", "Stethoscope!") — called fast, once per game. Specialising a lane both turns its dial down *and* unlocks its plays.
+  - **Boosts (active).** There are exactly four power-ups — one per lane. **Each game has one signature ability** ("Reset Pin!", "Stethoscope!", "Extra Hands!"), and any committed player holding a power-up in *any lane the game uses* may **shout** it once. Specialising a lane both turns its dial down *and* unlocks the plays of every game that touches it.
 
 ### The grid
 
@@ -149,17 +162,17 @@ Each obstacle is resolved by a short tabletop mini-game — Crystal Maze meets e
 
 **The Once-Over** — *Stealth.* Observation. The narrator lays out ~8–10 cards (the "room"); the crew studies it, it's screened, and one thing changes (swap, flip, remove, rotate). They must spot what changed. *Replayable:* random spread and change. *Dial:* longer study / fewer changes. *Boost:* **Hunch** (Stealth) — the narrator gives a clue (you pitch it at the right level live).
 
-**Follow the Circuit** — *Tech + Physical.* Growing memory sequence (Simon). The app lights a path across a grid of cards; the crew taps it back in order. Each round **the sequence extends by one** — clear the Heat-set length to win, break the chain and it's over. *Replayable:* random sequence. *Dial:* target length / playback speed. *Boost (whichever lane power-up you hold):* **Tech** → Photographic (replay the sequence once) · **Physical** → Muscle Memory (slower playback, one fumble forgiven).
+**Follow the Circuit** — *Tech + Physical.* Growing memory sequence (Simon). The app lights a path across a grid of cards; the crew taps it back in order. Each round **the sequence extends by one** — clear the Heat-set length to win, break the chain and it's over. *Replayable:* random sequence. *Dial:* target length / playback speed. *Boost (hold a Tech **or** Physical power-up):* **Photographic** — replay the whole sequence once; shout it fast, once per game.
 
-**Inside Knowledge** — *Tech + Charm.* Pub-quiz trivia (Outsmarted vibe). Rapid-fire questions; the crew confers and answers against the clock. *Replayable:* large question bank. *Dial:* easier tier / fewer questions / more time. *Boost (whichever lane power-up you hold):* **Tech** → Cheat Sheet (skip a question, counted right) · **Charm** → Narrow It Down (multiple choice).
+**Inside Knowledge** — *Tech + Charm.* Pub-quiz trivia (Outsmarted vibe). Rapid-fire questions; the crew confers and answers against the clock. *Replayable:* large question bank. *Dial:* easier tier / fewer questions / more time. *Boost (hold a Tech **or** Charm power-up):* **Narrow It Down** — turn one question into multiple choice for the table; once per game.
 
-**Safe-Crack** — *Tech + Stealth.* Deduction (Mastermind). The crew guesses at a hidden combination; the app feeds back "two digits right, one in place." They reason in over a few attempts before Heat climbs. *Replayable:* random code. *Dial:* fewer digits in play / more guesses / more time. *Boost (whichever lane power-up you hold):* **Tech** → Stethoscope (reveal a digit's position) · **Stealth** → Patient Touch (one extra guess).
+**Safe-Crack** — *Tech + Stealth.* Deduction (Mastermind). The crew guesses at a hidden combination; the app feeds back "two digits right, one in place." They reason in over a few attempts before Heat climbs. *Replayable:* random code. *Dial:* fewer digits in play / more guesses / more time. *Boost (hold a Tech **or** Stealth power-up):* **Stethoscope** — reveal one digit's position; once per game.
 
-**Assembly Line** — *Physical + Charm.* Frantic trading (Pit-style), with a cooperative twist. Everyone holds a fixed hand (say 4 cards) and trades **one-for-one only**, so hands stay full and nobody can dump. The goal is for every player to end holding a complete set — but the deal **hides which sets are even in play**: there are exactly enough cards to solve it, yet *not necessarily one of each type*, so the crew doesn't know what they should each be collecting until they read the table and work it out together. Forces the talking, which is the Charm half. *Replayable:* random (always-solvable) deal. *Dial:* hand size / number of types in play / time. *Boost (whichever lane power-up you hold):* **Physical** → Quick Hands (one 2-for-1 trade) · **Charm** → Tip-Off (reveal which loot types are in play).
+**Assembly Line** — *Physical + Charm.* Frantic trading (Pit-style), with a cooperative twist. Everyone holds a fixed hand (say 4 cards) and trades **one-for-one only**, so hands stay full and nobody can dump. The goal is for every player to end holding a complete set — but the deal **hides which sets are even in play**: there are exactly enough cards to solve it, yet *not necessarily one of each type*, so the crew doesn't know what they should each be collecting until they read the table and work it out together. Forces the talking, which is the Charm half. *Replayable:* random (always-solvable) deal. *Dial:* hand size / number of types in play / time. *Boost (hold a Physical **or** Charm power-up):* **Tip-Off** — reveal which loot types are actually in play; once per game.
 
-**Steady Hands** — *Physical + Stealth.* Dexterity. Build a card tower to a target height without it toppling, under a timer. Just "can you do it." *Dial:* target height / timer. *Boost (whichever lane power-up you hold):* **Physical** → Extra Hands (shout it: 10s where everyone, benched included, helps build — the one sanctioned all-hands moment) · **Stealth** → Steady Breath (one wobble forgiven).
+**Steady Hands** — *Physical + Stealth.* Dexterity. Build a card tower to a target height without it toppling, under a timer. Just "can you do it." *Dial:* target height / timer. *Boost (hold a Physical **or** Stealth power-up):* **Extra Hands** — shout it: 10s where everyone, benched included, helps build (the one sanctioned all-hands moment); once per game.
 
-**Defuse the Alarm** — *Charm + Stealth.* Asymmetric info (Keep Talking and Nobody Explodes) — and **the cards literally are the wires.** A row of cards is the bomb; the rules read off card properties — *"if there are two red wires, cut the higher; if a face card shows, cut it last; never cut the aces."* The app shows one player the rulebook (not the table); the rest see the cards (not the rules), so they must call out *"two reds, a jack, a seven"* and get talked through it. "Cutting" = flipping a card face-down. Ticking clock under it all; soft *clip* per safe cut, alarm on a wrong one. *Replayable:* wiring and rules regenerate. *Dial:* simpler rulebook / fewer wires / more time. *Boost (whichever lane power-up you hold):* **Charm** → Clear Channel (one full sentence allowed) · **Stealth** → Spare Wire (one wrong cut forgiven).
+**Defuse the Alarm** — *Charm + Stealth.* Asymmetric info (Keep Talking and Nobody Explodes) — and **the cards literally are the wires.** A row of cards is the bomb; the rules read off card properties — *"if there are two red wires, cut the higher; if a face card shows, cut it last; never cut the aces."* The app shows one player the rulebook (not the table); the rest see the cards (not the rules), so they must call out *"two reds, a jack, a seven"* and get talked through it. "Cutting" = flipping a card face-down. Ticking clock under it all; soft *clip* per safe cut, alarm on a wrong one. *Replayable:* wiring and rules regenerate. *Dial:* simpler rulebook / fewer wires / more time. *Boost (hold a Charm **or** Stealth power-up):* **Clear Channel** — one full spoken sentence allowed through; once per game.
 
 ---
 

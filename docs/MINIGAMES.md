@@ -134,11 +134,19 @@ never sees it — they feel it.
 
 ## 4. The boost system
 
+> **⚠ Revised in design v0.9 (implemented by EPIC E18).** Each game now has **one**
+> signature ability, fired by a committed holder of a power-up in **any** of the game's
+> lanes — *not* a different effect per lane. The combo-game dual boosts and the per-game
+> sections further down are **stale** until E18 lands: collapse each combo game to its single
+> ability and **retire** Muscle Memory, Cheat Sheet, Patient Touch, Quick Hands, Steady Breath
+> and Spare Wire. Canonical single abilities live in `heist-content.md` (§"per game"). The
+> contract sketch below (one `BoostHook` per lane, a button per held lane) changes accordingly:
+> one ability per game, surfaced when the holder has a power-up in any of its `lanes`.
+
 There are exactly **four power-ups, one per lane** (design doc; heist-content.md
 GEAR). Holding a lane's power-up means *"you're an ace at that lane's games"*:
-whenever a game uses that lane, the holder gets a **game-specific effect they
-shout to use, once per game**. One per lane per player, no stacking; a player
-can hold up to four.
+the holder gets the **game's signature effect they shout to use, once per game**.
+One per lane per player, no stacking; a player can hold up to four.
 
 - **Surfacing.** `BoostButton` renders **only** when a *committed* player holds
   the lane power-up for one of the game's `lanes`. In a combo, a button surfaces
