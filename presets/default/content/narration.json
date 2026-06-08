@@ -956,59 +956,59 @@
   "scenarioReveal": [
     {
       "id": "scenario-reveal-1",
-      "text": "That's the call. {outcome}. {mark} is none the wiser — or very, very wiser. Either way, move."
+      "text": "That's the call. {mark} is none the wiser — or very, very wiser. Either way, move."
     },
     {
       "id": "scenario-reveal-2",
-      "text": "{crew} made the call. {outcome}. Room {roomNum} is behind us."
+      "text": "{crew} made the call. Room {roomNum} is behind us."
     },
     {
       "id": "scenario-reveal-3",
-      "text": "Decision made, consequences landing. {outcome} — that's the tally. Keep moving."
+      "text": "Decision made, consequences landing. Keep moving."
     },
     {
       "id": "scenario-reveal-4",
-      "text": "Scenario closed. {outcome}. {attempter} took the heat on that one — noted."
+      "text": "Scenario closed. {attempter} took the heat on that one — noted."
     },
     {
       "id": "scenario-reveal-5",
-      "text": "The {mark} job has one less complication. {outcome}. On to the next."
+      "text": "The {mark} job has one less complication. On to the next."
     },
     {
       "id": "scenario-reveal-6",
-      "text": "That's how it plays at {mark}. {outcome}. Van's watching — keep the pace."
+      "text": "That's how it plays at {mark}. Van's watching — keep the pace."
     },
     {
       "id": "scenario-reveal-7",
-      "text": "That's the verdict. {outcome}. The call's been made — own it and move on."
+      "text": "The call's been made — own it and move on."
     },
     {
       "id": "scenario-reveal-8",
-      "text": "Scenario closed. {outcome}. Not every move looks clean from the van."
+      "text": "Scenario closed. Not every move looks clean from the van."
     },
     {
       "id": "scenario-reveal-9",
-      "text": "Decision done. {outcome}. {mark} may have noticed — or they haven't. We'll find out."
+      "text": "Decision done. {mark} may have noticed — or they haven't. We'll find out."
     },
     {
       "id": "scenario-reveal-10",
-      "text": "The trigger's been pulled. {outcome}. Keep moving."
+      "text": "The trigger's been pulled. Keep moving."
     },
     {
       "id": "scenario-reveal-11",
-      "text": "That's the verdict: {outcome}. The van's watching and so is the clock."
+      "text": "The verdict's in. The van's watching and so is the clock."
     },
     {
       "id": "scenario-reveal-12",
-      "text": "The situation at {mark} is resolved. {outcome}. What matters is the next room."
+      "text": "The situation at {mark} is resolved. What matters is the next room."
     },
     {
       "id": "scenario-reveal-13",
-      "text": "Situation resolved. {outcome}. Good or bad, it's done. Back to work."
+      "text": "Situation resolved. Good or bad, it's done. Back to work."
     },
     {
       "id": "scenario-reveal-14",
-      "text": "The verdict is in: {outcome}. {mark} didn't plan for this crew. Keep proving that right."
+      "text": "The verdict is in. {mark} didn't plan for this crew. Keep proving that right."
     }
   ]
 }
