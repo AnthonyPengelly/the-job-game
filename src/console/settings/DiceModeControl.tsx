@@ -171,10 +171,72 @@ export function SettingsDialog({ onClose, onNewJob }: SettingsDialogProps) {
   );
 }
 
-/** Standalone dice-mode selector. Used by the Setup screen and in tests. */
-export function DiceModeControl() {
+interface DiceModeControlProps {
+  /** 'select' (default) renders a labelled dropdown; 'cards' renders two mode-card buttons. */
+  variant?: 'select' | 'cards';
+}
+
+/** Standalone dice-mode selector. Used by the Setup screen (cards) and Settings (select). */
+export function DiceModeControl({ variant = 'select' }: DiceModeControlProps) {
   const diceMode = useGameStore(s => s.diceMode);
   const setDiceMode = useGameStore(s => s.setDiceMode);
+
+  if (variant === 'cards') {
+    return (
+      <div data-testid="dice-mode-control" style={{ display: 'flex', gap: 10 }}>
+        <button
+          type="button"
+          data-testid="dice-mode-card-app"
+          aria-pressed={diceMode === 'app'}
+          onClick={() => setDiceMode('app')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            padding: 13,
+            border: `1px solid ${diceMode === 'app' ? 'var(--accent)' : 'var(--border-strong)'}`,
+            borderRadius: 'var(--radius-md)',
+            background: diceMode === 'app' ? 'var(--accent-tint)' : 'var(--bg-panel)',
+            cursor: 'pointer',
+            textAlign: 'left',
+          }}
+        >
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, textTransform: 'uppercase', fontSize: 16, color: 'var(--fg)' }}>
+            App roll
+          </span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--fg-muted)' }}>
+            The console rolls and shows the result. Fastest.
+          </span>
+        </button>
+        <button
+          type="button"
+          data-testid="dice-mode-card-physical"
+          aria-pressed={diceMode === 'physical'}
+          onClick={() => setDiceMode('physical')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            padding: 13,
+            border: `1px solid ${diceMode === 'physical' ? 'var(--accent)' : 'var(--border-strong)'}`,
+            borderRadius: 'var(--radius-md)',
+            background: diceMode === 'physical' ? 'var(--accent-tint)' : 'var(--bg-panel)',
+            cursor: 'pointer',
+            textAlign: 'left',
+          }}
+        >
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, textTransform: 'uppercase', fontSize: 16, color: 'var(--fg)' }}>
+            Physical die
+          </span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--fg-muted)' }}>
+            Roll at the table; type the number in.
+          </span>
+        </button>
+      </div>
+    );
+  }
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     setDiceMode(e.target.value as DiceMode);
