@@ -1,27 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
-import { Play, Pause } from 'lucide-react';
+import { Check, Banknote, SkipForward, Timer as TimerIcon, Play, Pause } from 'lucide-react';
 import { useGameStore } from '@/console/store';
 import { getawayBrief } from '@/engine';
 import { publishSlice } from '@/platform/channel';
 import { Teleprompter } from '@/console/teleprompter';
-import { PhaseHead, Panel, Button } from '@/console/ui';
+import { ActionBar, Button } from '@/console/ui';
 
 /**
- * Live Getaway referee screen — replaces GetawayStub.
+ * Getaway referee screen — decluttered hero-clock layout.
  *
- * On mount computes the brief once (heat locked at call time per design).
- * Runs the round-the-circle Articulate game as a GM referee:
- *  - Counter: shows current clue-giver, cards cleared vs target.
- *  - Countdown timer: local state only — never in RunState (engine stays pure).
- *  - Cleared: increments cards-cleared + advances clue-giver.
- *  - Ditch: dispatches GETAWAY_DITCH (Heat tick, undoable), advances clue-giver.
- *  - Skip card: GM referee — advances clue-giver with no clear, no engine event.
- *  - Buy seconds: adds cfg.getaway.buySecondsBonus to the running countdown (GM referee).
- *  - Force win / Force bust: always available (golden rule #1, no dead-ends).
+ * Two visual states driven by `timerActive`:
+ *  ARMED (timerActive=false): clock shown ready (fg-faint, not ticking),
+ *    controls enabled per CLAUDE.md rule 1 (no dead-ends), START CTA.
+ *  ACTIVE (timerActive=true): clock is the hero — calm green while safe,
+ *    danger red when ≤15 s remain. Round bar shows cleared progress meter.
  *
- * Resolution:
- *  - cards-cleared reaches target → RESOLVE_GETAWAY { win: true }
- *  - timer hits 0              → RESOLVE_GETAWAY { win: false }
+ * GM override buttons (Force win / Force bust) are always present.
  */
 export function Getaway() {
   const dispatch = useGameStore(s => s.dispatch);
@@ -34,7 +28,7 @@ export function Getaway() {
   const briefRef = useRef(getawayBrief(heat, cfg));
   const brief = briefRef.current;
 
-  // Narration: getawayIntro and getawayCountdown picked once at mount.
+  // Narration lines picked once at mount.
   const [introLine, setIntroLine] = useState<string>(() =>
     director?.next('getawayIntro') ?? ''
   );
@@ -62,13 +56,10 @@ export function Getaway() {
 
   // ── Crew helpers ─────────────────────────────────────────────────────────────
 
-  const activeCrew = crew;
-  const currentClueGiverIdx = clueGiverIndex % activeCrew.length;
-  const currentPlayer = activeCrew[currentClueGiverIdx];
+  const currentClueGiverIdx = clueGiverIndex % crew.length;
+  const currentPlayer = crew[currentClueGiverIdx];
 
   // ── Publish player-view slice ────────────────────────────────────────────────
-  // Publishes player-safe Getaway state to the player-view channel on every change.
-  // Publishes idle on unmount (resolve or navigation away).
 
   useEffect(() => {
     publishSlice({
@@ -84,15 +75,11 @@ export function Getaway() {
 
   useEffect(() => {
     return () => {
-      // SEAM(E8/E9): teardown audio/narration on unmount.
       publishSlice({ kind: 'idle' });
     };
   }, []);
 
   // ── Countdown timer ──────────────────────────────────────────────────────────
-
-  // SEAM(E8/E9): climax narration/sound — intro trigger on first start.
-  // SEAM(E8/E9): countdown tick audio at each second while timerActive.
 
   useEffect(() => {
     if (!timerActive) return;
@@ -100,7 +87,6 @@ export function Getaway() {
       if (!resolvedRef.current) {
         resolvedRef.current = true;
         setTimerActive(false);
-        // SEAM(E8/E9): bust sound/narration trigger here.
         dispatch({ t: 'RESOLVE_GETAWAY', win: false });
       }
       return;
@@ -121,7 +107,6 @@ export function Getaway() {
     if (next >= brief.targetCards) {
       resolvedRef.current = true;
       setTimerActive(false);
-      // SEAM(E8/E9): win sound/narration trigger here.
       dispatch({ t: 'RESOLVE_GETAWAY', win: true });
     }
   }
@@ -160,105 +145,132 @@ export function Getaway() {
     setTimerActive(a => !a);
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ── Derived display values ────────────────────────────────────────────────────
 
   const minutes = Math.floor(secondsLeft / 60);
   const secs = secondsLeft % 60;
   const formattedTime = `${minutes}:${String(secs).padStart(2, '0')}`;
 
-  // Clock is calm (green) when time is plentiful; danger (red) when ≤15s remain.
-  const danger = secondsLeft <= 15;
-  const clockClass = ['clock', !danger ? 'calm' : '', timerActive ? 'running' : '']
-    .filter(Boolean)
-    .join(' ');
+  const nearBust = timerActive && secondsLeft <= 15;
 
-  const heatPad = String(heat).padStart(2, '0');
+  let clockClass: string;
+  if (!timerActive) {
+    clockClass = 'gclock ready';
+  } else if (nearBust) {
+    clockClass = 'gclock danger';
+  } else {
+    clockClass = 'gclock calm';
+  }
+
+  const target = brief.targetCards;
+  const clearedPct = target > 0 ? Math.min((cardsCleared / target) * 100, 100) : 0;
+
+  const clockSub = !timerActive
+    ? 'Clock ready · starts on START'
+    : nearBust
+      ? `Time draining · ${target - cardsCleared} card${target - cardsCleared !== 1 ? 's' : ''} left`
+      : `Ticking · ${cardsCleared} of ${target} cleared`;
 
   return (
     <div data-testid="screen-getaway" className="stage-inner">
-      <PhaseHead
-        eyebrow="05 · The Getaway"
-        title="The Getaway"
-        aside={`Heat ${heatPad} / ${cfg.heat.hMax}`}
-      />
 
-      {/* Narration: intro line at the start of the getaway */}
+      {/* Narration: intro line */}
       {introLine !== '' && (
         <div data-testid="getaway-intro-narration">
           <Teleprompter line={introLine} onAdvance={handleIntroAdvance} />
         </div>
       )}
 
-      {/* Big clock — the single glowing live element */}
-      <div className="clock-wrap">
-        <div
-          data-testid="timer-display"
-          data-remaining={secondsLeft}
-          className={clockClass}
-        >
-          {formattedTime}
-        </div>
+      <div className="gaway">
 
-        <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Button
-            kind={timerActive ? 'secondary' : 'primary'}
-            size="lg"
-            icon={timerActive ? Pause : Play}
-            data-testid="btn-toggle-timer"
-            onClick={toggleTimer}
-          >
-            {timerActive ? 'Pause' : 'Start'}
-          </Button>
-        </div>
-      </div>
-
-      {/* Brief display */}
-      <Panel title="Round tracker" tag={`${cardsCleared} / ${brief.targetCards} cleared`}>
-        <div style={{ display: 'flex', gap: 'var(--space-6)', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div className="readout" style={{ flex: '0 0 auto' }}>
+        {/* Round bar: target · cleared (with meter) · clue-giver */}
+        <div className="roundbar" data-testid="getaway-roundbar">
+          <div className="rc">
             <span className="k">Target</span>
-            <span className="v" data-testid="target-cards">{brief.targetCards}</span>
-          </div>
-          <div className="readout" style={{ flex: '0 0 auto' }}>
-            <span className="k">Cleared</span>
-            <span className="v" data-testid="cards-cleared">
-              {cardsCleared} / {brief.targetCards}
+            <span className="v" data-testid="target-cards">
+              {target}
             </span>
           </div>
-          <div className="readout" style={{ flex: '0 0 auto' }}>
+          <div className="rc">
+            <span className="k">Cleared</span>
+            <span className="v" data-testid="cards-cleared">
+              {cardsCleared} <small>/ {target}</small>
+            </span>
+            <div className="meter">
+              <div className="f" style={{ width: `${clearedPct}%` }} />
+            </div>
+          </div>
+          <div className="rc">
             <span className="k">Clue-giver</span>
-            <span className="v" style={{ fontSize: 28 }} data-testid="clue-giver">
+            <span className="v" data-testid="clue-giver">
               {currentPlayer?.name ?? '—'}
             </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-          <Button kind="primary" data-testid="btn-cleared" onClick={handleCleared}>
-            Cleared
-          </Button>
-          <Button kind="danger" data-testid="btn-ditch" onClick={handleDitch}>
-            Ditch (Heat +{cfg.getaway.ditchHeatCost})
-          </Button>
-          <Button kind="ghost" data-testid="btn-skip-card" onClick={handleSkipCard}>
-            Skip card
-          </Button>
-          <Button kind="secondary" data-testid="btn-buy-seconds" onClick={handleBuySeconds}>
-            Buy seconds (+{cfg.getaway.buySecondsBonus}s)
-          </Button>
+        {/* Hero clock */}
+        <div className="clockzone">
+          <div
+            data-testid="timer-display"
+            data-remaining={secondsLeft}
+            className={clockClass}
+          >
+            {formattedTime}
+          </div>
+          <div className={`clock-sub${nearBust ? ' danger' : ''}`} data-testid="clock-sub">
+            {clockSub}
+          </div>
         </div>
-      </Panel>
 
-      {/* Narration: countdown/finale tension line */}
-      {countdownLine !== '' && (
-        <div data-testid="getaway-countdown-narration">
-          <Teleprompter line={countdownLine} onAdvance={handleCountdownAdvance} />
+        {/* Action controls — always enabled per golden rule #1 (no dead-ends) */}
+        <div className="gctrls">
+          <button
+            type="button"
+            className="gctrl cleared"
+            data-testid="btn-cleared"
+            onClick={handleCleared}
+          >
+            <Check />
+            <span className="gl">Cleared</span>
+            <span className="gs">+1 card</span>
+          </button>
+
+          <button
+            type="button"
+            className="gctrl skip"
+            data-testid="btn-skip-card"
+            onClick={handleSkipCard}
+          >
+            <SkipForward />
+            <span className="gl">Skip card</span>
+            <span className="gs">advance clue-giver</span>
+          </button>
+
+          <button
+            type="button"
+            className="gctrl ditch"
+            data-testid="btn-ditch"
+            onClick={handleDitch}
+          >
+            <Banknote />
+            <span className="gl">Ditch (+{cfg.getaway.ditchHeatCost} Heat)</span>
+            <span className="gs">drop loot, skip</span>
+          </button>
+
+          <button
+            type="button"
+            className="gctrl buy"
+            data-testid="btn-buy-seconds"
+            onClick={handleBuySeconds}
+          >
+            <TimerIcon />
+            <span className="gl">Buy seconds</span>
+            <span className="gs">+{cfg.getaway.buySecondsBonus}s</span>
+          </button>
         </div>
-      )}
 
-      {/* GM overrides — always available (golden rule #1) */}
-      <Panel title="GM overrides" tag="always available">
-        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+        {/* GM overrides — always available (CLAUDE.md rule 1) */}
+        <div className="gaway-overrides">
           <Button kind="primary" data-testid="btn-force-win" onClick={handleForceWin}>
             Force win
           </Button>
@@ -266,7 +278,44 @@ export function Getaway() {
             Force bust
           </Button>
         </div>
-      </Panel>
+
+      </div>
+
+      {/* Narration: countdown tension line */}
+      {countdownLine !== '' && (
+        <div data-testid="getaway-countdown-narration">
+          <Teleprompter line={countdownLine} onAdvance={handleCountdownAdvance} />
+        </div>
+      )}
+
+      {/* Action bar: toggle timer */}
+      <ActionBar
+        left={
+          timerActive ? (
+            <Button
+              kind="ghost"
+              icon={Pause}
+              data-testid="btn-toggle-timer"
+              onClick={toggleTimer}
+            >
+              Pause
+            </Button>
+          ) : undefined
+        }
+        right={
+          !timerActive ? (
+            <Button
+              kind="primary"
+              size="lg"
+              icon={Play}
+              data-testid="btn-toggle-timer"
+              onClick={toggleTimer}
+            >
+              Start
+            </Button>
+          ) : undefined
+        }
+      />
     </div>
   );
 }

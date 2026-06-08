@@ -933,4 +933,175 @@
   cursor: pointer;
   transition: color var(--dur-fast);
 }
+
+/* ============================================================
+   GETAWAY STAGE — decluttered hero-clock layout
+   .gaway > .roundbar + .clockzone + .gctrls
+   ============================================================ */
+
+.gaway {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ---- Round bar ------------------------------------------- */
+.gaway .roundbar {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--c-surface-1);
+  flex: none;
+}
+.gaway .roundbar .rc {
+  flex: 1;
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-right: 1px solid var(--border);
+}
+.gaway .roundbar .rc:last-child { border-right: none; }
+.gaway .roundbar .rc .k {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.gaway .roundbar .rc .v {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--fg);
+}
+.gaway .roundbar .rc .v small { color: var(--fg-faint); font-size: 14px; }
+.gaway .roundbar .meter {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-3);
+  overflow: hidden;
+  margin-top: 2px;
+}
+.gaway .roundbar .meter .f {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  transition: width 0.25s ease;
+}
+
+/* ---- Clock zone ------------------------------------------ */
+.gaway .clockzone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 0;
+}
+.gaway .gclock {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: clamp(100px, 18vw, 168px);
+  line-height: .9;
+  letter-spacing: -.04em;
+  font-variant-numeric: tabular-nums;
+}
+.gaway .gclock.ready {
+  color: var(--fg-faint);
+}
+.gaway .gclock.calm {
+  color: var(--accent);
+  text-shadow: 0 0 60px color-mix(in srgb, var(--accent) 32%, transparent);
+}
+.gaway .gclock.danger {
+  color: var(--danger);
+  text-shadow: 0 0 60px rgba(240,70,58,.4);
+  animation: getaway-bust-pulse 1s steps(1) infinite;
+}
+@keyframes getaway-bust-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .62; }
+}
+.gaway .clock-sub {
+  font-family: var(--font-data);
+  font-size: 13px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  text-align: center;
+}
+.gaway .clock-sub.danger { color: var(--danger); }
+
+/* ---- Action controls ------------------------------------- */
+.gaway .gctrls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex: none;
+  flex-wrap: wrap;
+}
+.gaway .gctrl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 22px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-2);
+  cursor: pointer;
+  min-width: 140px;
+  transition: background var(--dur-fast), border-color var(--dur-fast), opacity var(--dur-fast);
+  font: inherit;
+}
+.gaway .gctrl:hover:not(:disabled) { background: var(--c-surface-3); }
+.gaway .gctrl:disabled { opacity: .4; cursor: not-allowed; }
+.gaway .gctrl svg { width: 22px; height: 22px; }
+.gaway .gctrl .gl {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 17px;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+.gaway .gctrl .gs {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  white-space: nowrap;
+}
+.gaway .gctrl.cleared {
+  border-color: var(--c-green-700);
+  background: var(--accent-tint);
+}
+.gaway .gctrl.cleared svg,
+.gaway .gctrl.cleared .gl { color: var(--accent); }
+.gaway .gctrl.ditch { border-color: var(--c-amber-700); }
+.gaway .gctrl.ditch svg,
+.gaway .gctrl.ditch .gl { color: var(--caution); }
+.gaway .gctrl.skip { border-color: var(--c-cyan-500); }
+.gaway .gctrl.skip svg,
+.gaway .gctrl.skip .gl { color: var(--data); }
+.gaway .gctrl.buy { border-color: var(--border-strong); }
+.gaway .gctrl.buy svg,
+.gaway .gctrl.buy .gl { color: var(--fg-muted); }
+
+/* ---- Force overrides row --------------------------------- */
+.gaway .gaway-overrides {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex: none;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
 .crew-detail-popover-close:hover { color: var(--fg); }
