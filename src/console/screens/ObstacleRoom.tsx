@@ -4,6 +4,7 @@ import { useGameStore } from '@/console/store';
 import { PhaseHead, Panel, ActionBar, Button } from '@/console/ui';
 import { Teleprompter } from '@/console/teleprompter';
 import { useCrewRailMode } from '@/console/shell';
+import { formatLoot } from '@/content/format';
 import type { ObstacleOption, Lane } from '@/engine';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -56,9 +57,17 @@ function OptionCard({ option, selected, onSelect, narrationLine }: OptionCardPro
           <span
             data-testid={`option-reward-${option.id}`}
             className="v"
-            style={{ color: 'var(--accent)' }}
+            style={option.reward > 0 ? { color: 'var(--accent)' } : undefined}
           >
-            {option.reward}
+            {option.gear ? (
+              option.reward > 0 ? (
+                <>{formatLoot(option.reward)}<span className="gpill">+ Gear</span></>
+              ) : (
+                <span className="gpill">Gear only</span>
+              )
+            ) : (
+              formatLoot(option.reward)
+            )}
           </span>
         </div>
         <div className="c">

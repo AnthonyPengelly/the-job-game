@@ -185,7 +185,8 @@ body {
 .opt .opt-cost { display:flex; gap:var(--space-4); margin-top:auto; padding-top:var(--space-3); border-top:1px solid var(--border); }
 .opt .opt-cost .c { display:flex; flex-direction:column; gap:2px; }
 .opt .opt-cost .c .k { font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
-.opt .opt-cost .c .v { font-family:var(--font-data); font-weight:800; font-size:20px; }
+.opt .opt-cost .c .v { font-family:var(--font-data); font-weight:800; font-size:20px; display:inline-flex; align-items:center; gap:7px; }
+.gpill { font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.06em; text-transform:uppercase; padding:3px 7px; border-radius:var(--radius-xs); background:var(--data-tint); color:var(--data); border:1px solid var(--c-cyan-500); white-space:nowrap; }
 
 /* ---- big getaway clock ---- */
 .clock-wrap { display:flex; flex-direction:column; align-items:center; gap:var(--space-4); padding:var(--space-7) 0; }
