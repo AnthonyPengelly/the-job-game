@@ -199,9 +199,53 @@ body {
 .readout { display:flex; flex-direction:column; align-items:center; gap:6px; padding:var(--space-5); border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); }
 .readout .k { font-family:var(--font-data); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--fg-faint); }
 .readout .v { font-family:var(--font-data); font-weight:800; font-size:48px; line-height:1; font-variant-numeric:tabular-nums; }
-.verdict { text-align:center; font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:84px; line-height:.9; letter-spacing:-.02em; }
-.verdict.win { color:var(--accent); }
-.verdict.lose { color:var(--danger); }
+
+/* verdict headline (Result) */
+.verdict { display:flex; align-items:center; gap:18px; flex:none; }
+.verdict .vmark { width:64px; height:64px; flex:none; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; border:1px solid; }
+.verdict.win .vmark { color:var(--accent); border-color:var(--c-green-700); background:var(--accent-tint); }
+.verdict.lose .vmark { color:var(--danger); border-color:var(--c-red-700); background:var(--danger-tint); }
+.verdict .vbig { font-family:var(--font-display); font-weight:800; text-transform:uppercase; font-size:64px; line-height:.88; letter-spacing:-.02em; white-space:nowrap; }
+.verdict.win .vbig { color:var(--accent); }
+.verdict.lose .vbig { color:var(--danger); }
+
+/* score equation (Result) */
+.score-eq { display:flex; align-items:stretch; gap:12px; flex:none; }
+.score-cell { flex:1; display:flex; flex-direction:column; gap:6px; padding:16px 18px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); }
+.score-cell .k { font-family:var(--font-data); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+.score-cell .v { font-family:var(--font-data); font-weight:800; font-size:38px; line-height:1; color:var(--fg); font-variant-numeric:tabular-nums; }
+.score-cell .s { font-family:var(--font-body); font-size:12px; color:var(--fg-muted); }
+.score-op { display:flex; align-items:center; font-family:var(--font-data); font-weight:800; font-size:30px; color:var(--fg-faint); }
+.score-final { flex:1.3; display:flex; flex-direction:column; gap:6px; padding:16px 20px; border-radius:var(--radius-lg); border:1px solid var(--c-green-700); background:var(--accent-tint); justify-content:center; }
+.score-final.lose { border-color:var(--c-red-700); background:var(--danger-tint); }
+.score-final .k { font-family:var(--font-data); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); }
+.score-final.lose .k { color:var(--danger); }
+.score-final .v { font-family:var(--font-data); font-weight:800; font-size:56px; line-height:.95; color:var(--accent); font-variant-numeric:tabular-nums; }
+.score-final.lose .v { color:var(--danger); }
+
+/* rank panel / personal best (Result) */
+.rankpanel { flex:1; min-height:0; display:flex; flex-direction:column; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); overflow:hidden; }
+.rankpanel .rp-head { display:flex; align-items:center; gap:10px; padding:11px 16px; border-bottom:1px solid var(--border); background:var(--bg-panel-raised); }
+.rankpanel .rp-head svg { width:17px; height:17px; color:var(--accent); flex:none; }
+.rankpanel .rp-head h3 { font-family:var(--font-display); font-weight:600; text-transform:uppercase; font-size:18px; }
+.rankpanel .rp-body { flex:1; min-height:0; overflow-y:auto; }
+.lrow { display:flex; align-items:center; gap:14px; padding:9px 16px; border-bottom:1px solid var(--border-faint); }
+.lrow .rank { font-family:var(--font-data); font-weight:800; font-size:16px; color:var(--fg-faint); width:26px; }
+.lrow .lname { font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:17px; color:var(--fg); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lrow .lscore { font-family:var(--font-data); font-weight:800; font-size:17px; color:var(--fg); font-variant-numeric:tabular-nums; }
+.lrow .lheat { font-family:var(--font-data); font-size:12px; color:var(--fg-faint); width:52px; text-align:right; }
+.lrow.you { background:var(--accent-tint); border-left:3px solid var(--accent); }
+.lrow.you .rank, .lrow.you .lscore { color:var(--accent); }
+.lrow.you.lose { background:var(--danger-tint); border-left-color:var(--danger); }
+.lrow.you.lose .rank, .lrow.you.lose .lscore { color:var(--c-red-300); }
+
+/* badges */
+.badge { font-family:var(--font-data); font-weight:700; font-size:12px; letter-spacing:.1em; text-transform:uppercase; line-height:1; padding:6px 11px; border-radius:var(--radius-pill); display:inline-flex; align-items:center; gap:7px; border:1px solid transparent; margin-left:auto; }
+.badge .d { width:7px; height:7px; border-radius:50%; }
+.b-live { background:var(--accent-tint); color:var(--c-green-300); border-color:var(--c-green-700); }
+.b-live .d { background:var(--accent); box-shadow:0 0 8px var(--accent); }
+.b-danger { background:var(--danger-tint); color:var(--c-red-300); border-color:var(--c-red-700); }
+.b-danger .d { background:var(--danger); }
 
 /* setup form */
 .setup-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-5); }

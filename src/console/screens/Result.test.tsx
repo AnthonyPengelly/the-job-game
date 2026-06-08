@@ -73,14 +73,14 @@ describe('Result screen', () => {
     expect(screen.getByTestId('screen-result')).toBeInTheDocument();
   });
 
-  it('shows "Win" outcome when win=true', () => {
+  it('shows "Clean Getaway" verdict when win=true', () => {
     renderResult(true);
-    expect(screen.getByTestId('result-outcome')).toHaveTextContent('Win');
+    expect(screen.getByTestId('result-outcome')).toHaveTextContent('Clean Getaway');
   });
 
-  it('shows "Bust" outcome when win=false', () => {
+  it('shows "Job Blown" verdict when win=false', () => {
     renderResult(false);
-    expect(screen.getByTestId('result-outcome')).toHaveTextContent('Bust');
+    expect(screen.getByTestId('result-outcome')).toHaveTextContent('Job Blown');
   });
 
   it('shows a finalScore element', () => {
@@ -96,9 +96,20 @@ describe('Result screen', () => {
     expect(screen.getByTestId('breakdown-multiplier')).toBeInTheDocument();
   });
 
+  it('breakdown-heat shows heat and hMax in the multiplier sub-line', () => {
+    renderResult(true);
+    const heatEl = screen.getByTestId('breakdown-heat');
+    expect(heatEl.textContent).toMatch(/Heat \d+ \/ \d+/);
+  });
+
   it('shows "Go Again" button', () => {
     renderResult(true);
     expect(screen.getByTestId('btn-go-again')).toBeInTheDocument();
+  });
+
+  it('shows "Run summary" secondary button', () => {
+    renderResult(true);
+    expect(screen.getByTestId('btn-run-summary')).toBeInTheDocument();
   });
 
   it('go-again clears the save and returns to Setup (crew empty)', () => {
@@ -130,6 +141,16 @@ describe('Result screen', () => {
       </StoreContext.Provider>,
     );
     expect(state.finalScore).toBeCloseTo(expectedScore, 5);
+  });
+
+  it('win verdict outcome has "win" class on result-outcome', () => {
+    renderResult(true);
+    expect(screen.getByTestId('result-outcome').classList.contains('win')).toBe(true);
+  });
+
+  it('bust verdict outcome has "lose" class on result-outcome', () => {
+    renderResult(false);
+    expect(screen.getByTestId('result-outcome').classList.contains('lose')).toBe(true);
   });
 });
 
@@ -258,6 +279,18 @@ describe('Result screen — leaderboard outcome', () => {
     expect(screen.getByTestId('result-new-best')).toBeInTheDocument();
   });
 
+  it('result-new-best badge includes the rank number', () => {
+    const store = makeResultStore(true);
+    render(
+      <StoreContext.Provider value={store}>
+        <Result />
+      </StoreContext.Provider>,
+    );
+    const badge = screen.getByTestId('result-new-best');
+    // First-ever run ranks #1.
+    expect(badge.textContent).toContain('1');
+  });
+
   it('shows result-rank reflecting the position on the leaderboard', () => {
     const store = makeResultStore(true);
     render(
@@ -269,6 +302,17 @@ describe('Result screen — leaderboard outcome', () => {
     expect(rankEl).toBeInTheDocument();
     // First-ever run ranks #1.
     expect(rankEl.textContent).toContain('1');
+  });
+
+  it('shows the leaderboard crew name in the rank panel', () => {
+    const store = makeResultStore(true);
+    render(
+      <StoreContext.Provider value={store}>
+        <Result />
+      </StoreContext.Provider>,
+    );
+    // crewName is '' (not set), so the panel shows '—'.
+    expect(screen.getByTestId('result-rank')).toBeInTheDocument();
   });
 
   it('does NOT show result-new-best badge when a better score already exists for the seed', () => {
@@ -304,6 +348,38 @@ describe('Result screen — leaderboard outcome', () => {
     expect(screen.queryByTestId('result-new-best')).toBeNull();
   });
 
+  it('shows "Did not place" badge when not a new personal best', () => {
+    const storage = makeStorage();
+    appendScore(
+      { runSeed: 1, score: 9_999_999, loot: 999, heatAtGetaway: 0, win: true, crewSize: 2, crewName: '', finishedAt: 0 },
+      storage,
+    );
+
+    const store = createGameStore({ cfg: obstacleOnlyCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+    store.getState().dispatch({
+      t: 'CHOOSE_OPTION',
+      optionId: room.options[0]!.id,
+      committed: [crew[0]!.id],
+    });
+    store.getState().dispatch({ t: 'RESOLVE_MINIGAME', outcome: 'clean' });
+    store.getState().dispatch({ t: 'CALL_GETAWAY' });
+    store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
+
+    render(
+      <StoreContext.Provider value={store}>
+        <Result />
+      </StoreContext.Provider>,
+    );
+    // The "Did not place" badge should be visible.
+    const panel = screen.getByTestId('result-rank');
+    expect(panel.textContent).toContain('Did not place');
+  });
+
   it('shows result-rank even when not a new personal best', () => {
     const storage = makeStorage();
     appendScore(
@@ -331,7 +407,38 @@ describe('Result screen — leaderboard outcome', () => {
         <Result />
       </StoreContext.Provider>,
     );
-    // Rank is always shown when currentRunRank is set.
+    // Rank panel is always shown when currentRunRank is set.
     expect(screen.getByTestId('result-rank')).toBeInTheDocument();
+  });
+
+  it('rank panel shows crew names from leaderboard entries', () => {
+    const storage = makeStorage();
+    appendScore(
+      { runSeed: 99, score: 500_000, loot: 400000, heatAtGetaway: 5, win: true, crewSize: 3, crewName: 'The Foxes', finishedAt: 0 },
+      storage,
+    );
+
+    const store = createGameStore({ cfg: obstacleOnlyCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1, 'The Magpies');
+
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+    store.getState().dispatch({
+      t: 'CHOOSE_OPTION',
+      optionId: room.options[0]!.id,
+      committed: [crew[0]!.id],
+    });
+    store.getState().dispatch({ t: 'RESOLVE_MINIGAME', outcome: 'clean' });
+    store.getState().dispatch({ t: 'CALL_GETAWAY' });
+    store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
+
+    render(
+      <StoreContext.Provider value={store}>
+        <Result />
+      </StoreContext.Provider>,
+    );
+    const panel = screen.getByTestId('result-rank');
+    expect(panel.textContent).toContain('The Foxes');
   });
 });
