@@ -66,7 +66,7 @@ export function resolveGearGrant(descriptor: GearGrantDescriptor, cfg: EngineCon
   }
 
   throw new Error(
-    `applyScenarioEffect: no gear in catalog matching descriptor ${JSON.stringify(descriptor)}`,
+    `resolveGearGrant: no gear in catalog matching descriptor ${JSON.stringify(descriptor)}`,
   );
 }
 
