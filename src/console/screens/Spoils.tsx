@@ -5,35 +5,7 @@ import { isResting } from '@/engine';
 import type { GearDef } from '@/engine/config';
 import type { GearGrantDescriptor } from '@/engine/types';
 import { Teleprompter } from '@/console/teleprompter';
-
-// ── Gear helpers ───────────────────────────────────────────────────────────────
-
-function isGrantDescriptor(item: GearId | GearGrantDescriptor): item is GearGrantDescriptor {
-  return typeof item === 'object' && item !== null && 'kind' in item;
-}
-
-function defLabel(def: GearDef): string {
-  if (def.kind === 'powerUp') return `${def.lane} power-up`;
-  return `${def.lane} +${def.magnitude}`;
-}
-
-/** Find the GearId in cfg.gear that matches the descriptor + chosen lane. */
-function resolveDescriptor(
-  descriptor: GearGrantDescriptor,
-  lane: Lane,
-  gear: Record<string, GearDef>,
-): GearId | undefined {
-  const targetKind = descriptor.kind === 'bigScore' ? 'statBoost' : descriptor.kind;
-  const targetMagnitude = descriptor.kind === 'bigScore' ? 2 : 1;
-  for (const [id, def] of Object.entries(gear)) {
-    if (def.lane !== lane) continue;
-    if (def.kind === 'powerUp' && targetKind === 'powerUp') return id as GearId;
-    if (def.kind === 'statBoost' && targetKind === 'statBoost' && def.magnitude === targetMagnitude) {
-      return id as GearId;
-    }
-  }
-  return undefined;
-}
+import { isGrantDescriptor, resolveGearDescriptor, gearItemLabel } from '@/console/gear-assign-util';
 
 // ── GearCard ──────────────────────────────────────────────────────────────────
 
@@ -59,12 +31,10 @@ function GearCard({ item, index, selected, gearCatalog, onSelect, onAssign, crew
   );
 
   const cardId = isDescriptor ? `grant-${index}` : String(item);
-  const displayLabel = isDescriptor
-    ? `${item.kind === 'powerUp' ? 'power-up' : 'gear'} (${availableLanes.join('/')})`
-    : (gearCatalog[item as string] ? defLabel(gearCatalog[item as string]!) : String(item));
+  const displayLabel = gearItemLabel(item, gearCatalog);
 
   const resolvedId: GearId | undefined = isDescriptor && laneChoice
-    ? resolveDescriptor(item, laneChoice as Lane, gearCatalog)
+    ? resolveGearDescriptor(item, laneChoice as Lane, gearCatalog)
     : isDescriptor
       ? undefined
       : (item as GearId);
@@ -157,14 +127,12 @@ export function Spoils() {
     return '';
   });
 
-  const [quipAdvance, setQuipAdvance] = useState(0);
   const [currentQuip, setCurrentQuip] = useState(quipLine);
 
   function handleQuipAdvance() {
     if (director !== null && lastResult?.kind === 'obstacle') {
       const next = director.next('outcomeQuip', { outcome: lastResult.outcome });
       setCurrentQuip(next);
-      setQuipAdvance(n => n + 1);
     }
   }
 
@@ -182,9 +150,6 @@ export function Spoils() {
   }
 
   const restingCrew = crew.filter(p => isResting(p, roomIndex));
-
-  // Suppress the quipAdvance lint — it's used only to force re-read of currentQuip
-  void quipAdvance;
 
   return (
     <div className="stage-inner" data-testid="screen-spoils">

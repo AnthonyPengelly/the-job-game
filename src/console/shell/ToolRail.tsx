@@ -16,42 +16,9 @@ import { OverridePanel } from '@/console/overrides';
 import { Soundboard } from '@/console/soundboard';
 import { SettingsDialog } from '@/console/settings';
 import { ConfirmDialog } from './ConfirmDialog';
+import { isGrantDescriptor, resolveGearDescriptor, gearItemLabel } from '@/console/gear-assign-util';
 
 type ToolOverlay = 'soundboard' | 'overrides' | 'settings' | 'gear' | null;
-
-// ── Gear assignment dialog helpers ─────────────────────────────────────────────
-
-function isGrantDescriptor(item: GearId | GearGrantDescriptor): item is GearGrantDescriptor {
-  return typeof item === 'object' && item !== null && 'kind' in item;
-}
-
-function resolveDescriptorToGearId(
-  descriptor: GearGrantDescriptor,
-  lane: Lane,
-  gearCatalog: Record<string, GearDef>,
-): GearId | undefined {
-  const targetKind = descriptor.kind === 'bigScore' ? 'statBoost' : descriptor.kind;
-  const targetMagnitude = descriptor.kind === 'bigScore' ? 2 : 1;
-  for (const [id, def] of Object.entries(gearCatalog)) {
-    if (def.lane !== lane) continue;
-    if (def.kind === 'powerUp' && targetKind === 'powerUp') return id as GearId;
-    if (def.kind === 'statBoost' && targetKind === 'statBoost' && def.magnitude === targetMagnitude) {
-      return id as GearId;
-    }
-  }
-  return undefined;
-}
-
-function gearItemLabel(item: GearId | GearGrantDescriptor, gearCatalog: Record<string, GearDef>): string {
-  if (!isGrantDescriptor(item)) {
-    const def = gearCatalog[item as string];
-    if (def === undefined) return String(item);
-    if (def.kind === 'powerUp') return `${def.lane} power-up`;
-    return `${def.lane} +${def.magnitude}`;
-  }
-  const lanes = item.lanes ?? (item.lane ? [item.lane] : []);
-  return `${item.kind === 'powerUp' ? 'power-up' : 'gear'} (${lanes.join('/')})`;
-}
 
 interface GearAssignRowProps {
   item: GearId | GearGrantDescriptor;
@@ -76,7 +43,7 @@ function GearAssignRow({ item, index, gearCatalog, crew, onAssign }: GearAssignR
   const label = gearItemLabel(item, gearCatalog);
 
   const resolvedId: GearId | undefined = isDescriptor && laneChoice
-    ? resolveDescriptorToGearId(item, laneChoice as Lane, gearCatalog)
+    ? resolveGearDescriptor(item, laneChoice as Lane, gearCatalog)
     : isDescriptor ? undefined : (item as GearId);
 
   function handleAssign() {
