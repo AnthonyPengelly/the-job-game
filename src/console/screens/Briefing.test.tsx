@@ -6,6 +6,7 @@ import { createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
 import type { ParsedNarration } from '@/content/schema';
+import type { SpineBank } from '@/content/schema';
 import { Briefing } from './Briefing';
 
 afterEach(cleanup);
@@ -47,9 +48,77 @@ function makeNarrationFixture(): ParsedNarration {
   };
 }
 
+function makeSpineBankFixture(): SpineBank {
+  return {
+    marks: [
+      {
+        id: 'villa-mark-0',
+        mansionType: 'villa',
+        markName: 'Ashcombe House',
+        vault: 'Floor 3',
+        security: 'HIGH',
+        targetHaul: '$120k',
+        dropCaption: 'Ashcombe House — north face, dusk',
+        dressing: 'Cold marble and old money.',
+      },
+      {
+        id: 'villa-mark-1',
+        mansionType: 'villa',
+        markName: 'Briar Hall',
+        vault: 'Basement',
+        security: 'MEDIUM',
+        targetHaul: '$80k',
+        dropCaption: 'Briar Hall — east wing',
+        dressing: 'Old ivy, older secrets.',
+      },
+      {
+        id: 'estate-mark-0',
+        mansionType: 'estate',
+        markName: 'Redcroft Estate',
+        vault: 'East Wing Safe',
+        security: 'HIGH',
+        targetHaul: '$200k',
+        dropCaption: 'Redcroft — aerial, pre-dawn',
+        dressing: 'Twenty acres of manicured suspicion.',
+      },
+      {
+        id: 'estate-mark-1',
+        mansionType: 'estate',
+        markName: 'Thornfield',
+        vault: 'Study Floor Safe',
+        security: 'MEDIUM',
+        targetHaul: '$150k',
+        dropCaption: 'Thornfield — main drive',
+        dressing: 'Fog and iron gates.',
+      },
+      {
+        id: 'penthouse-mark-0',
+        mansionType: 'penthouse',
+        markName: 'The Apex',
+        vault: 'Roof Terrace',
+        security: 'EXTREME',
+        targetHaul: '$350k',
+        dropCaption: 'The Apex — city skyline, night',
+        dressing: 'Glass and altitude.',
+      },
+      {
+        id: 'penthouse-mark-1',
+        mansionType: 'penthouse',
+        markName: 'Tower Suite',
+        vault: 'Private Floor',
+        security: 'HIGH',
+        targetHaul: '$250k',
+        dropCaption: 'Tower Suite — upper lobby',
+        dressing: 'Marble, security glass, and silence.',
+      },
+    ],
+  };
+}
+
 function renderBriefing(seed = 1) {
   const narration = makeNarrationFixture();
-  const store = createGameStore({ cfg: testCfg, storage: makeStorage(), narration });
+  const spineBank = makeSpineBankFixture();
+  const store = createGameStore({ cfg: testCfg, storage: makeStorage(), narration, spineBank });
   store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
   store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'briefing' });
   render(
@@ -73,7 +142,6 @@ describe('Briefing screen', () => {
     const mansionType = store.getState().session.present.mansion.type;
     const dressing = screen.getByTestId('mansion-dressing');
     expect(dressing).toBeInTheDocument();
-    // Director picks from the bank; the text should be one of the authored variants.
     const text = dressing.textContent ?? '';
     const knownPrefix = `${mansionType.charAt(0).toUpperCase()}${mansionType.slice(1)} narration line`;
     expect(text).toContain(knownPrefix);
@@ -87,14 +155,42 @@ describe('Briefing screen', () => {
     expect(line.textContent).not.toBe('');
   });
 
-  it('Teleprompter advance button re-picks a line (never blocks)', () => {
+  it('there is no Order of Play / Mastermind panel', () => {
     renderBriefing(1);
-    const advanceBtn = screen.getByTestId('teleprompter-advance');
-    // Advance is always clickable (no disabled dead-end).
-    expect(advanceBtn).not.toBeDisabled();
-    fireEvent.click(advanceBtn);
-    // After advance, the line is still a non-null element (narration is additive).
-    expect(screen.getByTestId('teleprompter-line')).toBeInTheDocument();
+    // The Order of Play panel must not be present — design-rejected.
+    const panels = screen.getAllByRole('heading', { level: 3 });
+    const panelTexts = panels.map(h => h.textContent ?? '');
+    expect(panelTexts).not.toContain('Order of Play');
+    expect(panelTexts).not.toContain('Mastermind reveals');
+  });
+
+  it('renders the dossier panel with spine data', () => {
+    renderBriefing(1);
+    expect(screen.getByTestId('dossier')).toBeInTheDocument();
+    // The dossier stats must be present.
+    expect(screen.getByTestId('dossier-target-haul')).toBeInTheDocument();
+    expect(screen.getByTestId('dossier-security')).toBeInTheDocument();
+    expect(screen.getByTestId('dossier-vault')).toBeInTheDocument();
+    // Spine values are non-placeholder (no literal '—' from a null spine).
+    expect(screen.getByTestId('dossier-target-haul').textContent).not.toBe('Target haul—');
+  });
+
+  it('renders the dossier drop-caption image strip', () => {
+    renderBriefing(1);
+    expect(screen.getByTestId('dossier-img-strip')).toBeInTheDocument();
+    const strip = screen.getByTestId('dossier-img-strip');
+    // Drop caption is sourced from the committed spine — not empty.
+    expect(strip.textContent?.trim()).not.toBe('');
+    expect(strip.textContent?.trim()).not.toBe('—');
+  });
+
+  it('renders the "Every room pays out" payout panel', () => {
+    renderBriefing(1);
+    const payout = screen.getByTestId('payout-panel');
+    expect(payout).toBeInTheDocument();
+    expect(payout.textContent).toContain('Every room pays out');
+    expect(payout.textContent).toContain('Loot');
+    expect(payout.textContent).toContain('Gear');
   });
 
   it('clicking Begin transitions the phase to room', () => {
