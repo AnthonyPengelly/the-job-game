@@ -394,9 +394,9 @@ describe('director — seeded from runSeed', () => {
 // ── Leaderboard integration ───────────────────────────────────────────────────
 
 /** Drive a store from fresh-start to the result phase using override shortcuts. */
-function reachResultPhase(storage: StorageLike, seed = 42, loot = 10, win = true) {
+function reachResultPhase(storage: StorageLike, seed = 42, loot = 10, win = true, crewName?: string) {
   const store = createGameStore({ cfg: testCfg, storage });
-  store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
+  store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed, crewName);
   store.getState().dispatch({ t: 'OVERRIDE_SET_LOOT', value: loot });
   store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'getaway' });
   store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win });
@@ -432,6 +432,27 @@ describe('leaderboard — write on run finish', () => {
     const { leaderboard } = createGameStore({ cfg: testCfg, storage }).getState();
     // 2 entries — different seeds
     expect(leaderboard).toHaveLength(2);
+  });
+
+  it('writes crewName from RunState into the leaderboard entry', () => {
+    const storage = makeStorage();
+    const store = reachResultPhase(storage, 42, 10, true, 'The Magpies');
+    const entry = store.getState().leaderboard[0]!;
+    expect(entry.crewName).toBe('The Magpies');
+  });
+
+  it('writes empty crewName when run started without a name', () => {
+    const storage = makeStorage();
+    const store = reachResultPhase(storage, 42, 10, true);
+    const entry = store.getState().leaderboard[0]!;
+    expect(entry.crewName).toBe('');
+  });
+
+  it('persists crewName in storage so a fresh readLeaderboard sees it', () => {
+    const storage = makeStorage();
+    reachResultPhase(storage, 42, 10, true, 'The Foxes');
+    const saved = readLeaderboard(storage);
+    expect(saved.entries[0]!.crewName).toBe('The Foxes');
   });
 });
 

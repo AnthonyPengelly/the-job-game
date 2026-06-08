@@ -182,6 +182,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
           heatAtGetaway: newSession.present.heat,
           win: newSession.present.win ?? false,
           crewSize: newSession.present.crew.length,
+          crewName: newSession.present.crewName,
           finishedAt: Date.now(),
         };
         const newEnvelope = appendScore(entry, storage);
