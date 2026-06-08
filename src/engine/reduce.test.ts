@@ -50,6 +50,7 @@ const cfg: EngineConfig = {
     'stat-tech-2':   { id: 'stat-tech-2',   kind: 'statBoost', lane: 'tech',     magnitude: 2 },
     'powerup-charm': { id: 'powerup-charm', kind: 'powerUp',  lane: 'charm' },
   },
+  quirks: {},
   banks: { categories: [], trivia: [] },
   roomTemplates: {
     obstacles: [

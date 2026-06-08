@@ -1,5 +1,5 @@
 import type { EngineConfig } from '@/engine/config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, quirksSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
 import type { ParsedNarration, ParsedSoundManifest } from '@/content/schema';
 import { buildConfig } from './build-config';
 import type { PresetBundle } from './build-config';
@@ -10,6 +10,7 @@ import scalingJson from '../../../presets/default/scaling.json';
 import roomTemplatesJson from '../../../presets/default/content/roomTemplates.json';
 import scenariosJson from '../../../presets/default/content/scenarios.json';
 import gearJson from '../../../presets/default/content/gear.json';
+import quirksJson from '../../../presets/default/content/quirks.json';
 import categoriesJson from '../../../presets/default/content/banks/categories.json';
 import triviaJson from '../../../presets/default/content/banks/trivia.json';
 import narrationJson from '../../../presets/default/content/narration.json';
@@ -23,9 +24,10 @@ export function loadDefaultBundle(): PresetBundle {
   const roomTemplates = roomTemplatesSchema.parse(roomTemplatesJson);
   const scenarios = scenariosSchema.parse(scenariosJson);
   const gear = gearSchema.parse(gearJson);
+  const quirks = quirksSchema.parse(quirksJson);
   const categoriesBank = categoriesBankSchema.parse(categoriesJson);
   const triviaBank = triviaBankSchema.parse(triviaJson);
-  return { meta, tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank };
+  return { meta, tuning, scaling, roomTemplates, scenarios, gear, quirks, categoriesBank, triviaBank };
 }
 
 export function loadDefaultConfig(): EngineConfig {

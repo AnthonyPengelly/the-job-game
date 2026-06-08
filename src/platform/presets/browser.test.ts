@@ -3,7 +3,7 @@ import { ZodError } from 'zod';
 import { loadDefaultConfig, loadDefaultNarration, loadDefaultSoundManifest } from './browser';
 import { loadPreset, loadNarration, loadSoundManifest } from './load';
 import { buildConfig } from './build-config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, quirksSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
 
 import metaJson from '../../../presets/default/_meta.json';
 import tuningJson from '../../../presets/default/tuning.json';
@@ -11,6 +11,7 @@ import scalingJson from '../../../presets/default/scaling.json';
 import roomTemplatesJson from '../../../presets/default/content/roomTemplates.json';
 import scenariosJson from '../../../presets/default/content/scenarios.json';
 import gearJson from '../../../presets/default/content/gear.json';
+import quirksJson from '../../../presets/default/content/quirks.json';
 import categoriesJson from '../../../presets/default/content/banks/categories.json';
 import triviaJson from '../../../presets/default/content/banks/trivia.json';
 
@@ -31,6 +32,7 @@ describe('loadDefaultConfig', () => {
     expect(browserCfg.generation).toEqual(nodeCfg.generation);
     expect(browserCfg.roomTemplates).toEqual(nodeCfg.roomTemplates);
     expect(browserCfg.gear).toEqual(nodeCfg.gear);
+    expect(browserCfg.quirks).toEqual(nodeCfg.quirks);
     expect(browserCfg.banks).toEqual(nodeCfg.banks);
   });
 
@@ -53,9 +55,10 @@ describe('buildConfig with malformed input', () => {
       const roomTemplates = roomTemplatesSchema.parse(roomTemplatesJson);
       const scenarios = scenariosSchema.parse(scenariosJson);
       const gear = gearSchema.parse(gearJson);
+      const quirks = quirksSchema.parse(quirksJson);
       const categoriesBank = categoriesBankSchema.parse(categoriesJson);
       const triviaBank = triviaBankSchema.parse(triviaJson);
-      buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank });
+      buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, quirks, categoriesBank, triviaBank });
     }).toThrow(ZodError);
   });
 
@@ -74,9 +77,10 @@ describe('buildConfig with malformed input', () => {
       const roomTemplates = roomTemplatesSchema.parse(roomTemplatesJson);
       const scenarios = scenariosSchema.parse(scenariosJson);
       const gear = gearSchema.parse(gearJson);
+      const quirks = quirksSchema.parse(quirksJson);
       const categoriesBank = categoriesBankSchema.parse(categoriesJson);
       const triviaBank = triviaBankSchema.parse(triviaJson);
-      buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank });
+      buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, quirks, categoriesBank, triviaBank });
     }).toThrow(ZodError);
   });
 
@@ -92,9 +96,10 @@ describe('buildConfig with malformed input', () => {
       const roomTemplates = roomTemplatesSchema.parse(roomTemplatesJson);
       const scenarios = scenariosSchema.parse(scenariosJson);
       const gear = gearSchema.parse(malformedGear);
+      const quirks = quirksSchema.parse(quirksJson);
       const categoriesBank = categoriesBankSchema.parse(categoriesJson);
       const triviaBank = triviaBankSchema.parse(triviaJson);
-      buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank });
+      buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, quirks, categoriesBank, triviaBank });
     }).toThrow(ZodError);
   });
 });

@@ -1,6 +1,6 @@
-import type { EngineConfig, GearDef, ObstacleOptionConfig, ObstacleTemplateConfig, TriviaItemConfig } from '@/engine/config';
+import type { EngineConfig, GearDef, ObstacleOptionConfig, ObstacleTemplateConfig, TriviaItemConfig, QuirkDef } from '@/engine/config';
 import type { GearGrantDescriptor, ScenarioDef } from '@/engine/types';
-import type { CategoriesBank, TriviaBank, ParsedGear, ParsedMeta, ParsedRoomTemplates, ParsedScaling, ParsedTuning, ParsedScenarios } from '@/content/schema';
+import type { CategoriesBank, TriviaBank, ParsedGear, ParsedMeta, ParsedRoomTemplates, ParsedScaling, ParsedTuning, ParsedScenarios, ParsedQuirks } from '@/content/schema';
 
 export interface PresetBundle {
   meta: ParsedMeta;
@@ -9,6 +9,7 @@ export interface PresetBundle {
   roomTemplates: ParsedRoomTemplates;
   scenarios: ParsedScenarios;
   gear: ParsedGear;
+  quirks: ParsedQuirks;
   categoriesBank: CategoriesBank;
   triviaBank: TriviaBank;
 }
@@ -70,8 +71,20 @@ function buildGearCatalog(raw: ParsedGear): Record<string, GearDef> {
   return gear;
 }
 
+function buildQuirkCatalog(raw: ParsedQuirks): Record<string, QuirkDef> {
+  const quirks: Record<string, QuirkDef> = {};
+  for (const item of raw.items) {
+    quirks[item.id] = {
+      id: item.id,
+      name: item.name,
+      boosts: item.boosts.map(b => ({ lane: b.lane, magnitude: b.magnitude })),
+    };
+  }
+  return quirks;
+}
+
 export function buildConfig(bundle: PresetBundle): EngineConfig {
-  const { tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank } = bundle;
+  const { tuning, scaling, roomTemplates, scenarios, gear, quirks, categoriesBank, triviaBank } = bundle;
 
   const profiles: Record<string, { getawayBonus: number; crewPerOption: [number, number]; exhaustion: 'full' | 'light' | 'tired' }> = {};
   for (const [key, profile] of Object.entries(scaling.profiles)) {
@@ -124,6 +137,7 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
       scenarios: buildScenarioDefs(scenarios),
     },
     gear: buildGearCatalog(gear),
+    quirks: buildQuirkCatalog(quirks),
     banks: {
       categories: categoriesBank.items,
       trivia: triviaBank.items.map((item): TriviaItemConfig => ({

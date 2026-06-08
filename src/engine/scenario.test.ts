@@ -58,6 +58,7 @@ const cfg: EngineConfig = {
     'powerup-charm':   { id: 'powerup-charm',   kind: 'powerUp',   lane: 'charm'  },
     'powerup-tech':    { id: 'powerup-tech',    kind: 'powerUp',   lane: 'tech'   },
   },
+  quirks: {},
   banks: { categories: [], trivia: [] },
   roomTemplates: {
     obstacles: [

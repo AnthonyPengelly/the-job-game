@@ -31,8 +31,8 @@ import { computeGearSellValue } from './gear';
 export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): RunState {
   switch (event.t) {
     case 'START_RUN': {
-      // Delegate to startRun (sets up crew/mansion), then generate the first room.
-      const s = startRun(state, event);
+      // Delegate to startRun (sets up crew/mansion/quirk boosts), then generate the first room.
+      const s = startRun(state, event, cfg);
       const s2 = generateRoom(s, cfg);
       return { ...s2, phase: 'briefing' };
     }

@@ -307,6 +307,7 @@ describe('scenarios pack — no-repeat draw within the run', () => {
     rewardScale: { perHeat: 0, perRoom: 0 },
     gearSellValue: { base: 1000, perRoom: 500 },
     gear: {},
+    quirks: {},
     banks: { categories: [], trivia: [] },
     roomTemplates: {
       obstacles: [

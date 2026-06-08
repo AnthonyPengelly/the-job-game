@@ -2,6 +2,19 @@
 // Defined here so the engine never imports from the content or platform layers.
 import type { Lane, ScenarioDef, GearGrantDescriptor } from './types';
 
+// ── Quirk types ────────────────────────────────────────────────────────────────
+
+export interface QuirkBoost {
+  lane: Lane;
+  magnitude: number;
+}
+
+export interface QuirkDef {
+  id: string;
+  name: string;
+  boosts: QuirkBoost[];
+}
+
 // ── Trivia bank type (mirrored from content schema; defined here to avoid upward imports) ──
 
 export interface TriviaItemConfig {
@@ -150,4 +163,6 @@ export interface EngineConfig {
     categories: string[];
     trivia: TriviaItemConfig[];
   };
+  /** Quirk table keyed by quirk id. Loaded from content/quirks.json. */
+  quirks: Record<string, QuirkDef>;
 }
