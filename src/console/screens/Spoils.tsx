@@ -1,0 +1,255 @@
+import { useState } from 'react';
+import { useGameStore } from '@/console/store';
+import type { GearId, PlayerId, Lane } from '@/engine';
+import { isResting } from '@/engine';
+import type { GearDef } from '@/engine/config';
+import type { GearGrantDescriptor } from '@/engine/types';
+import { Teleprompter } from '@/console/teleprompter';
+
+// ── Gear helpers ───────────────────────────────────────────────────────────────
+
+function isGrantDescriptor(item: GearId | GearGrantDescriptor): item is GearGrantDescriptor {
+  return typeof item === 'object' && item !== null && 'kind' in item;
+}
+
+function defLabel(def: GearDef): string {
+  if (def.kind === 'powerUp') return `${def.lane} power-up`;
+  return `${def.lane} +${def.magnitude}`;
+}
+
+/** Find the GearId in cfg.gear that matches the descriptor + chosen lane. */
+function resolveDescriptor(
+  descriptor: GearGrantDescriptor,
+  lane: Lane,
+  gear: Record<string, GearDef>,
+): GearId | undefined {
+  const targetKind = descriptor.kind === 'bigScore' ? 'statBoost' : descriptor.kind;
+  const targetMagnitude = descriptor.kind === 'bigScore' ? 2 : 1;
+  for (const [id, def] of Object.entries(gear)) {
+    if (def.lane !== lane) continue;
+    if (def.kind === 'powerUp' && targetKind === 'powerUp') return id as GearId;
+    if (def.kind === 'statBoost' && targetKind === 'statBoost' && def.magnitude === targetMagnitude) {
+      return id as GearId;
+    }
+  }
+  return undefined;
+}
+
+// ── GearCard ──────────────────────────────────────────────────────────────────
+
+interface GearCardProps {
+  item: GearId | GearGrantDescriptor;
+  index: number;
+  selected: boolean;
+  gearCatalog: Record<string, GearDef>;
+  onSelect: () => void;
+  onAssign: (to: PlayerId, gearId: GearId) => void;
+  crew: Array<{ id: PlayerId; name: string }>;
+}
+
+function GearCard({ item, index, selected, gearCatalog, onSelect, onAssign, crew }: GearCardProps) {
+  const isDescriptor = isGrantDescriptor(item);
+  const availableLanes: Lane[] = isDescriptor
+    ? ((item.lanes ?? (item.lane ? [item.lane] : [])) as Lane[])
+    : [];
+  const needsLanePick = isDescriptor && availableLanes.length > 1;
+
+  const [laneChoice, setLaneChoice] = useState<Lane | ''>(
+    needsLanePick ? '' : (availableLanes[0] ?? ''),
+  );
+
+  const cardId = isDescriptor ? `grant-${index}` : String(item);
+  const displayLabel = isDescriptor
+    ? `${item.kind === 'powerUp' ? 'power-up' : 'gear'} (${availableLanes.join('/')})`
+    : (gearCatalog[item as string] ? defLabel(gearCatalog[item as string]!) : String(item));
+
+  const resolvedId: GearId | undefined = isDescriptor && laneChoice
+    ? resolveDescriptor(item, laneChoice as Lane, gearCatalog)
+    : isDescriptor
+      ? undefined
+      : (item as GearId);
+
+  return (
+    <div
+      className={`spoils-gear-card${selected ? ' selected' : ''}`}
+      data-testid={`spoils-gear-card-${cardId}`}
+      draggable={!isDescriptor || !!resolvedId}
+      onDragStart={(e) => {
+        if (resolvedId) {
+          e.dataTransfer.setData('application/x-gear-id', resolvedId as string);
+          e.dataTransfer.effectAllowed = 'copy';
+        }
+      }}
+      onClick={onSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(); }}
+      aria-pressed={selected}
+    >
+      <span data-testid={`spoils-gear-label-${cardId}`}>{displayLabel}</span>
+
+      {needsLanePick && (
+        <select
+          value={laneChoice}
+          onChange={(e) => { setLaneChoice(e.target.value as Lane); e.stopPropagation(); }}
+          data-testid={`spoils-gear-lane-${cardId}`}
+          aria-label="Choose lane"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <option value="">Pick lane…</option>
+          {availableLanes.map(l => <option key={l} value={l}>{l}</option>)}
+        </select>
+      )}
+
+      {selected && (
+        <div className="spoils-crew-picker" data-testid={`spoils-crew-picker-${cardId}`}>
+          {crew.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              className="spoils-crew-pick-btn"
+              data-testid={`spoils-assign-${cardId}-${p.id}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!resolvedId) return;
+                onAssign(p.id, resolvedId);
+              }}
+              disabled={!resolvedId}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Spoils ────────────────────────────────────────────────────────────────────
+
+/**
+ * Spoils/Wrap-up beat shown after every room before the Offer.
+ *
+ * Announces loot gained and lets the GM assign earned gear (drag onto crew
+ * avatar in the left rail, or tap-card → tap-crew inline). Shows who is now
+ * resting. CONTINUE clears the pending-spoils flag and the PhaseRouter shows
+ * the Offer screen.
+ *
+ * No engine phase is created — this is a console-only UI interstitial.
+ */
+export function Spoils() {
+  const history = useGameStore(s => s.session.present.history);
+  const earnedGear = useGameStore(s => s.session.present.earnedGear);
+  const crew = useGameStore(s => s.session.present.crew);
+  const roomIndex = useGameStore(s => s.session.present.roomIndex);
+  const gearCatalog = useGameStore(s => s.cfg.gear);
+  const director = useGameStore(s => s.director);
+  const dispatch = useGameStore(s => s.dispatch);
+  const clearPendingSpoils = useGameStore(s => s.clearPendingSpoils);
+
+  const lastResult = history.at(-1);
+
+  // Outcome quip: shown for obstacle rooms only.
+  const [quipLine] = useState<string>(() => {
+    if (director !== null && lastResult?.kind === 'obstacle') {
+      return director.next('outcomeQuip', { outcome: lastResult.outcome });
+    }
+    return '';
+  });
+
+  const [quipAdvance, setQuipAdvance] = useState(0);
+  const [currentQuip, setCurrentQuip] = useState(quipLine);
+
+  function handleQuipAdvance() {
+    if (director !== null && lastResult?.kind === 'obstacle') {
+      const next = director.next('outcomeQuip', { outcome: lastResult.outcome });
+      setCurrentQuip(next);
+      setQuipAdvance(n => n + 1);
+    }
+  }
+
+  const [selectedGearIdx, setSelectedGearIdx] = useState<number | null>(null);
+
+  const lootGained = lastResult?.lootGained ?? 0;
+
+  function handleGearSelect(idx: number) {
+    setSelectedGearIdx(prev => (prev === idx ? null : idx));
+  }
+
+  function handleAssign(to: PlayerId, gearId: GearId) {
+    dispatch({ t: 'ASSIGN_GEAR', gear: gearId, to });
+    setSelectedGearIdx(null);
+  }
+
+  const restingCrew = crew.filter(p => isResting(p, roomIndex));
+
+  // Suppress the quipAdvance lint — it's used only to force re-read of currentQuip
+  void quipAdvance;
+
+  return (
+    <div className="stage-inner" data-testid="screen-spoils">
+      <h2 className="spoils-heading">Spoils</h2>
+
+      {/* Outcome quip (obstacle only) */}
+      {currentQuip !== '' && (
+        <div data-testid="outcome-quip">
+          <Teleprompter line={currentQuip} onAdvance={handleQuipAdvance} />
+        </div>
+      )}
+
+      {/* Loot gained */}
+      <div className="spoils-loot" data-testid="spoils-loot">
+        <span className="k">Loot gained</span>
+        <span className="v" data-testid="spoils-loot-value">{lootGained}</span>
+      </div>
+
+      {/* Earned gear */}
+      {earnedGear.length > 0 && (
+        <div className="spoils-gear-section" data-testid="spoils-gear-section">
+          <h3>Gear dropped</h3>
+          <div className="spoils-gear-cards" data-testid="spoils-gear-cards">
+            {earnedGear.map((item, idx) => (
+              <GearCard
+                key={idx}
+                item={item}
+                index={idx}
+                selected={selectedGearIdx === idx}
+                gearCatalog={gearCatalog}
+                onSelect={() => handleGearSelect(idx)}
+                onAssign={handleAssign}
+                crew={crew.map(p => ({ id: p.id, name: p.name }))}
+              />
+            ))}
+          </div>
+          <p className="spoils-gear-hint">
+            Drag a card onto a crew avatar, or tap a card then tap a name.
+          </p>
+        </div>
+      )}
+
+      {/* Exhaustion */}
+      {restingCrew.length > 0 && (
+        <div className="spoils-resting" data-testid="spoils-resting">
+          <h3>Resting next room</h3>
+          <ul>
+            {restingCrew.map(p => (
+              <li key={p.id} data-testid={`spoils-resting-${p.id}`}>
+                {p.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Continue */}
+      <button
+        type="button"
+        className="btn btn-primary spoils-continue"
+        data-testid="btn-spoils-continue"
+        onClick={clearPendingSpoils}
+      >
+        Continue
+      </button>
+    </div>
+  );
+}
