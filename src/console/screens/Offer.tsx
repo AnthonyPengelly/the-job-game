@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Flame, Shield } from 'lucide-react';
+import { Flame, Shield, Zap } from 'lucide-react';
 import { useGameStore } from '@/console/store';
 import { Teleprompter } from '@/console/teleprompter';
 import { PhaseHead, Icon } from '@/console/ui';
@@ -77,13 +77,16 @@ export function Offer() {
       )}
 
       {escapeSignal && (
-        <p
+        <div
           data-testid="escape-signal-hint"
-          className="opt-tag"
-          style={{ color: 'var(--caution)' }}
+          className="cockpit-escape-sig"
         >
-          Getting hot — we can roll.
-        </p>
+          <Zap size={18} strokeWidth={1.75} aria-hidden />
+          <div className="t">
+            <span className="k">Escape signal</span>
+            <span className="v">Getting hot — we can roll.</span>
+          </div>
+        </div>
       )}
 
       <div className="grid-2">
@@ -112,16 +115,17 @@ export function Offer() {
         </div>
 
         <div
-          className="opt safe"
+          className={`opt${escapeSignal ? ' risk' : ' safe'}`}
           role="button"
           tabIndex={0}
           data-testid="btn-call-getaway"
           onClick={handleCallGetaway}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCallGetaway(); }}
+          style={escapeSignal ? { borderColor: 'var(--caution)', boxShadow: '0 0 0 1px var(--caution)' } : undefined}
         >
-          <span className="opt-tag">
-            <Icon icon={Shield} size={14} />
-            {' '}Play it safe
+          <span className="opt-tag" style={escapeSignal ? { color: 'var(--caution)' } : undefined}>
+            <Icon icon={escapeSignal ? Zap : Shield} size={14} />
+            {' '}{escapeSignal ? 'Escape signal' : 'Play it safe'}
           </span>
           <h4>Call the Getaway</h4>
           <p className="prose muted" style={{ fontSize: 16 }}>

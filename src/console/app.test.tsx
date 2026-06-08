@@ -9,6 +9,7 @@ import type { StorageLike } from '@/platform';
 import { SAVE_VERSION } from '@/content/schema/save';
 import type { RunEvent, RunPhase } from '@/engine';
 import { PhaseRouter, Setup } from '@/console/screens';
+import { CrewRailModeProvider } from '@/console/shell';
 import { App } from './app';
 
 afterEach(cleanup);
@@ -97,7 +98,9 @@ describe('Phase router', () => {
       // from storage (which would set hasResumableSave=true and show Setup).
       render(
         <StoreContext.Provider value={store}>
-          <AppShellForTest skipHydrate />
+          <CrewRailModeProvider>
+            <AppShellForTest skipHydrate />
+          </CrewRailModeProvider>
         </StoreContext.Provider>,
       );
 

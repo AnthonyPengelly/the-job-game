@@ -238,19 +238,26 @@ export function Setup() {
               </div>
             ))}
           </div>
-          <div className="field">
-            <label htmlFor="seed-input">Seed (optional, numeric)</label>
-            <input
-              id="seed-input"
-              data-testid="seed-input"
-              type="number"
-              className="inp"
-              value={seedInput}
-              onChange={e => setSeedInput(e.target.value)}
-              placeholder="(random)"
-            />
-          </div>
-          <DiceModeControl />
+          <details data-testid="advanced-disclosure" style={{ marginTop: 'var(--space-3)' }}>
+            <summary style={{ fontFamily: 'var(--font-data)', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--fg-muted)', cursor: 'pointer', userSelect: 'none', padding: '4px 0' }}>
+              Advanced
+            </summary>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-3)' }}>
+              <div className="field">
+                <label htmlFor="seed-input">Seed (optional, numeric)</label>
+                <input
+                  id="seed-input"
+                  data-testid="seed-input"
+                  type="number"
+                  className="inp"
+                  value={seedInput}
+                  onChange={e => setSeedInput(e.target.value)}
+                  placeholder="(random)"
+                />
+              </div>
+              <DiceModeControl />
+            </div>
+          </details>
         </Panel>
         <Panel tag="Setup checklist">
           <Checklist items={SETUP_CHECKLIST} />

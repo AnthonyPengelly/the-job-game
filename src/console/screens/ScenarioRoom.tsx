@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '@/console/store';
 import { PhaseHead, ActionBar, Button } from '@/console/ui';
 import { Teleprompter } from '@/console/teleprompter';
-import type { PlayerId, ScenarioChoice } from '@/engine';
+import { useCrewRailMode } from '@/console/shell';
+import type { ScenarioChoice } from '@/engine';
 
 // ── Stage-one choice card ─────────────────────────────────────────────────────
 
@@ -35,9 +36,11 @@ interface AttempterPickerProps {
 function AttempterPicker({ choiceId, onBack }: AttempterPickerProps) {
   const crew = useGameStore(s => s.session.present.crew);
   const dispatch = useGameStore(s => s.dispatch);
+  const { pickAttempter, selectedAttempter } = useCrewRailMode();
 
-  function handlePick(playerId: PlayerId) {
-    dispatch({ t: 'CHOOSE_SCENARIO', choiceId, attemptedBy: playerId });
+  function handleConfirm() {
+    if (selectedAttempter === null) return;
+    dispatch({ t: 'CHOOSE_SCENARIO', choiceId, attemptedBy: selectedAttempter });
   }
 
   return (
@@ -52,7 +55,7 @@ function AttempterPicker({ choiceId, onBack }: AttempterPickerProps) {
               key={player.id}
               kind="secondary"
               data-testid={`btn-attempter-${player.id}`}
-              onClick={() => handlePick(player.id)}
+              onClick={() => pickAttempter(player.id)}
             >
               {player.name}
             </Button>
@@ -63,6 +66,16 @@ function AttempterPicker({ choiceId, onBack }: AttempterPickerProps) {
         left={
           <Button kind="ghost" data-testid="btn-back" onClick={onBack}>
             Back
+          </Button>
+        }
+        right={
+          <Button
+            kind="primary"
+            data-testid="btn-attempter-confirm"
+            onClick={handleConfirm}
+            disabled={selectedAttempter === null}
+          >
+            Select
           </Button>
         }
       />
@@ -181,9 +194,9 @@ function RollReveal() {
  * Two-stage reveal (design §10.3):
  *   Stage one  — setup text + both choice labels shown as flavour only; no lane,
  *                no DC, no Heat/Loot numbers (opaque-to-commit rule).
- *   Stage 1b   — roll choice selected: attempter picker prompts the GM to choose
- *                which crew member attempts; dispatches CHOOSE_SCENARIO {
- *                choiceId, attemptedBy }; engine returns pendingRoll.
+ *   Stage 1b   — roll choice selected: the crew rail enters attempter mode;
+ *                the attempter picker panel also renders inline as the tap target;
+ *                dispatches CHOOSE_SCENARIO { choiceId, attemptedBy }.
  *   Stage 1c   — no-roll choice selected: confirmation view; dispatches
  *                CHOOSE_SCENARIO { choiceId } and advances to Offer.
  *   Stage two  — pendingRoll set: reveals lane, rating, DC, success odds, and
@@ -196,15 +209,21 @@ export function ScenarioRoom() {
   const director = useGameStore(s => s.director);
   const dispatch = useGameStore(s => s.dispatch);
 
+  const { activateAttempter, deactivate } = useCrewRailMode();
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Framing line for the scenario: picked once at mount (RoomRouter guarantees
-  // room.kind === 'scenario' when this component is alive).
+  // Framing line for the scenario: picked once at mount.
   const [setupLine, setSetupLine] = useState<string>(() =>
     director && room?.kind === 'scenario'
       ? director.next('scenarioSetup')
       : ''
   );
+
+  // Deactivate crew rail attempter mode when this screen unmounts.
+  useEffect(() => {
+    return () => { deactivate(); };
+  }, [deactivate]);
 
   if (room === null || room.kind !== 'scenario') return null;
 
@@ -241,7 +260,12 @@ export function ScenarioRoom() {
             <ChoiceCard
               key={choice.id}
               choice={choice}
-              onSelect={() => setSelectedId(choice.id)}
+              onSelect={() => {
+                setSelectedId(choice.id);
+                if (choice.isRoll) {
+                  activateAttempter();
+                }
+              }}
             />
           ))}
         </div>
@@ -258,7 +282,10 @@ export function ScenarioRoom() {
         <PhaseHead eyebrow={`Room ${roomNum} B · Scenario`} title="Scenario" />
         <AttempterPicker
           choiceId={selectedId}
-          onBack={() => setSelectedId(null)}
+          onBack={() => {
+            setSelectedId(null);
+            deactivate();
+          }}
         />
       </div>
     );
