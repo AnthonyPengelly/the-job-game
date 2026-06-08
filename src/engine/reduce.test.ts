@@ -296,7 +296,7 @@ describe('CHOOSE_OPTION', () => {
 // ─── RESOLVE_MINIGAME ─────────────────────────────────────────────────────────
 
 describe('RESOLVE_MINIGAME — clean safe (roomIndex 0)', () => {
-  // drip = safe(1) + floor(0 * 0.2) = 1; surcharge = 0; outHeat = 0; heatDelta = 1; loot = 1
+  // drip = safe(1) + floor(0 * 0.2) = 1; surcharge = 0; outHeat = 0; heatDelta = 1
   const s = obstacleMinigameState({ roomIndex: 0, heat: 0 });
   const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
 
@@ -308,8 +308,11 @@ describe('RESOLVE_MINIGAME — clean safe (roomIndex 0)', () => {
     expect(next.heat).toBe(1);
   });
 
-  it('awards safe reward loot (1)', () => {
-    expect(next.loot).toBe(1);
+  it('awards loot equal to committed option reward', () => {
+    if (s.currentRoom?.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const room = s.currentRoom;
+    const committed = room.options.find(o => o.id === room.committedOptionId) ?? room.options[0]!;
+    expect(next.loot).toBe(committed.reward);
   });
 
   it('increments obstacleCount', () => {
@@ -320,8 +323,11 @@ describe('RESOLVE_MINIGAME — clean safe (roomIndex 0)', () => {
     const entry = next.history[0];
     expect(entry?.kind).toBe('obstacle');
     if (entry?.kind === 'obstacle') {
+      if (s.currentRoom?.kind !== 'obstacle') throw new Error('Expected obstacle room');
+      const room = s.currentRoom;
+      const committed = room.options.find(o => o.id === room.committedOptionId) ?? room.options[0]!;
       expect(entry.outcome).toBe('clean');
-      expect(entry.lootGained).toBe(1);
+      expect(entry.lootGained).toBe(committed.reward);
       expect(entry.heatGained).toBe(1);
       expect(entry.optionId).toBe('alpha-safe');
     }
@@ -329,7 +335,7 @@ describe('RESOLVE_MINIGAME — clean safe (roomIndex 0)', () => {
 });
 
 describe('RESOLVE_MINIGAME — clean greedy (roomIndex 0)', () => {
-  // drip = 1; surcharge = greedy(2) - safe(1) = 1; outHeat = 0; heatDelta = 2; loot = 2
+  // drip = 1; surcharge = greedy(2) - safe(1) = 1; outHeat = 0; heatDelta = 2
   const s = obstacleMinigameState({
     roomIndex: 0,
     heat: 0,
@@ -353,13 +359,16 @@ describe('RESOLVE_MINIGAME — clean greedy (roomIndex 0)', () => {
     expect(next.heat).toBe(2); // drip(1) + surcharge(1)
   });
 
-  it('awards greedy reward loot (2)', () => {
-    expect(next.loot).toBe(2);
+  it('awards greedy reward loot', () => {
+    if (s.currentRoom?.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const room = s.currentRoom;
+    const committed = room.options.find(o => o.id === room.committedOptionId) ?? room.options[1]!;
+    expect(next.loot).toBe(committed.reward);
   });
 });
 
 describe('RESOLVE_MINIGAME — complication safe (roomIndex 0)', () => {
-  // drip = 1; surcharge = 0; outHeat = 1; heatDelta = 2; loot = 1
+  // drip = 1; surcharge = 0; outHeat = 1; heatDelta = 2
   const s = obstacleMinigameState({ roomIndex: 0, heat: 0 });
   const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'complication' }, cfg);
 
@@ -371,13 +380,13 @@ describe('RESOLVE_MINIGAME — complication safe (roomIndex 0)', () => {
     expect(next.heat).toBe(2); // drip(1) + outHeat(1)
   });
 
-  it('awards fixed complication loot (1)', () => {
-    expect(next.loot).toBe(1);
+  it('awards outcomeLoot.complication on complication outcome', () => {
+    expect(next.loot).toBe(cfg.outcomeLoot.complication);
   });
 });
 
 describe('RESOLVE_MINIGAME — botched safe (structural assertion J)', () => {
-  // drip = 1; surcharge = 0; outHeat = 2; heatDelta = 3; loot = 0
+  // drip = 1; surcharge = 0; outHeat = 2; heatDelta = 3
   const s = obstacleMinigameState({ roomIndex: 0, heat: 0 });
   const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'botched' }, cfg);
 
@@ -389,8 +398,8 @@ describe('RESOLVE_MINIGAME — botched safe (structural assertion J)', () => {
     expect(next.heat).toBe(3); // drip(1) + outHeat(2)
   });
 
-  it('awards no loot on botch', () => {
-    expect(next.loot).toBe(0);
+  it('awards outcomeLoot.botched on botch outcome', () => {
+    expect(next.loot).toBe(cfg.outcomeLoot.botched);
   });
 
   it('obstacleCount still incremented (botch counts as an obstacle)', () => {

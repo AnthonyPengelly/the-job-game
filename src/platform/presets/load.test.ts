@@ -35,7 +35,7 @@ describe('loadPreset', () => {
 
     it('returns outcomeLoot fields matching tuning.json', () => {
       const cfg = loadPreset('default');
-      expect(cfg.outcomeLoot.complication).toBe(1);
+      expect(cfg.outcomeLoot.complication).toBe(5000);
       expect(cfg.outcomeLoot.botched).toBe(0);
     });
 

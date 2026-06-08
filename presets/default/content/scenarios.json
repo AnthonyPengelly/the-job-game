@@ -14,7 +14,7 @@
           "label": "Pay him off",
           "effect": {
             "heatDelta": 0,
-            "lootDelta": -1,
+            "lootDelta": -5000,
             "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
           }
         },
@@ -72,7 +72,7 @@
         {
           "id": "sleeping-dog-toss",
           "label": "Toss it your lunch",
-          "effect": { "heatDelta": -2, "lootDelta": -1 }
+          "effect": { "heatDelta": -2, "lootDelta": -5000 }
         }
       ]
     },
@@ -83,7 +83,7 @@
         {
           "id": "champagne-room-pocket",
           "label": "Pocket a bottle",
-          "effect": { "heatDelta": 2, "lootDelta": 1 }
+          "effect": { "heatDelta": 2, "lootDelta": 5000 }
         },
         {
           "id": "champagne-room-discipline",
@@ -120,14 +120,14 @@
         {
           "id": "old-friend-team-up",
           "label": "Team up",
-          "effect": { "heatDelta": 2, "lootDelta": 1 }
+          "effect": { "heatDelta": 2, "lootDelta": 5000 }
         },
         {
           "id": "old-friend-tip-off",
           "label": "Send them off with a tip",
           "effect": {
             "heatDelta": 0,
-            "lootDelta": -1,
+            "lootDelta": -5000,
             "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
           }
         }
@@ -143,7 +143,7 @@
           "roll": {
             "lane": "tech",
             "baseDifficulty": 13,
-            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "success": { "heatDelta": 0, "lootDelta": 5000 },
             "failure": { "heatDelta": 2, "lootDelta": 0 }
           }
         },
@@ -181,7 +181,7 @@
         {
           "id": "dropped-wallet-take",
           "label": "Take the cash",
-          "effect": { "heatDelta": 0, "lootDelta": 1 }
+          "effect": { "heatDelta": 0, "lootDelta": 5000 }
         },
         {
           "id": "dropped-wallet-leave",
@@ -221,7 +221,7 @@
           "roll": {
             "lane": "physical",
             "baseDifficulty": 13,
-            "success": { "heatDelta": 0, "lootDelta": 2 },
+            "success": { "heatDelta": 0, "lootDelta": 10000 },
             "failure": { "heatDelta": 2, "lootDelta": 0 }
           }
         },
@@ -253,7 +253,7 @@
         {
           "id": "cold-feet-cut",
           "label": "Cut them loose",
-          "effect": { "heatDelta": -2, "lootDelta": -1 }
+          "effect": { "heatDelta": -2, "lootDelta": -5000 }
         }
       ]
     },
@@ -310,7 +310,7 @@
         {
           "id": "bent-cop-bribe",
           "label": "Bribe him",
-          "effect": { "heatDelta": -4, "lootDelta": -1 }
+          "effect": { "heatDelta": -4, "lootDelta": -5000 }
         },
         {
           "id": "bent-cop-refuse",
@@ -329,14 +329,14 @@
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 14,
-            "success": { "heatDelta": 0, "lootDelta": 2 },
+            "success": { "heatDelta": 0, "lootDelta": 10000 },
             "failure": { "heatDelta": 4, "lootDelta": 0 }
           }
         },
         {
           "id": "the-gallery-photograph",
           "label": "Photograph them for the fence",
-          "effect": { "heatDelta": 0, "lootDelta": 1 }
+          "effect": { "heatDelta": 0, "lootDelta": 5000 }
         }
       ]
     },
@@ -371,7 +371,7 @@
           "roll": {
             "lane": "charm",
             "baseDifficulty": 13,
-            "success": { "heatDelta": -2, "lootDelta": 1 },
+            "success": { "heatDelta": -2, "lootDelta": 5000 },
             "failure": { "heatDelta": 2, "lootDelta": 0 }
           }
         },
@@ -396,7 +396,7 @@
               "kind": "briefcase",
               "roomsLeft": 3,
               "perRoomEffect": { "heatDelta": 2, "lootDelta": 0 },
-              "payoff": { "heatDelta": 0, "lootDelta": 2 }
+              "payoff": { "heatDelta": 0, "lootDelta": 10000 }
             }
           }
         },
@@ -417,14 +417,14 @@
           "roll": {
             "lane": "physical",
             "baseDifficulty": 12,
-            "success": { "heatDelta": 0, "lootDelta": 2 },
-            "failure": { "heatDelta": 2, "lootDelta": 1 }
+            "success": { "heatDelta": 0, "lootDelta": 10000 },
+            "failure": { "heatDelta": 2, "lootDelta": 5000 }
           }
         },
         {
           "id": "spilled-jewels-handful",
           "label": "Grab a handful",
-          "effect": { "heatDelta": 0, "lootDelta": 1 }
+          "effect": { "heatDelta": 0, "lootDelta": 5000 }
         }
       ]
     },
@@ -466,7 +466,7 @@
         {
           "id": "blueprints-sell",
           "label": "Pocket and sell them",
-          "effect": { "heatDelta": 0, "lootDelta": 1 }
+          "effect": { "heatDelta": 0, "lootDelta": 5000 }
         }
       ]
     },
@@ -480,14 +480,14 @@
           "roll": {
             "lane": "tech",
             "baseDifficulty": 13,
-            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "success": { "heatDelta": 0, "lootDelta": 5000 },
             "failure": { "heatDelta": 2, "lootDelta": 0 }
           }
         },
         {
           "id": "home-office-desk-cash",
           "label": "Pocket the desk cash",
-          "effect": { "heatDelta": 0, "lootDelta": 1 }
+          "effect": { "heatDelta": 0, "lootDelta": 5000 }
         }
       ]
     },
@@ -500,7 +500,7 @@
           "label": "Share it evenly",
           "effect": {
             "heatDelta": 0,
-            "lootDelta": 1,
+            "lootDelta": 5000,
             "gear": { "kind": "statBoost", "lanes": ["tech", "physical", "charm", "stealth"] }
           }
         },
@@ -509,7 +509,7 @@
           "label": "Pocket it quietly",
           "effect": {
             "heatDelta": 2,
-            "lootDelta": 1,
+            "lootDelta": 5000,
             "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
           }
         }
@@ -522,7 +522,7 @@
         {
           "id": "recognised-pay",
           "label": "Pay for silence",
-          "effect": { "heatDelta": 0, "lootDelta": -1 }
+          "effect": { "heatDelta": 0, "lootDelta": -5000 }
         },
         {
           "id": "recognised-lean",
@@ -557,7 +557,7 @@
         {
           "id": "marks-study-cigar",
           "label": "Pocket a cigar and go",
-          "effect": { "heatDelta": 0, "lootDelta": 1 }
+          "effect": { "heatDelta": 0, "lootDelta": 5000 }
         }
       ]
     },
@@ -597,7 +597,7 @@
           "roll": {
             "lane": "charm",
             "baseDifficulty": 13,
-            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "success": { "heatDelta": 0, "lootDelta": 5000 },
             "failure": { "heatDelta": 2, "lootDelta": 0 }
           }
         },
@@ -639,7 +639,7 @@
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 12,
-            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "success": { "heatDelta": 0, "lootDelta": 5000 },
             "failure": { "heatDelta": 2, "lootDelta": 0 }
           }
         },
@@ -660,7 +660,7 @@
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 11,
-            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "success": { "heatDelta": 0, "lootDelta": 5000 },
             "failure": { "heatDelta": 0, "lootDelta": 0 }
           }
         },
@@ -678,7 +678,7 @@
         {
           "id": "wine-steward-tip",
           "label": "Tip and follow",
-          "effect": { "heatDelta": 0, "lootDelta": -1, "info": true }
+          "effect": { "heatDelta": 0, "lootDelta": -5000, "info": true }
         },
         {
           "id": "wine-steward-decline",
@@ -744,14 +744,14 @@
           "roll": {
             "lane": "physical",
             "baseDifficulty": 12,
-            "success": { "heatDelta": 0, "lootDelta": 1 },
+            "success": { "heatDelta": 0, "lootDelta": 5000 },
             "failure": { "heatDelta": 2, "lootDelta": 0 }
           }
         },
         {
           "id": "collectors-cabinet-ajar",
           "label": "Take the one left ajar",
-          "effect": { "heatDelta": 0, "lootDelta": 1 }
+          "effect": { "heatDelta": 0, "lootDelta": 5000 }
         }
       ]
     },
@@ -785,7 +785,7 @@
           "roll": {
             "lane": "tech",
             "baseDifficulty": 15,
-            "success": { "heatDelta": 0, "lootDelta": 2 },
+            "success": { "heatDelta": 0, "lootDelta": 10000 },
             "failure": { "heatDelta": 4, "lootDelta": 0 }
           }
         },
@@ -795,7 +795,7 @@
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 14,
-            "success": { "heatDelta": -2, "lootDelta": 2 },
+            "success": { "heatDelta": -2, "lootDelta": 10000 },
             "failure": { "heatDelta": 2, "lootDelta": 0 }
           }
         }
@@ -877,14 +877,14 @@
           "roll": {
             "lane": "physical",
             "baseDifficulty": 13,
-            "success": { "heatDelta": 0, "lootDelta": 2 },
+            "success": { "heatDelta": 0, "lootDelta": 10000 },
             "failure": { "heatDelta": 2, "lootDelta": 0 }
           }
         },
         {
           "id": "hidden-compartment-note",
           "label": "Note it and leave",
-          "effect": { "heatDelta": 0, "lootDelta": 1 }
+          "effect": { "heatDelta": 0, "lootDelta": 5000 }
         }
       ]
     },
@@ -921,7 +921,7 @@
         {
           "id": "vault-ledger-tear",
           "label": "Tear out a page and run",
-          "effect": { "heatDelta": 0, "lootDelta": 1 }
+          "effect": { "heatDelta": 0, "lootDelta": 5000 }
         }
       ]
     },

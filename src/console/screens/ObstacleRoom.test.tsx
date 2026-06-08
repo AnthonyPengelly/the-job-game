@@ -355,35 +355,38 @@ describe('MinigameStub screen', () => {
   it('exact heat and loot values match engine arithmetic for clean outcome', () => {
     // drip at room 0 = obstacleHeat.safe + Math.floor(0 * rampPerObstacle) = 1 + 0 = 1
     // outcomeHeat.clean = 0 → total heat = 1
-    // loot = option.reward = 1 (safe option)
+    // loot = option.reward (safe option committed by renderMinigameStub)
     const store = renderMinigameStub();
+    const room = store.getState().session.present.currentRoom;
+    if (room?.kind !== 'obstacle') throw new Error('Expected obstacle room in minigame phase');
+    const safeOpt = room.options[0]!;
 
     fireEvent.click(screen.getByTestId('btn-outcome-clean'));
 
     const state = store.getState().session.present;
     expect(state.heat).toBe(1);
-    expect(state.loot).toBe(1);
+    expect(state.loot).toBe(safeOpt.reward);
   });
 
   it('exact heat and loot values match engine arithmetic for complication outcome', () => {
-    // drip=1, outcomeHeat.complication=1 → heat=2; outcomeLoot.complication=1 → loot=1
+    // drip=1, outcomeHeat.complication=1 → heat=2; loot = outcomeLoot.complication
     const store = renderMinigameStub();
 
     fireEvent.click(screen.getByTestId('btn-outcome-complication'));
 
     const state = store.getState().session.present;
     expect(state.heat).toBe(2);
-    expect(state.loot).toBe(1);
+    expect(state.loot).toBe(obstacleOnlyCfg.outcomeLoot.complication);
   });
 
   it('exact heat and loot values match engine arithmetic for botched outcome', () => {
-    // drip=1, outcomeHeat.botched=2 → heat=3; outcomeLoot.botched=0 → loot=0
+    // drip=1, outcomeHeat.botched=2 → heat=3; loot = outcomeLoot.botched
     const store = renderMinigameStub();
 
     fireEvent.click(screen.getByTestId('btn-outcome-botched'));
 
     const state = store.getState().session.present;
     expect(state.heat).toBe(3);
-    expect(state.loot).toBe(0);
+    expect(state.loot).toBe(obstacleOnlyCfg.outcomeLoot.botched);
   });
 });
