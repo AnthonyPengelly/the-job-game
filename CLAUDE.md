@@ -46,7 +46,7 @@ Full detail: `docs/ARCHITECTURE.md`.
 
 This repo is built by an orchestrated pipeline of Claude Code agents running in Docker (bypass-permissions). You may be invoked as a **planner**, a **builder**, a **code reviewer**, a **game-design reviewer**, or a **QA agent**. Your role and its rules are in the prompt you were given and in `.claude/agents/`. The full pipeline — models per step, how reviews gate merges, how the QA fix-loop terminates — is in **`docs/ORCHESTRATION.md`**.
 
-The work backlog is **`docs/EPICS.md`**: epics E0–E12 with stories, dependencies, and acceptance criteria. Build in dependency order. Ways of working (branching, commits, definition of done, the pipeline markers you must emit) are in **`docs/WAYS-OF-WORKING.md`**.
+The work backlog is **`docs/EPICS.md`**: epics E0–E20 with stories, dependencies, and acceptance criteria (E0–E13 plus the E14–E20 playtest-feedback wave). Build in dependency order — and if you add an epic, also wire it into `DEFAULT_ORDER` in `scripts/agents/orchestrate.sh` (see the note in `docs/EPICS.md`). Ways of working (branching, commits, definition of done, the pipeline markers you must emit) are in **`docs/WAYS-OF-WORKING.md`**.
 
 ## When you get stuck
 

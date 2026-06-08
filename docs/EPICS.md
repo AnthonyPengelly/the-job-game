@@ -4,6 +4,12 @@ The authoritative work breakdown. The orchestrator builds these **in dependency 
 
 Epic IDs are stable (`E0`–`E20`). Never renumber — scripts, branches (`epic/E5-...`), and reviews reference them.
 
+> **Adding a new epic? Two steps, not one.** (1) Add the `## E<n> — …` section here. (2) **Append its
+> ID to the `DEFAULT_ORDER` array in `scripts/agents/orchestrate.sh`**, in dependency order — the
+> big-bang build walks *that list*, not these headings, so an epic added here but not wired there is
+> **silently never built**. The orchestrator warns about any epic in this file that's missing from
+> `DEFAULT_ORDER`, but don't lean on the warning — wire it. See `docs/ORCHESTRATION.md` §3.
+
 > **E14–E20 are the playtest-feedback wave.** They follow the first full-build playtest of the
 > completed E0–E13 app. E13 redrew the console against the `design-system/redesign/` mockups but was
 > **presentation/IA-only** — it could not implement the engine, content and economy those mockups

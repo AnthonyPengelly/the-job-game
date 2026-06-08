@@ -86,7 +86,9 @@ Deterministic gates (sim, content, lint, type, unit tests) are **scripts, not ag
 
 ## 3. The big-bang run
 
-`scripts/agents/orchestrate.sh` walks the epics in the **dependency order** from `docs/EPICS.md` (E0→E1→E2→E3→E4→E5, then E6–E9, then E10, E11, E12, and E13 the frontend redesign) and runs the per-epic pipeline for each. It is resumable: because state is in git + `plans/` + the review archive, a crashed or rate-limited run **picks up at the next unmerged task**, never redoing merged work.
+`scripts/agents/orchestrate.sh` walks the epics in the **dependency order** from `docs/EPICS.md` and runs the per-epic pipeline for each. The order is the `DEFAULT_ORDER` array at the top of that script: E0→E1→E2→E3→E4→E5, then E6–E9, then E10, E11, E13 (the frontend redesign), then the **E14–E20 playtest-feedback wave**, with E12 (the optional true-offline build) last so it packages the finished app. It is resumable: because state is in git + `plans/` + the review archive, a crashed or rate-limited run **picks up at the next unmerged task**, never redoing merged work, and epics with a `.orchestrator/done/<EPIC>` marker are skipped.
+
+> **Adding an epic?** The run order is **not** auto-derived from `docs/EPICS.md` — it is the explicit `DEFAULT_ORDER` list in `orchestrate.sh`. When you add an epic to the backlog you **must also append its ID to `DEFAULT_ORDER`** in dependency order, or the big-bang build will never pick it up. As a safety net the script greps `docs/EPICS.md` on startup and **warns loudly** about any `## E<n>` epic missing from `DEFAULT_ORDER` — but fix the list; don't rely on the warning. (Re-running a finished epic — e.g. E12 to re-package after the E14–E20 wave — means deleting its `.orchestrator/done/<EPIC>` marker first.)
 
 - **Sequential by default**, because the critical path is genuinely linear and parallel agents fighting over one repo is where incoherence creeps in.
 - **Opt-in fan-out:** E6–E9 (which only depend on E3/E4) may be run as parallel `run-epic.sh` invocations on separate branches once E4 is merged — the script supports it behind a flag, but the safe default is sequential.

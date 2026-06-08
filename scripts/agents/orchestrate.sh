@@ -13,12 +13,27 @@ cd "$(git rev-parse --show-toplevel)"
 source scripts/agents/lib/common.sh
 
 # Dependency-ordered epic sequence (critical path then fan-out). See docs/EPICS.md.
-DEFAULT_ORDER=(E0 E1 E2 E3 E4 E5 E6 E7 E8 E9 E10 E11 E12 E13)
+# IMPORTANT: when you add an epic to docs/EPICS.md you MUST also append its ID here,
+# in dependency order, or the big-bang build will never pick it up. E12 (optional
+# offline build) is deliberately last. The E14–E20 playtest-feedback wave follows E13.
+DEFAULT_ORDER=(E0 E1 E2 E3 E4 E5 E6 E7 E8 E9 E10 E11 E13 E14 E15 E16 E17 E18 E19 E20 E12)
 
 if [ "$#" -gt 0 ]; then
   ORDER=("$@")
 else
   ORDER=("${DEFAULT_ORDER[@]}")
+fi
+
+# Safety net: warn about epics defined in docs/EPICS.md but absent from DEFAULT_ORDER,
+# so a future agent that adds an epic to the backlog but forgets to wire it here gets a
+# loud heads-up instead of a silently-skipped epic. Non-fatal (subset runs are valid).
+if [ -f docs/EPICS.md ]; then
+  for doc_epic in $(grep -oE '^## E[0-9]+' docs/EPICS.md | awk '{print $2}'); do
+    case " ${DEFAULT_ORDER[*]} " in
+      *" $doc_epic "*) ;;
+      *) err "WARNING: $doc_epic is in docs/EPICS.md but missing from DEFAULT_ORDER in $(basename "$0") — it will NOT be built. Append it in dependency order." ;;
+    esac
+  done
 fi
 
 DONE_DIR=".orchestrator/done"
