@@ -114,9 +114,12 @@ Notes:
   Dual-RNG architecture (separate streams for room gen and outcome rolls)
   structurally produces P≈0.940 at N=20k. Not fixable without merging streams.
 - **H uses `score` not raw loot — HUMAN SIGN-OFF E1.7. DO NOT revert to raw loot.**
-  `score` = loot × win/bust multiplier. Raw loot ratio is only ~1.47×; score
-  ratio is ~1.79×. Threshold is 1.75 (not 1.80) — deterministic scenario
-  policy vs Python's probabilistic one compresses the ratio slightly.
+  `score` = loot × win/bust multiplier. Raw loot ratio is only ~1.47× (pre-E14);
+  score ratio is ~1.79×. Threshold is 1.75 (not 1.80) — deterministic scenario
+  policy vs Python's probabilistic one compresses the ratio slightly. E14.5
+  verified: real-money magnitudes and gear-only obstacle options (reward:0) leave
+  the ratio intact — both skill bands see the same option pool so the compression
+  is symmetric.
 - **Sim N = 20 000.** Do not reduce below 20k; SE≈0.007 needed for stable H.
 - **A, B, C** are the "shape" of a run — measured on the `avg`/`n=4` cell, the
   same cell `stage1` tunes against.
