@@ -85,7 +85,7 @@ export interface GameStoreState {
   undo: () => void;
   /** Clear the pending-spoils flag after the GM views the Spoils screen. */
   clearPendingSpoils: () => void;
-  startRun: (setup: PlayerSetup[], seed?: number) => void;
+  startRun: (setup: PlayerSetup[], seed?: number, crewName?: string) => void;
   goAgain: () => void;
   hydrate: () => void;
   /**
@@ -237,10 +237,10 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
       set({ pendingSpoils: false });
     },
 
-    startRun(setup: PlayerSetup[], seed?: number): void {
+    startRun(setup: PlayerSetup[], seed?: number, crewName?: string): void {
       const { cfg: c } = get();
       const startSeed = (seed ?? 0) >>> 0;
-      const startEvent: RunEvent = { t: 'START_RUN', crew: setup, seed: startSeed };
+      const startEvent: RunEvent = { t: 'START_RUN', crew: setup, seed: startSeed, ...(crewName !== undefined && { crewName }) };
       const baseSession = initialSession(initialState(startSeed));
       const newSession = reduceSession(baseSession, startEvent, c);
       const newLog: RunEvent[] = [startEvent];

@@ -106,6 +106,7 @@ export function ToolRail() {
   const dispatch = useGameStore(s => s.dispatch);
   const earnedGear = useGameStore(s => s.session.present.earnedGear);
   const crew = useGameStore(s => s.session.present.crew);
+  const crewName = useGameStore(s => s.session.present.crewName);
   const gearCatalog = useGameStore(s => s.cfg.gear);
 
   const hasGear = earnedGear.length > 0;
@@ -283,7 +284,11 @@ export function ToolRail() {
       {confirmNewJob && (
         <ConfirmDialog
           title="New Job"
-          message="Start a new job? Your current run will be abandoned and all progress lost."
+          message={
+            crewName
+              ? `${crewName} are mid-job — abandoning clears the run and the save. This can't be undone.`
+              : "Start a new job? Your current run will be abandoned and all progress lost."
+          }
           confirmLabel="Abandon & New Job"
           onConfirm={handleConfirmNewJob}
           onClose={() => setConfirmNewJob(false)}

@@ -20,6 +20,7 @@ const startRunSchema = z.object({
   t: z.literal('START_RUN'),
   crew: z.array(playerSetupSchema),
   seed: z.number().optional(),
+  crewName: z.string().optional(),
 });
 
 const chooseOptionSchema = z.object({
