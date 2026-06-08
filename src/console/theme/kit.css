@@ -267,3 +267,19 @@ body {
 .check.done { color:var(--fg); }
 .check.done .box { border-color:var(--accent); background:var(--accent-tint); }
 .check svg { width:14px; height:14px; }
+
+/* ---- Briefing dossier ---- */
+.dossier-img-strip { position:relative; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; min-height:80px; display:flex; align-items:flex-end;
+  background: repeating-linear-gradient(135deg, rgba(170,200,195,.05) 0 2px, transparent 2px 11px), linear-gradient(180deg, #10171a, #0b1012); }
+.dossier-cap { font-family:var(--font-data); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--fg-faint);
+  padding:8px 12px; background:linear-gradient(0deg, rgba(6,8,10,.85), transparent); width:100%; }
+.dossier-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.dstat { display:flex; flex-direction:column; gap:4px; padding:11px 13px; background:var(--c-surface-2); border:1px solid var(--border); border-radius:var(--radius-md); }
+.dstat .k { font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
+.dstat .v { font-family:var(--font-data); font-weight:800; font-size:24px; line-height:1; color:var(--fg); }
+
+/* ---- "Every room pays out" framing panel ---- */
+.payout-panel { flex:none; display:flex; align-items:center; gap:14px; padding:13px 18px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--c-surface-1); }
+.payout-panel svg { width:18px; height:18px; color:var(--accent); flex:none; }
+.payout-heading { font-family:var(--font-data); font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg); }
+.payout-sub { font-family:var(--font-body); font-size:14px; color:var(--fg-muted); }

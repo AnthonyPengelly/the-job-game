@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Gift } from 'lucide-react';
 import { useGameStore } from '@/console/store';
 import { PhaseHead, Panel, ActionBar, Button } from '@/console/ui';
 import { Teleprompter } from '@/console/teleprompter';
@@ -6,13 +7,23 @@ import { Teleprompter } from '@/console/teleprompter';
 export function Briefing() {
   const mansion = useGameStore(s => s.session.present.mansion);
   const crew = useGameStore(s => s.session.present.crew);
-  const roomIndex = useGameStore(s => s.session.present.roomIndex);
   const director = useGameStore(s => s.director);
   const dispatch = useGameStore(s => s.dispatch);
 
-  const [narrationLine, setNarrationLine] = useState(() =>
-    director?.next('briefing', { mansionType: mansion.type }) ?? ''
+  const crewNames = crew.map(p => p.name).join(', ');
+
+  // Commit briefing lines once at mount — within-beat stepping, no re-roll.
+  const [lines] = useState<string[]>(() =>
+    director?.script('briefing', { mansionType: mansion.type, crew: crewNames }) ?? [],
   );
+  const [lineIndex, setLineIndex] = useState(0);
+
+  const currentLine = lines[lineIndex] ?? '';
+  const hasNext = lineIndex < lines.length - 1;
+
+  function handleAdvance() {
+    setLineIndex(i => Math.min(i + 1, lines.length - 1));
+  }
 
   function handleBegin() {
     // Advance from the briefing phase to the first room. In normal flow, START_RUN
@@ -21,75 +32,55 @@ export function Briefing() {
     dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'room' });
   }
 
-  function handleAdvance() {
-    if (!director) return;
-    setNarrationLine(director.next('briefing', { mansionType: mansion.type }));
-  }
-
-  const mansionLabel = mansion.type.charAt(0).toUpperCase() + mansion.type.slice(1);
+  const spine = director?.spine ?? null;
 
   return (
     <div className="stage-inner" data-testid="screen-briefing">
       <PhaseHead
         eyebrow="02 · Briefing"
-        title="The Briefing"
-        aside={
-          <>
-            {mansionLabel}
-            <br />
-            <span style={{ color: 'var(--fg-faint)', fontSize: 13, fontFamily: 'var(--font-data)' }}>
-              {roomIndex} rooms cleared
-            </span>
-          </>
-        }
+        title="Briefing"
       />
 
       <div data-testid="mansion-dressing">
-        <Teleprompter line={narrationLine} hasNext={true} onAdvance={handleAdvance} />
+        <Teleprompter line={currentLine} hasNext={hasNext} onAdvance={handleAdvance} />
       </div>
 
-      <div className="grid-3">
-        <div className="readout">
-          <span className="k">Crew</span>
-          <span className="v">{crew.length}</span>
-        </div>
-        <div className="readout">
-          <span className="k">Mark</span>
-          <span className="v" style={{ fontSize: 28, textTransform: 'uppercase', fontFamily: 'var(--font-display)' }}>
-            {mansion.type}
-          </span>
-        </div>
-        <div className="readout">
-          <span className="k">Phase</span>
-          <span className="v" style={{ fontSize: 28, fontFamily: 'var(--font-display)' }}>
-            Briefing
-          </span>
-        </div>
-      </div>
+      {/* Dossier — "Tonight's Mark" */}
+      <Panel title="Tonight's Mark" tag={spine?.markName ?? mansion.type} className="dossier-panel">
+        <div data-testid="dossier">
+          {/* Image strip / drop caption */}
+          <div className="dossier-img-strip" data-testid="dossier-img-strip">
+            <span className="dossier-cap">
+              {spine?.dropCaption ?? '—'}
+            </span>
+          </div>
 
-      <Panel title="Order of Play" tag="Mastermind reveals">
-        <div className="checklist">
-          {crew.map((player, i) => (
-            <div key={player.id} className="check done">
-              <span
-                className="box"
-                style={{ fontFamily: 'var(--font-data)', fontWeight: 800 }}
-              >
-                {i + 1}
-              </span>
-              <strong
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '.02em',
-                }}
-              >
-                {player.name}
-              </strong>
+          {/* Dossier stat grid */}
+          <div className="dossier-stats" data-testid="dossier-stats">
+            <div className="dstat" data-testid="dossier-target-haul">
+              <span className="k">Target haul</span>
+              <span className="v" style={{ color: 'var(--accent)' }}>{spine?.targetHaul ?? '—'}</span>
             </div>
-          ))}
+            <div className="dstat" data-testid="dossier-security">
+              <span className="k">Security</span>
+              <span className="v" style={{ color: 'var(--caution)' }}>{spine?.security ?? '—'}</span>
+            </div>
+            <div className="dstat" data-testid="dossier-vault">
+              <span className="k">The vault</span>
+              <span className="v">{spine?.vault ?? '—'}</span>
+            </div>
+          </div>
         </div>
       </Panel>
+
+      {/* "Every room pays out" framing panel */}
+      <div className="payout-panel" data-testid="payout-panel">
+        <Gift size={18} aria-hidden={true} />
+        <div>
+          <div className="payout-heading">Every room pays out</div>
+          <div className="payout-sub">Loot, Gear, or both — obstacles and scenarios alike.</div>
+        </div>
+      </div>
 
       <ActionBar
         right={
