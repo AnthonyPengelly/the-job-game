@@ -133,6 +133,11 @@ export interface EngineConfig {
     heatDC: { perHeat: number; perRoom: number };
   };
   roomTemplates: RoomTemplatesConfig;
+  /** Preset curve for scaling generated obstacle rewards with Heat and room depth (no-op at defaults 0/0). */
+  rewardScale: {
+    perHeat: number;
+    perRoom: number;
+  };
   /** Preset curve for computing gear sell value: base + perRoom * roomIndex. */
   gearSellValue: {
     base: number;

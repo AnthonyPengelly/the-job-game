@@ -36,6 +36,7 @@ const cfg: EngineConfig = {
   },
   generation: { obstacleRatio: 0.6 },
   scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
+  rewardScale: { perHeat: 0, perRoom: 0 },
   gearSellValue: { base: 1000, perRoom: 500 },
   gear: {},
   banks: { categories: [], trivia: [] },

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generateRoom, tickCarriedEffects } from '@/engine/generation';
 import { initialState } from '@/engine/run';
-import type { EngineConfig } from '@/engine/config';
+import type { EngineConfig, ObstacleTemplateConfig } from '@/engine/config';
 import type { RunState, CarriedEffect, PlayerId } from '@/engine/types';
 
 // ─── Inline test config — no platform dependency ─────────────────────────────
@@ -36,6 +36,7 @@ const cfg: EngineConfig = {
   },
   generation: { obstacleRatio: 0.6 },
   scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
+  rewardScale: { perHeat: 0, perRoom: 0 },
   gearSellValue: { base: 1000, perRoom: 500 },
   gear: {},
   banks: { categories: [], trivia: [] },
@@ -765,5 +766,187 @@ describe('generateRoom — gear propagated onto obstacle options', () => {
       expect(currentRoom.options[0]!.gear).toBeUndefined();
       expect(currentRoom.options[1]!.gear).toBeUndefined();
     }
+  });
+});
+
+// ─── generateRoom — rewardScale (E15.2) ──────────────────────────────────────
+
+describe('generateRoom — rewardScale', () => {
+  // Helper: find an obstacle room from a specific config.
+  function findObstacleRoomFrom(cfgOverride: EngineConfig): ReturnType<typeof generateRoom> {
+    for (let seed = 0; seed < 100; seed++) {
+      const result = generateRoom(makeState(seed), cfgOverride);
+      if (result.currentRoom?.kind === 'obstacle') return result;
+    }
+    throw new Error('No obstacle room found in 100 seeds');
+  }
+
+  // Obstacle template with all three gear kinds for targeted tests.
+  const bigScoreOpts: ObstacleTemplateConfig = {
+    id: 'obs-bigscore', gameId: 'alpha', lane: 'tech',
+    options: [
+      { id: 'bigscore-safe',   greedy: false, heatCost: 1, reward: 1000, gear: { kind: 'bigScore', lane: 'tech' } },
+      { id: 'bigscore-greedy', greedy: true,  heatCost: 2, reward: 2000 },
+    ],
+  };
+
+  const powerUpOpts: ObstacleTemplateConfig = {
+    id: 'obs-powerup', gameId: 'bravo', lane: 'physical',
+    options: [
+      { id: 'powerup-safe',   greedy: false, heatCost: 1, reward: 500,  gear: { kind: 'powerUp', lane: 'physical' } },
+      { id: 'powerup-greedy', greedy: true,  heatCost: 2, reward: 1000 },
+    ],
+  };
+
+  const statBoostOpts: ObstacleTemplateConfig = {
+    id: 'obs-statboost', gameId: 'charlie', lane: 'stealth',
+    options: [
+      { id: 'statboost-safe',   greedy: false, heatCost: 1, reward: 800,  gear: { kind: 'statBoost', lane: 'stealth' } },
+      { id: 'statboost-greedy', greedy: true,  heatCost: 2, reward: 1600 },
+    ],
+  };
+
+  // Config with a single obstacle pool so we always draw the target template.
+  function cfgWithScale(perHeat: number, perRoom: number): EngineConfig {
+    return {
+      ...cfg,
+      rewardScale: { perHeat, perRoom },
+      roomTemplates: {
+        obstacles: [bigScoreOpts, powerUpOpts, statBoostOpts],
+        scenarios: cfg.roomTemplates.scenarios,
+      },
+    };
+  }
+
+  it('regression: at default (0,0) rewards equal template values exactly', () => {
+    const base = cfgWithScale(0, 0);
+    const { currentRoom } = findObstacleRoomFrom(base);
+    if (currentRoom?.kind !== 'obstacle') return;
+    const template = base.roomTemplates.obstacles.find(t => t.id === currentRoom.templateId)!;
+    expect(currentRoom.options[0]!.reward).toBe(template.options[0]!.reward);
+    expect(currentRoom.options[1]!.reward).toBe(template.options[1]!.reward);
+  });
+
+  it('rewards increase with heat when perHeat > 0', () => {
+    const base = cfgWithScale(0.1, 0);
+    for (let heat = 0; heat <= 15; heat += 5) {
+      for (let seed = 0; seed < 100; seed++) {
+        const result = generateRoom({ ...makeState(seed), heat }, base);
+        if (result.currentRoom?.kind !== 'obstacle') continue;
+        const template = base.roomTemplates.obstacles.find(t => t.id === result.currentRoom!.templateId)!;
+        const expectedM = 1 + 0.1 * heat;
+        const expectedSafe   = Math.round(template.options[0]!.reward * expectedM);
+        const expectedGreedy = Math.round(template.options[1]!.reward * expectedM);
+        expect(result.currentRoom.options[0]!.reward).toBe(expectedSafe);
+        expect(result.currentRoom.options[1]!.reward).toBe(expectedGreedy);
+        break;
+      }
+    }
+  });
+
+  it('rewards at heat=10 exceed rewards at heat=0 when perHeat > 0', () => {
+    const cfgScale = cfgWithScale(0.1, 0);
+    let foundAtHeat0 = false;
+    let rewardAt0 = 0;
+    let rewardAt10 = 0;
+
+    for (let seed = 0; seed < 100; seed++) {
+      const r0  = generateRoom({ ...makeState(seed), heat: 0  }, cfgScale);
+      const r10 = generateRoom({ ...makeState(seed), heat: 10 }, cfgScale);
+      if (r0.currentRoom?.kind !== 'obstacle' || r10.currentRoom?.kind !== 'obstacle') continue;
+      if (r0.currentRoom.templateId !== r10.currentRoom.templateId) continue;
+      const template = cfgScale.roomTemplates.obstacles.find(t => t.id === r0.currentRoom!.templateId)!;
+      if (template.options[1]!.reward === 0) continue; // skip zero-reward templates
+      rewardAt0  = r0.currentRoom.options[1]!.reward;
+      rewardAt10 = r10.currentRoom.options[1]!.reward;
+      foundAtHeat0 = true;
+      break;
+    }
+    expect(foundAtHeat0).toBe(true);
+    expect(rewardAt10).toBeGreaterThan(rewardAt0);
+  });
+
+  it('rewards increase with roomIndex when perRoom > 0', () => {
+    const cfgScale = cfgWithScale(0, 0.1);
+
+    let found = false;
+    for (let seed = 0; seed < 100; seed++) {
+      const r1 = generateRoom({ ...makeState(seed), roomIndex: 1 }, cfgScale);
+      const r8 = generateRoom({ ...makeState(seed), roomIndex: 8 }, cfgScale);
+      if (r1.currentRoom?.kind !== 'obstacle' || r8.currentRoom?.kind !== 'obstacle') continue;
+      if (r1.currentRoom.templateId !== r8.currentRoom.templateId) continue;
+      const template = cfgScale.roomTemplates.obstacles.find(t => t.id === r1.currentRoom!.templateId)!;
+      if (template.options[1]!.reward === 0) continue;
+      expect(r8.currentRoom.options[1]!.reward).toBeGreaterThan(r1.currentRoom.options[1]!.reward);
+      found = true;
+      break;
+    }
+    expect(found).toBe(true);
+  });
+
+  it('safe < greedy ordering preserved after scaling', () => {
+    const cfgScale = cfgWithScale(0.2, 0.05);
+    for (let seed = 0; seed < 100; seed++) {
+      const result = generateRoom({ ...makeState(seed), heat: 5, roomIndex: 3 }, cfgScale);
+      if (result.currentRoom?.kind !== 'obstacle') continue;
+      const template = cfgScale.roomTemplates.obstacles.find(t => t.id === result.currentRoom!.templateId)!;
+      if (template.options[0]!.reward >= template.options[1]!.reward) continue; // skip equal-reward templates
+      expect(result.currentRoom.options[0]!.reward).toBeLessThanOrEqual(result.currentRoom.options[1]!.reward);
+      return;
+    }
+  });
+
+  it('bigScore gear option reward is scaled; gear descriptor unchanged', () => {
+    const cfgScale = cfgWithScale(0.1, 0);
+    for (let seed = 0; seed < 200; seed++) {
+      const result = generateRoom({ ...makeState(seed), heat: 10 }, cfgScale);
+      if (result.currentRoom?.kind !== 'obstacle' || result.currentRoom.templateId !== 'obs-bigscore') continue;
+      const templateReward = bigScoreOpts.options[0]!.reward; // 1000
+      const expectedM = 1 + 0.1 * 10; // 2.0
+      expect(result.currentRoom.options[0]!.reward).toBe(Math.round(templateReward * expectedM)); // 2000
+      // Gear descriptor is unchanged (still bigScore, same lane).
+      expect(result.currentRoom.options[0]!.gear).toEqual({ kind: 'bigScore', lane: 'tech' });
+      return;
+    }
+    throw new Error('obs-bigscore not found in 200 seeds');
+  });
+
+  it('powerUp gear descriptor is not modified by rewardScale', () => {
+    const cfgScale = cfgWithScale(0.1, 0);
+    for (let seed = 0; seed < 200; seed++) {
+      const result = generateRoom({ ...makeState(seed), heat: 10 }, cfgScale);
+      if (result.currentRoom?.kind !== 'obstacle' || result.currentRoom.templateId !== 'obs-powerup') continue;
+      expect(result.currentRoom.options[0]!.gear).toEqual({ kind: 'powerUp', lane: 'physical' });
+      return;
+    }
+    throw new Error('obs-powerup not found');
+  });
+
+  it('statBoost gear descriptor is not modified by rewardScale', () => {
+    const cfgScale = cfgWithScale(0.1, 0);
+    for (let seed = 0; seed < 200; seed++) {
+      const result = generateRoom({ ...makeState(seed), heat: 10 }, cfgScale);
+      if (result.currentRoom?.kind !== 'obstacle' || result.currentRoom.templateId !== 'obs-statboost') continue;
+      expect(result.currentRoom.options[0]!.gear).toEqual({ kind: 'statBoost', lane: 'stealth' });
+      return;
+    }
+    throw new Error('obs-statboost not found');
+  });
+
+  it('reward multiplier is computed from stateAfterPayoffs heat/roomIndex (not initial state)', () => {
+    // Without effects, stateAfterPayoffs.heat equals state.heat. Verify via direct formula.
+    const cfgScale = cfgWithScale(0.05, 0.02);
+    const heat = 8;
+    const roomIndex = 4;
+    for (let seed = 0; seed < 200; seed++) {
+      const result = generateRoom({ ...makeState(seed), heat, roomIndex }, cfgScale);
+      if (result.currentRoom?.kind !== 'obstacle') continue;
+      const template = cfgScale.roomTemplates.obstacles.find(t => t.id === result.currentRoom!.templateId)!;
+      const m = 1 + 0.05 * heat + 0.02 * roomIndex;
+      expect(result.currentRoom.options[0]!.reward).toBe(Math.round(template.options[0]!.reward * m));
+      expect(result.currentRoom.options[1]!.reward).toBe(Math.round(template.options[1]!.reward * m));
+      return;
+    }
+    throw new Error('No obstacle room found');
   });
 });
