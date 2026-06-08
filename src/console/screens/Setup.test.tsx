@@ -53,6 +53,16 @@ describe('Setup — new run', () => {
     expect(screen.getByTestId('player-quirk-0')).toBeInTheDocument();
   });
 
+  it('renders quirk dropdown with options from cfg.quirks', () => {
+    renderSetup(makeStorage());
+    const quirkSelect = screen.getByTestId('player-quirk-0');
+    // testCfg has tech-ace, brute, fixer
+    const options = Array.from(quirkSelect.querySelectorAll('option')).map(o => o.value);
+    expect(options).toContain('tech-ace');
+    expect(options).toContain('brute');
+    expect(options).toContain('fixer');
+  });
+
   it('adjusts the number of player rows when crew size changes', () => {
     renderSetup(makeStorage());
     const select = screen.getByTestId('crew-size-select');
@@ -61,11 +71,19 @@ describe('Setup — new run', () => {
     expect(screen.queryByTestId('player-name-5')).toBeNull();
   });
 
+  it('renders crew name input with placeholder "The Magpies"', () => {
+    renderSetup(makeStorage());
+    const input = screen.getByTestId('crew-name-input');
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveAttribute('placeholder', 'The Magpies');
+  });
+
   it('dispatches START_RUN with entered names, quirk, and seed', () => {
     const storage = makeStorage();
     const store = renderSetup(storage);
 
     fireEvent.change(screen.getByTestId('player-name-0'), { target: { value: 'Alice' } });
+    // Change quirk via the select (value 'tech-ace' is a valid option in testCfg)
     fireEvent.change(screen.getByTestId('player-quirk-0'), { target: { value: 'tech-ace' } });
     fireEvent.change(screen.getByTestId('player-name-1'), { target: { value: 'Bob' } });
     fireEvent.change(screen.getByTestId('player-name-2'), { target: { value: 'Eve' } });
@@ -88,6 +106,25 @@ describe('Setup — new run', () => {
     expect(session.present.phase).toBe('briefing');
   });
 
+  it('dispatches START_RUN with crew name when entered', () => {
+    const storage = makeStorage();
+    const store = renderSetup(storage);
+
+    fireEvent.change(screen.getByTestId('crew-name-input'), { target: { value: 'The Foxes' } });
+    fireEvent.change(screen.getByTestId('player-name-0'), { target: { value: 'Alice' } });
+    fireEvent.change(screen.getByTestId('player-name-1'), { target: { value: 'Bob' } });
+    fireEvent.change(screen.getByTestId('player-name-2'), { target: { value: 'Eve' } });
+
+    fireEvent.click(screen.getByTestId('btn-start-run'));
+
+    const { eventLog } = store.getState();
+    const startEvent = eventLog[0];
+    expect(startEvent?.t).toBe('START_RUN');
+    if (startEvent?.t === 'START_RUN') {
+      expect(startEvent.crewName).toBe('The Foxes');
+    }
+  });
+
   it('dispatches START_RUN with a random non-negative seed when seed field is empty', () => {
     const storage = makeStorage();
     const store = renderSetup(storage);
@@ -107,6 +144,13 @@ describe('Setup — new run', () => {
       expect(startEvent.seed).toBeLessThanOrEqual(0xFFFF_FFFF);
     }
   });
+
+  it('does not render the checklist panel', () => {
+    renderSetup(makeStorage());
+    // The old "Setup checklist" panel should be gone
+    expect(screen.queryByText('Shuffle the Room deck and place it face-down')).toBeNull();
+    expect(screen.queryByText('Deal one Gear card to each player, face-down')).toBeNull();
+  });
 });
 
 describe('Setup — resume flow', () => {
@@ -116,7 +160,7 @@ describe('Setup — resume flow', () => {
     storage = makeStorage();
     // Write a valid save so hydrate() sees a resumable save.
     const log: RunEvent[] = [
-      { t: 'START_RUN', crew: [{ name: 'Alice' }, { name: 'Bob' }], seed: 99 },
+      { t: 'START_RUN', crew: [{ name: 'Alice' }, { name: 'Bob' }], seed: 99, crewName: 'The Ravens' },
     ];
     storage.setItem(
       'the-job:run-save',
@@ -128,6 +172,11 @@ describe('Setup — resume flow', () => {
     renderSetup(storage);
     expect(screen.getByTestId('btn-resume')).toBeInTheDocument();
     expect(screen.getByTestId('btn-new-job')).toBeInTheDocument();
+  });
+
+  it('shows crew name in the resume card when the save has one', () => {
+    renderSetup(storage);
+    expect(screen.getByText(/Resume · The Ravens/i)).toBeInTheDocument();
   });
 
   it('does not show the crew form by default when a save is present', () => {
@@ -165,7 +214,7 @@ describe('Setup — leaderboard', () => {
     expect(screen.getByText('Complete your first run to see scores here.')).toBeInTheDocument();
   });
 
-  it('renders leaderboard entries with score, outcome, loot and crew size', () => {
+  it('renders leaderboard entries with crew name, score, and heat', () => {
     const storage = makeStorage();
     storage.setItem(
       'the-job:leaderboard',
@@ -178,13 +227,15 @@ describe('Setup — leaderboard', () => {
       }),
     );
     renderSetup(storage);
+    // Scores
     expect(screen.getByText('$5k')).toBeInTheDocument();
     expect(screen.getByText('$2.5k')).toBeInTheDocument();
-    expect(screen.getByText('WIN')).toBeInTheDocument();
-    expect(screen.getByText('BUST')).toBeInTheDocument();
-    // Loot formatted via formatLoot
-    expect(screen.getByText('$12k · 3p')).toBeInTheDocument();
-    expect(screen.getByText('$6k · 4p')).toBeInTheDocument();
+    // Crew names
+    expect(screen.getByText('The Magpies')).toBeInTheDocument();
+    expect(screen.getByText('The Ravens')).toBeInTheDocument();
+    // Heat
+    expect(screen.getByText('H 2')).toBeInTheDocument();
+    expect(screen.getByText('H 5')).toBeInTheDocument();
   });
 
   it('shows at most 5 entries (top-5 slice)', () => {

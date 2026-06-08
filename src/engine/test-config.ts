@@ -42,7 +42,11 @@ export const testCfg: EngineConfig = {
   rewardScale: { perHeat: 0, perRoom: 0 },
   gearSellValue: { base: 1000, perRoom: 500 },
   gear: {},
-  quirks: {},
+  quirks: {
+    'tech-ace': { id: 'tech-ace', name: 'Tech Ace', boosts: [{ lane: 'tech' as const, magnitude: 2 }] },
+    'brute':    { id: 'brute',    name: 'Brute',    boosts: [{ lane: 'physical' as const, magnitude: 2 }] },
+    'fixer':    { id: 'fixer',    name: 'Fixer',    boosts: [{ lane: 'tech' as const, magnitude: 1 }, { lane: 'charm' as const, magnitude: 1 }] },
+  },
   banks: {
     categories: ['Things made of gold', 'Types of cheese', 'European cities'],
     trivia: [
