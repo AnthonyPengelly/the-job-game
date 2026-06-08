@@ -13,9 +13,17 @@ export function GetawayDisplay({ slice }: Props): JSX.Element {
   const formattedTime = `${minutes}:${String(secs).padStart(2, '0')}`;
   const danger = gameActive && secondsRemaining <= 15;
 
+  const remaining = targetCards - cardsCleared;
+
+  const subText = !gameActive
+    ? 'Waiting to start…'
+    : danger
+      ? `${remaining} card${remaining !== 1 ? 's' : ''} left — go!`
+      : `${cardsCleared} of ${targetCards} cleared`;
+
   return (
-    <div data-testid="getaway-display" className="pv-inner" style={{ alignItems: 'center' }}>
-      <div className="pv-clock-label">Get to the van</div>
+    <div data-testid="getaway-display" className="pv-inner center" style={{ alignItems: 'center' }}>
+      <div className={`pv-clock-label${danger ? ' danger' : ''}`}>Get to the van</div>
 
       <div
         data-testid="getaway-timer"
@@ -23,6 +31,23 @@ export function GetawayDisplay({ slice }: Props): JSX.Element {
         className={`pv-clock${danger ? ' danger' : ''}`}
       >
         {gameActive ? formattedTime : '—:——'}
+      </div>
+
+      {/* Progress dots — one per card, cleared dots lit up */}
+      <div className="pv-progdots" data-testid="getaway-progdots">
+        {Array.from({ length: targetCards }, (_, i) => (
+          <span
+            key={i}
+            className={`d${i < cardsCleared ? ' on' : danger ? ' left' : ''}`}
+          />
+        ))}
+      </div>
+
+      <div
+        className={`pv-clock-sub${danger ? ' danger' : ''}`}
+        data-testid="getaway-clock-sub"
+      >
+        {subText}
       </div>
 
       <div className="pv-check" data-testid="getaway-cards-cleared">

@@ -163,6 +163,107 @@ describe('Getaway screen', () => {
     expect(screen.getByTestId('btn-force-win')).toBeInTheDocument();
     expect(screen.getByTestId('btn-force-bust')).toBeInTheDocument();
   });
+
+  it('renders the round bar with target/cleared/clue-giver cells', () => {
+    renderGetaway();
+    expect(screen.getByTestId('getaway-roundbar')).toBeInTheDocument();
+    expect(screen.getByTestId('target-cards')).toBeInTheDocument();
+    expect(screen.getByTestId('cards-cleared')).toBeInTheDocument();
+    expect(screen.getByTestId('clue-giver')).toBeInTheDocument();
+  });
+});
+
+// ── ARMED / ACTIVE / near-bust states ─────────────────────────────────────────
+
+describe('Getaway ARMED/ACTIVE states', () => {
+  it('clock has ready class before START (ARMED)', () => {
+    renderGetaway();
+    const clock = screen.getByTestId('timer-display');
+    expect(clock.className).toContain('ready');
+    expect(clock.className).not.toContain('calm');
+    expect(clock.className).not.toContain('danger');
+  });
+
+  it('clock does not tick before START', () => {
+    vi.useFakeTimers();
+    const store = makeGetawayStoreWithCfg(shortTimerCfg);
+    renderGetaway(store);
+    const initial = Number(screen.getByTestId('timer-display').getAttribute('data-remaining'));
+
+    tickSeconds(2);
+
+    const after = Number(screen.getByTestId('timer-display').getAttribute('data-remaining'));
+    expect(after).toBe(initial);
+  });
+
+  it('clock has calm class after START when time is plentiful', () => {
+    renderGetaway();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer'));
+    const clock = screen.getByTestId('timer-display');
+    expect(clock.className).toContain('calm');
+    expect(clock.className).not.toContain('ready');
+    expect(clock.className).not.toContain('danger');
+  });
+
+  it('clock-sub shows "Clock ready" in ARMED state', () => {
+    renderGetaway();
+    const sub = screen.getByTestId('clock-sub');
+    expect(sub.textContent).toContain('ready');
+  });
+
+  it('clock-sub shows "Ticking" in ACTIVE state', () => {
+    renderGetaway();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer'));
+    const sub = screen.getByTestId('clock-sub');
+    expect(sub.textContent).toContain('Ticking');
+  });
+});
+
+// ── Near-bust (danger) state ────────────────────────────────────────────────────
+
+describe('Getaway near-bust', () => {
+  it('clock has danger class when active and ≤15 seconds remain', () => {
+    vi.useFakeTimers();
+    const store = makeGetawayStoreWithCfg(shortTimerCfg);
+    renderGetaway(store);
+
+    fireEvent.click(screen.getByTestId('btn-toggle-timer'));
+    // shortTimerCfg has timerSeconds:3 at low heat, tick to 1 second left
+    tickSeconds(2);
+
+    const clock = screen.getByTestId('timer-display');
+    expect(clock.className).toContain('danger');
+    expect(clock.className).not.toContain('calm');
+  });
+
+  it('clock-sub has danger class when near-bust', () => {
+    vi.useFakeTimers();
+    const store = makeGetawayStoreWithCfg(shortTimerCfg);
+    renderGetaway(store);
+
+    fireEvent.click(screen.getByTestId('btn-toggle-timer'));
+    tickSeconds(2);
+
+    const sub = screen.getByTestId('clock-sub');
+    expect(sub.className).toContain('danger');
+  });
+
+  it('clock does not have danger class when timer is not active even if time is low', () => {
+    vi.useFakeTimers();
+    const store = makeGetawayStoreWithCfg(shortTimerCfg);
+    renderGetaway(store);
+
+    // Start and then pause before it expires
+    fireEvent.click(screen.getByTestId('btn-toggle-timer'));
+    tickSeconds(2);
+    // Pause at 1 second
+    fireEvent.click(screen.getByTestId('btn-toggle-timer'));
+
+    const clock = screen.getByTestId('timer-display');
+    // After pause, timerActive=false → ready class, not danger
+    expect(clock.className).toContain('ready');
+    expect(clock.className).not.toContain('danger');
+  });
 });
 
 // ── Resolution paths ───────────────────────────────────────────────────────────
