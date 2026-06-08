@@ -31,6 +31,26 @@
       "dressing": "Private security firm on contract, cameras everywhere, but the rear garden blind-spot is thirty seconds wide."
     },
     {
+      "id": "villa-4",
+      "mansionType": "villa",
+      "markName": "Thornfield House",
+      "vault": "Master Suite, Second Floor",
+      "security": "MODERATE",
+      "targetHaul": "$95k",
+      "dropCaption": "A country villa converted from a farmhouse — the original walls hide a modern interior.",
+      "dressing": "Converted property, alarm system installed after the renovation. The original stone walls block signal in the east corridor."
+    },
+    {
+      "id": "villa-5",
+      "mansionType": "villa",
+      "markName": "Casa Valente",
+      "vault": "Wine Cellar, Lower Ground",
+      "security": "LOW",
+      "targetHaul": "$70k",
+      "dropCaption": "A Mediterranean villa where the wine cellar doubles as a private vault.",
+      "dressing": "Single-level layout, tiled courtyard, CCTV on the gate only. Owner travels frequently — the house-sitter leaves at nine."
+    },
+    {
       "id": "estate-1",
       "mansionType": "estate",
       "markName": "Harwick Estate",
@@ -61,6 +81,26 @@
       "dressing": "Sweeping grounds, gated entry, motion sensors inside only. Owner is away for the weekend."
     },
     {
+      "id": "estate-4",
+      "mansionType": "estate",
+      "markName": "Ravenswood Hall",
+      "vault": "East Gallery, First Floor",
+      "security": "HIGH",
+      "targetHaul": "$260k",
+      "dropCaption": "A Victorian hall whose gallery holds the kind of collection that never appears at auction.",
+      "dressing": "Twenty-two rooms, full CCTV, one armed overnight guard. The east wing alarm is on a separate circuit — installed six months ago and never fully integrated."
+    },
+    {
+      "id": "estate-5",
+      "mansionType": "estate",
+      "markName": "Syon Grange",
+      "vault": "Strongroom, Cellar Level",
+      "security": "MODERATE",
+      "targetHaul": "$210k",
+      "dropCaption": "A Georgian grange with a strongroom the owners are rather too proud of.",
+      "dressing": "Period property, original cellar structure. The strongroom was added in the 1990s — the installation company no longer exists, but I have their blueprints."
+    },
+    {
       "id": "penthouse-1",
       "mansionType": "penthouse",
       "markName": "The Meridian",
@@ -89,6 +129,26 @@
       "targetHaul": "$310k",
       "dropCaption": "A rooftop penthouse whose owner installed a panic room but forgot about the dumbwaiter.",
       "dressing": "Rooftop access via service lift, panic room on the east side. We stay west. Owner lands from Geneva at six AM."
+    },
+    {
+      "id": "penthouse-4",
+      "mansionType": "penthouse",
+      "markName": "Lakeview Residence 88",
+      "vault": "Private Office, North Suite",
+      "security": "VERY HIGH",
+      "targetHaul": "$420k",
+      "dropCaption": "Eighty-eighth floor — the owner believes altitude equals security. It doesn't.",
+      "dressing": "Dedicated residential elevator, biometric entry, private guard service. The building's power management cycles the secondary alarm circuit at 3 AM for maintenance — thirty-five seconds."
+    },
+    {
+      "id": "penthouse-5",
+      "mansionType": "penthouse",
+      "markName": "Carver & Associates Suite",
+      "vault": "Display Room, South Corner",
+      "security": "HIGH",
+      "targetHaul": "$340k",
+      "dropCaption": "A penthouse registered to a shell company — the collection inside is not on any official inventory.",
+      "dressing": "Corporate-registered property, staffed during business hours only. Night security is a single contracted guard who starts his rounds at the lobby. We go in between rounds."
     }
   ]
 }

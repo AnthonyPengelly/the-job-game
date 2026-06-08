@@ -42,15 +42,15 @@ describe('narration bank — minimum variant counts', () => {
     }
   });
 
-  describe('optionDescription — ≥4 greedy, ≥4 safe', () => {
-    it('greedy=true has ≥4 variants', () => {
+  describe('optionDescription — ≥10 greedy, ≥10 safe (for full-run no-repeat)', () => {
+    it('greedy=true has ≥10 variants', () => {
       const count = bank.optionDescription.filter((v) => v.when?.greedy === true).length;
-      expect(count).toBeGreaterThanOrEqual(4);
+      expect(count).toBeGreaterThanOrEqual(10);
     });
 
-    it('greedy=false has ≥4 variants', () => {
+    it('greedy=false has ≥10 variants', () => {
       const count = bank.optionDescription.filter((v) => v.when?.greedy === false).length;
-      expect(count).toBeGreaterThanOrEqual(4);
+      expect(count).toBeGreaterThanOrEqual(10);
     });
   });
 
@@ -94,5 +94,17 @@ describe('narration bank — minimum variant counts', () => {
 
   it('bustSting has ≥4 variants', () => {
     expect(bank.bustSting.length).toBeGreaterThanOrEqual(4);
+  });
+
+  describe('roomApproach — ≥10 variants for full-run no-repeat', () => {
+    it('has ≥10 total variants', () => {
+      expect(bank.roomApproach.length).toBeGreaterThanOrEqual(10);
+    });
+  });
+
+  describe('scenarioReveal — ≥10 variants for full-run no-repeat', () => {
+    it('has ≥10 total variants', () => {
+      expect(bank.scenarioReveal.length).toBeGreaterThanOrEqual(10);
+    });
   });
 });
