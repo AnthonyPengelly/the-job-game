@@ -8,7 +8,7 @@ const scenariosPackMetaSchema = z.object({
 
 const laneSchema = z.enum(['tech', 'physical', 'charm', 'stealth']);
 
-const gearGrantDescriptorSchema = z.object({
+export const gearGrantDescriptorSchema = z.object({
   kind: z.enum(['statBoost', 'powerUp', 'bigScore']),
   lane: laneSchema.optional(),
   lanes: z.array(laneSchema).min(1).optional(),

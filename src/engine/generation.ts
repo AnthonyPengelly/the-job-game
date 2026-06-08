@@ -132,6 +132,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         greedy: template.options[0].greedy,
         heatCost: template.options[0].heatCost,
         reward: template.options[0].reward,
+        ...(template.options[0].gear !== undefined && { gear: template.options[0].gear }),
         ...(range !== undefined && { commitRange: range }),
       },
       {
@@ -140,6 +141,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         greedy: template.options[1].greedy,
         heatCost: template.options[1].heatCost,
         reward: template.options[1].reward,
+        ...(template.options[1].gear !== undefined && { gear: template.options[1].gear }),
         ...(range !== undefined && { commitRange: range }),
       },
     ];

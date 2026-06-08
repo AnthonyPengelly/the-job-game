@@ -50,7 +50,7 @@ export function resolveRoll(roll: number, dc: number, critFumble: boolean): bool
  * Must only be called when descriptor.lane is defined (single-lane grant).
  * Throws if no matching gear exists in the catalog (fail loudly at the boundary).
  */
-function resolveGearGrant(descriptor: GearGrantDescriptor, cfg: EngineConfig): GearId {
+export function resolveGearGrant(descriptor: GearGrantDescriptor, cfg: EngineConfig): GearId {
   const lane = descriptor.lane!;
   const targetKind = descriptor.kind === 'bigScore' ? 'statBoost' : descriptor.kind;
   const targetMagnitude = descriptor.kind === 'bigScore' ? 2 : 1;
@@ -66,7 +66,7 @@ function resolveGearGrant(descriptor: GearGrantDescriptor, cfg: EngineConfig): G
   }
 
   throw new Error(
-    `applyScenarioEffect: no gear in catalog matching descriptor ${JSON.stringify(descriptor)}`,
+    `resolveGearGrant: no gear in catalog matching descriptor ${JSON.stringify(descriptor)}`,
   );
 }
 

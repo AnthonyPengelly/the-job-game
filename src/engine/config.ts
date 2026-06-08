@@ -1,6 +1,6 @@
 // The frozen, parsed shape the pure engine reducer reads from the active preset.
 // Defined here so the engine never imports from the content or platform layers.
-import type { Lane, ScenarioDef } from './types';
+import type { Lane, ScenarioDef, GearGrantDescriptor } from './types';
 
 // ── Trivia bank type (mirrored from content schema; defined here to avoid upward imports) ──
 
@@ -26,6 +26,8 @@ export interface ObstacleOptionConfig {
   heatCost: number;
   /** Loot reward on a clean outcome (2 if greedy, 1 if safe by convention). */
   reward: number;
+  /** Optional gear grant awarded on a clean outcome. Mirrors reward: fires only on clean. */
+  gear?: GearGrantDescriptor;
 }
 
 export interface ObstacleTemplateConfig {
