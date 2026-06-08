@@ -13,6 +13,7 @@ const VALID_ENTRY: LeaderboardEntry = {
   heatAtGetaway: 8,
   win: true,
   crewSize: 4,
+  crewName: 'The Magpies',
   finishedAt: 1700000000000,
 };
 
@@ -61,6 +62,23 @@ describe('leaderboardEntrySchema', () => {
     const noScore = { ...VALID_ENTRY, score: undefined };
     const result = leaderboardEntrySchema.safeParse(noScore);
     expect(result.success).toBe(false);
+  });
+
+  it('rejects missing crewName', () => {
+    const withoutCrew = { ...VALID_ENTRY, crewName: undefined };
+    const result = leaderboardEntrySchema.safeParse(withoutCrew);
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts an empty-string crewName (run started without a name)', () => {
+    const result = leaderboardEntrySchema.safeParse({ ...VALID_ENTRY, crewName: '' });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('LEADERBOARD_VERSION', () => {
+  it('is 2', () => {
+    expect(LEADERBOARD_VERSION).toBe(2);
   });
 });
 

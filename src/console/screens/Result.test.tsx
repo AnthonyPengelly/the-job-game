@@ -275,7 +275,7 @@ describe('Result screen — leaderboard outcome', () => {
     const storage = makeStorage();
     // Pre-populate storage with a very high score for seed 1 so the run cannot beat it.
     appendScore(
-      { runSeed: 1, score: 9_999_999, loot: 999, heatAtGetaway: 0, win: true, crewSize: 2, finishedAt: 0 },
+      { runSeed: 1, score: 9_999_999, loot: 999, heatAtGetaway: 0, win: true, crewSize: 2, crewName: '', finishedAt: 0 },
       storage,
     );
 
@@ -307,7 +307,7 @@ describe('Result screen — leaderboard outcome', () => {
   it('shows result-rank even when not a new personal best', () => {
     const storage = makeStorage();
     appendScore(
-      { runSeed: 1, score: 9_999_999, loot: 999, heatAtGetaway: 0, win: true, crewSize: 2, finishedAt: 0 },
+      { runSeed: 1, score: 9_999_999, loot: 999, heatAtGetaway: 0, win: true, crewSize: 2, crewName: '', finishedAt: 0 },
       storage,
     );
 

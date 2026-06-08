@@ -32,6 +32,7 @@ function makeEntry(overrides: Partial<LeaderboardEntry> = {}): LeaderboardEntry 
     heatAtGetaway: 5,
     win: true,
     crewSize: 3,
+    crewName: 'The Ravens',
     finishedAt: 1700000000000,
     ...overrides,
   };
@@ -68,6 +69,19 @@ describe('readLeaderboard', () => {
       JSON.stringify({ version: LEADERBOARD_VERSION + 99, entries: [] }),
     );
     const result = readLeaderboard(storage);
+    expect(result.entries).toHaveLength(0);
+  });
+
+  it('discards v1 saves cleanly — no crash, no stale data (v1→v2 migration path)', () => {
+    const storage = makeStorage();
+    // Simulate a v1 envelope stored before the schema bump (no crewName field)
+    const v1Envelope = {
+      version: 1,
+      entries: [{ runSeed: 7, score: 25, loot: 20, heatAtGetaway: 4, win: true, crewSize: 3, finishedAt: 1700000000000 }],
+    };
+    storage.setItem('the-job:leaderboard', JSON.stringify(v1Envelope));
+    const result = readLeaderboard(storage);
+    expect(result.version).toBe(LEADERBOARD_VERSION);
     expect(result.entries).toHaveLength(0);
   });
 
@@ -146,6 +160,18 @@ describe('appendScore', () => {
     appendScore(makeEntry({ runSeed: 3, score: 15 }), storage);
     const second = readLeaderboard(storage);
     expect(second.entries).toHaveLength(1);
+  });
+
+  it('round-trips crewName through appendScore → readLeaderboard', () => {
+    appendScore(makeEntry({ runSeed: 10, crewName: 'The Foxes' }), storage);
+    const { entries } = readLeaderboard(storage);
+    expect(entries[0]!.crewName).toBe('The Foxes');
+  });
+
+  it('round-trips an empty crewName (run started without a name)', () => {
+    appendScore(makeEntry({ runSeed: 11, crewName: '' }), storage);
+    const { entries } = readLeaderboard(storage);
+    expect(entries[0]!.crewName).toBe('');
   });
 });
 

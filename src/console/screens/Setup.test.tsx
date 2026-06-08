@@ -172,8 +172,8 @@ describe('Setup — leaderboard', () => {
       JSON.stringify({
         version: LEADERBOARD_VERSION,
         entries: [
-          { runSeed: 1, score: 5000, loot: 12000, heatAtGetaway: 2, win: true,  crewSize: 3, finishedAt: 1000 },
-          { runSeed: 2, score: 2500, loot:  6000, heatAtGetaway: 5, win: false, crewSize: 4, finishedAt: 2000 },
+          { runSeed: 1, score: 5000, loot: 12000, heatAtGetaway: 2, win: true,  crewSize: 3, crewName: 'The Magpies', finishedAt: 1000 },
+          { runSeed: 2, score: 2500, loot:  6000, heatAtGetaway: 5, win: false, crewSize: 4, crewName: 'The Ravens',  finishedAt: 2000 },
         ],
       }),
     );
@@ -196,6 +196,7 @@ describe('Setup — leaderboard', () => {
       heatAtGetaway: 1,
       win: true,
       crewSize: 3,
+      crewName: `Crew ${i + 1}`,
       finishedAt: i * 1000,
     }));
     storage.setItem(

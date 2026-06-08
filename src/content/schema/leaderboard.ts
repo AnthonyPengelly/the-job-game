@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const LEADERBOARD_VERSION = 1;
+export const LEADERBOARD_VERSION = 2;
 
 export const leaderboardEntrySchema = z.object({
   runSeed: z.number().int().nonnegative(),
@@ -9,6 +9,7 @@ export const leaderboardEntrySchema = z.object({
   heatAtGetaway: z.number().int().nonnegative(),
   win: z.boolean(),
   crewSize: z.number().int().min(1).max(7),
+  crewName: z.string(),
   /** Unix timestamp (ms) when the run was recorded. */
   finishedAt: z.number().int().nonnegative(),
 });
