@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { reduce } from '@/engine/reduce';
 import { initialState } from '@/engine/run';
+import { reduceSession, initialSession } from '@/engine/history';
 import type { EngineConfig } from '@/engine/config';
 import type { RunState, PlayerId, GearId, GameId, GearGrantDescriptor } from '@/engine/types';
 
@@ -41,6 +42,7 @@ const cfg: EngineConfig = {
   },
   generation: { obstacleRatio: 0.6 },
   scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false },
+  gearSellValue: { base: 1000, perRoom: 500 },
   gear: {
     'stat-tech-1':   { id: 'stat-tech-1',   kind: 'statBoost', lane: 'tech',     magnitude: 1 },
     'stat-tech-2':   { id: 'stat-tech-2',   kind: 'statBoost', lane: 'tech',     magnitude: 2 },
@@ -1222,5 +1224,107 @@ describe('RESOLVE_MINIGAME — Zod schema: gear descriptor accepted and [greedy,
       ],
     };
     expect(() => roomTemplatesSchema.parse(invalid)).toThrow();
+  });
+});
+
+// ─── SELL_GEAR ────────────────────────────────────────────────────────────────
+
+function sellGearState(overrides: Partial<RunState> = {}): RunState {
+  return {
+    ...initialState(42),
+    phase: 'offer' as const,
+    roomIndex: 3,
+    loot: 10000,
+    earnedGear: [
+      'stat-tech-1' as GearId,
+      'powerup-charm' as GearId,
+    ],
+    ...overrides,
+  };
+}
+
+describe('SELL_GEAR — removes gear and banks sell value', () => {
+  it('removes the targeted earnedGear entry by index', () => {
+    const s = sellGearState();
+    const next = reduce(s, { t: 'SELL_GEAR', index: 0 }, cfg);
+    expect(next.earnedGear).toHaveLength(1);
+    expect(next.earnedGear[0]).toBe('powerup-charm' as GearId);
+  });
+
+  it('increases loot by the preset curve value (base + perRoom * roomIndex)', () => {
+    const s = sellGearState({ roomIndex: 3 });
+    // cfg.gearSellValue = { base: 1000, perRoom: 500 }; roomIndex=3 → 1000 + 500*3 = 2500
+    const next = reduce(s, { t: 'SELL_GEAR', index: 0 }, cfg);
+    expect(next.loot).toBe(10000 + 1000 + 500 * 3); // 12500
+  });
+
+  it('sell value scales with roomIndex', () => {
+    const s0 = sellGearState({ roomIndex: 0 });
+    const s5 = sellGearState({ roomIndex: 5 });
+    const next0 = reduce(s0, { t: 'SELL_GEAR', index: 0 }, cfg);
+    const next5 = reduce(s5, { t: 'SELL_GEAR', index: 0 }, cfg);
+    expect(next5.loot - s5.loot).toBeGreaterThan(next0.loot - s0.loot);
+  });
+
+  it('removes the correct entry when index is 1 (leaves index 0 intact)', () => {
+    const s = sellGearState();
+    const next = reduce(s, { t: 'SELL_GEAR', index: 1 }, cfg);
+    expect(next.earnedGear).toHaveLength(1);
+    expect(next.earnedGear[0]).toBe('stat-tech-1' as GearId);
+  });
+
+  it('can sell a GearGrantDescriptor (multi-lane unresolved)', () => {
+    const descriptor: GearGrantDescriptor = { kind: 'powerUp', lanes: ['tech', 'charm'] };
+    const s = sellGearState({ earnedGear: [descriptor] });
+    const next = reduce(s, { t: 'SELL_GEAR', index: 0 }, cfg);
+    expect(next.earnedGear).toHaveLength(0);
+    expect(next.loot).toBeGreaterThan(s.loot);
+  });
+
+  it('leaves all other state fields untouched', () => {
+    const s = sellGearState();
+    const next = reduce(s, { t: 'SELL_GEAR', index: 0 }, cfg);
+    expect(next.phase).toBe(s.phase);
+    expect(next.heat).toBe(s.heat);
+    expect(next.roomIndex).toBe(s.roomIndex);
+    expect(next.crew).toBe(s.crew);
+  });
+
+  it('does not mutate input state', () => {
+    const s = sellGearState();
+    const originalGear = [...s.earnedGear];
+    const originalLoot = s.loot;
+    reduce(s, { t: 'SELL_GEAR', index: 0 }, cfg);
+    expect(s.earnedGear).toEqual(originalGear);
+    expect(s.loot).toBe(originalLoot);
+  });
+
+  it('throws when index is out of range (too high)', () => {
+    const s = sellGearState({ earnedGear: ['stat-tech-1' as GearId] });
+    expect(() => reduce(s, { t: 'SELL_GEAR', index: 1 }, cfg)).toThrow(/out of range/);
+  });
+
+  it('throws when index is negative', () => {
+    const s = sellGearState({ earnedGear: ['stat-tech-1' as GearId] });
+    expect(() => reduce(s, { t: 'SELL_GEAR', index: -1 }, cfg)).toThrow(/out of range/);
+  });
+
+  it('throws when earnedGear is empty', () => {
+    const s = sellGearState({ earnedGear: [] });
+    expect(() => reduce(s, { t: 'SELL_GEAR', index: 0 }, cfg)).toThrow(/out of range/);
+  });
+});
+
+describe('SELL_GEAR — undo restores gear and loot', () => {
+  it('UNDO_LAST after SELL_GEAR restores earnedGear and loot via session history', () => {
+    const s = sellGearState();
+    let session = initialSession(s);
+    session = reduceSession(session, { t: 'SELL_GEAR', index: 0 }, cfg);
+    expect(session.present.earnedGear).toHaveLength(1);
+    expect(session.present.loot).toBeGreaterThan(s.loot);
+
+    session = reduceSession(session, { t: 'UNDO_LAST' }, cfg);
+    expect(session.present.earnedGear).toHaveLength(2);
+    expect(session.present.loot).toBe(s.loot);
   });
 });

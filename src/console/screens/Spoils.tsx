@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '@/console/store';
 import type { GearId, PlayerId, Lane } from '@/engine';
-import { isResting } from '@/engine';
+import { isResting, computeGearSellValue } from '@/engine';
 import type { GearDef } from '@/engine/config';
 import type { GearGrantDescriptor } from '@/engine/types';
 import { Teleprompter } from '@/console/teleprompter';
@@ -17,10 +17,12 @@ interface GearCardProps {
   gearCatalog: Record<string, GearDef>;
   onSelect: () => void;
   onAssign: (to: PlayerId, gearId: GearId) => void;
+  onSell: (index: number) => void;
+  sellValueLabel: string;
   crew: Array<{ id: PlayerId; name: string }>;
 }
 
-function GearCard({ item, index, selected, gearCatalog, onSelect, onAssign, crew }: GearCardProps) {
+function GearCard({ item, index, selected, gearCatalog, onSelect, onAssign, onSell, sellValueLabel, crew }: GearCardProps) {
   const isDescriptor = isGrantDescriptor(item);
   const availableLanes: Lane[] = isDescriptor
     ? ((item.lanes ?? (item.lane ? [item.lane] : [])) as Lane[])
@@ -72,6 +74,18 @@ function GearCard({ item, index, selected, gearCatalog, onSelect, onAssign, crew
         </select>
       )}
 
+      <button
+        type="button"
+        className="spoils-sell-btn"
+        data-testid={`spoils-sell-${cardId}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSell(index);
+        }}
+      >
+        Sell for {sellValueLabel}
+      </button>
+
       {selected && (
         <div className="spoils-crew-picker" data-testid={`spoils-crew-picker-${cardId}`}>
           {crew.map(p => (
@@ -114,9 +128,12 @@ export function Spoils() {
   const crew = useGameStore(s => s.session.present.crew);
   const roomIndex = useGameStore(s => s.session.present.roomIndex);
   const gearCatalog = useGameStore(s => s.cfg.gear);
+  const cfg = useGameStore(s => s.cfg);
   const director = useGameStore(s => s.director);
   const dispatch = useGameStore(s => s.dispatch);
   const clearPendingSpoils = useGameStore(s => s.clearPendingSpoils);
+
+  const sellValueLabel = formatLoot(computeGearSellValue(roomIndex, cfg));
 
   const lastResult = history.at(-1);
 
@@ -147,6 +164,11 @@ export function Spoils() {
 
   function handleAssign(to: PlayerId, gearId: GearId) {
     dispatch({ t: 'ASSIGN_GEAR', gear: gearId, to });
+    setSelectedGearIdx(null);
+  }
+
+  function handleSell(index: number) {
+    dispatch({ t: 'SELL_GEAR', index });
     setSelectedGearIdx(null);
   }
 
@@ -183,6 +205,8 @@ export function Spoils() {
                 gearCatalog={gearCatalog}
                 onSelect={() => handleGearSelect(idx)}
                 onAssign={handleAssign}
+                onSell={handleSell}
+                sellValueLabel={sellValueLabel}
                 crew={crew.map(p => ({ id: p.id, name: p.name }))}
               />
             ))}

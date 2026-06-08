@@ -253,6 +253,7 @@ export type RunEvent =
   | { t: 'CHOOSE_SCENARIO'; choiceId: string; attemptedBy?: PlayerId }
   | { t: 'RESOLVE_SCENARIO_ROLL'; externalRoll?: number }
   | { t: 'ASSIGN_GEAR'; gear: GearId; to: PlayerId }
+  | { t: 'SELL_GEAR'; index: number }
   | { t: 'PUSH_ON' }
   | { t: 'CALL_GETAWAY' }
   | { t: 'GETAWAY_DITCH' }

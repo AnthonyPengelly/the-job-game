@@ -19,6 +19,7 @@ import {
 import { resolveGetawayOutcome } from './getaway';
 import { scoreRun } from './scoring';
 import { computeDC, resolveRoll, applyScenarioEffect, resolveGearGrant } from './scenario';
+import { computeGearSellValue } from './gear';
 
 /**
  * Pure reducer: (state, event, config) → next state.
@@ -256,6 +257,23 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
       return {
         ...state,
         crew: state.crew.map((p, i) => (i === playerIndex ? updatedPlayer : p)),
+      };
+    }
+
+    case 'SELL_GEAR': {
+      if (event.index < 0 || event.index >= state.earnedGear.length) {
+        throw new Error(
+          `SELL_GEAR: index ${event.index} out of range (earnedGear has ${state.earnedGear.length} item(s))`,
+        );
+      }
+      const sellValue = computeGearSellValue(state.roomIndex, cfg);
+      return {
+        ...state,
+        earnedGear: [
+          ...state.earnedGear.slice(0, event.index),
+          ...state.earnedGear.slice(event.index + 1),
+        ],
+        loot: state.loot + sellValue,
       };
     }
 

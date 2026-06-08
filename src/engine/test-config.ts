@@ -38,6 +38,7 @@ export const testCfg: EngineConfig = {
   },
   generation: { obstacleRatio: 0.7 },
   scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false },
+  gearSellValue: { base: 1000, perRoom: 500 },
   gear: {},
   banks: {
     categories: ['Things made of gold', 'Types of cheese', 'European cities'],

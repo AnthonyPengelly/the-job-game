@@ -82,5 +82,10 @@
     "dcClamp": [1, 20],
     "easeDialSteps": 1,
     "critFumble": false
+  },
+
+  "gearSellValue": {
+    "base": 5000,
+    "perRoom": 3000
   }
 }

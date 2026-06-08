@@ -330,6 +330,116 @@ describe('Spoils — outcome quip narration', () => {
   });
 });
 
+// ── Sell gear ─────────────────────────────────────────────────────────────────
+
+describe('Spoils — sell gear button', () => {
+  it('renders a sell button for each earned gear card', () => {
+    const store = makeGearSpoilsStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <Spoils />
+      </StoreContext.Provider>,
+    );
+    expect(screen.getByTestId('spoils-sell-stat-tech-1')).toBeInTheDocument();
+  });
+
+  it('sell button label contains formatted sell value via formatLoot', () => {
+    const store = makeGearSpoilsStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <Spoils />
+      </StoreContext.Provider>,
+    );
+    const sellBtn = screen.getByTestId('spoils-sell-stat-tech-1');
+    // gearSellValue from testCfg: base=1000, perRoom=500; roomIndex=0 after start → $1k
+    expect(sellBtn.textContent).toContain('$');
+  });
+
+  it('clicking sell button dispatches SELL_GEAR with correct index', () => {
+    const store = makeGearSpoilsStore();
+    render(
+      <StoreContext.Provider value={store}>
+        <Spoils />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('spoils-sell-stat-tech-1'));
+
+    const lastEvent = store.getState().eventLog.at(-1);
+    expect(lastEvent?.t).toBe('SELL_GEAR');
+    if (lastEvent?.t === 'SELL_GEAR') {
+      expect(lastEvent.index).toBe(0);
+    }
+  });
+
+  it('selling a gear card increases loot in the store', () => {
+    const store = makeGearSpoilsStore();
+    const lootBefore = store.getState().session.present.loot;
+    render(
+      <StoreContext.Provider value={store}>
+        <Spoils />
+      </StoreContext.Provider>,
+    );
+    fireEvent.click(screen.getByTestId('spoils-sell-stat-tech-1'));
+    expect(store.getState().session.present.loot).toBeGreaterThan(lootBefore);
+  });
+
+  it('gear can still be assigned through the existing flow after another card is sold', () => {
+    // Add two gear items to earnedGear so we can sell one and assign the other
+    const storage = makeStorage();
+    const storeWith2Gear = createGameStore({ cfg: obstacleWithGearCfg, storage });
+    storeWith2Gear.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+    storeWith2Gear.setState(prev => ({
+      session: {
+        ...prev.session,
+        present: {
+          ...prev.session.present,
+          earnedGear: [
+            'stat-tech-1' as import('@/engine').GearId,
+            'powerup-tech' as import('@/engine').GearId,
+          ],
+        },
+      },
+    }));
+
+    render(
+      <StoreContext.Provider value={storeWith2Gear}>
+        <Spoils />
+      </StoreContext.Provider>,
+    );
+
+    // Sell the first card (stat-tech-1)
+    fireEvent.click(screen.getByTestId('spoils-sell-stat-tech-1'));
+
+    // The remaining card (powerup-tech) should still be assignable
+    expect(screen.getByTestId('spoils-gear-card-powerup-tech')).toBeInTheDocument();
+    const bob = storeWith2Gear.getState().session.present.crew[1]!;
+    fireEvent.click(screen.getByTestId('spoils-gear-card-powerup-tech'));
+    fireEvent.click(screen.getByTestId(`spoils-assign-powerup-tech-${bob.id}`));
+
+    const lastEvent = storeWith2Gear.getState().eventLog.at(-1);
+    expect(lastEvent?.t).toBe('ASSIGN_GEAR');
+  });
+
+  it('UNDO after selling restores the gear card', () => {
+    const store = makeGearSpoilsStore();
+    const lootBefore = store.getState().session.present.loot;
+    const gearCountBefore = store.getState().session.present.earnedGear.length;
+
+    render(
+      <StoreContext.Provider value={store}>
+        <Spoils />
+      </StoreContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByTestId('spoils-sell-stat-tech-1'));
+    expect(store.getState().session.present.earnedGear.length).toBe(gearCountBefore - 1);
+
+    store.getState().undo();
+    expect(store.getState().session.present.earnedGear.length).toBe(gearCountBefore);
+    expect(store.getState().session.present.loot).toBe(lootBefore);
+  });
+});
+
 // ── pendingSpoils store wiring ─────────────────────────────────────────────────
 
 describe('store — pendingSpoils transitions', () => {

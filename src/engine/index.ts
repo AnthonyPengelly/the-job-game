@@ -31,6 +31,8 @@ export { obstacleCommitRange, resolveGameVariant, computeDial } from './scaling'
 
 export { applyOverride } from './overrides';
 
+export { computeGearSellValue } from './gear';
+
 export { reduce } from './reduce';
 
 export { reduceSession, initialSession } from './history';
