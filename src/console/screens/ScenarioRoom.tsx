@@ -202,10 +202,15 @@ function RollReveal() {
  *   Stage two  — pendingRoll set: reveals lane, rating, DC, success odds, and
  *                the appropriate roll control (app: Roll button; physical: 1–20
  *                input). Dispatches RESOLVE_SCENARIO_ROLL.
+ *
+ * Narration: entry roomApproach lines are prepended to scenarioSetup lines so
+ * the GM reads the scene-set first, then the framing prompt. Next steps through
+ * the committed sequence and disappears at the last line.
  */
 export function ScenarioRoom() {
   const room = useGameStore(s => s.session.present.currentRoom);
   const roomIndex = useGameStore(s => s.session.present.roomIndex);
+  const crew = useGameStore(s => s.session.present.crew);
   const director = useGameStore(s => s.director);
   const dispatch = useGameStore(s => s.dispatch);
 
@@ -213,12 +218,19 @@ export function ScenarioRoom() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Framing line for the scenario: picked once at mount.
-  const [setupLine, setSetupLine] = useState<string>(() =>
-    director && room?.kind === 'scenario'
-      ? director.next('scenarioSetup')
-      : ''
-  );
+  const crewNames = crew.map(p => p.name).join(', ');
+  const roomNum = String(roomIndex + 1).padStart(2, '0');
+
+  // Entry → tension narration: roomApproach (scene-set) prepended to scenarioSetup.
+  // Committed once at mount; stepping is handled locally.
+  const [lines] = useState<string[]>(() => {
+    if (!director || room?.kind !== 'scenario') return [];
+    return [
+      ...director.script('roomApproach', { roomNum, crew: crewNames }),
+      ...director.script('scenarioSetup', { roomNum, crew: crewNames }),
+    ];
+  });
+  const [lineIndex, setLineIndex] = useState(0);
 
   // Deactivate crew rail attempter mode when this screen unmounts.
   useEffect(() => {
@@ -227,11 +239,11 @@ export function ScenarioRoom() {
 
   if (room === null || room.kind !== 'scenario') return null;
 
-  const roomNum = String(roomIndex + 1).padStart(2, '0');
+  const currentLine = lines[lineIndex] ?? '';
+  const hasNext = lineIndex < lines.length - 1;
 
-  function handleSetupAdvance() {
-    if (!director) return;
-    setSetupLine(director.next('scenarioSetup'));
+  function handleAdvance() {
+    setLineIndex(i => Math.min(i + 1, lines.length - 1));
   }
 
   // Stage 2: roll pending after CHOOSE_SCENARIO for a roll choice
@@ -250,7 +262,7 @@ export function ScenarioRoom() {
       <div className="stage-inner" data-testid="screen-room">
         <PhaseHead eyebrow={`Room ${roomNum} B · Scenario`} title="Scenario" />
         <div data-testid="scenario-narration">
-          <Teleprompter line={setupLine} onAdvance={handleSetupAdvance} />
+          <Teleprompter line={currentLine} hasNext={hasNext} onAdvance={handleAdvance} />
         </div>
         <p data-testid="scenario-setup" className="prose">
           {room.setup}

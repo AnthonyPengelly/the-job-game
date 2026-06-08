@@ -223,11 +223,10 @@ describe('Offer screen — pushRun narration', () => {
     expect(line).toContain('Cool push run');
   });
 
-  it('advance button re-picks a pushRun line (never disabled)', () => {
+  it('advance button absent at last committed line (no re-roll)', () => {
+    // script() commits a single pushRun line — hasNext=false → no advance button.
     renderOfferWithNarration();
-    const btn = screen.getByTestId('teleprompter-advance');
-    expect(btn).not.toBeDisabled();
-    fireEvent.click(btn);
+    expect(screen.queryByTestId('teleprompter-advance')).toBeNull();
     expect(screen.getByTestId('teleprompter-line')).toBeInTheDocument();
   });
 

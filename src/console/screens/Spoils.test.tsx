@@ -322,13 +322,13 @@ describe('Spoils — outcome quip narration', () => {
     expect(screen.queryByTestId('outcome-quip')).toBeNull();
   });
 
-  it('advance button re-picks a quip of the same outcome', () => {
+  it('advance button absent at last committed line (no re-roll)', () => {
+    // script() commits a single outcomeQuip line — hasNext=false → no advance button.
     renderSpoils({ narration: makeNarrationFixture() });
-    const advBtn = screen.getByTestId('teleprompter-advance');
-    expect(advBtn).not.toBeDisabled();
-    fireEvent.click(advBtn);
-    const lineAfter = screen.getByTestId('teleprompter-line').textContent ?? '';
-    expect(lineAfter).toContain('Clean quip');
+    expect(screen.queryByTestId('teleprompter-advance')).toBeNull();
+    // The committed line is still shown.
+    const line = screen.getByTestId('teleprompter-line').textContent ?? '';
+    expect(line).toContain('Clean quip');
   });
 });
 

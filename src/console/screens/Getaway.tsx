@@ -16,6 +16,9 @@ import { ActionBar, Button } from '@/console/ui';
  *    danger red when ≤15 s remain. Round bar shows cleared progress meter.
  *
  * GM override buttons (Force win / Force bust) are always present.
+ *
+ * Narration lines are committed once at mount via script(). Next steps through
+ * the committed sequence and disappears at the last line.
  */
 export function Getaway() {
   const dispatch = useGameStore(s => s.dispatch);
@@ -28,23 +31,24 @@ export function Getaway() {
   const briefRef = useRef(getawayBrief(heat, cfg));
   const brief = briefRef.current;
 
-  // Narration lines picked once at mount.
-  const [introLine, setIntroLine] = useState<string>(() =>
-    director?.next('getawayIntro') ?? ''
-  );
-  const [countdownLine, setCountdownLine] = useState<string>(() =>
-    director?.next('getawayCountdown') ?? ''
-  );
+  // Narration lines committed once at mount.
+  const [introLines] = useState<string[]>(() => director?.script('getawayIntro') ?? []);
+  const [introIndex, setIntroIndex] = useState(0);
+  const [countdownLines] = useState<string[]>(() => director?.script('getawayCountdown') ?? []);
+  const [countdownIndex, setCountdownIndex] = useState(0);
 
   function handleIntroAdvance() {
-    if (!director) return;
-    setIntroLine(director.next('getawayIntro'));
+    setIntroIndex(i => Math.min(i + 1, introLines.length - 1));
   }
 
   function handleCountdownAdvance() {
-    if (!director) return;
-    setCountdownLine(director.next('getawayCountdown'));
+    setCountdownIndex(i => Math.min(i + 1, countdownLines.length - 1));
   }
+
+  const introLine = introLines[introIndex] ?? '';
+  const hasNextIntro = introIndex < introLines.length - 1;
+  const countdownLine = countdownLines[countdownIndex] ?? '';
+  const hasNextCountdown = countdownIndex < countdownLines.length - 1;
 
   const [cardsCleared, setCardsCleared] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(brief.timerSeconds);
@@ -177,7 +181,7 @@ export function Getaway() {
       {/* Narration: intro line */}
       {introLine !== '' && (
         <div data-testid="getaway-intro-narration">
-          <Teleprompter line={introLine} onAdvance={handleIntroAdvance} />
+          <Teleprompter line={introLine} hasNext={hasNextIntro} onAdvance={handleIntroAdvance} />
         </div>
       )}
 
@@ -284,7 +288,7 @@ export function Getaway() {
       {/* Narration: countdown tension line */}
       {countdownLine !== '' && (
         <div data-testid="getaway-countdown-narration">
-          <Teleprompter line={countdownLine} onAdvance={handleCountdownAdvance} />
+          <Teleprompter line={countdownLine} hasNext={hasNextCountdown} onAdvance={handleCountdownAdvance} />
         </div>
       )}
 

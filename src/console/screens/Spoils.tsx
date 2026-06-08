@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGameStore } from '@/console/store';
-import type { GearId, PlayerId, Lane } from '@/engine';
+import type { GearId, PlayerId, Lane, Outcome } from '@/engine';
 import { isResting, computeGearSellValue } from '@/engine';
 import type { GearDef } from '@/engine/config';
 import type { GearGrantDescriptor } from '@/engine/types';
@@ -121,6 +121,11 @@ function GearCard({ item, index, selected, gearCatalog, onSelect, onAssign, onSe
  * resting. CONTINUE clears the pending-spoils flag and the PhaseRouter shows
  * the Offer screen.
  *
+ * Narration payoff:
+ *   Obstacle rooms → outcomeQuip lines (committed once; no re-roll).
+ *   Scenario rooms → scenarioReveal lines (committed once; no re-roll).
+ * Next steps through the committed sequence and disappears at the last line.
+ *
  * No engine phase is created — this is a console-only UI interstitial.
  */
 export function Spoils() {
@@ -138,26 +143,36 @@ export function Spoils() {
 
   const lastResult = history.at(-1);
 
-  // Outcome quip: shown for obstacle rooms only.
-  const [quipLine] = useState<string>(() => {
-    if (director !== null && lastResult?.kind === 'obstacle') {
-      return director.next('outcomeQuip', { outcome: lastResult.outcome });
+  // Payoff narration: committed once at mount for the relevant beat.
+  // Obstacle rooms use outcomeQuip; scenario rooms use scenarioReveal.
+  const [quipLines] = useState<string[]>(() => {
+    if (director === null || lastResult === undefined) return [];
+    if (lastResult.kind === 'obstacle') {
+      return director.script('outcomeQuip', { outcome: lastResult.outcome });
     }
-    return '';
+    if (lastResult.kind === 'scenario') {
+      // Map scenario success/failure to Outcome for variant filtering.
+      const outcomeCtx: Outcome | undefined =
+        lastResult.success === true ? 'clean'
+        : lastResult.success === false ? 'complication'
+        : undefined;
+      return director.script('scenarioReveal',
+        outcomeCtx !== undefined ? { outcome: outcomeCtx } : {},
+      );
+    }
+    return [];
   });
-
-  const [currentQuip, setCurrentQuip] = useState(quipLine);
-
-  function handleQuipAdvance() {
-    if (director !== null && lastResult?.kind === 'obstacle') {
-      const next = director.next('outcomeQuip', { outcome: lastResult.outcome });
-      setCurrentQuip(next);
-    }
-  }
+  const [quipIndex, setQuipIndex] = useState(0);
 
   const [selectedGearIdx, setSelectedGearIdx] = useState<number | null>(null);
 
   const lootGained = lastResult?.lootGained ?? 0;
+  const currentQuip = quipLines[quipIndex] ?? '';
+  const hasNextQuip = quipIndex < quipLines.length - 1;
+
+  function handleQuipAdvance() {
+    setQuipIndex(i => Math.min(i + 1, quipLines.length - 1));
+  }
 
   function handleGearSelect(idx: number) {
     setSelectedGearIdx(prev => (prev === idx ? null : idx));
@@ -179,10 +194,10 @@ export function Spoils() {
     <div className="stage-inner" data-testid="screen-spoils">
       <h2 className="spoils-heading">Spoils</h2>
 
-      {/* Outcome quip (obstacle only) */}
+      {/* Payoff narration (obstacle: outcomeQuip; scenario: scenarioReveal) */}
       {currentQuip !== '' && (
         <div data-testid="outcome-quip">
-          <Teleprompter line={currentQuip} onAdvance={handleQuipAdvance} />
+          <Teleprompter line={currentQuip} hasNext={hasNextQuip} onAdvance={handleQuipAdvance} />
         </div>
       )}
 

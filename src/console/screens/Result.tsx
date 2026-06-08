@@ -97,14 +97,16 @@ export function Result() {
 
   const stingBeat = win ? 'winSting' : ('bustSting' as const);
 
-  const [stingLine, setStingLine] = useState<string>(() =>
-    director?.next(stingBeat) ?? ''
-  );
+  // Committed once at mount; no re-roll on advance.
+  const [stingLines] = useState<string[]>(() => director?.script(stingBeat) ?? []);
+  const [lineIndex, setLineIndex] = useState(0);
 
   function handleStingAdvance() {
-    if (!director) return;
-    setStingLine(director.next(stingBeat));
+    setLineIndex(i => Math.min(i + 1, stingLines.length - 1));
   }
+
+  const stingLine = stingLines[lineIndex] ?? '';
+  const hasNext = lineIndex < stingLines.length - 1;
 
   const reasonText = win
     ? `Heat ${state.heat} / ${cfg.heat.hMax} — stayed cool`
@@ -128,7 +130,7 @@ export function Result() {
       {/* Win / bust sting narration */}
       {stingLine !== '' && (
         <div data-testid="result-sting">
-          <Teleprompter line={stingLine} onAdvance={handleStingAdvance} />
+          <Teleprompter line={stingLine} hasNext={hasNext} onAdvance={handleStingAdvance} />
         </div>
       )}
 
