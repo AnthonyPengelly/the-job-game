@@ -5,6 +5,7 @@ import { StoreContext, createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
 import type { ParsedNarration } from '@/content/schema';
+import { CrewRailModeProvider } from '@/console/shell';
 import { ObstacleRoom } from './ObstacleRoom';
 import { MinigameStub } from './MinigameStub';
 
@@ -56,7 +57,9 @@ function renderObstacleRoom(seed = 1) {
   const store = makeObstacleStore(seed);
   render(
     <StoreContext.Provider value={store}>
-      <ObstacleRoom />
+      <CrewRailModeProvider>
+        <ObstacleRoom />
+      </CrewRailModeProvider>
     </StoreContext.Provider>,
   );
   return store;
@@ -191,7 +194,9 @@ describe('ObstacleRoom screen', () => {
     const store = makeObstacleStore3();
     render(
       <StoreContext.Provider value={store}>
-        <ObstacleRoom />
+        <CrewRailModeProvider>
+          <ObstacleRoom />
+        </CrewRailModeProvider>
       </StoreContext.Provider>,
     );
     const room = store.getState().session.present.currentRoom;
