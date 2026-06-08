@@ -51,6 +51,11 @@ const assignGearSchema = z.object({
   earnedGearIndex: z.number().int().optional(),
 });
 
+const sellGearSchema = z.object({
+  t: z.literal('SELL_GEAR'),
+  index: z.number().int(),
+});
+
 const pushOnSchema = z.object({ t: z.literal('PUSH_ON') });
 const callGetawaySchema = z.object({ t: z.literal('CALL_GETAWAY') });
 
@@ -116,6 +121,7 @@ export const runEventSchema = z.discriminatedUnion('t', [
   chooseScenarioSchema,
   resolveScenarioRollSchema,
   assignGearSchema,
+  sellGearSchema,
   pushOnSchema,
   callGetawaySchema,
   resolveGetawaySchema,

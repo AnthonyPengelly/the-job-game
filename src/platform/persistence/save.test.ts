@@ -3,7 +3,7 @@ import { writeSave, readSave, clearSave } from './save';
 import type { StorageLike } from './save';
 import { SAVE_VERSION } from '@/content/schema/save';
 import type { SaveEnvelope } from '@/content/schema/save';
-import type { PlayerId, QuirkId } from '@/engine/types';
+import type { PlayerId, QuirkId, GearId } from '@/engine/types';
 
 // ── In-memory Storage stub ────────────────────────────────────────────────────
 
@@ -172,6 +172,31 @@ describe('readSave malformed data → corrupt', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.reason).toBe('corrupt');
+    }
+  });
+});
+
+// ── SELL_GEAR persistence round-trip ─────────────────────────────────────────
+
+describe('SELL_GEAR round-trip', () => {
+  it('survives write → read when the event log contains SELL_GEAR', () => {
+    const storage = makeMemoryStorage();
+    const envelope: SaveEnvelope = {
+      version: SAVE_VERSION,
+      seed: 42,
+      eventLog: [
+        { t: 'START_RUN', crew: [{ name: 'Alex' }], seed: 42 },
+        { t: 'ASSIGN_GEAR', gear: 'lockpick-set' as GearId, to: 'player-0' as PlayerId, earnedGearIndex: 0 },
+        { t: 'SELL_GEAR', index: 1 },
+        { t: 'PUSH_ON' },
+      ],
+    };
+    writeSave(envelope, storage);
+    const result = readSave(storage);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.save.eventLog).toHaveLength(4);
+      expect(result.save.eventLog[2]).toMatchObject({ t: 'SELL_GEAR', index: 1 });
     }
   });
 });
