@@ -17,6 +17,7 @@ import type { StorageLike } from '@/platform';
 import { SAVE_VERSION } from '@/content/schema/save';
 import type { DiceMode } from '@/content/schema/settings';
 import type { ParsedNarration } from '@/content/schema';
+import type { SpineBank } from '@/content/schema';
 import type { LeaderboardEntry } from '@/content/schema/leaderboard';
 import { createNarrationDirector } from '@/console/teleprompter';
 import type { NarrationDirector } from '@/console/teleprompter';
@@ -112,6 +113,9 @@ export interface CreateGameStoreOptions {
   /** Optional narration bank. When supplied the store creates and seeds a
    *  NarrationDirector on every run start / hydrate / goAgain. */
   narration?: ParsedNarration;
+  /** Optional spine bank. When supplied alongside narration the director commits
+   *  a MarkSpine for the run's mansion type, enabling template-filled narration. */
+  spineBank?: SpineBank;
   /** The id of the active preset to record in state. Defaults to 'default'. */
   activePresetId?: string;
   /** When true the boot-time preset fallback notice is shown to the GM. */
@@ -121,12 +125,18 @@ export interface CreateGameStoreOptions {
 // ── Factory ───────────────────────────────────────────────────────────────────
 
 export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameStoreState> {
-  const { cfg, storage, narration } = options;
+  const { cfg, storage, narration, spineBank } = options;
   const initialActivePresetId = options.activePresetId ?? 'default';
   const initialPresetFallbackNotice = options.presetFallbackNotice ?? false;
 
-  function makeDirector(seed: number): NarrationDirector | null {
+  function makeDirector(seed: number, mansionType?: string): NarrationDirector | null {
     if (!narration) return null;
+    if (spineBank !== undefined) {
+      return createNarrationDirector(narration, seed, undefined, {
+        spineBank,
+        mansionType: mansionType ?? 'villa',
+      });
+    }
     return createNarrationDirector(narration, seed);
   }
 
@@ -252,7 +262,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         runSeed: startSeed,
         hasResumableSave: false,
         staleSaveNotice: false,
-        director: makeDirector(startSeed),
+        director: makeDirector(startSeed, newSession.present.mansion.type),
         currentRunRank: null,
         currentRunNewBest: false,
         pendingSpoils: false,
@@ -288,7 +298,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
           eventLog: result.save.eventLog,
           runSeed: result.save.seed,
           hasResumableSave: true,
-          director: makeDirector(result.save.seed),
+          director: makeDirector(result.save.seed, replayed.present.mansion.type),
           // Hydrate/replay does not append to the leaderboard.
           // Refresh the leaderboard read so any externally-modified storage is
           // picked up, but do not write a new entry.

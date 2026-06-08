@@ -104,6 +104,10 @@ function OptionCard({ option, selected, onSelect, narrationLine }: OptionCardPro
  * Commit selection is driven through CrewRailModeContext (E13.8): selecting an
  * option activates commit mode on the crew rail and this screen reads back the
  * committed set from the shared context.
+ *
+ * Narration: entry roomApproach lines are prepended to obstacleClue lines so the
+ * GM reads the scene-set first, then the choice prompt. Next steps through the
+ * committed sequence and disappears at the last line.
  */
 export function ObstacleRoom() {
   const room = useGameStore(s => s.session.present.currentRoom);
@@ -124,27 +128,45 @@ export function ObstacleRoom() {
 
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
 
-  // Narration: clue and per-option descriptions picked once at mount.
-  const [clue, setClue] = useState<string>(() => {
-    if (!director || !room || room.kind !== 'obstacle') return '';
+  const crewNames = crew.map(p => p.name).join(', ');
+  const roomNum = String(roomIndex + 1).padStart(2, '0');
+
+  // Entry → tension narration: roomApproach (scene-set) prepended to obstacleClue.
+  // Committed once at mount; stepping through the sequence is handled locally.
+  const [lines] = useState<string[]>(() => {
+    if (!director || !room || room.kind !== 'obstacle') return [];
     const tmpl = cfg.roomTemplates.obstacles.find(t => t.id === room.templateId);
     const laneCtx = toLane(tmpl?.lane);
-    return director.next('obstacleClue', {
-      gameId: room.options[0]?.gameId,
+    const approachCtx = {
+      roomNum,
+      crew: crewNames,
       ...(laneCtx !== undefined ? { lane: laneCtx } : {}),
-    });
+    };
+    const clueCtx = {
+      gameId: room.options[0]?.gameId,
+      roomNum,
+      crew: crewNames,
+      ...(laneCtx !== undefined ? { lane: laneCtx } : {}),
+    };
+    return [
+      ...director.script('roomApproach', approachCtx),
+      ...director.script('obstacleClue', clueCtx),
+    ];
   });
+  const [lineIndex, setLineIndex] = useState(0);
 
+  // Per-option description lines, committed once at mount.
   const [optionLines] = useState<Record<string, string>>(() => {
     if (!director || !room || room.kind !== 'obstacle') return {};
     const tmpl = cfg.roomTemplates.obstacles.find(t => t.id === room.templateId);
     const laneCtx = toLane(tmpl?.lane);
     const result: Record<string, string> = {};
     for (const opt of room.options) {
-      result[opt.id] = director.next('optionDescription', {
+      const optLines = director.script('optionDescription', {
         greedy: opt.greedy,
         ...(laneCtx !== undefined ? { lane: laneCtx } : {}),
       });
+      result[opt.id] = optLines[0] ?? '';
     }
     return result;
   });
@@ -158,8 +180,6 @@ export function ObstacleRoom() {
 
   const template = cfg.roomTemplates.obstacles.find(t => t.id === room.templateId);
   const lane = template?.lane ?? room.templateId;
-  const laneCtx = toLane(lane);
-  const roomNum = String(roomIndex + 1).padStart(2, '0');
 
   function handleSelectOption(option: ObstacleOption) {
     const [min, max] = option.commitRange ?? [1, Math.max(1, crew.length)];
@@ -176,13 +196,12 @@ export function ObstacleRoom() {
     });
   }
 
-  function handleClueAdvance() {
-    if (!director || room === null || room.kind !== 'obstacle') return;
-    setClue(director.next('obstacleClue', {
-      gameId: room.options[0]?.gameId,
-      ...(laneCtx !== undefined ? { lane: laneCtx } : {}),
-    }));
+  function handleAdvance() {
+    setLineIndex(i => Math.min(i + 1, lines.length - 1));
   }
+
+  const currentLine = lines[lineIndex] ?? '';
+  const hasNext = lineIndex < lines.length - 1;
 
   const commitCount = committed.size;
   const canCommit =
@@ -198,7 +217,7 @@ export function ObstacleRoom() {
         }
       />
 
-      <Teleprompter line={clue} onAdvance={handleClueAdvance} />
+      <Teleprompter line={currentLine} hasNext={hasNext} onAdvance={handleAdvance} />
 
       <div className="grid-2" data-testid="option-cards">
         {room.options.map(option => (

@@ -6,6 +6,7 @@ import type { GameStoreState, CreateGameStoreOptions } from './store';
 import {
   loadDefaultConfig,
   loadDefaultNarration,
+  loadDefaultSpine,
   buildConfigFromPreset,
   readSettings,
 } from '@/platform';
@@ -84,6 +85,7 @@ export function StoreProvider({ children, options }: StoreProviderProps) {
       ...boot,
       storage,
       narration: options?.narration ?? loadDefaultNarration(),
+      spineBank: options?.spineBank ?? loadDefaultSpine(),
     });
   }
   return (

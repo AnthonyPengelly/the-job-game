@@ -45,7 +45,7 @@ export function Briefing() {
       />
 
       <div data-testid="mansion-dressing">
-        <Teleprompter line={narrationLine} onAdvance={handleAdvance} />
+        <Teleprompter line={narrationLine} hasNext={true} onAdvance={handleAdvance} />
       </div>
 
       <div className="grid-3">

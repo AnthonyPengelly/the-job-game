@@ -684,19 +684,20 @@ describe('Getaway screen — narration', () => {
     expect(screen.getByTestId('getaway-countdown-narration')).toBeInTheDocument();
   });
 
-  it('both narration teleprompters are advanceable (no dead-end)', () => {
+  it('both narration teleprompters show committed lines (no advance at last line)', () => {
+    // script() commits a single line per beat — hasNext=false → no advance buttons.
     const store = makeGetawayStoreWithNarration();
     render(
       <StoreContext.Provider value={store}>
         <Getaway />
       </StoreContext.Provider>,
     );
-    const advanceBtns = screen.getAllByTestId('teleprompter-advance');
-    for (const btn of advanceBtns) {
-      expect(btn).not.toBeDisabled();
-      fireEvent.click(btn);
-    }
-    // All existing game controls remain present
+    // No advance buttons — each teleprompter is already at its last (only) line.
+    expect(screen.queryByTestId('teleprompter-advance')).toBeNull();
+    // Both narration containers still render with their committed lines.
+    expect(screen.getByTestId('getaway-intro-narration')).toBeInTheDocument();
+    expect(screen.getByTestId('getaway-countdown-narration')).toBeInTheDocument();
+    // All game controls remain present.
     expect(screen.getByTestId('btn-cleared')).toBeInTheDocument();
     expect(screen.getByTestId('btn-force-win')).toBeInTheDocument();
   });

@@ -28,8 +28,9 @@ function deriveHeatBand(heat: number, cfg: EngineConfig): HeatBand {
  * The escape-signal hint ("getting hot — we can roll") is shown exactly when
  * state.escapeSignal is true (heat is at or above the run-at fraction).
  *
- * The pushRun teleprompter surfaces a director-selected line scoped by heatBand
+ * The pushRun teleprompter surfaces a committed script line scoped by heatBand
  * derived from current Heat vs the escape signal threshold.
+ * Next steps through the committed sequence and disappears at the last line.
  */
 export function Offer() {
   const dispatch = useGameStore(s => s.dispatch);
@@ -38,14 +39,15 @@ export function Offer() {
   const cfg = useGameStore(s => s.cfg);
   const director = useGameStore(s => s.director);
 
-  // Guard ensures director.next() fires exactly once even under React StrictMode,
+  // Guard ensures script() fires exactly once even under React StrictMode,
   // which double-invokes useState lazy initializers in development.
   const hasPicked = useRef(false);
-  const [pushRunLine, setPushRunLine] = useState<string>('');
+  const [pushRunLines, setPushRunLines] = useState<string[]>([]);
+  const [lineIndex, setLineIndex] = useState(0);
   useEffect(() => {
     if (hasPicked.current || !director) return;
     hasPicked.current = true;
-    setPushRunLine(director.next('pushRun', { heatBand: deriveHeatBand(heat, cfg) }));
+    setPushRunLines(director.script('pushRun', { heatBand: deriveHeatBand(heat, cfg) }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -58,9 +60,11 @@ export function Offer() {
   }
 
   function handleAdvance() {
-    if (!director) return;
-    setPushRunLine(director.next('pushRun', { heatBand: deriveHeatBand(heat, cfg) }));
+    setLineIndex(i => Math.min(i + 1, pushRunLines.length - 1));
   }
+
+  const currentLine = pushRunLines[lineIndex] ?? '';
+  const hasNext = lineIndex < pushRunLines.length - 1;
 
   return (
     <div data-testid="screen-offer" className="stage-inner">
@@ -70,9 +74,9 @@ export function Offer() {
         aside="A choice · No take-backs"
       />
 
-      {pushRunLine !== '' && (
+      {currentLine !== '' && (
         <div data-testid="push-run-narration">
-          <Teleprompter line={pushRunLine} onAdvance={handleAdvance} />
+          <Teleprompter line={currentLine} hasNext={hasNext} onAdvance={handleAdvance} />
         </div>
       )}
 

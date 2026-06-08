@@ -231,16 +231,15 @@ describe('Result screen — sting narration', () => {
     expect(line).toContain('Bust sting line');
   });
 
-  it('sting advance button re-picks a line (never disabled)', () => {
+  it('advance button absent at last committed sting line (no re-roll)', () => {
+    // script() commits a single sting line — hasNext=false → no advance button.
     const store = makeResultStoreWithNarration(true);
     render(
       <StoreContext.Provider value={store}>
         <Result />
       </StoreContext.Provider>,
     );
-    const btn = screen.getByTestId('teleprompter-advance');
-    expect(btn).not.toBeDisabled();
-    fireEvent.click(btn);
+    expect(screen.queryByTestId('teleprompter-advance')).toBeNull();
     const line = screen.getByTestId('teleprompter-line').textContent ?? '';
     expect(line).toContain('Win sting line');
   });
