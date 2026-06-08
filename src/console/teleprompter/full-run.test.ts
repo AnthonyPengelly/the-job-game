@@ -176,51 +176,75 @@ describe('full-run determinism — same seed yields same scripts', () => {
   });
 });
 
-// ── Template tokens — no literal {token} in any line of a full run ────────────
+// ── Template tokens — no literal {token} or empty-gap artifact in any line ────
+//
+// Uses production-equivalent per-beat contexts (matching the actual React
+// callers, omitting tokens those callers don't supply) so the sensor reflects
+// what the table actually sees.
+//
+// Caller token inventory (beyond spine tokens always merged by the director):
+//   briefing:          { mansionType }              — Briefing.tsx
+//   roomApproach:      { roomNum, crew }             — ScenarioRoom.tsx (no lane)
+//                      { roomNum, crew, lane }       — ObstacleRoom.tsx (lane conditional)
+//   obstacleClue:      { gameId }                   — ObstacleRoom.tsx
+//   optionDescription: { greedy }                   — ObstacleRoom.tsx
+//   outcomeQuip:       { outcome }                  — Spoils.tsx:151
+//   scenarioSetup:     { roomNum, crew }             — ScenarioRoom.tsx
+//   scenarioReveal:    { outcome }                  — Spoils.tsx:159
+//   pushRun:           { heatBand }                 — Offer.tsx:50
+//   getawayIntro/Countdown: no ctx                  — Getaway.tsx
+//   winSting/bustSting: no ctx                      — Result.tsx
 
-describe('full-run template coverage — no unresolved tokens', () => {
-  it('no rendered line contains a literal {token} placeholder', () => {
+describe('full-run template coverage — no unresolved tokens or empty gaps', () => {
+  it('no rendered line contains unresolved token or empty-gap artifact', () => {
     const d = createNarrationDirector(bank, 5555, undefined, {
       spineBank,
       mansionType: 'penthouse',
     });
 
-    const ctx: Parameters<typeof d.script>[1] = {
-      mansionType: 'penthouse',
-      crew: 'Eve, Frank',
-      attempter: 'Eve',
-      roomNum: '3',
-      runTotal: '$120k',
-      lane: 'tech',
-      outcome: 'clean',
-      heatBand: 'warm',
-      gameId: 'safeCrack',
-      greedy: false,
-    };
-
-    const beats: NarrationBeat[] = [
-      'briefing',
-      'roomApproach',
-      'obstacleClue',
-      'optionDescription',
-      'outcomeQuip',
-      'scenarioSetup',
-      'scenarioReveal',
-      'pushRun',
-      'getawayIntro',
-      'getawayCountdown',
-      'winSting',
-      'bustSting',
+    // Per-beat production contexts — only the tokens the real caller supplies.
+    // roomApproach is tested twice: once without lane (scenario rooms) and once
+    // with lane (obstacle rooms), so a variant that requires {lane} is caught
+    // when selected for a scenario room.
+    const beatCalls: Array<[NarrationBeat, Parameters<typeof d.script>[1]?]> = [
+      ['briefing', { mansionType: 'penthouse' }],
+      ['roomApproach', { roomNum: '3', crew: 'Eve, Frank' }],          // scenario room — no lane
+      ['roomApproach', { roomNum: '3', crew: 'Eve, Frank', lane: 'tech' }], // obstacle room — with lane
+      ['obstacleClue', { gameId: 'safeCrack' }],
+      ['optionDescription', { greedy: false }],
+      ['outcomeQuip', { outcome: 'clean' }],
+      ['scenarioSetup'],
+      ['scenarioReveal', { outcome: 'clean' }],
+      ['pushRun', { heatBand: 'warm' }],
+      ['getawayIntro'],
+      ['getawayCountdown'],
+      ['winSting'],
+      ['bustSting'],
     ];
 
     const TOKEN_PATTERN = /\{[a-zA-Z]+\}/;
-    for (const beat of beats) {
+    // Patterns that indicate an empty string was substituted for a missing token.
+    // fillTemplate replaces absent tokens with '' — leaving double-spaces or
+    // spaces immediately before punctuation.
+    const GAP_PATTERNS: Array<{ re: RegExp; label: string }> = [
+      { re: / {2,}/, label: 'double space (token→empty in middle)' },
+      { re: /^ /, label: 'leading space (token→empty at start)' },
+      { re: / [.,;]/, label: 'space before punctuation (token→empty before punct)' },
+    ];
+
+    for (const [beat, ctx] of beatCalls) {
       const lines = d.script(beat, ctx);
       for (const line of lines) {
         expect(
           TOKEN_PATTERN.test(line),
-          `beat="${beat}" line contains unresolved token: "${line}"`,
+          `beat="${beat}" line has unresolved token: "${line}"`,
         ).toBe(false);
+        for (const { re, label } of GAP_PATTERNS) {
+          expect(
+            re.test(line),
+            `beat="${beat}" line has empty-gap artifact (${label}): "${line}"`,
+          ).toBe(false);
+        }
       }
     }
   });

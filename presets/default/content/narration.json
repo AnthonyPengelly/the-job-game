@@ -578,7 +578,7 @@
     },
     {
       "id": "quip-clean-7",
-      "text": "That's what surgical looks like. {runTotal} in hand — don't get comfortable.",
+      "text": "That's what surgical looks like. No alarm, no trace — don't get comfortable.",
       "when": { "outcome": "clean" }
     },
     {
@@ -709,7 +709,7 @@
     },
     {
       "id": "push-run-9",
-      "text": "You've got {runTotal} secured and the exit's clean. The question is whether you're satisfied."
+      "text": "The haul is secured and the exit's clean. The question is whether you're satisfied."
     },
     {
       "id": "push-run-10",
@@ -846,7 +846,7 @@
     },
     {
       "id": "win-sting-9",
-      "text": "{runTotal} in hand and clean air all the way out. That is what we came here to do."
+      "text": "Good haul and clean air all the way out. That is what we came here to do."
     },
     {
       "id": "win-sting-10",
@@ -950,7 +950,7 @@
     },
     {
       "id": "room-approach-14",
-      "text": "Room {roomNum}. One at a time through the door. {lane} is what we need in here — nothing else."
+      "text": "Room {roomNum}. One at a time through the door. Discipline is what we need in here — nothing else."
     }
   ],
   "scenarioReveal": [
@@ -980,11 +980,11 @@
     },
     {
       "id": "scenario-reveal-7",
-      "text": "That's the verdict. {outcome}. {attempter} made the call — own it and move on."
+      "text": "That's the verdict. {outcome}. The call's been made — own it and move on."
     },
     {
       "id": "scenario-reveal-8",
-      "text": "Scenario closed at room {roomNum}. {outcome}. Not every move looks clean from the van."
+      "text": "Scenario closed. {outcome}. Not every move looks clean from the van."
     },
     {
       "id": "scenario-reveal-9",
@@ -992,11 +992,11 @@
     },
     {
       "id": "scenario-reveal-10",
-      "text": "{attempter} pulled the trigger on that one. {outcome}. {crew} — keep moving."
+      "text": "The trigger's been pulled. {outcome}. Keep moving."
     },
     {
       "id": "scenario-reveal-11",
-      "text": "That's the verdict on room {roomNum}: {outcome}. The van's watching and so is the clock."
+      "text": "That's the verdict: {outcome}. The van's watching and so is the clock."
     },
     {
       "id": "scenario-reveal-12",
@@ -1004,11 +1004,11 @@
     },
     {
       "id": "scenario-reveal-13",
-      "text": "Situation resolved. {outcome}. {attempter} — good or bad, it's done. {crew} — back to work."
+      "text": "Situation resolved. {outcome}. Good or bad, it's done. Back to work."
     },
     {
       "id": "scenario-reveal-14",
-      "text": "Room {roomNum}: {outcome}. {mark} didn't plan for this crew. Keep proving that right."
+      "text": "The verdict is in: {outcome}. {mark} didn't plan for this crew. Keep proving that right."
     }
   ]
 }
