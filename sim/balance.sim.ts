@@ -19,8 +19,8 @@ const N = 20_000; // 20k: stable SE≈0.007 for H threshold 1.75 — do not redu
 
 // ── Cell helper ───────────────────────────────────────────────────────────────
 
-function computeCell(skill: Skill, headcount: number, cfg: EngineConfig): MonteCarloResult {
-  return runMonteCarlo(cfg, { n: N, baseSeed: BASE_SEED, skill, headcount });
+function computeCell(skill: Skill, headcount: number, cfg: EngineConfig, levelled = true): MonteCarloResult {
+  return runMonteCarlo(cfg, { n: N, baseSeed: BASE_SEED, skill, headcount, levelled });
 }
 
 // ── Test state ────────────────────────────────────────────────────────────────
@@ -31,16 +31,20 @@ let badN4: MonteCarloResult;
 let goodN4: MonteCarloResult;
 let avgN2: MonteCarloResult;
 let avgN7: MonteCarloResult;
+/** Avg/n4 with levelled=false — used for K/L assertions only. */
+let avgN4Unlevelled: MonteCarloResult;
 
 beforeAll(() => {
   cfg = loadPreset(PRESET_ID);
-  // Compute the 5 cells needed to cover all assertions A–J.
+  // Compute the 6 cells needed to cover all assertions A–L.
   avgN4 = computeCell('avg', 4, cfg);
   badN4 = computeCell('bad', 4, cfg);
   goodN4 = computeCell('good', 4, cfg);
   avgN2 = computeCell('avg', 2, cfg);
   avgN7 = computeCell('avg', 7, cfg);
-}, 300_000);
+  // Un-levelled pair for K/L: same condition but levelled=false (no growth bonus).
+  avgN4Unlevelled = computeCell('avg', 4, cfg, false);
+}, 360_000);
 
 // ── Assertions (A–J) ─────────────────────────────────────────────────────────
 // On failure: observed value, target, seed, preset are all printed.
@@ -166,6 +170,47 @@ describe(`balance assertions — preset:${PRESET_ID} seed:${BASE_SEED} N:${N}`, 
       cfg.outcomeHeat.botched,
       `J: outcomeHeat.botched = ${cfg.outcomeHeat.botched} must be 2 per design`,
     ).toBe(2);
+  });
+
+  // K: early-room clean-rate high — forgiving before heat builds.
+  // Measured on the levelled avg/n4 cell; early band = obstacle index < BAND_EARLY_MAX_OBSTACLE (2).
+  // With heatDial at design values, heat/depth penalty is minimal at the first two obstacles,
+  // so the clean rate should comfortably exceed 0.40.
+  it('K: early-room clean-rate ≥ 0.40 (levelled avg/n4)', () => {
+    const r = avgN4.earlyCleanRate;
+    expect(
+      r,
+      `K: early clean-rate = ${Number.isNaN(r) ? 'NaN (no early obstacles!)' : r.toFixed(3)} < 0.40 (seed ${BASE_SEED}, preset ${PRESET_ID})`,
+    ).toBeGreaterThanOrEqual(0.40);
+  });
+
+  // L: late-room clean-rate is Heat/level-dependent.
+  // Un-levelled crew (no growth bonus) must be clearly worse late than levelled crew late,
+  // and clearly worse late than their own early rate — showing levelling pays off and
+  // that late rooms are punishing without investment.
+  // Both measured on avg/n4; late band = obstacle index >= BAND_LATE_MIN_OBSTACLE (3).
+  it('L: un-levelled late clean-rate < levelled late clean-rate by ≥ 0.02 (avg/n4)', () => {
+    const levLate   = avgN4.lateCleanRate;
+    const unlevLate = avgN4Unlevelled.lateCleanRate;
+    const gap = levLate - unlevLate;
+    expect(
+      gap,
+      `L: levelled late=${levLate.toFixed(3)}, un-levelled late=${unlevLate.toFixed(3)}, gap=${gap.toFixed(3)} — need ≥ 0.02 (seed ${BASE_SEED}, preset ${PRESET_ID})`,
+    ).toBeGreaterThanOrEqual(0.02);
+  });
+
+  // L part 2: un-levelled late must fall below levelled early (early invested < late un-invested).
+  // We compare against levelled early rather than un-levelled early because at early obstacles
+  // the model crew plays greedy (heat < 0.5×hMax), so un-levelled early already carries a
+  // greedy-choice penalty that confounds the comparison.  The meaningful design property is:
+  // "late rooms with an un-invested crew are harder than early rooms with an invested crew."
+  it('L: un-levelled late clean-rate < levelled early clean-rate (avg/n4)', () => {
+    const levEarly  = avgN4.earlyCleanRate;
+    const unlevLate = avgN4Unlevelled.lateCleanRate;
+    expect(
+      unlevLate,
+      `L: un-levelled late=${unlevLate.toFixed(3)} ≥ levelled early=${levEarly.toFixed(3)} — late un-levelled should be harder than early levelled (seed ${BASE_SEED}, preset ${PRESET_ID})`,
+    ).toBeLessThan(levEarly);
   });
 
   it('J: botch never terminates a run — routes to offer (structural)', () => {

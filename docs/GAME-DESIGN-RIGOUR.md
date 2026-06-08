@@ -108,6 +108,8 @@ sign-off.
 | H | Skill payoff in Loot | roughly doubles poor→good | `score_good ≥ 1.75 × score_bad` | ≥1.75× — see note |
 | I | Headcount helps a little | +6–7pt, 2→7 players | `0.03 ≤ win_7 − win_2 ≤ 0.12` | band |
 | J | No single botch ends a run | botch adds only +2 Heat | `maxOutcomeHeat(botch) == 2` and no terminal-on-botch path | structural |
+| K | Early rooms forgiving | clean-rate high before heat builds | `earlyCleanRate(levelled avg/n4) ≥ 0.40` | ≥0.40 |
+| L | Late rooms punish un-levelled crews | heat/depth penalty bites without lane investment | `lateCleanRate(unlevelled) < lateCleanRate(levelled) − 0.02` and `lateCleanRate(unlevelled) < earlyCleanRate(levelled)` | strict / −0.02 gap |
 
 Notes:
 - **C threshold 0.93 — HUMAN SIGN-OFF E1.7. DO NOT raise without sign-off.**
@@ -131,6 +133,15 @@ Notes:
   have no path where a botch outcome terminates the run, and botch Heat is
   capped at the preset's `botch_h` (2 in the default). Failure here is a design
   contradiction, not noise.
+- **K and L use the levelled-vs-un-levelled pair** added in E15.3/E15.4. The
+  existing A–J cells all run at `levelled=true`. K/L introduce an `avgN4Unlevelled`
+  cell (`levelled=false`, meaning no room-growth probability bonus — proxy for a
+  crew that hasn't invested in the relevant skill lanes). K asserts early rooms
+  are forgiving regardless of levelling; L asserts late rooms clearly punish the
+  un-levelled crew. Curve values: `heatDial={perHeat:0.05,perRoom:0.05}`,
+  `heatDC={perHeat:0.1,perRoom:0.2}`, `rewardScale={perHeat:0.04,perRoom:0.05}`.
+  E15.4 sign-off: growth bonus and heat penalty are sized to keep D–F win-rate
+  bands intact while producing a 2+ pp levelling gap in late clean-rate.
 
 If a preset legitimately wants different feel (e.g. a "Spicy" pack with hotter
 Heat), it carries its *own* expected bands in its preset metadata and `sim:check`
