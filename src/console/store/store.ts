@@ -72,9 +72,19 @@ export interface GameStoreState {
    */
   currentRunNewBest: boolean;
 
+  /**
+   * True when the engine just transitioned from 'minigame' or 'room' to 'offer'
+   * via natural resolution (RESOLVE_MINIGAME / RESOLVE_SCENARIO_ROLL /
+   * CHOOSE_SCENARIO). The PhaseRouter shows the Spoils interstitial instead of
+   * the Offer screen until the GM clicks Continue.
+   */
+  pendingSpoils: boolean;
+
   // Actions
   dispatch: (event: RunEvent) => void;
   undo: () => void;
+  /** Clear the pending-spoils flag after the GM views the Spoils screen. */
+  clearPendingSpoils: () => void;
   startRun: (setup: PlayerSetup[], seed?: number) => void;
   goAgain: () => void;
   hydrate: () => void;
@@ -147,10 +157,13 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
     leaderboard: sortedLeaderboard(),
     currentRunRank: null,
     currentRunNewBest: false,
+    pendingSpoils: false,
 
     dispatch(event: RunEvent): void {
       const { session, eventLog, cfg: c, runSeed } = get();
+      const oldPhase = session.present.phase;
       const newSession = reduceSession(session, event, c);
+      const newPhase = newSession.present.phase;
       const newLog = [...eventLog, event];
       writeThrough(runSeed, newLog);
 
@@ -186,7 +199,16 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         leaderboardPatch = { currentRunRank: null, currentRunNewBest: false };
       }
 
-      set({ session: newSession, eventLog: newLog, ...leaderboardPatch });
+      // Spoils interstitial: set when a natural room resolution transitions to 'offer'.
+      // Clear when transitioning AWAY from 'offer' (phase jump, PUSH_ON, etc.).
+      let spoilsPatch: Partial<Pick<GameStoreState, 'pendingSpoils'>> = {};
+      if ((oldPhase === 'minigame' || oldPhase === 'room') && newPhase === 'offer') {
+        spoilsPatch = { pendingSpoils: true };
+      } else if (oldPhase === 'offer' && newPhase !== 'offer') {
+        spoilsPatch = { pendingSpoils: false };
+      }
+
+      set({ session: newSession, eventLog: newLog, ...leaderboardPatch, ...spoilsPatch });
     },
 
     undo(): void {
@@ -203,7 +225,16 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         ? { currentRunRank: null, currentRunNewBest: false }
         : {};
 
-      set({ session: newSession, eventLog: newLog, ...leaderboardPatch });
+      // Clear pendingSpoils when undo takes us away from 'offer'.
+      const leavingOffer =
+        session.present.phase === 'offer' && newSession.present.phase !== 'offer';
+      const spoilsPatch = leavingOffer ? { pendingSpoils: false } : {};
+
+      set({ session: newSession, eventLog: newLog, ...leaderboardPatch, ...spoilsPatch });
+    },
+
+    clearPendingSpoils(): void {
+      set({ pendingSpoils: false });
     },
 
     startRun(setup: PlayerSetup[], seed?: number): void {
@@ -223,6 +254,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         director: makeDirector(startSeed),
         currentRunRank: null,
         currentRunNewBest: false,
+        pendingSpoils: false,
       });
     },
 
@@ -237,6 +269,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         director: makeDirector(0),
         currentRunRank: null,
         currentRunNewBest: false,
+        pendingSpoils: false,
       });
     },
 
@@ -261,6 +294,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
           leaderboard: sortedLeaderboard(),
           currentRunRank: null,
           currentRunNewBest: false,
+          pendingSpoils: false,
         });
       } else if (result.reason === 'stale' || result.reason === 'corrupt') {
         clearSave(storage);
@@ -303,6 +337,7 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
         director: makeDirector(0),
         currentRunRank: null,
         currentRunNewBest: false,
+        pendingSpoils: false,
       });
     },
   }));

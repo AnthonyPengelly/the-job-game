@@ -395,3 +395,108 @@ describe('ToolRail — Confirm new job', () => {
     expect(screen.queryByTestId('confirm-new-job')).toBeNull();
   });
 });
+
+// ── Gear dialog ───────────────────────────────────────────────────────────────
+
+describe('ToolRail — Gear dialog', () => {
+  async function makeStoreWithGear() {
+    const storage = makeStorage();
+    const gearCfg = {
+      ...testCfg,
+      gear: {
+        'stat-tech-1': { id: 'stat-tech-1', kind: 'statBoost' as const, lane: 'tech' as const, magnitude: 1 },
+      },
+    };
+    const store = createGameStore({ cfg: gearCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+    await act(async () => {
+      store.setState(prev => ({
+        session: {
+          ...prev.session,
+          present: {
+            ...prev.session.present,
+            earnedGear: ['stat-tech-1' as import('@/engine').GearId],
+          },
+        },
+      }));
+    });
+    return store;
+  }
+
+  it('clicking Gear button opens the gear dialog', async () => {
+    const store = await makeStoreWithGear();
+    const audioHandle: AudioHandle | null = null;
+    render(
+      <StoreContext.Provider value={store}>
+        <AudioHandleContext.Provider value={audioHandle}>
+          <ToolRail />
+        </AudioHandleContext.Provider>
+      </StoreContext.Provider>,
+    );
+
+    expect(screen.queryByTestId('dialog-gear')).toBeNull();
+    await act(async () => { fireEvent.click(screen.getByTestId('btn-tool-gear')); });
+    expect(screen.getByTestId('dialog-gear')).toBeInTheDocument();
+  });
+
+  it('gear dialog shows the earned gear items', async () => {
+    const store = await makeStoreWithGear();
+    const audioHandle: AudioHandle | null = null;
+    render(
+      <StoreContext.Provider value={store}>
+        <AudioHandleContext.Provider value={audioHandle}>
+          <ToolRail />
+        </AudioHandleContext.Provider>
+      </StoreContext.Provider>,
+    );
+
+    await act(async () => { fireEvent.click(screen.getByTestId('btn-tool-gear')); });
+    expect(screen.getByTestId('gear-assign-list')).toBeInTheDocument();
+    expect(screen.getByTestId('gear-assign-row-stat-tech-1')).toBeInTheDocument();
+  });
+
+  it('gear dialog assigns gear when player is selected and Assign is clicked', async () => {
+    const store = await makeStoreWithGear();
+    const bob = store.getState().session.present.crew[1]!;
+    const audioHandle: AudioHandle | null = null;
+    render(
+      <StoreContext.Provider value={store}>
+        <AudioHandleContext.Provider value={audioHandle}>
+          <ToolRail />
+        </AudioHandleContext.Provider>
+      </StoreContext.Provider>,
+    );
+
+    await act(async () => { fireEvent.click(screen.getByTestId('btn-tool-gear')); });
+
+    fireEvent.change(screen.getByTestId('gear-assign-player-stat-tech-1'), {
+      target: { value: bob.id },
+    });
+    fireEvent.click(screen.getByTestId('gear-assign-btn-stat-tech-1'));
+
+    const lastEvent = store.getState().eventLog.at(-1);
+    expect(lastEvent?.t).toBe('ASSIGN_GEAR');
+    if (lastEvent?.t === 'ASSIGN_GEAR') {
+      expect(lastEvent.gear).toBe('stat-tech-1');
+      expect(lastEvent.to).toBe(bob.id);
+    }
+  });
+
+  it('gear dialog closes on Esc', async () => {
+    const store = await makeStoreWithGear();
+    const audioHandle: AudioHandle | null = null;
+    render(
+      <StoreContext.Provider value={store}>
+        <AudioHandleContext.Provider value={audioHandle}>
+          <ToolRail />
+        </AudioHandleContext.Provider>
+      </StoreContext.Provider>,
+    );
+
+    await act(async () => { fireEvent.click(screen.getByTestId('btn-tool-gear')); });
+    expect(screen.getByTestId('dialog-gear')).toBeInTheDocument();
+
+    await act(async () => { fireEvent.keyDown(document, { key: 'Escape' }); });
+    expect(screen.queryByTestId('dialog-gear')).toBeNull();
+  });
+});
