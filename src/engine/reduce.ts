@@ -18,7 +18,7 @@ import {
 } from './heat';
 import { resolveGetawayOutcome } from './getaway';
 import { scoreRun } from './scoring';
-import { computeDC, resolveRoll, applyScenarioEffect } from './scenario';
+import { computeDC, resolveRoll, applyScenarioEffect, resolveGearGrant } from './scenario';
 
 /**
  * Pure reducer: (state, event, config) → next state.
@@ -76,10 +76,22 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
         event.outcome === 'complication' ? cfg.outcomeLoot.complication :
         cfg.outcomeLoot.botched;
 
+      // Gear grant: fires only on clean, mirroring the reward behavior.
+      let newEarnedGear = state.earnedGear;
+      if (event.outcome === 'clean' && option.gear !== undefined) {
+        if (option.gear.lane !== undefined) {
+          const gearId = resolveGearGrant(option.gear, cfg);
+          newEarnedGear = [...state.earnedGear, gearId];
+        } else {
+          newEarnedGear = [...state.earnedGear, option.gear];
+        }
+      }
+
       const intermediate: RunState = {
         ...state,
         heat: newHeat,
         loot: state.loot + lootGained,
+        earnedGear: newEarnedGear,
         obstacleCount: state.obstacleCount + 1,
         history: [
           ...state.history,

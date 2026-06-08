@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { gearGrantDescriptorSchema } from './scenarios';
 
 const roomTemplatesPackMetaSchema = z.object({
   pack: z.literal('roomTemplates'),
@@ -11,6 +12,7 @@ const obstacleOptionSchema = z.object({
   greedy: z.boolean(),
   heatCost: z.number().int().nonnegative(),
   reward: z.number().int().nonnegative(),
+  gear: gearGrantDescriptorSchema.optional(),
 }).strict();
 
 const obstacleTemplateSchema = z.object({

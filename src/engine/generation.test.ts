@@ -688,3 +688,78 @@ describe('generateRoom — easeNextObstacle annotation', () => {
     throw new Error('No obstacle room found after intervening scenario');
   });
 });
+
+// ─── generateRoom — gear-on-option propagation ────────────────────────────────
+
+describe('generateRoom — gear propagated onto obstacle options', () => {
+  const gearDescriptor = { kind: 'statBoost' as const, lane: 'tech' as const };
+
+  const cfgWithGear: EngineConfig = {
+    ...cfg,
+    roomTemplates: {
+      ...cfg.roomTemplates,
+      obstacles: [
+        {
+          id: 'obs-with-gear',
+          gameId: 'alpha',
+          lane: 'tech',
+          options: [
+            { id: 'gear-safe',   greedy: false, heatCost: 1, reward: 1, gear: gearDescriptor },
+            { id: 'gear-greedy', greedy: true,  heatCost: 2, reward: 2 },
+          ],
+        },
+        {
+          id: 'obs-no-gear',
+          gameId: 'bravo',
+          lane: 'physical',
+          options: [
+            { id: 'nogear-safe',   greedy: false, heatCost: 1, reward: 1 },
+            { id: 'nogear-greedy', greedy: true,  heatCost: 2, reward: 2 },
+          ],
+        },
+        ...cfg.roomTemplates.obstacles.slice(2),
+      ],
+    },
+  };
+
+  function findObstacleById(id: string): ReturnType<typeof generateRoom> {
+    for (let seed = 0; seed < 200; seed++) {
+      const result = generateRoom(makeState(seed), cfgWithGear);
+      if (result.currentRoom?.kind === 'obstacle' && result.currentRoom.templateId === id) {
+        return result;
+      }
+    }
+    throw new Error(`No obstacle room with id "${id}" found in 200 seeds`);
+  }
+
+  it('gear from template option is carried onto the generated ObstacleOption', () => {
+    const { currentRoom } = findObstacleById('obs-with-gear');
+    if (currentRoom?.kind === 'obstacle') {
+      expect(currentRoom.options[0]!.gear).toEqual(gearDescriptor);
+    }
+  });
+
+  it('option without gear has no gear field on generated ObstacleOption', () => {
+    const { currentRoom } = findObstacleById('obs-with-gear');
+    if (currentRoom?.kind === 'obstacle') {
+      expect(currentRoom.options[1]!.gear).toBeUndefined();
+    }
+  });
+
+  it('gear does not affect rngState (pure metadata, no extra draw)', () => {
+    const withGear = generateRoom(makeState(42), cfgWithGear);
+    const withoutGear = generateRoom(makeState(42), cfg);
+    // If the same seed draws the same room type (obstacle or scenario), rngState must match.
+    if (withGear.currentRoom?.kind === withoutGear.currentRoom?.kind) {
+      expect(withGear.rngState).toBe(withoutGear.rngState);
+    }
+  });
+
+  it('template with no gear on either option yields no gear on generated options', () => {
+    const { currentRoom } = findObstacleById('obs-no-gear');
+    if (currentRoom?.kind === 'obstacle') {
+      expect(currentRoom.options[0]!.gear).toBeUndefined();
+      expect(currentRoom.options[1]!.gear).toBeUndefined();
+    }
+  });
+});

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { reduce } from '@/engine/reduce';
 import { initialState } from '@/engine/run';
 import type { EngineConfig } from '@/engine/config';
-import type { RunState, PlayerId, GearId, GameId } from '@/engine/types';
+import type { RunState, PlayerId, GearId, GameId, GearGrantDescriptor } from '@/engine/types';
 
 // ─── Inline test config (no platform dependency) ─────────────────────────────
 
@@ -1014,5 +1014,204 @@ describe('ASSIGN_GEAR — error cases', () => {
     const before = s.crew[0]!.stats.tech;
     reduce(s, { t: 'ASSIGN_GEAR', gear: 'stat-tech-1' as GearId, to: 'player-0' as PlayerId }, cfg);
     expect(s.crew[0]!.stats.tech).toBe(before);
+  });
+});
+
+// ─── RESOLVE_MINIGAME — gear grants ──────────────────────────────────────────
+
+describe('RESOLVE_MINIGAME — single-lane gear grant', () => {
+  const singleLaneGear: GearGrantDescriptor = { kind: 'statBoost', lane: 'tech' };
+
+  function gearOptionState(): RunState {
+    return obstacleMinigameState({
+      currentRoom: {
+        kind: 'obstacle',
+        templateId: 'obs-alpha',
+        options: [
+          {
+            id: 'alpha-safe',
+            gameId: 'alpha' as GameId,
+            greedy: false,
+            heatCost: 1,
+            reward: 1,
+            gear: singleLaneGear,
+          },
+          { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true, heatCost: 2, reward: 2 },
+        ],
+        committedOptionId: 'alpha-safe',
+      },
+      earnedGear: [],
+    });
+  }
+
+  it('resolves single-lane gear to GearId and pushes to earnedGear on clean', () => {
+    const next = reduce(gearOptionState(), { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(next.earnedGear).toHaveLength(1);
+    expect(next.earnedGear[0]).toBe('stat-tech-1' as GearId);
+  });
+
+  it('awards no gear on complication', () => {
+    const next = reduce(gearOptionState(), { t: 'RESOLVE_MINIGAME', outcome: 'complication' }, cfg);
+    expect(next.earnedGear).toHaveLength(0);
+  });
+
+  it('awards no gear on botched', () => {
+    const next = reduce(gearOptionState(), { t: 'RESOLVE_MINIGAME', outcome: 'botched' }, cfg);
+    expect(next.earnedGear).toHaveLength(0);
+  });
+
+  it('does not mutate the existing earnedGear array', () => {
+    const existingGear = ['stat-tech-1' as GearId];
+    const s = obstacleMinigameState({
+      currentRoom: {
+        kind: 'obstacle',
+        templateId: 'obs-alpha',
+        options: [
+          {
+            id: 'alpha-safe',
+            gameId: 'alpha' as GameId,
+            greedy: false,
+            heatCost: 1,
+            reward: 1,
+            gear: singleLaneGear,
+          },
+          { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true, heatCost: 2, reward: 2 },
+        ],
+        committedOptionId: 'alpha-safe',
+      },
+      earnedGear: existingGear,
+    });
+    reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(existingGear).toHaveLength(1);
+  });
+});
+
+describe('RESOLVE_MINIGAME — multi-lane gear grant', () => {
+  const multiLaneGear: GearGrantDescriptor = { kind: 'powerUp', lanes: ['tech', 'charm'] };
+
+  function multiGearOptionState(): RunState {
+    return obstacleMinigameState({
+      currentRoom: {
+        kind: 'obstacle',
+        templateId: 'obs-alpha',
+        options: [
+          {
+            id: 'alpha-safe',
+            gameId: 'alpha' as GameId,
+            greedy: false,
+            heatCost: 1,
+            reward: 1,
+            gear: multiLaneGear,
+          },
+          { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true, heatCost: 2, reward: 2 },
+        ],
+        committedOptionId: 'alpha-safe',
+      },
+      earnedGear: [],
+    });
+  }
+
+  it('pushes multi-lane descriptor unresolved to earnedGear on clean', () => {
+    const next = reduce(multiGearOptionState(), { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(next.earnedGear).toHaveLength(1);
+    expect(next.earnedGear[0]).toEqual(multiLaneGear);
+  });
+
+  it('does not resolve multi-lane descriptor to a GearId', () => {
+    const next = reduce(multiGearOptionState(), { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(typeof next.earnedGear[0]).not.toBe('string');
+  });
+
+  it('grants nothing on complication', () => {
+    const next = reduce(multiGearOptionState(), { t: 'RESOLVE_MINIGAME', outcome: 'complication' }, cfg);
+    expect(next.earnedGear).toHaveLength(0);
+  });
+});
+
+describe('RESOLVE_MINIGAME — gear-only option (reward: 0 + gear)', () => {
+  const gearDescriptor: GearGrantDescriptor = { kind: 'statBoost', lane: 'tech' };
+
+  function gearOnlyState(): RunState {
+    return obstacleMinigameState({
+      currentRoom: {
+        kind: 'obstacle',
+        templateId: 'obs-alpha',
+        options: [
+          {
+            id: 'alpha-safe',
+            gameId: 'alpha' as GameId,
+            greedy: false,
+            heatCost: 1,
+            reward: 0,
+            gear: gearDescriptor,
+          },
+          { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true, heatCost: 2, reward: 2 },
+        ],
+        committedOptionId: 'alpha-safe',
+      },
+      loot: 5,
+      earnedGear: [],
+    });
+  }
+
+  it('grants gear on clean outcome', () => {
+    const next = reduce(gearOnlyState(), { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(next.earnedGear).toHaveLength(1);
+    expect(next.earnedGear[0]).toBe('stat-tech-1' as GearId);
+  });
+
+  it('adds 0 Loot from the option reward on clean (reward: 0)', () => {
+    const s = gearOnlyState();
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    // loot gained from option.reward is 0; total loot = initial 5 + 0 = 5
+    expect(next.loot).toBe(5);
+  });
+});
+
+describe('RESOLVE_MINIGAME — option without gear', () => {
+  it('earnedGear unchanged when option has no gear field', () => {
+    const s = obstacleMinigameState({ earnedGear: [] });
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(next.earnedGear).toHaveLength(0);
+  });
+});
+
+describe('RESOLVE_MINIGAME — Zod schema: gear descriptor accepted and [greedy,safe] ordering rejected', () => {
+  it('Zod obstacleOptionSchema accepts a gear descriptor', async () => {
+    const { roomTemplatesSchema } = await import('@/content/schema/room-templates');
+    const valid = {
+      _meta: { pack: 'roomTemplates', version: 1, source: 'test' },
+      obstacles: [
+        {
+          id: 'test-obs',
+          gameId: 'testGame',
+          lane: 'tech',
+          options: [
+            { id: 'safe',   greedy: false, heatCost: 1, reward: 1, gear: { kind: 'statBoost', lane: 'tech' } },
+            { id: 'greedy', greedy: true,  heatCost: 2, reward: 2 },
+          ],
+        },
+      ],
+    };
+    expect(() => roomTemplatesSchema.parse(valid)).not.toThrow();
+  });
+
+  it('Zod obstacleTemplateSchema still rejects [greedy, safe] option ordering', async () => {
+    const { roomTemplatesSchema } = await import('@/content/schema/room-templates');
+    const invalid = {
+      _meta: { pack: 'roomTemplates', version: 1, source: 'test' },
+      obstacles: [
+        {
+          id: 'test-obs',
+          gameId: 'testGame',
+          lane: 'tech',
+          options: [
+            { id: 'greedy', greedy: true,  heatCost: 2, reward: 2 },
+            { id: 'safe',   greedy: false, heatCost: 1, reward: 1 },
+          ],
+        },
+      ],
+    };
+    expect(() => roomTemplatesSchema.parse(invalid)).toThrow();
   });
 });

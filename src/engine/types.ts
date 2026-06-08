@@ -113,6 +113,8 @@ export interface ObstacleOption {
   greedy: boolean;
   heatCost: number;
   reward: number;
+  /** Gear grant awarded on a clean outcome. Mirrors the reward field: fires only on clean. */
+  gear?: GearGrantDescriptor;
   /** Scaling-aware [minCrew, maxCrew] commit range for the current headcount. Set by generateRoom when crew ≥ 2. */
   commitRange?: [number, number];
 }
