@@ -46,6 +46,18 @@ export function growthBonus(room: number): number {
   return Math.min(0.12, 0.015 * room);
 }
 
+// Harness conversion factor: 1 dial-level unit maps to this many probability units.
+// The tunable magnitudes live in cfg.scaling.heatDial; this constant owns
+// the dial-level → success-probability interpretation in the harness model.
+// 1 dial-level increase (a typical preset step) → 5 pp reduction in clean probability.
+export const DIAL_LEVEL_TO_P = 0.05;
+
+// Obstacle band boundaries for per-band clean-rate instrumentation.
+// "Early" = obstacle encounters 0..(BAND_EARLY_MAX_OBSTACLE-1).
+// "Late"  = obstacle encounters >= BAND_LATE_MIN_OBSTACLE.
+export const BAND_EARLY_MAX_OBSTACLE = 2;
+export const BAND_LATE_MIN_OBSTACLE = 3;
+
 // Port of Python's outcome(rng, p): uses 2 RNG draws on success, 2 on failure.
 function rollOutcome(rng: Rng, p: number): 'clean' | 'complication' | 'botched' {
   if (rng.next() < p) {
@@ -105,16 +117,27 @@ function pickScenarioChoiceId(
  *   scenario: cool/loot branches per Python
  *   offer:    escape when escapeSignal or forced; safety cap at roomIndex >= 39 (~room 40)
  *   getaway:  RESOLVE_GETAWAY with no win override — engine's seeded RNG decides
+ *
+ * levelled: when true (default) the crew earns the room-growth offset, modelling
+ *   investment in relevant skill lanes. When false (un-levelled crew) the growth
+ *   offset is 0 — late rooms give no free probability bonus.
  */
 export function nextModelEvent(
   state: RunState,
   rng: Rng,
   skill: Skill,
   cfg: EngineConfig,
+  levelled = true,
 ): RunEvent {
-  // p = min(0.95, base + growth_bonus(room)) — Python room is 1-indexed → roomIndex+1
+  // p = min(0.95, base + growth − heatPenalty)
+  // growth: levelled crew earns full room-growth offset; un-levelled crew earns none.
+  // heatPenalty: dial-level contribution from heatDial preset curve mapped to probability
+  //   via DIAL_LEVEL_TO_P. At default heatDial={0,0} the penalty is always 0.
   const base = SKILL_VALUES[skill] + playerBonus(state.crew.length);
-  const p = Math.min(0.95, base + growthBonus(state.roomIndex + 1));
+  const growth = levelled ? growthBonus(state.roomIndex + 1) : 0;
+  const hd = cfg.scaling.heatDial;
+  const heatPenalty = DIAL_LEVEL_TO_P * (hd.perHeat * state.heat + hd.perRoom * state.roomIndex);
+  const p = Math.min(0.95, base + growth - heatPenalty);
 
   switch (state.phase) {
     case 'briefing': {
@@ -185,6 +208,14 @@ interface RunStats {
   win: boolean;
   loot: number;
   finalScore: number;
+  /** Clean outcomes in the early band (obstacle index < BAND_EARLY_MAX_OBSTACLE). */
+  earlyClean: number;
+  /** Total obstacles in the early band. */
+  earlyTotal: number;
+  /** Clean outcomes in the late band (obstacle index >= BAND_LATE_MIN_OBSTACLE). */
+  lateClean: number;
+  /** Total obstacles in the late band. */
+  lateTotal: number;
 }
 
 export function simulateRun(
@@ -192,6 +223,7 @@ export function simulateRun(
   skill: Skill,
   headcount: number,
   cfg: EngineConfig,
+  levelled = true,
 ): RunStats {
   // Two independent RNG streams: engine (embedded in rngState) and harness.
   // XOR-mix the seed so the two streams differ for every run.
@@ -204,8 +236,29 @@ export function simulateRun(
     cfg,
   );
 
+  let earlyClean = 0;
+  let earlyTotal = 0;
+  let lateClean = 0;
+  let lateTotal = 0;
+
   while (state.phase !== 'result') {
-    state = reduce(state, nextModelEvent(state, harnessRng, skill, cfg), cfg);
+    const event = nextModelEvent(state, harnessRng, skill, cfg, levelled);
+
+    // Track band clean-rates by inspecting RESOLVE_MINIGAME events before reducing.
+    // state.obstacleCount is the 0-based index of the obstacle being resolved.
+    if (event.t === 'RESOLVE_MINIGAME') {
+      const idx = state.obstacleCount;
+      if (idx < BAND_EARLY_MAX_OBSTACLE) {
+        earlyTotal++;
+        if (event.outcome === 'clean') earlyClean++;
+      }
+      if (idx >= BAND_LATE_MIN_OBSTACLE) {
+        lateTotal++;
+        if (event.outcome === 'clean') lateClean++;
+      }
+    }
+
+    state = reduce(state, event, cfg);
   }
 
   return {
@@ -214,6 +267,10 @@ export function simulateRun(
     win: state.win ?? false,
     loot: state.loot,
     finalScore: state.finalScore ?? 0,
+    earlyClean,
+    earlyTotal,
+    lateClean,
+    lateTotal,
   };
 }
 
@@ -237,6 +294,16 @@ export interface MonteCarloResult {
   meanLoot: number;
   /** mean(loot × win/bust multiplier) — amplifies skill gap vs raw loot (assertion H). */
   meanScore: number;
+  /**
+   * Fraction of early-band obstacle encounters (index < BAND_EARLY_MAX_OBSTACLE)
+   * that resolved as "clean" across all runs. NaN if no early obstacles encountered.
+   */
+  earlyCleanRate: number;
+  /**
+   * Fraction of late-band obstacle encounters (index >= BAND_LATE_MIN_OBSTACLE)
+   * that resolved as "clean" across all runs. NaN if no late obstacles encountered.
+   */
+  lateCleanRate: number;
 }
 
 export interface MonteCarloOpts {
@@ -244,6 +311,13 @@ export interface MonteCarloOpts {
   baseSeed: number;
   skill: Skill;
   headcount: number;
+  /**
+   * When true (default) the model crew earns the room-growth probability bonus,
+   * modelling a crew that has invested in relevant skill lanes (levelled up).
+   * When false, the growth bonus is 0 — late rooms provide no free p boost.
+   * The existing A–J balance cells all run at levelled=true (the default).
+   */
+  levelled?: boolean;
 }
 
 /**
@@ -252,11 +326,11 @@ export interface MonteCarloOpts {
  * while the CI harness keeps N=20_000 for statistical stability.
  */
 export function runMonteCarlo(cfg: EngineConfig, opts: MonteCarloOpts): MonteCarloResult {
-  const { n, baseSeed, skill, headcount } = opts;
+  const { n, baseSeed, skill, headcount, levelled = true } = opts;
 
   const runs: RunStats[] = [];
   for (let i = 0; i < n; i++) {
-    runs.push(simulateRun(baseSeed + i, skill, headcount, cfg));
+    runs.push(simulateRun(baseSeed + i, skill, headcount, cfg, levelled));
   }
 
   // Obstacle-count histogram
@@ -276,5 +350,22 @@ export function runMonteCarlo(cfg: EngineConfig, opts: MonteCarloOpts): MonteCar
   const meanLoot = runs.reduce((s, r) => s + r.loot, 0) / n;
   const meanScore = runs.reduce((s, r) => s + r.finalScore, 0) / n;
 
-  return { histogram, winRate, medianObstacles, pRoomsOver10, pObstTight, meanLoot, meanScore };
+  const totalEarlyClean = runs.reduce((s, r) => s + r.earlyClean, 0);
+  const totalEarlyTotal = runs.reduce((s, r) => s + r.earlyTotal, 0);
+  const totalLateClean  = runs.reduce((s, r) => s + r.lateClean, 0);
+  const totalLateTotal  = runs.reduce((s, r) => s + r.lateTotal, 0);
+  const earlyCleanRate = totalEarlyTotal > 0 ? totalEarlyClean / totalEarlyTotal : NaN;
+  const lateCleanRate  = totalLateTotal  > 0 ? totalLateClean  / totalLateTotal  : NaN;
+
+  return {
+    histogram,
+    winRate,
+    medianObstacles,
+    pRoomsOver10,
+    pObstTight,
+    meanLoot,
+    meanScore,
+    earlyCleanRate,
+    lateCleanRate,
+  };
 }
