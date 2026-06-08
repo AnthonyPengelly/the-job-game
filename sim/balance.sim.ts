@@ -132,13 +132,15 @@ describe(`balance assertions — preset:${PRESET_ID} seed:${BASE_SEED} N:${N}`, 
   it('H: score_good ≥ 1.75 × score_bad (n4)', () => {
     // HUMAN SIGN-OFF E1.7 — uses finalScore (loot × win/bust multiplier), not
     // raw loot. Score amplifies skill separation via win rate differential.
-    // Raw loot ratio ~1.47× (pre-E14); score ratio ~1.79×.
+    // Raw loot ratio ~1.47× (pre-E14); score ratio ~2.46× at E14 magnitudes.
     // Threshold is 1.75, not 1.80 — deterministic scenario policy vs Python's
     // probabilistic one compresses the ratio slightly. DO NOT revert to raw
     // loot or raise threshold to 1.80 without sign-off.
     // E14.5 verified: real-money magnitudes (E14.3) and gear-only obstacle
-    // options (reward:0) leave the ratio intact — both skill bands face the
-    // same option pool so absolute-loot compression is symmetric.
+    // options (reward:0) widened the ratio (~1.79× → ~2.46×) — rescale was
+    // non-uniform (gear-only options grant 0 Loot) so good-crew win-rate
+    // advantage compounds against a different absolute-loot base. Clears
+    // the 1.75 threshold comfortably (headroom ~0.71).
     const ratio = goodN4.meanScore / (badN4.meanScore || 1);
     expect(
       ratio,
