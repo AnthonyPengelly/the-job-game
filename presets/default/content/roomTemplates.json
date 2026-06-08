@@ -11,8 +11,8 @@
       "gameId": "crackTheTumblers",
       "lane": "tech",
       "options": [
-        { "id": "tumblers-careful", "greedy": false, "heatCost": 1, "reward": 1 },
-        { "id": "tumblers-bold",    "greedy": true,  "heatCost": 2, "reward": 2 }
+        { "id": "tumblers-careful", "greedy": false, "heatCost": 1, "reward": 25000, "gear": { "kind": "statBoost", "lane": "tech" } },
+        { "id": "tumblers-bold",    "greedy": true,  "heatCost": 2, "reward": 50000 }
       ]
     },
     {
@@ -20,8 +20,8 @@
       "gameId": "beat16",
       "lane": "physical",
       "options": [
-        { "id": "beat16-steady",  "greedy": false, "heatCost": 1, "reward": 1 },
-        { "id": "beat16-rushed",  "greedy": true,  "heatCost": 2, "reward": 2 }
+        { "id": "beat16-steady",  "greedy": false, "heatCost": 1, "reward": 0, "gear": { "kind": "statBoost", "lane": "physical" } },
+        { "id": "beat16-rushed",  "greedy": true,  "heatCost": 2, "reward": 40000 }
       ]
     },
     {
@@ -29,8 +29,8 @@
       "gameId": "categories",
       "lane": "charm",
       "options": [
-        { "id": "categories-quiet",  "greedy": false, "heatCost": 1, "reward": 1 },
-        { "id": "categories-brash",  "greedy": true,  "heatCost": 2, "reward": 2 }
+        { "id": "categories-quiet",  "greedy": false, "heatCost": 1, "reward": 20000, "gear": { "kind": "statBoost", "lane": "charm" } },
+        { "id": "categories-brash",  "greedy": true,  "heatCost": 2, "reward": 45000 }
       ]
     },
     {
@@ -38,8 +38,8 @@
       "gameId": "theOnceOver",
       "lane": "stealth",
       "options": [
-        { "id": "onceover-patient",  "greedy": false, "heatCost": 1, "reward": 1 },
-        { "id": "onceover-hasty",    "greedy": true,  "heatCost": 2, "reward": 2 }
+        { "id": "onceover-patient",  "greedy": false, "heatCost": 1, "reward": 22000 },
+        { "id": "onceover-hasty",    "greedy": true,  "heatCost": 2, "reward": 44000 }
       ]
     },
     {
@@ -47,8 +47,8 @@
       "gameId": "followTheCircuit",
       "lane": "tech",
       "options": [
-        { "id": "circuit-methodical", "greedy": false, "heatCost": 1, "reward": 1 },
-        { "id": "circuit-shortcut",   "greedy": true,  "heatCost": 2, "reward": 2 }
+        { "id": "circuit-methodical", "greedy": false, "heatCost": 1, "reward": 25000, "gear": { "kind": "powerUp", "lane": "tech" } },
+        { "id": "circuit-shortcut",   "greedy": true,  "heatCost": 2, "reward": 50000 }
       ]
     },
     {
@@ -56,8 +56,8 @@
       "gameId": "insideKnowledge",
       "lane": "tech",
       "options": [
-        { "id": "knowledge-careful",  "greedy": false, "heatCost": 1, "reward": 1 },
-        { "id": "knowledge-thorough", "greedy": true,  "heatCost": 2, "reward": 2 }
+        { "id": "knowledge-careful",  "greedy": false, "heatCost": 1, "reward": 20000 },
+        { "id": "knowledge-thorough", "greedy": true,  "heatCost": 2, "reward": 40000 }
       ]
     },
     {
@@ -65,8 +65,8 @@
       "gameId": "safeCrack",
       "lane": "tech",
       "options": [
-        { "id": "safe-patient",  "greedy": false, "heatCost": 1, "reward": 1 },
-        { "id": "safe-speedy",   "greedy": true,  "heatCost": 2, "reward": 2 }
+        { "id": "safe-patient",  "greedy": false, "heatCost": 1, "reward": 0, "gear": { "kind": "powerUp", "lane": "tech" } },
+        { "id": "safe-speedy",   "greedy": true,  "heatCost": 2, "reward": 60000 }
       ]
     },
     {
@@ -74,8 +74,8 @@
       "gameId": "steadyHands",
       "lane": "physical",
       "options": [
-        { "id": "steady-slow",   "greedy": false, "heatCost": 1, "reward": 1 },
-        { "id": "steady-daring", "greedy": true,  "heatCost": 2, "reward": 2 }
+        { "id": "steady-slow",   "greedy": false, "heatCost": 1, "reward": 22000 },
+        { "id": "steady-daring", "greedy": true,  "heatCost": 2, "reward": 50000, "gear": { "kind": "statBoost", "lane": "physical" } }
       ]
     },
     {
@@ -83,8 +83,8 @@
       "gameId": "assemblyLine",
       "lane": "physical",
       "options": [
-        { "id": "assembly-quiet", "greedy": false, "heatCost": 1, "reward": 1 },
-        { "id": "assembly-fast",  "greedy": true,  "heatCost": 2, "reward": 2 }
+        { "id": "assembly-quiet", "greedy": false, "heatCost": 1, "reward": 20000, "gear": { "kind": "powerUp", "lane": "physical" } },
+        { "id": "assembly-fast",  "greedy": true,  "heatCost": 2, "reward": 40000 }
       ]
     },
     {
@@ -92,8 +92,8 @@
       "gameId": "defuseTheAlarm",
       "lane": "charm",
       "options": [
-        { "id": "defuse-careful",  "greedy": false, "heatCost": 1, "reward": 1 },
-        { "id": "defuse-rushing",  "greedy": true,  "heatCost": 2, "reward": 2 }
+        { "id": "defuse-careful",  "greedy": false, "heatCost": 1, "reward": 20000 },
+        { "id": "defuse-rushing",  "greedy": true,  "heatCost": 2, "reward": 40000 }
       ]
     }
   ]

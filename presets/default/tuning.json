@@ -45,7 +45,7 @@
   },
 
   "outcomeLoot": {
-    "complication": 1,
+    "complication": 5000,
     "botched": 0
   },
 

@@ -284,11 +284,13 @@ describe('generateRoom — obstacle room shape', () => {
     }
   });
 
-  it('safe option has reward 1, greedy option has reward 2', () => {
+  it('safe and greedy rewards match the template config (safe ≤ greedy)', () => {
     const { currentRoom } = findObstacleRoom();
     if (currentRoom?.kind === 'obstacle') {
-      expect(currentRoom.options[0]!.reward).toBe(1);
-      expect(currentRoom.options[1]!.reward).toBe(2);
+      const template = cfg.roomTemplates.obstacles.find(t => t.id === currentRoom.templateId)!;
+      expect(currentRoom.options[0]!.reward).toBe(template.options[0]!.reward);
+      expect(currentRoom.options[1]!.reward).toBe(template.options[1]!.reward);
+      expect(currentRoom.options[0]!.reward).toBeLessThanOrEqual(currentRoom.options[1]!.reward);
     }
   });
 
