@@ -1,6 +1,6 @@
 import type { EngineConfig } from '@/engine/config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, quirksSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
-import type { ParsedNarration, ParsedSoundManifest } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, quirksSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema, spineBankSchema } from '@/content/schema';
+import type { ParsedNarration, ParsedSoundManifest, SpineBank } from '@/content/schema';
 import { buildConfig } from './build-config';
 import type { PresetBundle } from './build-config';
 
@@ -15,6 +15,7 @@ import categoriesJson from '../../../presets/default/content/banks/categories.js
 import triviaJson from '../../../presets/default/content/banks/trivia.json';
 import narrationJson from '../../../presets/default/content/narration.json';
 import soundJson from '../../../presets/default/content/sound.json';
+import spineJson from '../../../presets/default/content/spine.json';
 
 /** Returns the parsed (but not yet frozen) default preset bundle. */
 export function loadDefaultBundle(): PresetBundle {
@@ -48,4 +49,12 @@ export function loadDefaultNarration(): ParsedNarration {
  */
 export function loadDefaultSoundManifest(): ParsedSoundManifest {
   return soundManifestSchema.parse(soundJson);
+}
+
+/**
+ * Parses the bundled default spine bank.
+ * Returned separately from EngineConfig so the spine never enters the engine or sim.
+ */
+export function loadDefaultSpine(): SpineBank {
+  return spineBankSchema.parse(spineJson);
 }

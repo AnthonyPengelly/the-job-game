@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { MansionType, Lane, Outcome } from '@/engine';
+import { ALLOWED_TOKENS } from '../narration/template';
 
 // ── When condition ────────────────────────────────────────────────────────────
 
@@ -27,7 +28,20 @@ export const narrationVariantSchema = z
     text: z.string().min(1),
     when: narrationWhenSchema.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((v, ctx) => {
+    const re = /\{(\w+)\}/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(v.text)) !== null) {
+      const token = m[1]!;
+      if (!(ALLOWED_TOKENS as readonly string[]).includes(token)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Unknown template token "{${token}}" in variant "${v.id}"`,
+        });
+      }
+    }
+  });
 
 export type NarrationVariant = z.infer<typeof narrationVariantSchema>;
 
@@ -51,11 +65,13 @@ const beatSchema = z.array(narrationVariantSchema).superRefine((variants, ctx) =
 export const narrationSchema = z
   .object({
     briefing: beatSchema,
+    roomApproach: beatSchema,
     obstacleClue: beatSchema,
     optionDescription: beatSchema,
     pushRun: beatSchema,
     outcomeQuip: beatSchema,
     scenarioSetup: beatSchema,
+    scenarioReveal: beatSchema,
     getawayIntro: beatSchema,
     getawayCountdown: beatSchema,
     winSting: beatSchema,

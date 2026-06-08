@@ -1,0 +1,94 @@
+{
+  "marks": [
+    {
+      "id": "villa-1",
+      "mansionType": "villa",
+      "markName": "Ashcombe House",
+      "vault": "East Wing, Ground Floor",
+      "security": "MODERATE",
+      "targetHaul": "$85k",
+      "dropCaption": "A hillside villa with a locked east wing and one inattentive night guard.",
+      "dressing": "Manicured grounds, iron gate, one guard on rotation. Owner at the opera until midnight."
+    },
+    {
+      "id": "villa-2",
+      "mansionType": "villa",
+      "markName": "Villa Serrano",
+      "vault": "Study, First Floor",
+      "security": "LOW",
+      "targetHaul": "$60k",
+      "dropCaption": "A sun-faded villa whose owner trusts a Rottweiler over cameras.",
+      "dressing": "Quiet neighbourhood, motion-sensor lights only on the south side. Dog is kennelled on Thursdays."
+    },
+    {
+      "id": "villa-3",
+      "mansionType": "villa",
+      "markName": "Crestwood Villa",
+      "vault": "Basement Safe Room",
+      "security": "HIGH",
+      "targetHaul": "$140k",
+      "dropCaption": "A modern villa with professional security — and one predictable patrol gap.",
+      "dressing": "Private security firm on contract, cameras everywhere, but the rear garden blind-spot is thirty seconds wide."
+    },
+    {
+      "id": "estate-1",
+      "mansionType": "estate",
+      "markName": "Harwick Estate",
+      "vault": "Library Annex, North Wing",
+      "security": "HIGH",
+      "targetHaul": "$220k",
+      "dropCaption": "Three generations of old money, locked behind surprisingly new doors.",
+      "dressing": "Forty rooms, staff quarters in the west annex. The groundskeepers are off Thursdays — I made it Thursday."
+    },
+    {
+      "id": "estate-2",
+      "mansionType": "estate",
+      "markName": "Dunmore Estate",
+      "vault": "Wine Cellar, East Basement",
+      "security": "MODERATE",
+      "targetHaul": "$175k",
+      "dropCaption": "A crumbling estate with a wine cellar that holds more than bottles.",
+      "dressing": "Old stone walls, unreliable CCTV, one live-in caretaker who sleeps heavily."
+    },
+    {
+      "id": "estate-3",
+      "mansionType": "estate",
+      "markName": "Aldermoor Park",
+      "vault": "Master Study, Second Floor",
+      "security": "MODERATE",
+      "targetHaul": "$190k",
+      "dropCaption": "A country estate whose owner values art over alarm codes.",
+      "dressing": "Sweeping grounds, gated entry, motion sensors inside only. Owner is away for the weekend."
+    },
+    {
+      "id": "penthouse-1",
+      "mansionType": "penthouse",
+      "markName": "The Meridian",
+      "vault": "Floor 42, Hidden Study",
+      "security": "VERY HIGH",
+      "targetHaul": "$380k",
+      "dropCaption": "Forty-two floors up — and the security is private, not police.",
+      "dressing": "Two merged units, private elevator key-coded, concierge on duty 24 hours. We go in through the service shaft."
+    },
+    {
+      "id": "penthouse-2",
+      "mansionType": "penthouse",
+      "markName": "Apex Suite 61",
+      "vault": "West Terrace, Climate Vault",
+      "security": "HIGH",
+      "targetHaul": "$290k",
+      "dropCaption": "Sixty-first floor, west terrace, a vault disguised as a wine cooler.",
+      "dressing": "Building security is contract staff. Floor 61 is the only residential floor above 58 — foot traffic is zero at 2 AM."
+    },
+    {
+      "id": "penthouse-3",
+      "mansionType": "penthouse",
+      "markName": "The Belvedere Crown",
+      "vault": "Rooftop Annex",
+      "security": "HIGH",
+      "targetHaul": "$310k",
+      "dropCaption": "A rooftop penthouse whose owner installed a panic room but forgot about the dumbwaiter.",
+      "dressing": "Rooftop access via service lift, panic room on the east side. We stay west. Owner lands from Geneva at six AM."
+    }
+  ]
+}

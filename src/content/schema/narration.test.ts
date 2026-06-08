@@ -41,6 +41,12 @@ const validBank = {
   bustSting: [
     { id: 'bs-1', text: 'Cuffs on.' },
   ],
+  roomApproach: [
+    { id: 'ra-1', text: 'Stack up — room {roomNum}.' },
+  ],
+  scenarioReveal: [
+    { id: 'sr-1', text: 'The call is made. {outcome}.' },
+  ],
 };
 
 // ── Parse valid fixture ───────────────────────────────────────────────────────
@@ -139,5 +145,72 @@ describe('narrationSchema — when condition values', () => {
       pushRun: [{ id: 'pr-1', text: 'A.', when: { heatBand: 'scorching' } }],
     };
     expect(() => narrationSchema.parse(bad)).toThrow(ZodError);
+  });
+});
+
+// ── Template token validation ─────────────────────────────────────────────────
+
+describe('narrationVariantSchema — template token validation', () => {
+  it('accepts variants with no template tokens', () => {
+    expect(() =>
+      narrationSchema.parse({
+        ...validBank,
+        briefing: [{ id: 'b-plain', text: 'No tokens here.' }],
+      }),
+    ).not.toThrow();
+  });
+
+  it('accepts variants with allowed tokens', () => {
+    expect(() =>
+      narrationSchema.parse({
+        ...validBank,
+        roomApproach: [{ id: 'ra-tok', text: 'Room {roomNum} — {crew} moves in on {mark}.' }],
+        scenarioReveal: [{ id: 'sr-tok', text: '{outcome} at {mark}.' }],
+      }),
+    ).not.toThrow();
+  });
+
+  it('rejects a variant whose text uses an unknown token', () => {
+    const bad = {
+      ...validBank,
+      briefing: [{ id: 'b-bad', text: 'Hello {unknownToken} world.' }],
+    };
+    expect(() => narrationSchema.parse(bad)).toThrow(ZodError);
+  });
+
+  it('rejects even one unknown token among valid tokens', () => {
+    const bad = {
+      ...validBank,
+      roomApproach: [{ id: 'ra-bad', text: 'Room {roomNum} — {badToken}.' }],
+    };
+    expect(() => narrationSchema.parse(bad)).toThrow(ZodError);
+  });
+});
+
+// ── New beats (roomApproach / scenarioReveal) ─────────────────────────────────
+
+describe('narrationSchema — new beats', () => {
+  it('accepts roomApproach variants', () => {
+    const bank = narrationSchema.parse(validBank);
+    expect(Array.isArray(bank.roomApproach)).toBe(true);
+    expect(bank.roomApproach[0]?.id).toBe('ra-1');
+  });
+
+  it('accepts scenarioReveal variants', () => {
+    const bank = narrationSchema.parse(validBank);
+    expect(Array.isArray(bank.scenarioReveal)).toBe(true);
+    expect(bank.scenarioReveal[0]?.id).toBe('sr-1');
+  });
+
+  it('rejects a bank missing roomApproach', () => {
+    const { roomApproach: _omit1, ...noRoomApproach } = validBank;
+    void _omit1;
+    expect(() => narrationSchema.parse(noRoomApproach)).toThrow(ZodError);
+  });
+
+  it('rejects a bank missing scenarioReveal', () => {
+    const { scenarioReveal: _omit2, ...noScenarioReveal } = validBank;
+    void _omit2;
+    expect(() => narrationSchema.parse(noScenarioReveal)).toThrow(ZodError);
   });
 });

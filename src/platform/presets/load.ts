@@ -3,8 +3,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { cwd } from 'node:process';
 import type { EngineConfig } from '@/engine/config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, quirksSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
-import type { ParsedNarration, ParsedSoundManifest } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, quirksSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema, spineBankSchema } from '@/content/schema';
+import type { ParsedNarration, ParsedSoundManifest, SpineBank } from '@/content/schema';
 import { buildConfig } from './build-config';
 
 function readJson(dir: string, file: string): unknown {
@@ -58,4 +58,14 @@ export function loadNarration(id = 'default'): ParsedNarration {
 export function loadSoundManifest(id = 'default'): ParsedSoundManifest {
   const dir = resolve(cwd(), 'presets', id);
   return soundManifestSchema.parse(readJson(resolve(dir, 'content'), 'sound.json'));
+}
+
+/**
+ * Reads and Zod-parses the spine bank from presets/<id>/content/spine.json.
+ * Returns SpineBank separately — the spine must never enter EngineConfig
+ * or the sim's RNG stream.
+ */
+export function loadSpine(id = 'default'): SpineBank {
+  const dir = resolve(cwd(), 'presets', id);
+  return spineBankSchema.parse(readJson(resolve(dir, 'content'), 'spine.json'));
 }
