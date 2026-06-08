@@ -42,6 +42,7 @@ export const testCfg: EngineConfig = {
   rewardScale: { perHeat: 0, perRoom: 0 },
   gearSellValue: { base: 1000, perRoom: 500 },
   gear: {},
+  quirks: {},
   banks: {
     categories: ['Things made of gold', 'Types of cheese', 'European cities'],
     trivia: [

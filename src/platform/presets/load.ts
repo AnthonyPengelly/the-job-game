@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { cwd } from 'node:process';
 import type { EngineConfig } from '@/engine/config';
-import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
+import { tuningSchema, scalingSchema, metaSchema, roomTemplatesSchema, scenariosSchema, gearSchema, quirksSchema, categoriesBankSchema, triviaBankSchema, narrationSchema, soundManifestSchema } from '@/content/schema';
 import type { ParsedNarration, ParsedSoundManifest } from '@/content/schema';
 import { buildConfig } from './build-config';
 
@@ -29,6 +29,7 @@ export function loadPreset(id = 'default'): EngineConfig {
     readJson(resolve(dir, 'content'), 'scenarios.json'),
   );
   const gear = gearSchema.parse(readJson(resolve(dir, 'content'), 'gear.json'));
+  const quirks = quirksSchema.parse(readJson(resolve(dir, 'content'), 'quirks.json'));
   const categoriesBank = categoriesBankSchema.parse(
     readJson(resolve(dir, 'content', 'banks'), 'categories.json'),
   );
@@ -36,7 +37,7 @@ export function loadPreset(id = 'default'): EngineConfig {
     readJson(resolve(dir, 'content', 'banks'), 'trivia.json'),
   );
 
-  return buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, categoriesBank, triviaBank });
+  return buildConfig({ meta, tuning, scaling, roomTemplates, scenarios, gear, quirks, categoriesBank, triviaBank });
 }
 
 /**

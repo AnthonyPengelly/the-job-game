@@ -46,6 +46,7 @@ const cfg: EngineConfig = {
   rewardScale: { perHeat: 0, perRoom: 0 },
   gearSellValue: { base: 1000, perRoom: 500 },
   gear: {},
+  quirks: {},
   banks: { categories: [], trivia: [] },
   roomTemplates: { obstacles: [], scenarios: [] },
 };

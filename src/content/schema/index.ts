@@ -40,3 +40,6 @@ export {
   leaderboardEnvelopeSchema,
 } from './leaderboard';
 export type { LeaderboardEntry, LeaderboardEnvelope } from './leaderboard';
+
+export { quirksSchema } from './quirks';
+export type { ParsedQuirks, ParsedQuirkItem } from './quirks';

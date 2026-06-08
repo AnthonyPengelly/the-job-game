@@ -1,0 +1,77 @@
+{
+  "_meta": {
+    "pack": "quirks",
+    "version": 1,
+    "source": "presets/default/content/quirks.json"
+  },
+  "items": [
+    {
+      "id": "circuit-jockey",
+      "name": "Circuit Jockey",
+      "boosts": [{ "lane": "tech", "magnitude": 2 }]
+    },
+    {
+      "id": "bruiser",
+      "name": "Bruiser",
+      "boosts": [{ "lane": "physical", "magnitude": 2 }]
+    },
+    {
+      "id": "grifter",
+      "name": "Grifter",
+      "boosts": [{ "lane": "charm", "magnitude": 2 }]
+    },
+    {
+      "id": "shadow",
+      "name": "Shadow",
+      "boosts": [{ "lane": "stealth", "magnitude": 2 }]
+    },
+    {
+      "id": "grease-monkey",
+      "name": "Grease Monkey",
+      "boosts": [
+        { "lane": "tech", "magnitude": 1 },
+        { "lane": "physical", "magnitude": 1 }
+      ]
+    },
+    {
+      "id": "fixer",
+      "name": "Fixer",
+      "boosts": [
+        { "lane": "tech", "magnitude": 1 },
+        { "lane": "charm", "magnitude": 1 }
+      ]
+    },
+    {
+      "id": "cat-burglar",
+      "name": "Cat Burglar",
+      "boosts": [
+        { "lane": "tech", "magnitude": 1 },
+        { "lane": "stealth", "magnitude": 1 }
+      ]
+    },
+    {
+      "id": "enforcer",
+      "name": "Enforcer",
+      "boosts": [
+        { "lane": "physical", "magnitude": 1 },
+        { "lane": "charm", "magnitude": 1 }
+      ]
+    },
+    {
+      "id": "prowler",
+      "name": "Prowler",
+      "boosts": [
+        { "lane": "physical", "magnitude": 1 },
+        { "lane": "stealth", "magnitude": 1 }
+      ]
+    },
+    {
+      "id": "spy",
+      "name": "Spy",
+      "boosts": [
+        { "lane": "charm", "magnitude": 1 },
+        { "lane": "stealth", "magnitude": 1 }
+      ]
+    }
+  ]
+}
