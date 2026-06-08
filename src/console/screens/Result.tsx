@@ -4,6 +4,7 @@ import { useGameStore } from '@/console/store';
 import { getawayMultiplier } from '@/engine/scoring';
 import { Teleprompter } from '@/console/teleprompter';
 import { PhaseHead, Button, Icon } from '@/console/ui';
+import { formatLoot } from '@/content/format';
 
 /**
  * GM console screen for the result phase.
@@ -86,7 +87,7 @@ export function Result() {
       <div data-testid="result-breakdown" className="grid-3">
         <div className="readout" data-testid="breakdown-loot">
           <span className="k">Loot banked</span>
-          <span className="v" style={{ color: 'var(--accent)' }}>{state.loot}</span>
+          <span className="v" style={{ color: 'var(--accent)' }}>{formatLoot(state.loot)}</span>
         </div>
         <div className="readout" data-testid="breakdown-heat">
           <span className="k">Heat at getaway</span>

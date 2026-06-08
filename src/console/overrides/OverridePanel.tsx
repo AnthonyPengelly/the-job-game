@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '@/console/store';
 import type { RunPhase } from '@/engine';
+import { formatLoot } from '@/content/format';
 
 const ALL_PHASES: readonly RunPhase[] = [
   'briefing',
@@ -82,7 +83,7 @@ export function OverridePanel() {
       {/* ── Loot ── */}
       <section data-testid="override-section-loot" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <span className="t-label" style={{ display: 'block' }}>
-          Loot ({loot})
+          Loot ({formatLoot(loot)})
         </span>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <button

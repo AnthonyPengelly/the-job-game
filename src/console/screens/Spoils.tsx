@@ -6,6 +6,7 @@ import type { GearDef } from '@/engine/config';
 import type { GearGrantDescriptor } from '@/engine/types';
 import { Teleprompter } from '@/console/teleprompter';
 import { isGrantDescriptor, resolveGearDescriptor, gearItemLabel } from '@/console/gear-assign-util';
+import { formatLoot } from '@/content/format';
 
 // ── GearCard ──────────────────────────────────────────────────────────────────
 
@@ -165,7 +166,7 @@ export function Spoils() {
       {/* Loot gained */}
       <div className="spoils-loot" data-testid="spoils-loot">
         <span className="k">Loot gained</span>
-        <span className="v" data-testid="spoils-loot-value">{lootGained}</span>
+        <span className="v" data-testid="spoils-loot-value">{formatLoot(lootGained)}</span>
       </div>
 
       {/* Earned gear */}
