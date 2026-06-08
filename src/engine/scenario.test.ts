@@ -43,9 +43,10 @@ const cfg: EngineConfig = {
     excludedFromSolo: [],
     soloEligibleMinPool: 8,
     dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
+    heatDial: { perHeat: 0, perRoom: 0 },
   },
   generation: { obstacleRatio: 0.0 },
-  scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false },
+  scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
   gearSellValue: { base: 1000, perRoom: 500 },
   gear: {
     'stat-tech-1':     { id: 'stat-tech-1',     kind: 'statBoost', lane: 'tech',     magnitude: 1 },
@@ -178,6 +179,51 @@ describe('computeDC', () => {
   it('respects custom clamp bounds', () => {
     expect(computeDC(5, 3, [2, 15])).toBe(2);
     expect(computeDC(18, 0, [2, 15])).toBe(15);
+  });
+
+  // ── E15.1 Heat/depth ctx tests ──────────────────────────────────────────────
+
+  const noopHeatDC = { perHeat: 0, perRoom: 0 };
+
+  it('default curve (0/0): ctx has no effect — regression equals no-ctx result', () => {
+    expect(computeDC(13, 2, clamp, { heat: 10, roomIndex: 5, heatDC: noopHeatDC })).toBe(11);
+  });
+
+  it('non-zero perHeat: DC rises as heat increases (hot run harder)', () => {
+    const heatDC = { perHeat: 0.5, perRoom: 0 };
+    const cool = computeDC(13, 2, clamp, { heat: 0,  roomIndex: 0, heatDC });
+    const warm = computeDC(13, 2, clamp, { heat: 4,  roomIndex: 0, heatDC });
+    const hot  = computeDC(13, 2, clamp, { heat: 8,  roomIndex: 0, heatDC });
+    expect(cool).toBeLessThan(warm);
+    expect(warm).toBeLessThan(hot);
+  });
+
+  it('non-zero perRoom: DC rises as roomIndex increases (deeper run harder)', () => {
+    const heatDC = { perHeat: 0, perRoom: 1 };
+    const early = computeDC(13, 2, clamp, { heat: 0, roomIndex: 0, heatDC });
+    const mid   = computeDC(13, 2, clamp, { heat: 0, roomIndex: 3, heatDC });
+    const late  = computeDC(13, 2, clamp, { heat: 0, roomIndex: 6, heatDC });
+    expect(early).toBeLessThan(mid);
+    expect(mid).toBeLessThan(late);
+  });
+
+  it('heatTerm is rounded before adding to raw DC', () => {
+    // perHeat=0.4, heat=1 → heatTerm = round(0.4) = 0; baseDifficulty-laneRating = 13-2 = 11
+    const heatDC = { perHeat: 0.4, perRoom: 0 };
+    expect(computeDC(13, 2, clamp, { heat: 1, roomIndex: 0, heatDC })).toBe(11);
+    // perHeat=0.4, heat=2 → heatTerm = round(0.8) = 1; DC = 12
+    expect(computeDC(13, 2, clamp, { heat: 2, roomIndex: 0, heatDC })).toBe(12);
+  });
+
+  it('combined DC is still clamped to dcClamp upper bound', () => {
+    // baseDifficulty=18, laneRating=0, heatTerm=10 → raw=28, clamped to 20
+    const heatDC = { perHeat: 1, perRoom: 0 };
+    expect(computeDC(18, 0, clamp, { heat: 10, roomIndex: 0, heatDC })).toBe(20);
+  });
+
+  it('combined DC is still clamped to dcClamp lower bound', () => {
+    // baseDifficulty=5, laneRating=10, heatTerm=0 → raw=-5, clamped to 1
+    expect(computeDC(5, 10, clamp, { heat: 0, roomIndex: 0, heatDC: noopHeatDC })).toBe(1);
   });
 });
 
@@ -531,7 +577,7 @@ describe('UNDO_LAST restores prior state after a roll (mistyped physical roll is
 // ── critFumble flag ───────────────────────────────────────────────────────────
 
 describe('critFumble flag', () => {
-  const cfgCrit: EngineConfig = { ...cfg, scenario: { dcClamp: [1, 20], critFumble: true, easeDialSteps: 1 } };
+  const cfgCrit: EngineConfig = { ...cfg, scenario: { dcClamp: [1, 20], critFumble: true, easeDialSteps: 1, heatDC: { perHeat: 0, perRoom: 0 } } };
 
   it('nat-20 always succeeds when critFumble=true (DC=20)', () => {
     expect(resolveRoll(20, 20, true)).toBe(true);

@@ -162,7 +162,12 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
         throw new Error(`Unknown player "${event.attemptedBy ?? ''}" in CHOOSE_SCENARIO`);
       }
       const laneRating = player.stats[choiceDef.roll.lane];
-      const dc = computeDC(choiceDef.roll.baseDifficulty, laneRating, cfg.scenario.dcClamp);
+      const dc = computeDC(
+        choiceDef.roll.baseDifficulty,
+        laneRating,
+        cfg.scenario.dcClamp,
+        { heat: state.heat, roomIndex: state.roomIndex, heatDC: cfg.scenario.heatDC },
+      );
 
       const pendingRoll: PendingRoll = {
         choiceId: event.choiceId,

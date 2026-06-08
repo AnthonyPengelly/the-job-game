@@ -299,10 +299,11 @@ describe('scenarios pack — no-repeat draw within the run', () => {
       excludedFromSolo: [],
       soloEligibleMinPool: 8,
       dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
+      heatDial: { perHeat: 0, perRoom: 0 },
     },
     // Force all rooms to be scenario rooms for this test.
     generation: { obstacleRatio: 0.0 },
-    scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false },
+    scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
     gearSellValue: { base: 1000, perRoom: 500 },
     gear: {},
     banks: { categories: [], trivia: [] },

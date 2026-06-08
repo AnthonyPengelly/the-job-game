@@ -68,6 +68,7 @@ export const tuningSchema = z.object({
     dcClamp: z.tuple([z.number().int().min(1), z.number().int().max(20)]),
     easeDialSteps: z.number().int().nonnegative(),
     critFumble: z.boolean(),
+    heatDC: z.object({ perHeat: z.number(), perRoom: z.number() }).strict(),
   }).strict(),
   gearSellValue: z.object({
     base: z.number().nonnegative(),

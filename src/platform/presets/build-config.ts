@@ -101,7 +101,12 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
     },
     scoring: tuning.scoring,
     generation: tuning.generation,
-    scenario: tuning.scenario,
+    scenario: {
+      dcClamp: tuning.scenario.dcClamp,
+      easeDialSteps: tuning.scenario.easeDialSteps,
+      critFumble: tuning.scenario.critFumble,
+      heatDC: tuning.scenario.heatDC,
+    },
     gearSellValue: tuning.gearSellValue,
     scaling: {
       profiles,
@@ -111,6 +116,7 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
       excludedFromSolo: scaling.excludedFromSolo,
       soloEligibleMinPool: scaling.soloEligibleMinPool,
       dialCurve: scaling.dialCurve,
+      heatDial: scaling.heatDial,
     },
     roomTemplates: {
       obstacles: buildObstacleTemplates(roomTemplates),

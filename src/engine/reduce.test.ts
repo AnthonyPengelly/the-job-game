@@ -39,9 +39,10 @@ const cfg: EngineConfig = {
     excludedFromSolo: [],
     soloEligibleMinPool: 8,
     dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
+    heatDial: { perHeat: 0, perRoom: 0 },
   },
   generation: { obstacleRatio: 0.6 },
-  scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false },
+  scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
   gearSellValue: { base: 1000, perRoom: 500 },
   gear: {
     'stat-tech-1':   { id: 'stat-tech-1',   kind: 'statBoost', lane: 'tech',     magnitude: 1 },

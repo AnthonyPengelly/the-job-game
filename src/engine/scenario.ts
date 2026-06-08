@@ -13,15 +13,22 @@ import type {
 // ── DC computation ────────────────────────────────────────────────────────────
 
 /**
- * DC = baseDifficulty − laneRating, clamped to dcClamp (default [1, 20]).
+ * DC = baseDifficulty − laneRating + heatTerm, clamped to dcClamp (default [1, 20]).
  * Higher laneRating lowers the DC, making success more likely.
+ * When ctx is supplied, adds round(heatDC.perHeat × heat + heatDC.perRoom × roomIndex)
+ * to the raw DC before clamping — so hotter/deeper runs require a higher d20.
+ * The stored PendingRoll.dc reflects the combined value, keeping successOdds honest.
  */
 export function computeDC(
   baseDifficulty: number,
   laneRating: number,
   dcClamp: [number, number],
+  ctx?: { heat: number; roomIndex: number; heatDC: { perHeat: number; perRoom: number } },
 ): number {
-  const raw = baseDifficulty - laneRating;
+  const heatTerm = ctx !== undefined
+    ? Math.round(ctx.heatDC.perHeat * ctx.heat + ctx.heatDC.perRoom * ctx.roomIndex)
+    : 0;
+  const raw = baseDifficulty - laneRating + heatTerm;
   return Math.max(dcClamp[0], Math.min(dcClamp[1], raw));
 }
 

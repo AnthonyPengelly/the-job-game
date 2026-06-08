@@ -57,20 +57,24 @@ export function resolveGameVariant(
 
 /**
  * Compute the difficulty dial value for a mini-game given the lane ratings of the
- * committed players.
+ * committed players, plus an optional Heat/depth context.
  *
  * Formula (from the active preset's dialCurve for gameId, or _default):
- *   dial = base + perLanePoint × Σ(ratings) − tightenPerExtraCrew × (commitSize − 1)
+ *   base   = dialCurve.base + perLanePoint × Σ(ratings) − tightenPerExtraCrew × (commitSize − 1)
+ *   heatTerm = heatDial.perHeat × heat + heatDial.perRoom × roomIndex  (0 when ctx omitted)
+ *   dial   = base + heatTerm
  *
  * Higher ratings lower the dial (easier); more committed crew also eases it.
  * The tightenPerExtraCrew preset field stores the magnitude of the easing-per-extra-crew
  * credit (positive value ⇒ subtracted in the formula).
+ * The DialReadout renders the combined dial.level, so it is always honest.
  */
 export function computeDial(
   committedLaneRatings: number[],
   gameId: string,
   _headcount: number,
   cfg: EngineConfig,
+  ctx?: { heat: number; roomIndex: number },
 ): number {
   const curve = cfg.scaling.dialCurve[gameId] ?? cfg.scaling.dialCurve['_default'];
   if (curve === undefined) {
@@ -78,5 +82,8 @@ export function computeDial(
   }
   const sum = committedLaneRatings.reduce((acc, r) => acc + r, 0);
   const commitSize = committedLaneRatings.length;
-  return curve.base + curve.perLanePoint * sum - curve.tightenPerExtraCrew * (commitSize - 1);
+  const base = curve.base + curve.perLanePoint * sum - curve.tightenPerExtraCrew * (commitSize - 1);
+  if (ctx === undefined) return base;
+  const hd = cfg.scaling.heatDial;
+  return base + hd.perHeat * ctx.heat + hd.perRoom * ctx.roomIndex;
 }
