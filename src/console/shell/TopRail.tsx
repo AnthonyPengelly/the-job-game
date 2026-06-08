@@ -2,6 +2,7 @@ import { Banknote, Repeat, Siren } from 'lucide-react';
 import { useGameStore } from '@/console/store';
 import type { RunPhase } from '@/engine';
 import { HeatTrack } from '@/console/hud/HeatTrack';
+import { formatLoot } from '@/content/format';
 
 const PHASE_LABELS: Record<RunPhase, string> = {
   briefing: 'Briefing',
@@ -97,7 +98,7 @@ export function TopRail() {
         <Banknote size={19} strokeWidth={1.75} aria-hidden="true" />
         <div className="stk">
           <span className="k">Loot</span>
-          <span className="v">{loot.toLocaleString()}</span>
+          <span className="v">{formatLoot(loot)}</span>
           <span data-testid="loot-total" className="sr-only">{loot}</span>
         </div>
       </div>

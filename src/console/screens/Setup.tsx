@@ -5,6 +5,7 @@ import type { ChecklistItem } from '@/console/ui';
 import { DiceModeControl } from '@/console/settings/DiceModeControl';
 import type { QuirkId } from '@/engine';
 import type { LeaderboardEntry } from '@/content/schema/leaderboard';
+import { formatLoot } from '@/content/format';
 
 const SETUP_CHECKLIST: ChecklistItem[] = [
   { label: 'Shuffle the Room deck and place it face-down' },
@@ -37,7 +38,7 @@ function LeaderboardSection({ entries }: LeaderboardSectionProps) {
                 {i + 1}
               </span>
               <span style={{ fontFamily: 'var(--font-data)', fontWeight: 800, fontSize: 18 }}>
-                {entry.score.toLocaleString()}
+                {formatLoot(entry.score)}
               </span>
               <span
                 style={{
@@ -58,7 +59,7 @@ function LeaderboardSection({ entries }: LeaderboardSectionProps) {
                   marginLeft: 'auto',
                 }}
               >
-                ${(entry.loot / 1000).toFixed(1)}k · {entry.crewSize}p
+                {formatLoot(entry.loot)} · {entry.crewSize}p
               </span>
             </div>
           ))}

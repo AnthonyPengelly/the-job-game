@@ -178,13 +178,13 @@ describe('Setup — leaderboard', () => {
       }),
     );
     renderSetup(storage);
-    expect(screen.getByText('5,000')).toBeInTheDocument();
-    expect(screen.getByText('2,500')).toBeInTheDocument();
+    expect(screen.getByText('$5k')).toBeInTheDocument();
+    expect(screen.getByText('$2.5k')).toBeInTheDocument();
     expect(screen.getByText('WIN')).toBeInTheDocument();
     expect(screen.getByText('BUST')).toBeInTheDocument();
-    // Loot formatted as $k
-    expect(screen.getByText('$12.0k · 3p')).toBeInTheDocument();
-    expect(screen.getByText('$6.0k · 4p')).toBeInTheDocument();
+    // Loot formatted via formatLoot
+    expect(screen.getByText('$12k · 3p')).toBeInTheDocument();
+    expect(screen.getByText('$6k · 4p')).toBeInTheDocument();
   });
 
   it('shows at most 5 entries (top-5 slice)', () => {
@@ -204,7 +204,7 @@ describe('Setup — leaderboard', () => {
     );
     renderSetup(storage);
     // Store sorts descending by score; slice(0,5) keeps rank 1-5 only
-    expect(screen.getByText('7,000')).toBeInTheDocument();
-    expect(screen.queryByText('1,000')).toBeNull();
+    expect(screen.getByText('$7k')).toBeInTheDocument();
+    expect(screen.queryByText('$1k')).toBeNull();
   });
 });

@@ -124,9 +124,9 @@ describe('Spoils — rendering', () => {
 
   it('loot value matches the engine result for a clean safe obstacle', () => {
     renderSpoils();
-    // Safe option reward = 1 (from obstacleOnlyCfg); clean outcome → reward = 1
+    // Safe option reward = 1 (from obstacleOnlyCfg); clean outcome → reward = 1; formatLoot(1) = '$1'
     const val = screen.getByTestId('spoils-loot-value').textContent;
-    expect(val).toBe('1');
+    expect(val).toBe('$1');
   });
 
   it('renders the Continue button', () => {
