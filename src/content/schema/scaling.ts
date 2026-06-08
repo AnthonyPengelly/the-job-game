@@ -40,6 +40,7 @@ export const scalingSchema = z.object({
   excludedFromSolo: z.array(z.string()),
   soloEligibleMinPool: z.number().int().positive(),
   dialCurve: z.record(z.string(), dialCurveEntrySchema),
+  heatDial: z.object({ perHeat: z.number(), perRoom: z.number() }).strict(),
 }).strict();
 
 export type ParsedScaling = z.infer<typeof scalingSchema>;

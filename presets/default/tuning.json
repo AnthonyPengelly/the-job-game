@@ -81,7 +81,8 @@
   "scenario": {
     "dcClamp": [1, 20],
     "easeDialSteps": 1,
-    "critFumble": false
+    "critFumble": false,
+    "heatDC": { "perHeat": 0, "perRoom": 0 }
   },
 
   "gearSellValue": {

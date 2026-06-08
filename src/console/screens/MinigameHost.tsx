@@ -60,9 +60,9 @@ export function MinigameHost() {
     const laneRatings = committed.flatMap(p =>
       game.lanes.map(lane => p.stats[lane]),
     );
-    const level = computeDial(laneRatings, resolvedGameId, headcount, cfg);
+    const level = computeDial(laneRatings, resolvedGameId, headcount, cfg, { heat: present.heat, roomIndex: present.roomIndex });
     return { level };
-  }, [committed, game, resolvedGameId, headcount, cfg]);
+  }, [committed, game, resolvedGameId, headcount, cfg, present.heat, present.roomIndex]);
 
   const params = useMemo(() => {
     if (game === undefined || resolvedGameId === undefined) return undefined;

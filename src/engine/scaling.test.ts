@@ -28,6 +28,7 @@ const cfg = {
     excludedFromSolo: ['assemblyLine', 'defuseTheAlarm'],
     soloEligibleMinPool: 8,
     dialCurve: { _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 } },
+    heatDial: { perHeat: 0, perRoom: 0 },
   },
 } satisfies Pick<EngineConfig, 'scaling'> as unknown as EngineConfig;
 
@@ -208,5 +209,45 @@ describe('computeDial', () => {
     const r1 = computeDial([1, 2, 3], 'anyGame', 7, cfg);
     const r2 = computeDial([1, 2, 3], 'anyGame', 7, cfg);
     expect(r1).toBe(r2);
+  });
+
+  // ── E15.1 Heat/depth ctx tests ────────────────────────────────────────────
+
+  it('default curve (0/0): ctx=undefined and ctx={heat:0,roomIndex:0} produce identical results (no-op)', () => {
+    const noCtx = computeDial([2], 'anyGame', 4, cfg);
+    const zeroCtx = computeDial([2], 'anyGame', 4, cfg, { heat: 0, roomIndex: 0 });
+    expect(noCtx).toBeCloseTo(zeroCtx);
+  });
+
+  it('default curve (0/0): adding ctx with heat>0 or roomIndex>0 does not change result (regression)', () => {
+    const base = computeDial([2], 'anyGame', 4, cfg);
+    const withHeat = computeDial([2], 'anyGame', 4, cfg, { heat: 10, roomIndex: 5 });
+    expect(base).toBeCloseTo(withHeat);
+  });
+
+  it('non-zero perHeat: dial rises monotonically as heat increases', () => {
+    const hotCfg = { ...cfg, scaling: { ...cfg.scaling, heatDial: { perHeat: 0.1, perRoom: 0 } } } as unknown as EngineConfig;
+    const cool = computeDial([2], 'anyGame', 4, hotCfg, { heat: 0,  roomIndex: 0 });
+    const warm = computeDial([2], 'anyGame', 4, hotCfg, { heat: 5,  roomIndex: 0 });
+    const hot  = computeDial([2], 'anyGame', 4, hotCfg, { heat: 10, roomIndex: 0 });
+    expect(cool).toBeLessThan(warm);
+    expect(warm).toBeLessThan(hot);
+  });
+
+  it('non-zero perRoom: dial rises monotonically as roomIndex increases', () => {
+    const deepCfg = { ...cfg, scaling: { ...cfg.scaling, heatDial: { perHeat: 0, perRoom: 0.05 } } } as unknown as EngineConfig;
+    const early = computeDial([2], 'anyGame', 4, deepCfg, { heat: 0, roomIndex: 0 });
+    const mid   = computeDial([2], 'anyGame', 4, deepCfg, { heat: 0, roomIndex: 5 });
+    const late  = computeDial([2], 'anyGame', 4, deepCfg, { heat: 0, roomIndex: 10 });
+    expect(early).toBeLessThan(mid);
+    expect(mid).toBeLessThan(late);
+  });
+
+  it('heat/depth term adds on top of lane/commit terms (not instead of)', () => {
+    const mixedCfg = { ...cfg, scaling: { ...cfg.scaling, heatDial: { perHeat: 0.1, perRoom: 0.05 } } } as unknown as EngineConfig;
+    const baseNoctx = computeDial([2], 'anyGame', 4, mixedCfg);
+    const withCtx   = computeDial([2], 'anyGame', 4, mixedCfg, { heat: 10, roomIndex: 4 });
+    // Lane/commit base: 1.0 + (-0.15)*2 = 0.7; heat term: 0.1*10 + 0.05*4 = 1.2; total = 1.9
+    expect(withCtx).toBeCloseTo(baseNoctx + 0.1 * 10 + 0.05 * 4);
   });
 });

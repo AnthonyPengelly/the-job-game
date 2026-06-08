@@ -115,6 +115,8 @@ export interface EngineConfig {
     soloEligibleMinPool: number;
     /** Difficulty dial curve per game (or "_default"). */
     dialCurve: Record<string, { base: number; perLanePoint: number; tightenPerExtraCrew: number }>;
+    /** Heat/depth contribution to the obstacle dial (no-op at defaults 0/0). */
+    heatDial: { perHeat: number; perRoom: number };
   };
   generation: {
     /** Probability [0,1] of drawing an obstacle room vs a scenario room. */
@@ -127,6 +129,8 @@ export interface EngineConfig {
     easeDialSteps: number;
     /** Whether nat-20 always succeeds and nat-1 always fails, overriding the DC. */
     critFumble: boolean;
+    /** Heat/depth bonus added to the raw DC before clamping (no-op at defaults 0/0). */
+    heatDC: { perHeat: number; perRoom: number };
   };
   roomTemplates: RoomTemplatesConfig;
   /** Preset curve for computing gear sell value: base + perRoom * roomIndex. */

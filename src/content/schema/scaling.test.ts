@@ -24,6 +24,7 @@ const validBase = {
   dialCurve: {
     _default: { base: 1.0, perLanePoint: -0.15, tightenPerExtraCrew: 0.1 },
   },
+  heatDial: { perHeat: 0, perRoom: 0 },
 };
 
 describe('scalingSchema', () => {
