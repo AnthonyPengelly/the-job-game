@@ -25,7 +25,7 @@ interface GearAssignRowProps {
   index: number;
   gearCatalog: Record<string, GearDef>;
   crew: Array<{ id: PlayerId; name: string }>;
-  onAssign: (to: PlayerId, gearId: GearId) => void;
+  onAssign: (to: PlayerId, gearId: GearId, gearIndex: number) => void;
 }
 
 function GearAssignRow({ item, index, gearCatalog, crew, onAssign }: GearAssignRowProps) {
@@ -48,7 +48,7 @@ function GearAssignRow({ item, index, gearCatalog, crew, onAssign }: GearAssignR
 
   function handleAssign() {
     if (!resolvedId || !playerChoice) return;
-    onAssign(playerChoice as PlayerId, resolvedId);
+    onAssign(playerChoice as PlayerId, resolvedId, index);
     setPlayerChoice('');
   }
 
@@ -111,8 +111,8 @@ export function ToolRail() {
   const hasGear = earnedGear.length > 0;
   const inRun = crew.length > 0;
 
-  function handleGearAssign(to: PlayerId, gearId: GearId) {
-    dispatch({ t: 'ASSIGN_GEAR', gear: gearId, to });
+  function handleGearAssign(to: PlayerId, gearId: GearId, earnedGearIndex: number) {
+    dispatch({ t: 'ASSIGN_GEAR', gear: gearId, to, earnedGearIndex });
   }
 
   function closeOverlay() {

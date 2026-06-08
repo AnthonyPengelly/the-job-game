@@ -102,6 +102,7 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
     scoring: tuning.scoring,
     generation: tuning.generation,
     scenario: tuning.scenario,
+    gearSellValue: tuning.gearSellValue,
     scaling: {
       profiles,
       exhaustionRest: scaling.exhaustionRest,

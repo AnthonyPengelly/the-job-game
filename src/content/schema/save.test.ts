@@ -38,6 +38,19 @@ describe('runEventSchema', () => {
     expect(runEventSchema.safeParse({ t: 'ASSIGN_GEAR', gear: 'safecracker-kit', to: 'player-0' }).success).toBe(true);
   });
 
+  it('accepts SELL_GEAR', () => {
+    expect(runEventSchema.safeParse({ t: 'SELL_GEAR', index: 0 }).success).toBe(true);
+    expect(runEventSchema.safeParse({ t: 'SELL_GEAR', index: 2 }).success).toBe(true);
+  });
+
+  it('rejects SELL_GEAR without index', () => {
+    expect(runEventSchema.safeParse({ t: 'SELL_GEAR' }).success).toBe(false);
+  });
+
+  it('rejects SELL_GEAR with a non-integer index', () => {
+    expect(runEventSchema.safeParse({ t: 'SELL_GEAR', index: 1.5 }).success).toBe(false);
+  });
+
   it('accepts PUSH_ON and CALL_GETAWAY', () => {
     expect(runEventSchema.safeParse({ t: 'PUSH_ON' }).success).toBe(true);
     expect(runEventSchema.safeParse({ t: 'CALL_GETAWAY' }).success).toBe(true);

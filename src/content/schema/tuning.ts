@@ -69,6 +69,10 @@ export const tuningSchema = z.object({
     easeDialSteps: z.number().int().nonnegative(),
     critFumble: z.boolean(),
   }).strict(),
+  gearSellValue: z.object({
+    base: z.number().nonnegative(),
+    perRoom: z.number().nonnegative(),
+  }).strict(),
 }).strict();
 
 export type ParsedTuning = z.infer<typeof tuningSchema>;

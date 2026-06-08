@@ -46,6 +46,7 @@ const cfg: EngineConfig = {
   },
   generation: { obstacleRatio: 0.0 },
   scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false },
+  gearSellValue: { base: 1000, perRoom: 500 },
   gear: {
     'stat-tech-1':     { id: 'stat-tech-1',     kind: 'statBoost', lane: 'tech',     magnitude: 1 },
     'stat-physical-1': { id: 'stat-physical-1', kind: 'statBoost', lane: 'physical', magnitude: 1 },

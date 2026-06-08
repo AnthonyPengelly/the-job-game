@@ -49,8 +49,13 @@ export function CrewRail() {
     setOpenPopoverId(prev => (prev === id ? null : id));
   }
 
-  function handleGearDrop(gear: GearId, to: PlayerId) {
-    dispatch({ t: 'ASSIGN_GEAR', gear, to });
+  function handleGearDrop(gear: GearId, to: PlayerId, earnedGearIndex?: number) {
+    dispatch({
+      t: 'ASSIGN_GEAR',
+      gear,
+      to,
+      ...(earnedGearIndex !== undefined && { earnedGearIndex }),
+    });
   }
 
   const closePopover = useCallback(() => setOpenPopoverId(null), []);

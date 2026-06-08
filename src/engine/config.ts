@@ -129,6 +129,11 @@ export interface EngineConfig {
     critFumble: boolean;
   };
   roomTemplates: RoomTemplatesConfig;
+  /** Preset curve for computing gear sell value: base + perRoom * roomIndex. */
+  gearSellValue: {
+    base: number;
+    perRoom: number;
+  };
   /** Gear catalog keyed by gear id. Loaded from content/gear.json. */
   gear: Record<string, GearDef>;
   /** Content banks loaded from the active preset. */
