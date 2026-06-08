@@ -9,6 +9,16 @@ describe('runEventSchema', () => {
     expect(runEventSchema.safeParse(event).success).toBe(true);
   });
 
+  it('accepts START_RUN with optional crewName', () => {
+    const event = { t: 'START_RUN', crew: [{ name: 'Alex' }], crewName: 'The Magpies' };
+    expect(runEventSchema.safeParse(event).success).toBe(true);
+  });
+
+  it('accepts START_RUN without crewName (backward-compat)', () => {
+    const event = { t: 'START_RUN', crew: [{ name: 'Alex' }] };
+    expect(runEventSchema.safeParse(event).success).toBe(true);
+  });
+
   it('accepts START_RUN without seed', () => {
     const event = { t: 'START_RUN', crew: [{ name: 'Alex' }] };
     expect(runEventSchema.safeParse(event).success).toBe(true);
@@ -164,6 +174,30 @@ describe('parseSaveEnvelope', () => {
     expect(result.seed).toBe(42);
     expect(result.eventLog).toHaveLength(4);
     expect(result.eventLog[0]).toMatchObject({ t: 'START_RUN' });
+  });
+
+  it('round-trips START_RUN with crewName through save→parse', () => {
+    const result = parseSaveEnvelope({
+      version: SAVE_VERSION,
+      seed: 42,
+      eventLog: [
+        { t: 'START_RUN', crew: [{ name: 'River' }], crewName: 'The Magpies' },
+        { t: 'PUSH_ON' },
+      ],
+    });
+    expect(result.eventLog[0]).toMatchObject({ t: 'START_RUN', crewName: 'The Magpies' });
+  });
+
+  it('round-trips START_RUN without crewName (old log compat)', () => {
+    const result = parseSaveEnvelope({
+      version: SAVE_VERSION,
+      seed: 42,
+      eventLog: [{ t: 'START_RUN', crew: [{ name: 'River' }] }],
+    });
+    expect(result.eventLog[0]).toMatchObject({ t: 'START_RUN' });
+    // crewName absent — old log parses fine
+    const event = result.eventLog[0] as { t: 'START_RUN'; crewName?: string };
+    expect(event.crewName).toBeUndefined();
   });
 
   it('throws on malformed data', () => {

@@ -48,6 +48,43 @@ function seedStore(storage: StorageLike, seed = 42) {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
+describe('startRun — crewName', () => {
+  it('threads crewName into RunState when provided', () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }], 42, 'The Magpies');
+    expect(store.getState().session.present.crewName).toBe('The Magpies');
+  });
+
+  it('crewName defaults to empty string when not provided', () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }], 42);
+    expect(store.getState().session.present.crewName).toBe('');
+  });
+
+  it('persists crewName in the START_RUN event log entry', () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }], 42, 'The Foxes');
+    const event = store.getState().eventLog[0];
+    expect(event?.t).toBe('START_RUN');
+    if (event?.t === 'START_RUN') {
+      expect(event.crewName).toBe('The Foxes');
+    }
+  });
+
+  it('crewName round-trips through save→replay (hydrate)', () => {
+    const storage = makeStorage();
+    const store1 = createGameStore({ cfg: testCfg, storage });
+    store1.getState().startRun([{ name: 'Alice' }], 42, 'The Ravens');
+
+    const store2 = createGameStore({ cfg: testCfg, storage });
+    store2.getState().hydrate();
+    expect(store2.getState().session.present.crewName).toBe('The Ravens');
+  });
+});
+
 describe('startRun', () => {
   it('clears staleSaveNotice left by a prior stale hydrate', () => {
     const storage = makeStorage();

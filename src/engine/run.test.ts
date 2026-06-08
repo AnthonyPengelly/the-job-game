@@ -229,6 +229,45 @@ describe('startRun', () => {
   });
 });
 
+describe('initialState — crewName', () => {
+  it('initialises crewName to empty string', () => {
+    const state = initialState(FIXED_SEED);
+    expect(state.crewName).toBe('');
+  });
+});
+
+describe('startRun — crewName', () => {
+  it('copies crewName from the event into RunState', () => {
+    const event: Extract<RunEvent, { t: 'START_RUN' }> = {
+      t: 'START_RUN',
+      crew: [{ name: 'Alice' }],
+      crewName: 'The Magpies',
+    };
+    const state = startRun(initialState(FIXED_SEED), event, minimalCfg);
+    expect(state.crewName).toBe('The Magpies');
+  });
+
+  it('defaults crewName to empty string when absent from the event', () => {
+    const event: Extract<RunEvent, { t: 'START_RUN' }> = {
+      t: 'START_RUN',
+      crew: [{ name: 'Alice' }],
+    };
+    const state = startRun(initialState(FIXED_SEED), event, minimalCfg);
+    expect(state.crewName).toBe('');
+  });
+
+  it('preserves crewName through deterministic replay', () => {
+    const event: Extract<RunEvent, { t: 'START_RUN' }> = {
+      t: 'START_RUN',
+      crew: [{ name: 'Alice' }],
+      crewName: 'The Foxes',
+    };
+    const a = startRun(initialState(FIXED_SEED), event, minimalCfg);
+    const b = startRun(initialState(FIXED_SEED), event, minimalCfg);
+    expect(a.crewName).toBe(b.crewName);
+  });
+});
+
 describe('startRun — quirk boost application', () => {
   it('applies a single-lane +2 quirk to player stats', () => {
     const event: Extract<RunEvent, { t: 'START_RUN' }> = {

@@ -360,6 +360,52 @@ describe('ToolRail — Gear badge', () => {
   });
 });
 
+// ── Confirm new job — crew name in message ─────────────────────────────────────
+
+describe('ToolRail — Confirm new job crew name', () => {
+  it('confirm dialog message names the crew when crewName is set', async () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1, 'The Magpies');
+
+    const audioHandle = null;
+    render(
+      <StoreContext.Provider value={store}>
+        <AudioHandleContext.Provider value={audioHandle}>
+          <ToolRail />
+        </AudioHandleContext.Provider>
+      </StoreContext.Provider>,
+    );
+
+    await act(async () => { fireEvent.click(screen.getByTestId('btn-tool-settings')); });
+    await act(async () => { fireEvent.click(screen.getByTestId('btn-settings-new-job')); });
+
+    expect(screen.getByTestId('confirm-new-job')).toBeInTheDocument();
+    expect(screen.getByTestId('confirm-new-job')).toHaveTextContent('The Magpies');
+  });
+
+  it('confirm dialog shows generic message when crewName is empty', async () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+
+    const audioHandle = null;
+    render(
+      <StoreContext.Provider value={store}>
+        <AudioHandleContext.Provider value={audioHandle}>
+          <ToolRail />
+        </AudioHandleContext.Provider>
+      </StoreContext.Provider>,
+    );
+
+    await act(async () => { fireEvent.click(screen.getByTestId('btn-tool-settings')); });
+    await act(async () => { fireEvent.click(screen.getByTestId('btn-settings-new-job')); });
+
+    expect(screen.getByTestId('confirm-new-job')).toBeInTheDocument();
+    expect(screen.getByTestId('confirm-new-job')).toHaveTextContent('Start a new job');
+  });
+});
+
 // ── Confirm new job ───────────────────────────────────────────────────────────
 
 describe('ToolRail — Confirm new job', () => {

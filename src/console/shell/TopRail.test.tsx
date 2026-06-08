@@ -175,6 +175,47 @@ describe('TopRail — Loot', () => {
   });
 });
 
+// ── Crew name ─────────────────────────────────────────────────────────────────
+
+describe('TopRail — crew name', () => {
+  it('shows the crew name when set', async () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+
+    await act(async () => {
+      store.getState().startRun([{ name: 'Alice' }], 1, 'The Magpies');
+    });
+    await act(async () => {
+      render(
+        <StoreContext.Provider value={store}>
+          <TopRail />
+        </StoreContext.Provider>,
+      );
+    });
+
+    expect(screen.getByTestId('top-rail-crew-name')).toBeInTheDocument();
+    expect(screen.getByTestId('top-rail-crew-name')).toHaveTextContent('The Magpies');
+  });
+
+  it('does not show the crew name block when crewName is empty', async () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+
+    await act(async () => {
+      store.getState().startRun([{ name: 'Alice' }], 1);
+    });
+    await act(async () => {
+      render(
+        <StoreContext.Provider value={store}>
+          <TopRail />
+        </StoreContext.Provider>,
+      );
+    });
+
+    expect(screen.queryByTestId('top-rail-crew-name')).toBeNull();
+  });
+});
+
 // ── Phase + room display ──────────────────────────────────────────────────────
 
 describe('TopRail — phase and room display', () => {

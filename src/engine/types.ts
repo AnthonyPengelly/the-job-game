@@ -199,6 +199,8 @@ export interface RunState {
   phase: RunPhase;
   heat: number;
   loot: number;
+  /** The GM-entered crew name (e.g. "The Magpies"). Empty string when not set. */
+  crewName: string;
   crew: Player[];
   roomIndex: number;
   obstacleCount: number;
@@ -247,7 +249,7 @@ export type OverrideEvent =
 // unhandled event type is a compile error.
 
 export type RunEvent =
-  | { t: 'START_RUN'; crew: PlayerSetup[]; seed?: number }
+  | { t: 'START_RUN'; crew: PlayerSetup[]; seed?: number; crewName?: string }
   | { t: 'CHOOSE_OPTION'; optionId: string; committed: PlayerId[] }
   | { t: 'RESOLVE_MINIGAME'; outcome: Outcome }
   | { t: 'CHOOSE_SCENARIO'; choiceId: string; attemptedBy?: PlayerId }

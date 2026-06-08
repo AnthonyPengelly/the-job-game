@@ -29,6 +29,7 @@ export function TopRail() {
   const phase        = useGameStore(s => s.session.present.phase);
   const roomIndex    = useGameStore(s => s.session.present.roomIndex);
   const escapeSignal = useGameStore(s => s.session.present.escapeSignal);
+  const crewName     = useGameStore(s => s.session.present.crewName);
   const hMax         = useGameStore(s => s.cfg.heat.hMax);
 
   const phaseLabel = PHASE_LABELS[phase];
@@ -44,6 +45,14 @@ export function TopRail() {
           <div className="sub">GM Console</div>
         </div>
       </div>
+
+      {/* Crew name — shown when present */}
+      {crewName && (
+        <div className="cockpit-crew-name" data-testid="top-rail-crew-name">
+          <span className="k">Crew</span>
+          <span className="v">{crewName}</span>
+        </div>
+      )}
 
       <div className="cockpit-rail-div" aria-hidden="true" />
 
