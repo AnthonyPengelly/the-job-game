@@ -17,7 +17,7 @@ interface CrewAvatarProps {
   /** Called when the avatar is clicked. */
   onClick: (id: PlayerId) => void;
   /** Gear drop target (used during Spoils and gear assignment flows). */
-  onGearDrop?: (gear: GearId, to: PlayerId) => void;
+  onGearDrop?: (gear: GearId, to: PlayerId, earnedGearIndex?: number) => void;
 }
 
 /**
@@ -48,7 +48,10 @@ export function CrewAvatar({
     if (!onGearDrop) return;
     e.preventDefault();
     const gearId = e.dataTransfer.getData('application/x-gear-id') as GearId;
-    if (gearId) onGearDrop(gearId, player.id);
+    if (!gearId) return;
+    const idxRaw = e.dataTransfer.getData('application/x-gear-index');
+    const earnedGearIndex = idxRaw !== '' ? parseInt(idxRaw, 10) : undefined;
+    onGearDrop(gearId, player.id, earnedGearIndex);
   }
 
   const selClass =

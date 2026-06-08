@@ -16,7 +16,7 @@ interface GearCardProps {
   selected: boolean;
   gearCatalog: Record<string, GearDef>;
   onSelect: () => void;
-  onAssign: (to: PlayerId, gearId: GearId) => void;
+  onAssign: (to: PlayerId, gearId: GearId, earnedGearIndex: number) => void;
   onSell: (index: number) => void;
   sellValueLabel: string;
   crew: Array<{ id: PlayerId; name: string }>;
@@ -50,6 +50,7 @@ function GearCard({ item, index, selected, gearCatalog, onSelect, onAssign, onSe
       onDragStart={(e) => {
         if (resolvedId) {
           e.dataTransfer.setData('application/x-gear-id', resolvedId as string);
+          e.dataTransfer.setData('application/x-gear-index', String(index));
           e.dataTransfer.effectAllowed = 'copy';
         }
       }}
@@ -97,7 +98,7 @@ function GearCard({ item, index, selected, gearCatalog, onSelect, onAssign, onSe
               onClick={(e) => {
                 e.stopPropagation();
                 if (!resolvedId) return;
-                onAssign(p.id, resolvedId);
+                onAssign(p.id, resolvedId, index);
               }}
               disabled={!resolvedId}
             >
@@ -162,8 +163,8 @@ export function Spoils() {
     setSelectedGearIdx(prev => (prev === idx ? null : idx));
   }
 
-  function handleAssign(to: PlayerId, gearId: GearId) {
-    dispatch({ t: 'ASSIGN_GEAR', gear: gearId, to });
+  function handleAssign(to: PlayerId, gearId: GearId, earnedGearIndex: number) {
+    dispatch({ t: 'ASSIGN_GEAR', gear: gearId, to, earnedGearIndex });
     setSelectedGearIdx(null);
   }
 

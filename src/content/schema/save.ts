@@ -48,6 +48,7 @@ const assignGearSchema = z.object({
   t: z.literal('ASSIGN_GEAR'),
   gear: z.string(),
   to: z.string(),
+  earnedGearIndex: z.number().int().optional(),
 });
 
 const pushOnSchema = z.object({ t: z.literal('PUSH_ON') });

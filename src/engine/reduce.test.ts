@@ -1028,6 +1028,40 @@ describe('ASSIGN_GEAR — error cases', () => {
   });
 });
 
+describe('ASSIGN_GEAR — earnedGear mutual exclusivity', () => {
+  it('removes the card at earnedGearIndex from earnedGear', () => {
+    const s = crewState({ earnedGear: ['stat-tech-1' as GearId] });
+    const next = reduce(
+      s,
+      { t: 'ASSIGN_GEAR', gear: 'stat-tech-1' as GearId, to: 'player-0' as PlayerId, earnedGearIndex: 0 },
+      cfg,
+    );
+    expect(next.earnedGear).toHaveLength(0);
+    expect(next.crew[0]!.stats.tech).toBe(1);
+  });
+
+  it('removes only the indexed card when multiple are present', () => {
+    const s = crewState({ earnedGear: ['powerup-charm' as GearId, 'stat-tech-1' as GearId] });
+    const next = reduce(
+      s,
+      { t: 'ASSIGN_GEAR', gear: 'stat-tech-1' as GearId, to: 'player-0' as PlayerId, earnedGearIndex: 1 },
+      cfg,
+    );
+    expect(next.earnedGear).toHaveLength(1);
+    expect(next.earnedGear[0]).toBe('powerup-charm');
+  });
+
+  it('leaves earnedGear unchanged when earnedGearIndex is absent', () => {
+    const s = crewState({ earnedGear: ['stat-tech-1' as GearId] });
+    const next = reduce(
+      s,
+      { t: 'ASSIGN_GEAR', gear: 'stat-tech-1' as GearId, to: 'player-0' as PlayerId },
+      cfg,
+    );
+    expect(next.earnedGear).toHaveLength(1);
+  });
+});
+
 // ─── RESOLVE_MINIGAME — gear grants ──────────────────────────────────────────
 
 describe('RESOLVE_MINIGAME — single-lane gear grant', () => {

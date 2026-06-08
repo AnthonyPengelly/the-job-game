@@ -254,9 +254,20 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
         throw new Error(`Unknown player id "${event.to}"`);
       }
       const updatedPlayer = applyGear(state.crew[playerIndex]!, def);
+      const { earnedGearIndex } = event;
+      const earnedGear =
+        earnedGearIndex !== undefined &&
+        earnedGearIndex >= 0 &&
+        earnedGearIndex < state.earnedGear.length
+          ? [
+              ...state.earnedGear.slice(0, earnedGearIndex),
+              ...state.earnedGear.slice(earnedGearIndex + 1),
+            ]
+          : state.earnedGear;
       return {
         ...state,
         crew: state.crew.map((p, i) => (i === playerIndex ? updatedPlayer : p)),
+        earnedGear,
       };
     }
 
