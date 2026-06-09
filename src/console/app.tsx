@@ -5,6 +5,7 @@ import { PhaseRouter, Setup } from '@/console/screens';
 import { AudioProvider } from '@/console/audio';
 import { Cockpit, CrewRail, ToolRail } from '@/console/shell';
 import { CrewRailModeProvider } from '@/console/shell/crewRailMode';
+import { ActionBarSlotProvider } from '@/console/shell/actionBarSlot';
 
 // ── App shell ─────────────────────────────────────────────────────────────────
 
@@ -56,9 +57,11 @@ export function App({ storeOptions }: AppProps) {
   return (
     <StoreProvider {...providerProps}>
       <AudioProvider>
-        <CrewRailModeProvider>
-          <AppShell />
-        </CrewRailModeProvider>
+        <ActionBarSlotProvider>
+          <CrewRailModeProvider>
+            <AppShell />
+          </CrewRailModeProvider>
+        </ActionBarSlotProvider>
       </AudioProvider>
     </StoreProvider>
   );

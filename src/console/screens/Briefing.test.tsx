@@ -7,6 +7,7 @@ import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
 import type { ParsedNarration } from '@/content/schema';
 import type { SpineBank } from '@/content/schema';
+import { ActionBarSlotProvider, ActionBarSlotOutlet } from '@/console/shell/actionBarSlot';
 import { Briefing } from './Briefing';
 
 afterEach(cleanup);
@@ -122,9 +123,12 @@ function renderBriefing(seed = 1) {
   store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
   store.getState().dispatch({ t: 'OVERRIDE_SET_PHASE', phase: 'briefing' });
   render(
-    <StoreContext.Provider value={store}>
-      <Briefing />
-    </StoreContext.Provider>,
+    <ActionBarSlotProvider>
+      <ActionBarSlotOutlet />
+      <StoreContext.Provider value={store}>
+        <Briefing />
+      </StoreContext.Provider>
+    </ActionBarSlotProvider>,
   );
   return store;
 }

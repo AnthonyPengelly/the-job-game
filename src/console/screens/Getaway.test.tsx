@@ -8,6 +8,7 @@ import type { StorageLike } from '@/platform';
 import type { PlayerViewSlice } from '@/platform/channel';
 import type { ParsedNarration } from '@/content/schema';
 import * as channelModule from '@/platform/channel';
+import { ActionBarSlotProvider, ActionBarSlotOutlet } from '@/console/shell/actionBarSlot';
 import { Getaway } from './Getaway';
 
 afterEach(() => {
@@ -111,9 +112,12 @@ function makeGetawayStoreAtHeat(heat: number) {
 
 function renderGetaway(store = makeGetawayStore()) {
   render(
-    <StoreContext.Provider value={store}>
-      <Getaway />
-    </StoreContext.Provider>,
+    <ActionBarSlotProvider>
+      <ActionBarSlotOutlet />
+      <StoreContext.Provider value={store}>
+        <Getaway />
+      </StoreContext.Provider>
+    </ActionBarSlotProvider>,
   );
   return store;
 }
@@ -578,9 +582,12 @@ describe('Getaway player-view publish', () => {
 
   it('publishes idle slice on unmount (resolve or navigate away)', () => {
     const { unmount } = render(
-      <StoreContext.Provider value={makeGetawayStore()}>
-        <Getaway />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={makeGetawayStore()}>
+          <Getaway />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
 
     publishedSlices.length = 0;
@@ -665,9 +672,12 @@ describe('Getaway screen — narration', () => {
   it('renders getaway-intro-narration container with teleprompter when narration is loaded', () => {
     const store = makeGetawayStoreWithNarration();
     render(
-      <StoreContext.Provider value={store}>
-        <Getaway />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Getaway />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId('getaway-intro-narration')).toBeInTheDocument();
     const line = screen.getAllByTestId('teleprompter-line')[0]?.textContent ?? '';
@@ -677,9 +687,12 @@ describe('Getaway screen — narration', () => {
   it('renders getaway-countdown-narration container with teleprompter when narration is loaded', () => {
     const store = makeGetawayStoreWithNarration();
     render(
-      <StoreContext.Provider value={store}>
-        <Getaway />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Getaway />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId('getaway-countdown-narration')).toBeInTheDocument();
   });
@@ -688,9 +701,12 @@ describe('Getaway screen — narration', () => {
     // script() commits a single line per beat — hasNext=false → no advance buttons.
     const store = makeGetawayStoreWithNarration();
     render(
-      <StoreContext.Provider value={store}>
-        <Getaway />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Getaway />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     // No advance buttons — each teleprompter is already at its last (only) line.
     expect(screen.queryByTestId('teleprompter-advance')).toBeNull();
@@ -706,9 +722,12 @@ describe('Getaway screen — narration', () => {
     // Store WITHOUT narration — introLine/countdownLine will be '' so containers are not rendered
     const store = makeGetawayStore();
     render(
-      <StoreContext.Provider value={store}>
-        <Getaway />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Getaway />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.queryByTestId('getaway-intro-narration')).toBeNull();
     expect(screen.queryByTestId('getaway-countdown-narration')).toBeNull();

@@ -385,6 +385,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* Edge fade so over-full content scrolls under a soft vignette, not under the bar */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
 }
 .cockpit-work::-webkit-scrollbar { width: 8px; }
 .cockpit-work::-webkit-scrollbar-thumb { background: var(--c-surface-3); border-radius: var(--radius-pill); }
@@ -424,6 +427,15 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+/* Supplementary note shown before the primary CTA (e.g. difficulty readout) */
+.cockpit-actionbar-note {
+  font-family: var(--font-data);
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--fg-muted);
+  white-space: nowrap;
 }
 
 /* ============================================================

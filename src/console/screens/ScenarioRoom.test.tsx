@@ -8,6 +8,7 @@ import type { PlayerId, ScenarioChoiceDef } from '@/engine';
 import type { ParsedNarration } from '@/content/schema';
 import { SETTINGS_VERSION } from '@/content/schema/settings';
 import { CrewRailModeProvider } from '@/console/shell';
+import { ActionBarSlotProvider, ActionBarSlotOutlet } from '@/console/shell/actionBarSlot';
 import { ScenarioRoom } from './ScenarioRoom';
 
 afterEach(cleanup);
@@ -58,11 +59,14 @@ function makeScenarioStore(seed = 1) {
 function renderScenarioRoom(seed = 1) {
   const store = makeScenarioStore(seed);
   const { container } = render(
-    <StoreContext.Provider value={store}>
-      <CrewRailModeProvider>
-        <ScenarioRoom />
-      </CrewRailModeProvider>
-    </StoreContext.Provider>,
+    <ActionBarSlotProvider>
+      <ActionBarSlotOutlet />
+      <StoreContext.Provider value={store}>
+        <CrewRailModeProvider>
+          <ScenarioRoom />
+        </CrewRailModeProvider>
+      </StoreContext.Provider>
+    </ActionBarSlotProvider>,
   );
   return { store, container };
 }
@@ -133,11 +137,14 @@ function advanceToRollReveal(store: ReturnType<typeof makeRollStore>) {
 function renderRollRoom(seed = 42, diceModePhysical = false) {
   const store = makeRollStore(seed, diceModePhysical);
   const { container } = render(
-    <StoreContext.Provider value={store}>
-      <CrewRailModeProvider>
-        <ScenarioRoom />
-      </CrewRailModeProvider>
-    </StoreContext.Provider>,
+    <ActionBarSlotProvider>
+      <ActionBarSlotOutlet />
+      <StoreContext.Provider value={store}>
+        <CrewRailModeProvider>
+          <ScenarioRoom />
+        </CrewRailModeProvider>
+      </StoreContext.Provider>
+    </ActionBarSlotProvider>,
   );
   return { store, container };
 }
@@ -427,11 +434,14 @@ describe('ScenarioRoom stage two — DC and odds reveal', () => {
     const alice = store.getState().session.present.crew[0]!;
     store.getState().dispatch({ t: 'OVERRIDE_SET_STAT', player: alice.id, lane: 'charm', value: 3 });
     render(
-      <StoreContext.Provider value={store}>
-        <CrewRailModeProvider>
-          <ScenarioRoom />
-        </CrewRailModeProvider>
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <CrewRailModeProvider>
+            <ScenarioRoom />
+          </CrewRailModeProvider>
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     advanceToRollReveal(store);
     // DC = clamp(13-3, 1, 20) = 10
