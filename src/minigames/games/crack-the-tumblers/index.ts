@@ -17,4 +17,7 @@ export const crackTheTumblers: MiniGame<CrackTheTumblersParams, CrackTheTumblers
   Component: CrackTheTumblersComponent,
   judge,
   boosts: [resetPinBoost],
+  armedInstructions:
+    'Play your number cards in ascending order — one per turn, lowest to highest. ' +
+    'One card out of sequence trips the alarm. Reset Pin undoes one clash.',
 };

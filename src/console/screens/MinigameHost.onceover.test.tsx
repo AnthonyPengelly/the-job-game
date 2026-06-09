@@ -138,7 +138,7 @@ describe('MinigameHost — the-once-over game mounting', () => {
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('onceover-phase')).toHaveTextContent('Study');
-    expect(screen.getByTestId('card-spread')).toBeInTheDocument();
+    expect(screen.getByTestId('onceover-spread')).toBeInTheDocument();
   });
 
   it('shows change count', () => {

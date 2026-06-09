@@ -24,7 +24,16 @@ export function CrackTheTumblersComponent({
 }: MiniGameProps<CrackTheTumblersParams>): JSX.Element {
   const [state, setState] = useState<CrackTheTumblersState>(initState);
 
-  const gameComplete = state.alarmTripped || state.playedSequence.length === params.cards.length;
+  const played = state.playedSequence.length;
+  const total = params.cards.length;
+  const gameComplete = state.alarmTripped || played === total;
+  const progressPct = total > 0 ? (played / total) * 100 : 0;
+
+  const lastPlayedId = state.playedSequence[played - 1];
+  const lastPlayedValue = lastPlayedId !== undefined ? cardValue(params, lastPlayedId) : null;
+
+  // Unplayed cards (in their original shuffled order) for tapping
+  const unplayedCards = params.cards.filter(c => !state.playedSequence.includes(c.id));
 
   function handleCardTap(id: CardId) {
     if (gameComplete) return;
@@ -50,60 +59,105 @@ export function CrackTheTumblersComponent({
     onResolve(judge(state, params));
   }
 
-  const played = state.playedSequence.length;
-  const total = params.cards.length;
-  const progressPct = total > 0 ? (played / total) * 100 : 0;
+  const progressBarClass = state.alarmTripped ? 'mg-progress-bar mg-progress-bar--danger' : 'mg-progress-bar';
 
   return (
     <div data-testid="crack-the-tumblers">
       <StatusZone>
         {state.alarmTripped ? (
-          <span
-            className="mg-status-badge mg-status-badge--botched"
-            data-testid="alarm-tripped"
-          >
+          <span className="mg-status-badge mg-status-badge--botched" data-testid="alarm-tripped">
             <Siren size={14} />
-            ALARM TRIPPED
+            Clash
           </span>
         ) : (
           <span className="mg-status-badge mg-status-badge--active">
             <ShieldCheck size={14} />
-            Armed
+            Active
           </span>
         )}
 
-        <div className="mg-progress-bar" aria-label="Progress">
+        <div className={progressBarClass} aria-label="Pins set">
           <div className="mg-progress-bar__label">
-            <span data-testid="card-count">Pins: {total}</span>
-            {' · '}
-            <span>Played: {played}/{total}</span>
+            <span data-testid="card-count">Pins set · {played} / {total}</span>
           </div>
           <div className="mg-progress-bar__track">
             <div
-              className="mg-progress-bar__fill"
+              className={`mg-progress-bar__fill${state.alarmTripped ? ' mg-progress-bar__fill--danger' : ''}`}
               style={{ width: `${progressPct}%` }}
             />
           </div>
         </div>
-
-        <span className="mg-mode-label" data-testid="mg-mode-label">
-          Crack
-        </span>
       </StatusZone>
 
       <ChallengeZone>
-        <CardSpread
-          cards={params.cards}
-          layout="row"
-          faceDown={state.playedSequence}
-          {...(!gameComplete && { onTap: handleCardTap })}
-        />
+        {/* Pin board: played pins (lit), next slot (?), remaining (face-down) */}
+        <div className="ctb-pinboard" data-testid="pin-board" aria-label="Pin board">
+          {params.correctOrder.map((id, i) => {
+            const isPlayed = state.playedSequence.includes(id);
+            const isNext = i === played && !gameComplete;
+            const card = params.cards.find(c => c.id === id);
+            const playedCard = isPlayed
+              ? params.cards.find(c => c.id === state.playedSequence[i])
+              : null;
 
-        <div data-testid="played-sequence">
+            if (isPlayed) {
+              const clashIndex = state.alarmTripped
+                ? state.playedSequence.length - 1
+                : -1;
+              const isClash = state.alarmTripped && i === clashIndex;
+              return (
+                <div
+                  key={id}
+                  className={`ctb-pin ctb-pin--played${isClash ? ' ctb-pin--clash' : ''}`}
+                  data-testid={`pin-played-${i}`}
+                >
+                  {playedCard?.label ?? card?.label ?? '?'}
+                </div>
+              );
+            }
+            if (isNext) {
+              return (
+                <div key={id} className="ctb-pin ctb-pin--next" data-testid="pin-next">
+                  ?
+                </div>
+              );
+            }
+            return (
+              <div key={id} className="ctb-pin ctb-pin--empty" data-testid={`pin-empty-${i}`} />
+            );
+          })}
+        </div>
+
+        {/* Sub-text: what to beat next, or clash message */}
+        <div className={`ctb-subtext${state.alarmTripped ? ' ctb-subtext--danger' : ''}`}>
+          {state.alarmTripped
+            ? 'Clash — card out of sequence. Reset Pin forgives it once.'
+            : played === total
+              ? 'All pins set.'
+              : lastPlayedValue !== null
+                ? `Next must beat ${lastPlayedValue} · lower trips it`
+                : 'Play lowest card first'}
+        </div>
+
+        {/* Unplayed cards — tap to register a play */}
+        {!gameComplete && unplayedCards.length > 0 && (
+          <div className="ctb-hand">
+            <div className="ctb-hand-label">Tap to play:</div>
+            <CardSpread
+              cards={unplayedCards}
+              layout="row"
+              faceDown={[]}
+              onTap={handleCardTap}
+            />
+          </div>
+        )}
+
+        {/* Played sequence readout for GM reference */}
+        <div className="ctb-played-row" data-testid="played-sequence">
           {state.playedSequence.map((id, i) => {
             const card = params.cards.find(c => c.id === id);
             return (
-              <span key={id} data-testid={`played-${i}`}>
+              <span key={id} data-testid={`played-${i}`} className="ctb-played-val">
                 {i > 0 ? ' → ' : ''}{card?.label ?? '?'}
               </span>
             );

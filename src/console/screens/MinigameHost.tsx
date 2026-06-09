@@ -96,6 +96,7 @@ export function MinigameHost() {
     <div data-testid="screen-minigame">
       <MinigameShell
         gameName={gameName}
+        {...(game.armedInstructions !== undefined && { instructions: game.armedInstructions })}
         dial={dial}
         boostPreviews={boostPreviews}
         onConfirm={handleShellConfirm}

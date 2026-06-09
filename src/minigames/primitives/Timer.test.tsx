@@ -53,4 +53,14 @@ describe('Timer', () => {
     act(() => { vi.advanceTimersByTime(2000); });
     expect(screen.getByTestId('timer')).toHaveAttribute('data-remaining', '0');
   });
+
+  it('calls onTick each second with remaining value', () => {
+    const onExpire = vi.fn();
+    const onTick = vi.fn();
+    render(<Timer seconds={3} running={true} onExpire={onExpire} onTick={onTick} audible={false} />);
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(onTick).toHaveBeenCalledWith(2);
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(onTick).toHaveBeenCalledWith(1);
+  });
 });

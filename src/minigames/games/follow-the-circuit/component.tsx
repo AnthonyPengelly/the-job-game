@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Eye, Zap, CheckCircle, XCircle } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
-import { CardSpread } from '@/minigames/primitives/CardSpread';
 import type { CardId } from '@/minigames/primitives/CardSpread';
 import { useMetronome, useAudioClock, useScheduleBeep } from '@/minigames/primitives';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
@@ -75,7 +73,7 @@ export function FollowTheCircuitComponent({
 
   const isDone = phase === 'done' || state.chainBroke;
 
-  function handleCardTap(id: CardId) {
+  function handleCellTap(id: CardId) {
     if (phase !== 'inputting' || isDone) return;
 
     const currentSt = stateRef.current;
@@ -128,71 +126,105 @@ export function FollowTheCircuitComponent({
     onResolve(judge(state, params));
   }
 
-  const faceDown: CardId[] =
-    phase === 'watching' && highlightIndex !== null
-      ? params.cards
-          .filter(c => c.id !== params.sequence[highlightIndex])
-          .map(c => c.id)
-      : [];
+  // Progress
+  const progressPct = params.targetLength > 0
+    ? (state.lengthReached / params.targetLength) * 100
+    : 0;
+  const roundProgressPct = currentRoundLength > 0
+    ? (state.tapsThisRound.length / currentRoundLength) * 100
+    : 0;
 
-  const progressText = `${state.lengthReached}/${params.targetLength}`;
-  const roundProgress = Math.min(
-    state.tapsThisRound.length / currentRoundLength,
-    1,
-  );
-
+  // Phase label for status
+  let phaseLabel = 'Watch';
   let phaseBadgeClass = 'mg-status-badge mg-status-badge--active';
-  let phaseIcon: React.ReactNode = <Eye size={14} />;
-  let phaseLabel = 'WATCH';
-
   if (phase === 'inputting') {
-    phaseBadgeClass = 'mg-status-badge mg-status-badge--active';
-    phaseIcon = <Zap size={14} />;
-    phaseLabel = 'TAP';
+    phaseLabel = 'Your turn';
+    phaseBadgeClass = 'mg-status-badge mg-status-badge--clean';
   } else if (phase === 'done') {
-    if (state.chainBroke) {
-      phaseBadgeClass = 'mg-status-badge mg-status-badge--botched';
-      phaseIcon = <XCircle size={14} />;
-      phaseLabel = 'BROKE';
-    } else {
-      phaseBadgeClass = 'mg-status-badge mg-status-badge--clean';
-      phaseIcon = <CheckCircle size={14} />;
-      phaseLabel = 'DONE';
-    }
+    phaseLabel = state.chainBroke ? 'Broke' : 'Done';
+    phaseBadgeClass = state.chainBroke
+      ? 'mg-status-badge mg-status-badge--botched'
+      : 'mg-status-badge mg-status-badge--clean';
   }
+
+  // Build cell states for the 4-card Simon grid
+  const watchingHighlightId =
+    phase === 'watching' && highlightIndex !== null
+      ? params.sequence[highlightIndex]
+      : null;
+
+  const tappedIds = new Set(state.tapsThisRound);
 
   return (
     <div data-testid="follow-the-circuit">
       <StatusZone>
-        <span className={phaseBadgeClass}>
-          {phaseIcon}
-          <span data-testid="ftc-phase">{phaseLabel}</span>
+        <span className={phaseBadgeClass} data-testid="ftc-phase">
+          {phaseLabel}
         </span>
-        <span data-testid="ftc-progress">Progress: {progressText}</span>
-        {state.chainBroke && <span data-testid="ftc-broke">CHAIN BROKE</span>}
-        <div className="mg-progress-bar">
+
+        <div className="mg-progress-bar" aria-label="Sequence length">
+          <div className="mg-progress-bar__label">
+            <span data-testid="ftc-progress">
+              {phase === 'inputting'
+                ? `Repeating · ${state.tapsThisRound.length} / ${currentRoundLength}`
+                : `Sequence · ${state.lengthReached} / ${params.targetLength}`}
+            </span>
+            {state.chainBroke && <span data-testid="ftc-broke"> · CHAIN BROKE</span>}
+          </div>
           <div className="mg-progress-bar__track">
             <div
-              className="mg-progress-bar__fill"
-              style={{ width: `${roundProgress * 100}%` }}
+              className="mg-progress-bar__fill mg-progress-bar__fill--data"
+              style={{
+                width: `${phase === 'inputting' ? roundProgressPct : progressPct}%`,
+              }}
             />
-          </div>
-          <div className="mg-progress-bar__label">
-            {state.tapsThisRound.length}/{currentRoundLength}
           </div>
         </div>
       </StatusZone>
 
       <ChallengeZone>
-        <div data-testid="ftc-taps">
-          Taps this round: {state.tapsThisRound.length}/{currentRoundLength}
+        {/* Simon grid — 2×2 for the 4 circuit nodes */}
+        <div className="ftc-grid" data-testid="ftc-grid">
+          {params.cards.map(card => {
+            const isWatching = card.id === watchingHighlightId;
+            const isTapped = tappedIds.has(card.id);
+            const isInteractive = phase === 'inputting' && !isDone;
+
+            const cellClasses = [
+              'ftc-cell',
+              isWatching ? 'ftc-cell--watch' : '',
+              isTapped ? 'ftc-cell--tapped' : '',
+              isInteractive ? 'ftc-cell--interactive' : '',
+            ].filter(Boolean).join(' ');
+
+            return (
+              <button
+                key={card.id}
+                type="button"
+                className={cellClasses}
+                data-testid={`ftc-cell-${card.id}`}
+                onClick={() => handleCellTap(card.id)}
+                disabled={!isInteractive}
+              >
+                {card.label}
+              </button>
+            );
+          })}
         </div>
-        <CardSpread
-          cards={params.cards}
-          layout="grid"
-          faceDown={faceDown}
-          {...(phase === 'inputting' && !isDone ? { onTap: handleCardTap } : {})}
-        />
+
+        {/* Sub-text describing current state */}
+        <div
+          className={`ftc-subtext${phase === 'watching' ? ' ftc-subtext--data' : ''}`}
+          data-testid="ftc-subtext"
+        >
+          {phase === 'watching' && highlightIndex !== null &&
+            `Showing step ${highlightIndex + 1} of ${currentRoundLength}`}
+          {phase === 'watching' && highlightIndex === null && 'Watch the sequence…'}
+          {phase === 'inputting' &&
+            `${state.tapsThisRound.length} of ${currentRoundLength} correct · a wrong tap ends the run`}
+          {phase === 'done' && !state.chainBroke && 'Target reached!'}
+          {phase === 'done' && state.chainBroke && 'Wrong tap — chain broken.'}
+        </div>
       </ChallengeZone>
 
       <RefereeZone>

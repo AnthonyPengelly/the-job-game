@@ -16,4 +16,7 @@ export const crackTheTumblersSolo: MiniGame<CrackTheTumblersSoloParams, CrackThe
   Component: CrackTheTumblersSoloComponent,
   judge,
   boosts: [resetPinBoost],
+  armedInstructions:
+    'Study the ascending sequence, then recall it from memory. ' +
+    'Tap pins in the correct order — one wrong tap trips the alarm. Reset Pin undoes one mistake.',
 };

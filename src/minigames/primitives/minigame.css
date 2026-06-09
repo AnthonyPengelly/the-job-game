@@ -41,6 +41,14 @@
   font-weight: var(--font-weight-medium, 500);
 }
 
+.mg-armed-instructions {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--fg-muted, #a4b2ad);
+  line-height: 1.5;
+  max-width: 42ch;
+  margin: 0;
+}
+
 .mg-start-btn {
   font-size: var(--font-size-lg, 1.125rem);
   font-weight: var(--font-weight-bold, 700);
@@ -242,6 +250,326 @@
   align-items: center;
   gap: var(--space-2, 8px);
   min-height: 2.5rem;
+}
+
+/* ── Crack the Tumblers — pin board ───────────────────────────────────────── */
+
+.ctb-pinboard {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ctb-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 68px;
+  border-radius: var(--radius-sm, 4px);
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+.ctb-pin--played {
+  background: var(--c-green-900, #0a2c1c);
+  color: var(--c-green-200, #b6f7d2);
+  border: 1px solid var(--c-green-700, #0c7b40);
+}
+
+.ctb-pin--clash {
+  background: var(--danger-tint, #2c0d0b);
+  color: var(--danger, #f0463a);
+  border: 1px solid var(--c-red-700, #8f1c16);
+}
+
+.ctb-pin--next {
+  background: transparent;
+  color: var(--fg-muted, #a4b2ad);
+  border: 1px dashed var(--fg-faint, #506a62);
+  font-size: 1rem;
+}
+
+.ctb-pin--empty {
+  background: var(--bg-panel, #141a1d);
+  border: 1px solid var(--border, rgba(170, 200, 195, 0.10));
+}
+
+.ctb-subtext {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--fg-muted, #a4b2ad);
+  margin-top: 0.5rem;
+}
+
+.ctb-subtext--danger {
+  color: var(--c-red-300, #f87171);
+}
+
+.ctb-hand {
+  margin-top: 1rem;
+}
+
+.ctb-hand-label {
+  font-family: var(--font-data);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-faint, #506a62);
+  margin-bottom: 0.4rem;
+}
+
+.ctb-played-row {
+  margin-top: 0.75rem;
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  color: var(--fg-muted, #a4b2ad);
+}
+
+.ctb-played-val {
+  color: var(--fg, #eef4f1);
+  font-weight: 700;
+}
+
+.mg-progress-bar__fill--danger {
+  background: var(--danger, #f0463a);
+}
+
+/* ── Beat 16 — beat dots ───────────────────────────────────────────────────── */
+
+.b16-beatrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+
+.b16-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-surface-3, #1e2b32);
+  border: 1px solid var(--border-strong, rgba(170, 200, 195, 0.2));
+  flex-shrink: 0;
+}
+
+.b16-dot--done {
+  background: var(--c-surface-4, #2a3c45);
+}
+
+.b16-dot--on {
+  background: var(--accent, #1fd06e);
+  border-color: var(--c-green-400, #4ade80);
+  box-shadow: 0 0 6px var(--accent, #1fd06e);
+}
+
+.b16-dot--mute {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--border, rgba(170, 200, 195, 0.10));
+}
+
+.b16-dot--target {
+  border-color: var(--caution, #f7b84b);
+}
+
+.b16-hero {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.b16-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.b16-num {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--fg, #eef4f1);
+  font-variant-numeric: tabular-nums;
+}
+
+.b16-of {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  color: var(--fg-muted, #a4b2ad);
+  letter-spacing: 0.05em;
+}
+
+.b16-muted-label {
+  font-family: var(--font-data);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-faint, #506a62);
+  margin-top: 0.2rem;
+}
+
+.mg-big-tap {
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.b16-tap-sub {
+  font-family: var(--font-data);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-on-accent, #05140c);
+  opacity: 0.7;
+}
+
+.b16-feedback-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.b16-feedback {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 3.5rem;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.b16-feedback--hit { color: var(--accent, #1fd06e); }
+.b16-feedback--early { color: var(--caution, #f7b84b); }
+.b16-feedback--late { color: var(--danger, #f0463a); }
+.b16-feedback--recorded { color: var(--fg-muted, #a4b2ad); font-size: 2rem; }
+
+.b16-feedback-sub {
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  color: var(--fg-muted, #a4b2ad);
+}
+
+/* ── Progress bar data colour variant ─────────────────────────────────────── */
+
+.mg-progress-bar__fill--data {
+  background: var(--data, #00bcd4);
+}
+
+/* ── Follow the Circuit — Simon grid ──────────────────────────────────────── */
+
+.ftc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-width: 260px;
+}
+
+.ftc-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid var(--border, rgba(170, 200, 195, 0.10));
+  background: var(--c-surface-2, #19262d);
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--fg-faint, #506a62);
+  cursor: default;
+  transition: background 60ms ease-out, border-color 60ms ease-out;
+  user-select: none;
+}
+
+.ftc-cell--watch {
+  background: var(--data-tint, #011c25);
+  border-color: var(--data, #00bcd4);
+  color: var(--data, #00bcd4);
+  box-shadow: 0 0 8px rgba(0, 188, 212, 0.3);
+}
+
+.ftc-cell--tapped {
+  background: var(--c-green-900, #0a2c1c);
+  border-color: var(--c-green-700, #0c7b40);
+  color: var(--c-green-200, #b6f7d2);
+}
+
+.ftc-cell--interactive {
+  cursor: pointer;
+}
+
+.ftc-cell--interactive:hover {
+  background: var(--c-surface-3, #1e2b32);
+  border-color: var(--border-strong, rgba(170, 200, 195, 0.2));
+}
+
+.ftc-subtext {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--fg-muted, #a4b2ad);
+  margin-top: 0.5rem;
+}
+
+.ftc-subtext--data {
+  color: var(--data, #00bcd4);
+}
+
+/* ── The Once-Over — changed-card indicator ───────────────────────────────── */
+
+.onceover-spread {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.onceover-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 68px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border, rgba(170, 200, 195, 0.10));
+  background: var(--c-surface-2, #19262d);
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--fg, #eef4f1);
+  cursor: default;
+  transition: border-color 80ms ease-out, background 80ms ease-out;
+}
+
+.onceover-card--flagged {
+  border-color: var(--caution, #f7b84b);
+  background: var(--caution-tint, #2e2008);
+  color: var(--c-amber-300, #fde68a);
+}
+
+.onceover-card--changed {
+  border-color: var(--caution, #f7b84b);
+  box-shadow: 0 0 0 2px rgba(247, 184, 75, 0.4);
+}
+
+.onceover-card--interactive {
+  cursor: pointer;
+}
+
+.onceover-card--interactive:hover {
+  border-color: var(--border-strong, rgba(170, 200, 195, 0.2));
+}
+
+.onceover-subtext {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--fg-muted, #a4b2ad);
+  margin-top: 0.5rem;
+}
+
+.onceover-subtext--gm {
+  color: var(--c-amber-300, #fde68a);
+  font-size: 0.8rem;
 }
 
 /* ── Card label ────────────────────────────────────────────────────────────── */

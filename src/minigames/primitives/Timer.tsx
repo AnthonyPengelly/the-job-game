@@ -4,11 +4,13 @@ export interface TimerProps {
   seconds: number;
   running: boolean;
   onExpire(): void;
+  /** Called each second with the new remaining value. */
+  onTick?: (remaining: number) => void;
   audible?: boolean;
 }
 
 /** Audible countdown timer. Uses Web Audio for tick/expiry beeps (E9 will integrate with the shared engine). */
-export function Timer({ seconds, running, onExpire, audible = true }: TimerProps): JSX.Element {
+export function Timer({ seconds, running, onExpire, onTick, audible = true }: TimerProps): JSX.Element {
   const [remaining, setRemaining] = useState(seconds);
   const expiredRef = useRef(false);
   const onExpireRef = useRef(onExpire);
@@ -34,6 +36,7 @@ export function Timer({ seconds, running, onExpire, audible = true }: TimerProps
       setRemaining((r) => {
         const next = r - 1;
         if (audible && next > 0) playBeep(440, 0.05);
+        onTick?.(next);
         return next;
       });
     }, 1000);

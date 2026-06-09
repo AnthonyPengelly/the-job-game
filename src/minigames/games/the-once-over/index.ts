@@ -16,4 +16,7 @@ export const theOnceOver: MiniGame<OnceOverParams, OnceOverState> = {
   Component: TheOnceOverComponent,
   judge,
   boosts: [hunchBoost],
+  armedInstructions:
+    'Study the spread carefully — the order, the values, every card. ' +
+    'When the timer ends the spread changes. Identify which card changed. Hunch gives a GM clue.',
 };

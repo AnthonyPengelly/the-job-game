@@ -153,7 +153,7 @@ describe('MinigameHost — followTheCircuit game mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('card-spread')).toBeInTheDocument();
+    expect(screen.getByTestId('ftc-grid')).toBeInTheDocument();
   });
 });
 
