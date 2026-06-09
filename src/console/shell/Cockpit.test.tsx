@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { StoreContext } from '@/console/store';
 import { createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
 import { Cockpit } from './Cockpit';
+import { ActionBarSlotProvider } from './actionBarSlot';
+import { ActionBar } from '@/console/ui/ActionBar';
 import { Dialog } from './overlays/Dialog';
 import { Drawer } from './overlays/Drawer';
 import { Popover } from './overlays/Popover';
@@ -28,6 +30,17 @@ function makeStore() {
   const store = createGameStore({ cfg: testCfg, storage });
   store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
   return store;
+}
+
+function renderCockpit(children: React.ReactNode, overlays?: React.ReactNode) {
+  const store = makeStore();
+  return render(
+    <ActionBarSlotProvider>
+      <StoreContext.Provider value={store}>
+        <Cockpit overlays={overlays}>{children}</Cockpit>
+      </StoreContext.Provider>
+    </ActionBarSlotProvider>,
+  );
 }
 
 // ── No document scroll ────────────────────────────────────────────────────────
@@ -319,5 +332,60 @@ describe('Popover overlay', () => {
 
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(closed).toBe(true);
+  });
+});
+
+// ── Action bar slot integration ───────────────────────────────────────────────
+
+describe('Cockpit — action bar slot', () => {
+  it('action bar is empty before any ActionBar is rendered', () => {
+    renderCockpit(<div />);
+    const bar = screen.getByTestId('cockpit-actionbar');
+    // No CTAs published yet — groups are empty
+    const grps = bar.querySelectorAll('.grp');
+    expect(grps.length).toBe(2);
+    expect(grps[0]?.textContent).toBe('');
+    expect(grps[1]?.textContent).toBe('');
+  });
+
+  it('ActionBar left CTA appears in cockpit-actionbar left group', async () => {
+    await act(async () => {
+      renderCockpit(
+        <ActionBar left={<button data-testid="back-btn">Back</button>} />,
+      );
+    });
+    const bar = screen.getByTestId('cockpit-actionbar');
+    expect(bar.querySelector('[data-testid="back-btn"]')).not.toBeNull();
+  });
+
+  it('ActionBar right CTA appears in cockpit-actionbar right group', async () => {
+    await act(async () => {
+      renderCockpit(
+        <ActionBar right={<button data-testid="primary-btn">Commit</button>} />,
+      );
+    });
+    const bar = screen.getByTestId('cockpit-actionbar');
+    expect(bar.querySelector('[data-testid="primary-btn"]')).not.toBeNull();
+  });
+
+  it('ActionBar note appears in cockpit-actionbar right group', async () => {
+    await act(async () => {
+      renderCockpit(
+        <ActionBar right={<button>Go</button>} note="Diff 8" />,
+      );
+    });
+    const bar = screen.getByTestId('cockpit-actionbar');
+    expect(bar.textContent).toContain('Diff 8');
+  });
+
+  it('ActionBar renders nothing inside the stage work area', async () => {
+    await act(async () => {
+      renderCockpit(
+        <ActionBar left={<button>Back</button>} right={<button>Next</button>} />,
+      );
+    });
+    const work = screen.getByTestId('cockpit-work');
+    // ActionBar renders null — no .actionbar div inside the work area
+    expect(work.querySelector('.actionbar')).toBeNull();
   });
 });

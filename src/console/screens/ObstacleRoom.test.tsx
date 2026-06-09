@@ -6,6 +6,7 @@ import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
 import type { ParsedNarration } from '@/content/schema';
 import { CrewRailModeProvider } from '@/console/shell';
+import { ActionBarSlotProvider, ActionBarSlotOutlet } from '@/console/shell/actionBarSlot';
 import { ObstacleRoom } from './ObstacleRoom';
 import { MinigameStub } from './MinigameStub';
 
@@ -58,11 +59,14 @@ function makeObstacleStore(seed = 1) {
 function renderObstacleRoom(seed = 1) {
   const store = makeObstacleStore(seed);
   render(
-    <StoreContext.Provider value={store}>
-      <CrewRailModeProvider>
-        <ObstacleRoom />
-      </CrewRailModeProvider>
-    </StoreContext.Provider>,
+    <ActionBarSlotProvider>
+      <ActionBarSlotOutlet />
+      <StoreContext.Provider value={store}>
+        <CrewRailModeProvider>
+          <ObstacleRoom />
+        </CrewRailModeProvider>
+      </StoreContext.Provider>
+    </ActionBarSlotProvider>,
   );
   return store;
 }
@@ -93,9 +97,12 @@ function renderMinigameStub(seed = 1) {
   });
 
   render(
-    <StoreContext.Provider value={store}>
-      <MinigameStub />
-    </StoreContext.Provider>,
+    <ActionBarSlotProvider>
+      <ActionBarSlotOutlet />
+      <StoreContext.Provider value={store}>
+        <MinigameStub />
+      </StoreContext.Provider>
+    </ActionBarSlotProvider>,
   );
   return store;
 }
@@ -195,11 +202,14 @@ describe('ObstacleRoom screen', () => {
     // 3 players with profile '3': crewPerOption=[1,2] → maxCrew = min(2, 3) = 2 < crew.length=3
     const store = makeObstacleStore3();
     render(
-      <StoreContext.Provider value={store}>
-        <CrewRailModeProvider>
-          <ObstacleRoom />
-        </CrewRailModeProvider>
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <CrewRailModeProvider>
+            <ObstacleRoom />
+          </CrewRailModeProvider>
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
@@ -325,11 +335,14 @@ describe('ObstacleRoom — full-team game (no crew-select)', () => {
   function renderFullTeamRoom(playerCount = 3) {
     const store = makeFullTeamStore(playerCount);
     render(
-      <StoreContext.Provider value={store}>
-        <CrewRailModeProvider>
-          <ObstacleRoom />
-        </CrewRailModeProvider>
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <CrewRailModeProvider>
+            <ObstacleRoom />
+          </CrewRailModeProvider>
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     return store;
   }

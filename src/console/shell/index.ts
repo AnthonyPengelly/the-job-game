@@ -7,6 +7,8 @@ export { CrewAvatar } from './CrewAvatar';
 export { CrewDetailPopover } from './CrewDetailPopover';
 export { CrewRailModeProvider, CrewRailModeContext, useCrewRailMode } from './crewRailMode';
 export type { CrewRailMode, CrewRailModeContextValue } from './crewRailMode';
+export { ActionBarSlotProvider, useActionBarSlot, useActionBarSlotSetter } from './actionBarSlot';
+export type { ActionBarSlot } from './actionBarSlot';
 export { ToolRail } from './ToolRail';
 export { ConfirmDialog } from './ConfirmDialog';
 export * from './overlays';

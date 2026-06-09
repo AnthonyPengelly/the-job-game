@@ -7,6 +7,7 @@ import { getawayMultiplier } from '@/engine/scoring';
 import { appendScore } from '@/platform';
 import type { StorageLike } from '@/platform';
 import type { ParsedNarration } from '@/content/schema';
+import { ActionBarSlotProvider, ActionBarSlotOutlet } from '@/console/shell/actionBarSlot';
 import { Result } from './Result';
 
 afterEach(cleanup);
@@ -58,9 +59,12 @@ function makeResultStore(win: boolean, seed = 1) {
 function renderResult(win: boolean, seed = 1) {
   const store = makeResultStore(win, seed);
   render(
-    <StoreContext.Provider value={store}>
-      <Result />
-    </StoreContext.Provider>,
+    <ActionBarSlotProvider>
+      <ActionBarSlotOutlet />
+      <StoreContext.Provider value={store}>
+        <Result />
+      </StoreContext.Provider>
+    </ActionBarSlotProvider>,
   );
   return store;
 }
@@ -124,9 +128,12 @@ describe('Result screen', () => {
     const state = store.getState().session.present;
     const expectedScore = state.loot * getawayMultiplier(state.heat, true, testCfg);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(state.finalScore).toBeCloseTo(expectedScore, 5);
   });
@@ -136,9 +143,12 @@ describe('Result screen', () => {
     const state = store.getState().session.present;
     const expectedScore = state.loot * getawayMultiplier(state.heat, false, testCfg);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(state.finalScore).toBeCloseTo(expectedScore, 5);
   });
@@ -210,9 +220,12 @@ describe('Result screen — sting narration', () => {
   it('shows result-sting container with teleprompter for a win', () => {
     const store = makeResultStoreWithNarration(true);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId('result-sting')).toBeInTheDocument();
     const line = screen.getByTestId('teleprompter-line').textContent ?? '';
@@ -222,9 +235,12 @@ describe('Result screen — sting narration', () => {
   it('shows bustSting line on a bust', () => {
     const store = makeResultStoreWithNarration(false);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId('result-sting')).toBeInTheDocument();
     const line = screen.getByTestId('teleprompter-line').textContent ?? '';
@@ -235,9 +251,12 @@ describe('Result screen — sting narration', () => {
     // script() commits a single sting line — hasNext=false → no advance button.
     const store = makeResultStoreWithNarration(true);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.queryByTestId('teleprompter-advance')).toBeNull();
     const line = screen.getByTestId('teleprompter-line').textContent ?? '';
@@ -247,9 +266,12 @@ describe('Result screen — sting narration', () => {
   it('go-again button remains reachable regardless of narration state', () => {
     const store = makeResultStoreWithNarration(true);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId('btn-go-again')).toBeInTheDocument();
   });
@@ -258,9 +280,12 @@ describe('Result screen — sting narration', () => {
     // Store WITHOUT narration
     const store = makeResultStore(true);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.queryByTestId('result-sting')).toBeNull();
   });
@@ -273,9 +298,12 @@ describe('Result screen — leaderboard outcome', () => {
     // makeResultStore uses fresh storage — first run is always a new best.
     const store = makeResultStore(true);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId('result-new-best')).toBeInTheDocument();
   });
@@ -283,9 +311,12 @@ describe('Result screen — leaderboard outcome', () => {
   it('result-new-best badge includes the rank number', () => {
     const store = makeResultStore(true);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     const badge = screen.getByTestId('result-new-best');
     // First-ever run ranks #1.
@@ -295,9 +326,12 @@ describe('Result screen — leaderboard outcome', () => {
   it('shows result-rank reflecting the position on the leaderboard', () => {
     const store = makeResultStore(true);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     const rankEl = screen.getByTestId('result-rank');
     expect(rankEl).toBeInTheDocument();
@@ -308,9 +342,12 @@ describe('Result screen — leaderboard outcome', () => {
   it('shows the leaderboard crew name in the rank panel', () => {
     const store = makeResultStore(true);
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     // crewName is '' (not set), so the panel shows '—'.
     expect(screen.getByTestId('result-rank')).toBeInTheDocument();
@@ -342,9 +379,12 @@ describe('Result screen — leaderboard outcome', () => {
     expect(store.getState().currentRunNewBest).toBe(false);
 
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.queryByTestId('result-new-best')).toBeNull();
   });
@@ -372,9 +412,12 @@ describe('Result screen — leaderboard outcome', () => {
     store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
 
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     // The "Did not place" badge should be visible.
     const panel = screen.getByTestId('result-rank');
@@ -404,9 +447,12 @@ describe('Result screen — leaderboard outcome', () => {
     store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
 
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     // Rank panel is always shown when currentRunRank is set.
     expect(screen.getByTestId('result-rank')).toBeInTheDocument();
@@ -435,9 +481,12 @@ describe('Result screen — leaderboard outcome', () => {
     store.getState().dispatch({ t: 'RESOLVE_GETAWAY', win: true });
 
     render(
-      <StoreContext.Provider value={store}>
-        <Result />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Result />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     const panel = screen.getByTestId('result-rank');
     expect(panel.textContent).toContain('The Foxes');

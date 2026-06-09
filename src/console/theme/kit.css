@@ -167,11 +167,10 @@ body {
 .btn:disabled { opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
 .btn-lg { font-size:21px; padding:16px 30px; }
 
-/* ============================================================
-   ACTION BAR (fixed bottom)
-   ============================================================ */
-.actionbar { position:absolute; left:0; right:0; bottom:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:var(--space-4); padding:var(--space-4) var(--space-6); border-top:1px solid var(--border-strong); background:linear-gradient(0deg, var(--bg-panel-raised), color-mix(in srgb, var(--bg-panel) 90%, transparent)); backdrop-filter:blur(6px); }
-.actionbar .grp { display:flex; align-items:center; gap:var(--space-3); }
+/* NOTE: .actionbar was the in-stage absolute bar (E13–E18). Removed in E19.1 —
+   ActionBar now renders null and publishes CTAs to the cockpit grid action bar
+   via ActionBarSlotProvider. The real bar styles live in cockpit.css
+   (.cockpit-actionbar). */
 
 /* ---- option / choice cards (Offer) ---- */
 .opt { border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); padding:var(--space-5); display:flex; flex-direction:column; gap:var(--space-3); cursor:pointer; transition:all var(--dur-base) var(--ease-out); }

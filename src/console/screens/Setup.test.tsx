@@ -8,6 +8,7 @@ import type { StorageLike } from '@/platform';
 import { SAVE_VERSION } from '@/content/schema/save';
 import { LEADERBOARD_VERSION } from '@/content/schema/leaderboard';
 import type { RunEvent } from '@/engine';
+import { ActionBarSlotProvider, ActionBarSlotOutlet } from '@/console/shell/actionBarSlot';
 import { Setup } from './Setup';
 
 afterEach(cleanup);
@@ -27,9 +28,12 @@ function renderSetup(storage: StorageLike) {
   const store = createGameStore({ cfg: testCfg, storage });
   store.getState().hydrate();
   render(
-    <StoreContext.Provider value={store}>
-      <Setup />
-    </StoreContext.Provider>,
+    <ActionBarSlotProvider>
+      <ActionBarSlotOutlet />
+      <StoreContext.Provider value={store}>
+        <Setup />
+      </StoreContext.Provider>
+    </ActionBarSlotProvider>,
   );
   return store;
 }
@@ -189,9 +193,12 @@ describe('Setup — resume flow', () => {
     store.getState().hydrate();
 
     render(
-      <StoreContext.Provider value={store}>
-        <Setup />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Setup />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
 
     expect(store.getState().hasResumableSave).toBe(true);

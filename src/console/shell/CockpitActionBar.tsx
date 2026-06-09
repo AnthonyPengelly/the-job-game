@@ -1,23 +1,27 @@
-interface CockpitActionBarProps {
-  left?: React.ReactNode;
-  cues?: React.ReactNode;
-  right?: React.ReactNode;
-}
+import { useActionBarSlot } from './actionBarSlot';
 
 /**
  * The cockpit bottom action bar.
  *
- * Has three zones: left (secondary / back), cues (contextual sound
- * shortcuts, centred), and right (primary CTA). All are optional
- * placeholders in E13.1 — filled contextually by phase screens in
- * E13.3/E13.7 onward.
+ * Reads left/right/note from the ActionBarSlot context published by the
+ * active phase screen's <ActionBar> component. Three zones:
+ *   left  — back / secondary CTA
+ *   cues  — contextual sound shortcuts (reserved, empty until E20)
+ *   right — note text + primary CTA
  */
-export function CockpitActionBar({ left, cues, right }: CockpitActionBarProps) {
+export function CockpitActionBar() {
+  const { left, right, note } = useActionBarSlot();
+
   return (
     <div className="cockpit-actionbar" data-testid="cockpit-actionbar">
       <div className="grp">{left}</div>
-      <div className="grp-cues">{cues}</div>
-      <div className="grp">{right}</div>
+      <div className="grp-cues" />
+      <div className="grp">
+        {note !== undefined && (
+          <span className="cockpit-actionbar-note">{note}</span>
+        )}
+        {right}
+      </div>
     </div>
   );
 }
