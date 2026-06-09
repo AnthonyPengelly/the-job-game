@@ -83,6 +83,12 @@ export function AssemblyLineComponent({
         <span className="mg-dial-inline" data-testid="al-dial">
           Dial {dial.level.toFixed(1)}
         </span>
+        <span className="mg-dial-inline" data-testid="al-hand-size">
+          {params.handSize} cards
+        </span>
+        <span className="mg-dial-inline" data-testid="al-type-count">
+          {params.setTypesInPlay.length} types
+        </span>
       </StatusZone>
 
       <ChallengeZone>
