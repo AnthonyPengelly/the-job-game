@@ -160,6 +160,9 @@ export function nextModelEvent(
           committed: state.crew.map(pl => pl.id),
         };
       } else {
+        if (room.resolvedRoll !== undefined) {
+          return { t: 'ACK_SCENARIO_ROLL' };
+        }
         if (room.pendingRoll !== undefined) {
           return { t: 'RESOLVE_SCENARIO_ROLL' };
         }

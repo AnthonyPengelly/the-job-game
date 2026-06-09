@@ -549,6 +549,7 @@ function makeScenarioSpoilsStore(opts: { externalRoll: number; narration?: Parse
     attemptedBy: alice.id as PlayerId,
   });
   store.getState().dispatch({ t: 'RESOLVE_SCENARIO_ROLL', externalRoll });
+  store.getState().dispatch({ t: 'ACK_SCENARIO_ROLL' });
   return store;
 }
 

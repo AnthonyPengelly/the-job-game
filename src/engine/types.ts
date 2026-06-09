@@ -88,6 +88,28 @@ export interface PendingRoll {
   dc: number;
 }
 
+/**
+ * The resolved roll result stored on ScenarioRoom after RESOLVE_SCENARIO_ROLL.
+ * Stays on the room until ACK_SCENARIO_ROLL, letting the UI reveal the result
+ * dramatically before transitioning to the offer phase.
+ *
+ * total = roll + laneRating (compare against baseDifficulty for "roll + bonus vs target" display).
+ * The engine already applied the loot/heat/gear grant when storing this — these
+ * deltas are carried here for display only.
+ */
+export interface ResolvedRoll {
+  roll: number;
+  total: number;
+  dc: number;
+  lane: Lane;
+  laneRating: number;
+  baseDifficulty: number;
+  result: Outcome;
+  lootDelta: number;
+  heatDelta: number;
+  gear?: GearGrantDescriptor;
+}
+
 // ── Player ────────────────────────────────────────────────────────────────────
 
 export interface Player {
@@ -146,6 +168,11 @@ export interface ScenarioRoom {
   choices: [ScenarioChoice, ScenarioChoice];
   /** Set after CHOOSE_SCENARIO for a roll choice; cleared by RESOLVE_SCENARIO_ROLL. */
   pendingRoll?: PendingRoll;
+  /**
+   * Set by RESOLVE_SCENARIO_ROLL: the applied roll result for UI reveal.
+   * Cleared and room set to null by ACK_SCENARIO_ROLL (which advances to offer).
+   */
+  resolvedRoll?: ResolvedRoll;
 }
 
 export type CurrentRoom = ObstacleRoom | ScenarioRoom;
@@ -256,6 +283,7 @@ export type RunEvent =
   | { t: 'RESOLVE_MINIGAME'; outcome: Outcome }
   | { t: 'CHOOSE_SCENARIO'; choiceId: string; attemptedBy?: PlayerId }
   | { t: 'RESOLVE_SCENARIO_ROLL'; externalRoll?: number }
+  | { t: 'ACK_SCENARIO_ROLL' }
   | { t: 'ASSIGN_GEAR'; gear: GearId; to: PlayerId; earnedGearIndex?: number }
   | { t: 'SELL_GEAR'; index: number }
   | { t: 'PUSH_ON' }
