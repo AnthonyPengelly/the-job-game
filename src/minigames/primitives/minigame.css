@@ -600,3 +600,326 @@
   text-transform: uppercase;
   color: var(--fg-muted, #a4b2ad);
 }
+
+/* ── Dial inline (status zone) ─────────────────────────────────────────────── */
+
+.mg-dial-inline {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  color: var(--fg-faint, #506a62);
+  letter-spacing: 0.04em;
+}
+
+/* ── Hero word (Categories) ────────────────────────────────────────────────── */
+
+.mg-hero-word {
+  font-family: var(--font-display, var(--font-body));
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.1;
+  color: var(--fg, #eef4f1);
+  margin-bottom: 1.25rem;
+}
+
+/* ── Hero number (Assembly Line sets count) ───────────────────────────────── */
+
+.mg-hero-num {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--fg, #eef4f1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Hero sub (label under a hero number or word) ─────────────────────────── */
+
+.mg-hero-sub {
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-muted, #a4b2ad);
+  margin-top: 0.25rem;
+}
+
+/* ── Tally control ─────────────────────────────────────────────────────────── */
+
+.mg-tally {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mg-tcount {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 4.5rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg, #eef4f1);
+}
+
+.mg-tally-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.mg-tbtn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.4rem;
+  border-radius: var(--radius-md, 6px);
+  background: var(--accent, #1fd06e);
+  color: var(--fg-on-accent, #05140c);
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--dur-fast, 90ms) ease-out;
+}
+
+.mg-tbtn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.mg-tbtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.mg-tl {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+}
+
+.mg-ts {
+  font-family: var(--font-data);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.mg-tbtn--ghost {
+  background: transparent;
+  color: var(--fg-muted, #a4b2ad);
+  border: 1px solid var(--border, rgba(170, 200, 195, 0.10));
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+}
+
+/* ── Mark correct/wrong buttons (Inside Knowledge) ─────────────────────────── */
+
+.ik-mark-buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.mg-mark-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.4rem;
+  border-radius: var(--radius-md, 6px);
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: opacity var(--dur-fast, 90ms) ease-out;
+}
+
+.mg-mark-btn:hover {
+  opacity: 0.88;
+}
+
+.mg-mark-btn--correct {
+  background: var(--c-green-900, #0a2c1c);
+  color: var(--c-green-200, #b6f7d2);
+  border: 1px solid var(--c-green-700, #0c7b40);
+}
+
+.mg-mark-btn--wrong {
+  background: var(--danger-tint, #2c0d0b);
+  color: var(--danger, #f0463a);
+  border: 1px solid var(--c-red-700, #8f1c16);
+}
+
+/* ── Inside Knowledge Q&A ──────────────────────────────────────────────────── */
+
+.ik-qa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ik-question {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--fg, #eef4f1);
+  line-height: 1.4;
+}
+
+.ik-answer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--data-tint, #011c25);
+  border: 1px solid var(--data, #00bcd4);
+}
+
+.ik-answer-icon {
+  color: var(--data, #00bcd4);
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.ik-answer-label {
+  font-family: var(--font-data);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--data, #00bcd4);
+  opacity: 0.75;
+}
+
+.ik-answer-value {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--data, #00bcd4);
+}
+
+/* ── Inside Knowledge 4-option narrow-down ─────────────────────────────────── */
+
+.ik-opts4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.ik-opt4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border, rgba(170, 200, 195, 0.10));
+  background: var(--c-surface-2, #19262d);
+}
+
+.ik-opt4--correct {
+  border-color: var(--data, #00bcd4);
+  background: var(--data-tint, #011c25);
+}
+
+.ik-opt-letter {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--fg-muted, #a4b2ad);
+  width: 1.2rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ik-opt4--correct .ik-opt-letter {
+  color: var(--data, #00bcd4);
+}
+
+.ik-opt-text {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--fg, #eef4f1);
+}
+
+.ik-opt4--correct .ik-opt-text {
+  color: var(--data, #00bcd4);
+  font-weight: 600;
+}
+
+.ik-complete {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg-muted, #a4b2ad);
+}
+
+/* ── Assembly Line type strip (Tip-Off) ────────────────────────────────────── */
+
+.al-type-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--data-tint, #011c25);
+  border: 1px solid var(--data, #00bcd4);
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.al-type-strip-icon {
+  color: var(--data, #00bcd4);
+  flex-shrink: 0;
+}
+
+.al-type-strip-label {
+  font-family: var(--font-data);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--data, #00bcd4);
+  opacity: 0.75;
+}
+
+.al-type-strip-values {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--data, #00bcd4);
+  letter-spacing: 0.06em;
+}
+
+.al-type-strip-hint {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  color: var(--fg-muted, #a4b2ad);
+  margin-left: auto;
+}
+
+/* ── Assembly Line hero + tally row ────────────────────────────────────────── */
+
+.al-hero-row {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.al-hero-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 6rem;
+}
+
+.al-tally-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}

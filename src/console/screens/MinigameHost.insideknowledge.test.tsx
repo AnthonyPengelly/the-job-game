@@ -133,7 +133,7 @@ describe('MinigameHost — inside-knowledge game mounting', () => {
     expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
   });
 
-  it('shows tier and first question in ACTIVE', () => {
+  it('shows first question and GM-only answer in ACTIVE', () => {
     const store = makeInsideKnowledgeStore();
     render(
       <StoreContext.Provider value={store}>
@@ -141,7 +141,6 @@ describe('MinigameHost — inside-knowledge game mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('ik-tier')).toBeInTheDocument();
     expect(screen.getByTestId('ik-question')).toBeInTheDocument();
     expect(screen.getByTestId('ik-answer')).toBeInTheDocument();
   });

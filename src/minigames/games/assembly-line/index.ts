@@ -17,4 +17,8 @@ export const assemblyLine: MiniGame<AssemblyLineParams, AssemblyLineState> = {
   Component: AssemblyLineComponent,
   judge,
   boosts: [tipOffBoost],
+  armedInstructions:
+    'The whole table plays — everyone starts with a hand of cards and trades simultaneously ' +
+    '(shout what you want, take what you need). Each player tries to collect a complete set. ' +
+    'Tell me every time one is complete. Tip-Off reveals which types are actually in play.',
 };
