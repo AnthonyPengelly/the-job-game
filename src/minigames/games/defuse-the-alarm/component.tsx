@@ -1,15 +1,41 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, AlertTriangle, BookOpen, Scissors } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, BookOpen, MessageSquare } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
-import { CardSpread } from '@/minigames/primitives/CardSpread';
 import type { CardId } from '@/minigames/primitives/CardSpread';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import { publishSlice } from '@/platform/channel';
-import type { DefuseParams } from './generate';
+import type { DefuseParams, WireCard } from './generate';
 import { judge, clearChannelBoost } from './judge';
 import type { DefuseState } from './judge';
+
+// Symbol emoji map for readable display
+const SYMBOL_GLYPH: Record<string, string> = {
+  circle: '●',
+  square: '■',
+  triangle: '▲',
+  star: '★',
+};
+
+// Color shorthand for card display
+const COLOR_ABBR: Record<string, string> = {
+  red: 'RED',
+  blue: 'BLU',
+  green: 'GRN',
+  yellow: 'YLW',
+  orange: 'ORG',
+  white: 'WHT',
+};
+
+const COLOR_STYLE: Record<string, React.CSSProperties> = {
+  red: { color: 'var(--c-red-400, #f87171)' },
+  blue: { color: 'var(--data, #00bcd4)' },
+  green: { color: 'var(--accent, #1fd06e)' },
+  yellow: { color: 'var(--caution, #f7b84b)' },
+  orange: { color: 'var(--c-amber-300, #fde68a)' },
+  white: { color: 'var(--fg, #eef4f1)' },
+};
 
 function initState(): DefuseState {
   return {
@@ -17,6 +43,51 @@ function initState(): DefuseState {
     timerExpired: false,
     clearChannelUsed: false,
   };
+}
+
+function WireCardView({
+  wire,
+  position,
+  isCut,
+  isBadCut,
+  onClick,
+}: {
+  wire: WireCard;
+  position: number;
+  isCut: boolean;
+  isBadCut: boolean;
+  onClick: () => void;
+}): JSX.Element {
+  const stateClass = isBadCut
+    ? ' dfz-card--badcut'
+    : isCut
+    ? ' dfz-card--cut'
+    : '';
+
+  return (
+    <div
+      className={`dfz-card${stateClass}`}
+      data-testid={`wire-card-${wire.id}`}
+      onClick={isCut || isBadCut ? undefined : onClick}
+      role={isCut || isBadCut ? undefined : 'button'}
+      aria-label={`Wire ${position}: ${wire.color} ${wire.symbol}`}
+    >
+      <div className="dfz-card-face">
+        <span
+          className="dfz-card-color"
+          style={COLOR_STYLE[wire.color]}
+        >
+          {COLOR_ABBR[wire.color] ?? wire.color.toUpperCase().slice(0, 3)}
+        </span>
+        <span className="dfz-card-symbol" style={COLOR_STYLE[wire.color]}>
+          {SYMBOL_GLYPH[wire.symbol] ?? wire.symbol}
+        </span>
+      </div>
+      <span className="dfz-card-pos" data-testid={`wire-pos-${wire.id}`}>
+        {position}{isBadCut ? ' · cut!' : isCut ? ' · cut' : ''}
+      </span>
+    </div>
+  );
 }
 
 export function DefuseComponent({
@@ -41,7 +112,6 @@ export function DefuseComponent({
   const wrongCutIds = state.cutIds.filter(id => !params.safeWireIds.includes(id));
   const safeCutsDone = state.cutIds.filter(id => params.safeWireIds.includes(id)).length;
   const allSafeDone = safeCutsDone >= params.safeWireIds.length;
-
   const alarmTripped = wrongCutIds.length > 0;
 
   const fillPct = params.safeWireIds.length > 0
@@ -49,7 +119,7 @@ export function DefuseComponent({
     : 0;
 
   let badgeClass = 'mg-status-badge mg-status-badge--active';
-  let badgeIcon: React.ReactNode = <Scissors size={14} />;
+  let badgeIcon: React.ReactNode = null;
   let badgeLabel = 'Defusing';
 
   if (alarmTripped) {
@@ -61,9 +131,7 @@ export function DefuseComponent({
     badgeIcon = <XCircle size={14} />;
     badgeLabel = 'TIME';
   } else if (allSafeDone) {
-    badgeClass = state.timerExpired
-      ? 'mg-status-badge mg-status-badge--complication'
-      : 'mg-status-badge mg-status-badge--clean';
+    badgeClass = 'mg-status-badge mg-status-badge--clean';
     badgeIcon = <CheckCircle size={14} />;
     badgeLabel = 'DEFUSED';
   }
@@ -87,11 +155,6 @@ export function DefuseComponent({
     onResolve(judge(state, params));
   }
 
-  const wireCards = params.wires.map(w => ({
-    id: w.id,
-    label: `${w.color}/${w.symbol}`,
-  }));
-
   return (
     <div data-testid="defuse-the-alarm">
       <StatusZone>
@@ -99,15 +162,16 @@ export function DefuseComponent({
           {badgeIcon}
           <span>{badgeLabel}</span>
         </span>
-        <div className="mg-progress-bar">
+        <div className="mg-progress-bar" data-testid="defuse-progress-bar">
           <div className="mg-progress-bar__track">
             <div
-              className="mg-progress-bar__fill"
+              className={`mg-progress-bar__fill mg-progress-bar__fill--data${alarmTripped ? ' mg-progress-bar__fill--danger' : ''}`}
               style={{ width: `${fillPct}%` }}
+              data-testid="defuse-progress-fill"
             />
           </div>
           <span className="mg-progress-bar__label" data-testid="defuse-progress">
-            {safeCutsDone} / {params.safeWireIds.length} safe cuts
+            Safe cuts · {safeCutsDone} / {params.safeWireIds.length}
           </span>
         </div>
         <Timer
@@ -119,29 +183,38 @@ export function DefuseComponent({
       </StatusZone>
 
       <ChallengeZone>
-        <div data-testid="defuse-wires">
-          <CardSpread
-            cards={wireCards}
-            layout="row"
-            faceDown={state.cutIds}
-            onTap={handleCut}
-          />
+        <div className="dfz-device" data-testid="defuse-wires">
+          {params.wires.map((wire, i) => {
+            const isCut = state.cutIds.includes(wire.id) && params.safeWireIds.includes(wire.id);
+            const isBadCut = state.cutIds.includes(wire.id) && !params.safeWireIds.includes(wire.id);
+            return (
+              <WireCardView
+                key={wire.id}
+                wire={wire}
+                position={i + 1}
+                isCut={isCut}
+                isBadCut={isBadCut}
+                onClick={() => handleCut(wire.id)}
+              />
+            );
+          })}
         </div>
 
-        {alarmTripped && (
-          <div data-testid="defuse-wrong-cuts" className="mg-status-badge mg-status-badge--botched" style={{ marginTop: '0.75rem', display: 'inline-flex', fontSize: '1rem' }}>
-            <AlertTriangle size={16} /> ALARM TRIPPED — wrong cut!
-          </div>
-        )}
-
         {state.clearChannelUsed && (
-          <div data-testid="defuse-clear-channel-active" className="mg-status-badge mg-status-badge--complication" style={{ marginTop: '0.5rem', display: 'inline-flex' }}>
-            Clear Channel active — one sentence allowed
+          <div data-testid="defuse-clear-channel-active" className="dfz-manual-ref" style={{ color: 'var(--caution, #f7b84b)' }}>
+            <MessageSquare size={14} />
+            Clear Channel active — one full sentence allowed
           </div>
         )}
 
-        {/* GM-only rulebook (glanceable reference; never reaches player-view) */}
-        <details style={{ marginTop: '0.75rem' }}>
+        {/* Player-view note */}
+        <div className="dfz-manual-ref" data-testid="defuse-manual-ref">
+          <BookOpen size={14} />
+          Player-view holds the manual · crew describes this row, reader names the cut
+        </div>
+
+        {/* GM-only rulebook (glanceable reference) */}
+        <details style={{ marginTop: '0.5rem' }}>
           <summary data-testid="defuse-rulebook-toggle" style={{ cursor: 'pointer', color: 'var(--fg-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 4 }}>
             <BookOpen size={14} /> Rules (GM only)
           </summary>

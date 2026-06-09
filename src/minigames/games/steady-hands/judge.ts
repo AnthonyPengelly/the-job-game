@@ -9,6 +9,8 @@ export interface SteadyHandsState {
   extraHandsUsed: boolean;
   /** True while the 10s all-hands window is active. */
   extraHandsActive: boolean;
+  /** GM-tracked current height (tapped up/down as the crew builds). */
+  currentHeight: number;
 }
 
 /**

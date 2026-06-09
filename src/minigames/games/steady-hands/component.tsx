@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Triangle, XCircle, Users } from 'lucide-react';
+import { Triangle, XCircle, Zap } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
@@ -15,6 +15,7 @@ function initState(): SteadyHandsState {
     timerExpired: false,
     extraHandsUsed: false,
     extraHandsActive: false,
+    currentHeight: 0,
   };
 }
 
@@ -24,6 +25,10 @@ export function SteadyHandsComponent({
   onResolve,
 }: MiniGameProps<SteadyHandsParams>): JSX.Element {
   const [state, setState] = useState<SteadyHandsState>(initState);
+  const [burstSeconds, setBurstSeconds] = useState(EXTRA_HANDS_SECONDS);
+
+  const fillPct = Math.min((state.currentHeight / params.targetHeight) * 100, 100);
+  const remaining = Math.max(0, params.targetHeight - state.currentHeight);
 
   let badgeClass = 'mg-status-badge mg-status-badge--active';
   let badgeIcon: React.ReactNode = <Triangle size={14} />;
@@ -44,11 +49,25 @@ export function SteadyHandsComponent({
 
   function handleBoost(hook: BoostHook<SteadyHandsState, SteadyHandsParams>) {
     setState(s => hook.apply(s, params));
+    setBurstSeconds(EXTRA_HANDS_SECONDS);
+  }
+
+  function handleHeightUp() {
+    setState(s => ({ ...s, currentHeight: Math.min(s.currentHeight + 1, params.targetHeight) }));
+  }
+
+  function handleHeightDown() {
+    setState(s => ({ ...s, currentHeight: Math.max(0, s.currentHeight - 1) }));
   }
 
   function handleCallOutcome() {
     onResolve(judge(state));
   }
+
+  // Build tower: solid bricks up to currentHeight, dashed bricks for remaining
+  const totalBricks = params.targetHeight;
+  const solidBricks = state.currentHeight;
+  const targetBricks = totalBricks - solidBricks;
 
   return (
     <div data-testid="steady-hands">
@@ -57,45 +76,87 @@ export function SteadyHandsComponent({
           {badgeIcon}
           <span>{badgeLabel}</span>
         </span>
-        <span data-testid="sh-target-height">Target: {params.targetHeight} blocks</span>
         <Timer
           seconds={params.timerSeconds}
           running={!state.timerExpired}
           onExpire={handleTimerExpire}
           audible
         />
-        {state.timerExpired && (
-          <span data-testid="sh-timer-expired">Time is up!</span>
-        )}
+        <div className="mg-progress-bar" data-testid="sh-progress">
+          <div className="mg-progress-bar__track">
+            <div
+              className="mg-progress-bar__fill"
+              style={{ width: `${fillPct}%` }}
+              data-testid="sh-progress-fill"
+            />
+          </div>
+          <span className="mg-progress-bar__label" data-testid="sh-progress-label">
+            Height built · <span data-testid="sh-target-height">{state.currentHeight}&nbsp;/&nbsp;{params.targetHeight}</span> tiers
+          </span>
+        </div>
       </StatusZone>
 
       <ChallengeZone>
-        <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-data)', color: 'var(--fg)' }}>
-          <Triangle size={24} style={{ display: 'inline', marginRight: 8 }} />
-          <span data-testid="sh-height-hero">{params.targetHeight}</span>
-          <span style={{ fontSize: '1rem', marginLeft: 8, color: 'var(--fg-muted)' }}>blocks</span>
+        <div className="sh-tower-area">
+          <div className="sh-tower" data-testid="sh-tower" aria-label={`Tower: ${solidBricks} of ${totalBricks} tiers`}>
+            {Array.from({ length: targetBricks }).map((_, i) => (
+              <div key={`t-${i}`} className="sh-brick sh-brick--target" />
+            ))}
+            {Array.from({ length: solidBricks }).map((_, i) => (
+              <div key={`b-${i}`} className="sh-brick" />
+            ))}
+          </div>
+
+          <div className="sh-hero">
+            <div className="sh-hero-num" data-testid="sh-height-hero">
+              {state.currentHeight}
+              <small style={{ fontSize: '1.5rem', color: 'var(--fg-faint, #506a62)' }}>/{params.targetHeight}</small>
+            </div>
+            <div className="sh-hero-sub">
+              {remaining > 0
+                ? `${remaining} tier${remaining !== 1 ? 's' : ''} to go`
+                : 'Target reached!'}
+            </div>
+            <div className="sh-height-controls" style={{ marginTop: '0.75rem' }}>
+              <button
+                type="button"
+                className="mg-tbtn"
+                data-testid="sh-height-up"
+                onClick={handleHeightUp}
+                disabled={state.currentHeight >= params.targetHeight}
+              >
+                <span className="mg-tl">+1</span>
+                <span className="mg-ts">Tier built</span>
+              </button>
+              <button
+                type="button"
+                className="mg-tbtn mg-tbtn--ghost"
+                data-testid="sh-height-down"
+                onClick={handleHeightDown}
+                disabled={state.currentHeight === 0}
+              >
+                Undo
+              </button>
+            </div>
+          </div>
         </div>
 
         {state.extraHandsActive && (
-          <div data-testid="sh-extra-hands" style={{
-            marginTop: '1rem',
-            padding: '0.75rem',
-            border: '2px solid var(--accent, #1fd06e)',
-            borderRadius: 'var(--radius-md, 7px)',
-            background: 'var(--c-green-900, #0a2c1c)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-          }}>
-            <Users size={18} style={{ color: 'var(--c-green-200, #b6f7d2)' }} />
-            <span style={{ color: 'var(--c-green-200, #b6f7d2)', fontWeight: 700 }}>
-              All hands on deck!
+          <div data-testid="sh-extra-hands" className="sh-burst" style={{ marginTop: '1rem' }}>
+            <Zap size={17} style={{ color: 'var(--caution, #f7b84b)', flexShrink: 0 }} />
+            <div>
+              <div className="sh-burst-label">Extra Hands · burst</div>
+              <div className="sh-burst-timer">
+                <Timer
+                  seconds={burstSeconds}
+                  running={state.extraHandsActive}
+                  onExpire={handleExtraHandsExpire}
+                />
+              </div>
+            </div>
+            <span className="sh-hero-sub" style={{ marginTop: 0, marginLeft: 'auto' }}>
+              Secondary clock — separate from build timer
             </span>
-            <Timer
-              seconds={EXTRA_HANDS_SECONDS}
-              running={state.extraHandsActive}
-              onExpire={handleExtraHandsExpire}
-            />
           </div>
         )}
       </ChallengeZone>
