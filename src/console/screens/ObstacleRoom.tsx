@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Flame, Shield } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Check, Flame, Shield, Users } from 'lucide-react';
 import { useGameStore } from '@/console/store';
-import { PhaseHead, Panel, ActionBar, Button } from '@/console/ui';
+import { ActionBar, Button } from '@/console/ui';
+import { PhaseHead } from '@/console/ui';
 import { Teleprompter } from '@/console/teleprompter';
 import { useCrewRailMode } from '@/console/shell';
 import { formatLoot } from '@/content/format';
+import { buildRegistry } from '@/minigames';
+import { computeDial } from '@/engine';
 import type { ObstacleOption, Lane } from '@/engine';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -15,45 +18,89 @@ function toLane(s: string | undefined): Lane | undefined {
   return s !== undefined && VALID_LANES.has(s) ? (s as Lane) : undefined;
 }
 
+function laneName(lane: string): string {
+  return lane.charAt(0).toUpperCase() + lane.slice(1);
+}
+
 // ── Option card ───────────────────────────────────────────────────────────────
 
 interface OptionCardProps {
   option: ObstacleOption;
+  templateLane: string;
+  gameName: string;
   selected: boolean;
   onSelect: () => void;
   narrationLine?: string | undefined;
+  dialLevel?: number | undefined;
 }
 
-function OptionCard({ option, selected, onSelect, narrationLine }: OptionCardProps) {
+function OptionCard({
+  option,
+  templateLane,
+  gameName,
+  selected,
+  onSelect,
+  narrationLine,
+  dialLevel,
+}: OptionCardProps) {
+  const tagContent = selected ? (
+    <>
+      <Check size={13} strokeWidth={1.75} aria-hidden />
+      {' '}Selected door
+    </>
+  ) : option.greedy ? (
+    <>
+      <Flame size={13} strokeWidth={1.75} aria-hidden />
+      {' '}High risk
+    </>
+  ) : (
+    <>
+      <Shield size={13} strokeWidth={1.75} aria-hidden />
+      {' '}Safe line
+    </>
+  );
+
+  const fillPct = dialLevel !== undefined
+    ? Math.min(100, Math.max(0, (dialLevel / 2.0) * 100))
+    : 50;
+
   return (
     <div
       data-testid={`option-card-${option.id}`}
       aria-selected={selected}
       className={`opt ${option.greedy ? 'risk' : 'safe'}${selected ? ' selected' : ''}`}
+      onClick={selected ? undefined : onSelect}
     >
-      <span className="opt-tag">
-        {option.greedy ? (
-          <>
-            <Flame size={13} strokeWidth={1.75} aria-hidden />
-            {' '}High risk
-          </>
-        ) : (
-          <>
-            <Shield size={13} strokeWidth={1.75} aria-hidden />
-            {' '}Play it safe
-          </>
-        )}
-      </span>
+      <span className="opt-tag">{tagContent}</span>
       <h4>{option.greedy ? 'Greedy' : 'Safe'}</h4>
+      <div
+        className="game"
+        data-testid={`option-game-${option.id}`}
+      >
+        <span className="lanechip" data-testid={`option-lane-chip-${option.id}`}>
+          {laneName(templateLane)}
+        </span>
+        <span className="gn" data-testid={`option-game-name-${option.id}`}>
+          {gameName}
+        </span>
+      </div>
       {narrationLine !== undefined && narrationLine !== '' && (
-        <p className="prose muted" data-testid={`option-narration-${option.id}`}>
+        <p className="desc" data-testid={`option-narration-${option.id}`}>
           {narrationLine}
         </p>
       )}
-      <span data-testid={`option-game-${option.id}`} />
+      {selected && dialLevel !== undefined && (
+        <div className="dialbar" data-testid="option-dial" aria-label="GM-only difficulty dial">
+          <span className="dlabel">Difficulty dial</span>
+          <div className="dtrack">
+            <div className="dfill" style={{ width: `${fillPct}%` }} />
+          </div>
+          <span className="dval">GM only</span>
+        </div>
+      )}
       <div className="opt-cost">
         <div className="c">
-          <span className="k">Loot</span>
+          <span className="k">Reward</span>
           <span
             data-testid={`option-reward-${option.id}`}
             className="v"
@@ -81,15 +128,17 @@ function OptionCard({ option, selected, onSelect, narrationLine }: OptionCardPro
           </span>
         </div>
       </div>
-      <button
-        data-testid={`option-select-${option.id}`}
-        onClick={onSelect}
-        aria-pressed={selected}
-        className={`btn ${selected ? 'btn-primary' : 'btn-secondary'}`}
-        type="button"
-      >
-        {selected ? 'Selected' : option.greedy ? 'Go greedy' : 'Play safe'}
-      </button>
+      {!selected && (
+        <button
+          data-testid={`option-select-${option.id}`}
+          onClick={(e) => { e.stopPropagation(); onSelect(); }}
+          aria-pressed={selected}
+          className="btn btn-secondary"
+          type="button"
+        >
+          {option.greedy ? 'Go greedy' : 'Play safe'}
+        </button>
+      )}
     </div>
   );
 }
@@ -101,9 +150,10 @@ function OptionCard({ option, selected, onSelect, narrationLine }: OptionCardPro
  * Shows the lane clue, both option cards, and a crew-commit control.
  * Committing dispatches CHOOSE_OPTION, advancing the engine to the minigame phase.
  *
- * Commit selection is driven through CrewRailModeContext (E13.8): selecting an
+ * Commit selection is driven through CrewRailModeContext (E13.8/E19.2): selecting an
  * option activates commit mode on the crew rail and this screen reads back the
- * committed set from the shared context.
+ * committed set from the shared context. The in-stage checkbox panel was removed in
+ * E19.3 — crew are tapped on the left rail to commit them.
  *
  * Narration: entry roomApproach lines are prepended to obstacleClue lines so the
  * GM reads the scene-set first, then the choice prompt. Next steps through the
@@ -112,6 +162,7 @@ function OptionCard({ option, selected, onSelect, narrationLine }: OptionCardPro
 export function ObstacleRoom() {
   const room = useGameStore(s => s.session.present.currentRoom);
   const crew = useGameStore(s => s.session.present.crew);
+  const heat = useGameStore(s => s.session.present.heat);
   const roomIndex = useGameStore(s => s.session.present.roomIndex);
   const cfg = useGameStore(s => s.cfg);
   const director = useGameStore(s => s.director);
@@ -121,7 +172,6 @@ export function ObstacleRoom() {
     committed,
     minCommit,
     maxCommit,
-    toggleCommit,
     activateCommit,
     activateFullTeam,
     deactivate,
@@ -132,8 +182,16 @@ export function ObstacleRoom() {
   const crewNames = crew.map(p => p.name).join(', ');
   const roomNum = String(roomIndex + 1).padStart(2, '0');
 
+  // Build the minigame registry once (keyed by gameId) for name lookups.
+  const registry = useMemo(() => buildRegistry(cfg), [cfg]);
+
+  // Per-option game name: look up in registry, fall back to gameId.
+  function resolveGameName(gameId: string): string {
+    const game = registry.find(g => g.id === gameId);
+    return game?.name ?? gameId;
+  }
+
   // Entry → tension narration: roomApproach (scene-set) prepended to obstacleClue.
-  // Committed once at mount; stepping through the sequence is handled locally.
   const [lines] = useState<string[]>(() => {
     if (!director || !room || room.kind !== 'obstacle') return [];
     const tmpl = cfg.roomTemplates.obstacles.find(t => t.id === room.templateId);
@@ -177,10 +235,35 @@ export function ObstacleRoom() {
     return () => { deactivate(); };
   }, [deactivate]);
 
+  // Derive selected option before early return (needed for useMemo below).
+  const obstacleOptions = room?.kind === 'obstacle' ? room.options : [];
+  const selectedOption = selectedOptionId !== null
+    ? obstacleOptions.find(o => o.id === selectedOptionId)
+    : undefined;
+
+  // Compute the GM-only difficulty dial for the selected option.
+  // Updates live as crew are tapped on the rail. Must be called before any early return.
+  const dialLevel = useMemo((): number | undefined => {
+    if (selectedOptionId === null || selectedOption === undefined) return undefined;
+    const game = registry.find(g => g.id === selectedOption.gameId);
+    if (game === undefined) return undefined;
+    const committedPlayers = crew.filter(p => committed.has(p.id));
+    const laneRatings = committedPlayers.flatMap(p =>
+      game.lanes.map(lane => p.stats[lane]),
+    );
+    return computeDial(laneRatings, selectedOption.gameId, crew.length, cfg, {
+      heat,
+      roomIndex,
+    });
+  }, [selectedOptionId, selectedOption, registry, committed, crew, cfg, heat, roomIndex]);
+
   if (room === null || room.kind !== 'obstacle') return null;
 
   const template = cfg.roomTemplates.obstacles.find(t => t.id === room.templateId);
-  const lane = template?.lane ?? room.templateId;
+  const templateLane = template?.lane ?? room.templateId;
+  const laneLabelFull = laneName(templateLane);
+
+  const isFullTeam = selectedOption?.fullTeam === true;
 
   function handleSelectOption(option: ObstacleOption) {
     setSelectedOptionId(option.id);
@@ -190,6 +273,11 @@ export function ObstacleRoom() {
       const [min, max] = option.commitRange ?? [1, Math.max(1, crew.length)];
       activateCommit(min, max);
     }
+  }
+
+  function handleChangeOption() {
+    setSelectedOptionId(null);
+    deactivate();
   }
 
   function handleCommit() {
@@ -208,70 +296,106 @@ export function ObstacleRoom() {
   const currentLine = lines[lineIndex] ?? '';
   const hasNext = lineIndex < lines.length - 1;
 
-  const selectedOption = selectedOptionId !== null
-    ? room.options.find(o => o.id === selectedOptionId)
-    : undefined;
-  const isFullTeam = selectedOption?.fullTeam === true;
-
   const commitCount = committed.size;
   const canCommit =
     selectedOptionId !== null && commitCount >= minCommit && commitCount <= maxCommit;
+
+  // Players committed in order (for chip row).
+  const committedPlayers = crew.filter(p => committed.has(p.id));
 
   return (
     <div className="stage-inner" data-testid="screen-room">
       <PhaseHead
         eyebrow={`Room ${roomNum} A · Obstacle`}
-        title={lane.charAt(0).toUpperCase() + lane.slice(1)}
+        title={laneLabelFull}
         aside={
-          <span data-testid="obstacle-lane">Lane: {lane}</span>
+          <span data-testid="obstacle-lane">Lane: {templateLane}</span>
         }
       />
 
       <Teleprompter line={currentLine} hasNext={hasNext} onAdvance={handleAdvance} />
 
-      <div className="grid-2" data-testid="option-cards">
-        {room.options.map(option => (
+      {selectedOptionId === null ? (
+        /* ── Pre-selection: option grid ── */
+        <div className="opts" data-testid="option-cards">
+          {room.options.map(option => (
+            <OptionCard
+              key={option.id}
+              option={option}
+              templateLane={templateLane}
+              gameName={resolveGameName(option.gameId)}
+              selected={false}
+              onSelect={() => handleSelectOption(option)}
+              narrationLine={optionLines[option.id]}
+            />
+          ))}
+        </div>
+      ) : (
+        /* ── Post-selection: two-column commit layout ── */
+        <div className="commit" data-testid="commit-layout">
+          {/* Selected door card */}
           <OptionCard
-            key={option.id}
-            option={option}
-            selected={option.id === selectedOptionId}
-            narrationLine={optionLines[option.id]}
-            onSelect={() => handleSelectOption(option)}
+            option={room.options.find(o => o.id === selectedOptionId)!}
+            templateLane={templateLane}
+            gameName={resolveGameName(room.options.find(o => o.id === selectedOptionId)!.gameId)}
+            selected={true}
+            onSelect={() => { /* no-op: already selected */ }}
+            narrationLine={optionLines[selectedOptionId]}
+            dialLevel={dialLevel}
           />
-        ))}
-      </div>
 
-      {selectedOptionId !== null && (
-        isFullTeam ? (
-          <Panel live title="Crew" tag="Full team">
-            <p data-testid="crew-full-team">
-              All {crew.length} players commit — no resting after this game
-            </p>
-          </Panel>
-        ) : (
-          <Panel live title="Crew" tag={`Commit ${minCommit}–${maxCommit}`}>
-            <div data-testid="crew-commit">
-              <p data-testid="commit-range">
-                Commit {minCommit}–{maxCommit} crew ({commitCount} selected)
-              </p>
-              {crew.map(player => (
-                <label key={player.id} data-testid={`crew-label-${player.id}`}>
-                  <input
-                    type="checkbox"
-                    data-testid={`crew-checkbox-${player.id}`}
-                    checked={committed.has(player.id)}
-                    onChange={() => toggleCommit(player.id)}
-                    disabled={!committed.has(player.id) && commitCount >= maxCommit}
-                  />
-                  {player.name}
-                </label>
-              ))}
+          {/* Commit side-panel */}
+          <div className="commit-side" data-testid="commit-side">
+            <div className="commit-instruct">
+              <span className="ci-k">
+                <Users size={15} aria-hidden /> Commit the crew
+              </span>
+              {isFullTeam ? (
+                <p data-testid="crew-full-team">
+                  This is a full-team game — the whole crew plays and{' '}
+                  <b>no one rests</b> afterward.
+                </p>
+              ) : (
+                <p>
+                  This is a <b>{laneLabelFull}</b> room — tap{' '}
+                  {minCommit === maxCommit ? minCommit : `${minCommit}–${maxCommit}`} on
+                  the left rail to send them in. Whoever plays{' '}
+                  <b>rests next room</b>.
+                </p>
+              )}
             </div>
-          </Panel>
-        )
+
+            <div className="committed" data-testid="committed-panel">
+              <span className="ch" data-testid="commit-going-in">
+                Going in · {commitCount} of {maxCommit}
+              </span>
+              <div className="commchips" data-testid="commchips">
+                {committedPlayers.map(player => (
+                  <div
+                    key={player.id}
+                    className="commchip"
+                    data-testid={`commchip-${player.id}`}
+                  >
+                    <span className="av">
+                      {player.name.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="nm">{player.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <ActionBar
+        left={
+          selectedOptionId !== null ? (
+            <Button kind="ghost" data-testid="btn-change-door" onClick={handleChangeOption}>
+              Change door
+            </Button>
+          ) : undefined
+        }
         right={
           <Button
             kind="primary"
@@ -281,6 +405,13 @@ export function ObstacleRoom() {
           >
             Commit
           </Button>
+        }
+        note={
+          selectedOptionId !== null && commitCount > 0 ? (
+            <span data-testid="action-note">
+              {commitCount} committed · rest next room
+            </span>
+          ) : undefined
         }
       />
     </div>
