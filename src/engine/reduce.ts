@@ -106,13 +106,16 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
           },
         ],
         phase: 'offer',
-        // Exhaustion rotation: bench committed crew for the next room (no RNG draw).
-        crew: applyExhaustion(
-          state.crew,
-          room.committedBy ?? [],
-          state.roomIndex,
-          cfg,
-        ),
+        // Full-team games impose no exhaustion: the whole crew commits and nobody rests.
+        // Regular games bench committed crew for the next room (no RNG draw).
+        crew: option.fullTeam === true
+          ? state.crew
+          : applyExhaustion(
+              state.crew,
+              room.committedBy ?? [],
+              state.roomIndex,
+              cfg,
+            ),
       };
       return { ...intermediate, escapeSignal: computeEscapeSignal(intermediate, cfg) };
     }

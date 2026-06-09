@@ -51,6 +51,8 @@ export interface ObstacleTemplateConfig {
   lane: string;
   /** Exactly [safe option, greedy option]. */
   options: [ObstacleOptionConfig, ObstacleOptionConfig];
+  /** True for games where the whole crew plays and no exhaustion rotation applies afterward. */
+  fullTeam?: boolean;
 }
 
 export interface RoomTemplatesConfig {

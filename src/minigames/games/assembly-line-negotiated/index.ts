@@ -12,6 +12,7 @@ export const assemblyLineNegotiated: MiniGame<AssemblyLineNegotiatedParams, Asse
   id: 'assemblyLineNegotiated' as import('@/engine').GameId,
   lanes: ['physical', 'charm'],
   minCommit: 2,
+  fullTeam: true,
   generate,
   Component: AssemblyLineNegotiatedComponent,
   judge,

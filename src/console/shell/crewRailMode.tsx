@@ -14,6 +14,11 @@ export interface CrewRailModeContextValue {
   maxCommit: number;
   /** Activate multi-select commit mode. Resets any prior selection. */
   activateCommit: (min: number, max: number) => void;
+  /**
+   * Activate full-team commit mode: pre-populates committed with all given IDs,
+   * sets min=max=ids.length. Used for full-team games where no crew-select is shown.
+   */
+  activateFullTeam: (ids: readonly PlayerId[]) => void;
   /** Activate single-select attempter mode. Resets any prior selection. */
   activateAttempter: () => void;
   /** Return to idle mode and clear all selections. */
@@ -62,6 +67,14 @@ export function CrewRailModeProvider({ children }: CrewRailModeProviderProps) {
     setMaxCommit(max);
   }, []);
 
+  const activateFullTeam = useCallback((ids: readonly PlayerId[]) => {
+    setMode('commit');
+    setCommitted(new Set(ids));
+    setSelectedAttempter(null);
+    setMinCommit(ids.length);
+    setMaxCommit(ids.length);
+  }, []);
+
   const activateAttempter = useCallback(() => {
     setMode('attempter');
     setCommitted(new Set());
@@ -97,6 +110,7 @@ export function CrewRailModeProvider({ children }: CrewRailModeProviderProps) {
     minCommit,
     maxCommit,
     activateCommit,
+    activateFullTeam,
     activateAttempter,
     deactivate,
     toggleCommit,

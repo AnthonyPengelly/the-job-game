@@ -390,7 +390,40 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 
 ---
 
-## 7. Solo / 2–3 player variants & the generator rule
+## 7. Full-team games
+
+Three games require the **whole crew** to play — no subset commits, no resting afterward:
+
+| Game | Why full-team |
+|------|---------------|
+| **Categories** (`categories`) | Crew rattles off answers as a table — meaningful with everyone shouting |
+| **Inside Knowledge** (`insideKnowledge`) | Crew confers on trivia — the whole table brings collective knowledge |
+| **Assembly Line** (`assemblyLine` + negotiated) | Whole table trades cards — no one to trade with if benched |
+
+**Contract flag.** `MiniGame.fullTeam = true` on these three games (and the
+`assemblyLineNegotiated` variant). The obstacle template in the preset also
+carries `fullTeam: true` so the engine can enforce the no-rest rule without
+importing the minigame layer.
+
+**No crew-select.** When the GM selects an option whose game is `fullTeam`,
+the ObstacleRoom skips the crew-select checkboxes entirely and shows a
+"Full team — all N players commit" panel. `CHOOSE_OPTION` is dispatched with
+every crew member's ID.
+
+**No exhaustion.** `RESOLVE_MINIGAME` skips `applyExhaustion` for full-team
+games — nobody rests the next room. The `fullTeam` flag on `ObstacleOption`
+(propagated from the template at generation time) drives this check in
+`reduce.ts`.
+
+**GM override still works.** The GM can edit committed crew and outcome at any
+time via the standard override controls — the full-team shortcut is a UI
+convenience, not a lock.
+
+---
+
+## 8. Solo / 2–3 player variants & the generator rule
+
+
 
 Reproduced faithfully from `the-job-app-design.md §10.5`. Each game carries
 `minCommit` (a hard floor) and, where solo needs a different mechanic, a
@@ -436,7 +469,7 @@ function pickGameForSlot(slot: ObstacleSlot, rng: RNG): GameId {
 
 ---
 
-## 8. How to add an 11th game
+## 9. How to add an 11th game
 
 The contract makes this a contained job. Checklist:
 
@@ -475,7 +508,7 @@ boosts once, and the GM-confirm judging feeds the engine.
 
 ---
 
-## 9. Shared primitives reference
+## 10. Shared primitives reference
 
 Build once, reuse across all ten (E4). API sketches are illustrative.
 

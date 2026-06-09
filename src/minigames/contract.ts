@@ -58,4 +58,9 @@ export interface MiniGame<Params, ChallengeState> {
   minCommit: number;
   /** Separate game module to use when committed headcount is 1, if the mechanic needs it. */
   soloVariantId?: GameId;
+  /**
+   * True for games that require the whole crew to participate (Categories, Inside Knowledge,
+   * Assembly Line). No crew-select UI is shown; no exhaustion rotation applies afterward.
+   */
+  fullTeam?: boolean;
 }

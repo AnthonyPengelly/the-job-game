@@ -48,6 +48,7 @@ function buildObstacleTemplates(raw: ParsedRoomTemplates): ObstacleTemplateConfi
       buildObstacleOption(t.options[0]),
       buildObstacleOption(t.options[1]),
     ] as [ObstacleOptionConfig, ObstacleOptionConfig],
+    ...(t.fullTeam === true && { fullTeam: true }),
   } satisfies ObstacleTemplateConfig));
 }
 

@@ -513,6 +513,89 @@ describe('RESOLVE_MINIGAME — exhaustion applied to committed crew', () => {
   });
 });
 
+describe('RESOLVE_MINIGAME — full-team game: no exhaustion rotation', () => {
+  function makeFullTeamState(playerCount: number, roomIndex = 3): RunState {
+    const crew: RunState['crew'] = [];
+    const committedBy: PlayerId[] = [];
+    for (let i = 0; i < playerCount; i++) {
+      const id = `player-${i}` as PlayerId;
+      crew.push({ id, name: `P${i}`, stats: { tech: 0, physical: 0, charm: 0, stealth: 0 }, powerUps: {} });
+      committedBy.push(id);
+    }
+    return {
+      ...initialState(1),
+      phase: 'minigame',
+      roomIndex,
+      crew,
+      currentRoom: {
+        kind: 'obstacle',
+        templateId: 'obs-alpha',
+        options: [
+          { id: 'ft-safe',   gameId: 'alpha' as GameId, greedy: false, heatCost: 1, reward: 1, fullTeam: true },
+          { id: 'ft-greedy', gameId: 'alpha' as GameId, greedy: true,  heatCost: 2, reward: 2, fullTeam: true },
+        ],
+        committedOptionId: 'ft-safe',
+        committedBy,
+      },
+    };
+  }
+
+  it('leaves no player resting after a full-team game (5-player crew, full class)', () => {
+    const s = makeFullTeamState(5, 3);
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(next.crew.every(p => p.restingUntilRoom === undefined)).toBe(true);
+  });
+
+  it('leaves no player resting after a full-team game (7-player crew, full class)', () => {
+    const s = makeFullTeamState(7, 2);
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(next.crew.every(p => p.restingUntilRoom === undefined)).toBe(true);
+  });
+
+  it('leaves no player resting after a full-team botched outcome', () => {
+    const s = makeFullTeamState(5, 1);
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'botched' }, cfg);
+    expect(next.crew.every(p => p.restingUntilRoom === undefined)).toBe(true);
+  });
+
+  it('still applies heat/loot/phase normally for full-team games', () => {
+    const s = makeFullTeamState(5, 0);
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(next.phase).toBe('offer');
+    expect(next.heat).toBe(1); // drip only
+    expect(next.loot).toBe(1); // reward
+  });
+
+  it('non-full-team options still bench committed crew', () => {
+    // Confirm the regular exhaustion path still works when fullTeam is absent.
+    const crew: RunState['crew'] = Array.from({ length: 5 }, (_, i) => ({
+      id: `player-${i}` as PlayerId,
+      name: `P${i}`,
+      stats: { tech: 0, physical: 0, charm: 0, stealth: 0 },
+      powerUps: {},
+    }));
+    const s: RunState = {
+      ...initialState(1),
+      phase: 'minigame',
+      roomIndex: 3,
+      crew,
+      currentRoom: {
+        kind: 'obstacle',
+        templateId: 'obs-alpha',
+        options: [
+          { id: 'alpha-safe',   gameId: 'alpha' as GameId, greedy: false, heatCost: 1, reward: 1 },
+          { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true,  heatCost: 2, reward: 2 },
+        ],
+        committedOptionId: 'alpha-safe',
+        committedBy: ['player-0' as PlayerId],
+      },
+    };
+    const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'clean' }, cfg);
+    expect(next.crew[0]!.restingUntilRoom).toBe(4); // benched
+    expect(next.crew[1]!.restingUntilRoom).toBeUndefined();
+  });
+});
+
 describe('RESOLVE_MINIGAME — escapeSignal set when thresholds met', () => {
   it('escapeSignal false below runAt', () => {
     // heat after resolve: 0 + 1 = 1 (well below 11)

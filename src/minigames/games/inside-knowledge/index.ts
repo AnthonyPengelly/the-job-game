@@ -18,6 +18,7 @@ export function makeInsideKnowledge(items: TriviaItemConfig[]): MiniGame<InsideK
     id: 'insideKnowledge' as import('@/engine').GameId,
     lanes: ['tech', 'charm'],
     minCommit: 1,
+    fullTeam: true,
     generate: makeGenerate(items),
     Component: InsideKnowledgeComponent,
     judge,
