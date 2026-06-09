@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Tv, Users } from 'lucide-react';
 import { useGameStore } from '@/console/store';
+import { isResting } from '@/engine';
 import type { PlayerId, GearId } from '@/engine';
 import { CrewAvatar } from './CrewAvatar';
 import { CrewDetailPopover } from './CrewDetailPopover';
@@ -38,10 +39,16 @@ export function CrewRail() {
 
   function handleAvatarClick(id: PlayerId) {
     if (mode === 'commit') {
+      // Resting members cannot be committed
+      const player = crew.find(p => p.id === id);
+      if (player && isResting(player, roomIndex)) return;
       toggleCommit(id);
       return;
     }
     if (mode === 'attempter') {
+      // Resting members cannot attempt
+      const player = crew.find(p => p.id === id);
+      if (player && isResting(player, roomIndex)) return;
       pickAttempter(id);
       return;
     }
@@ -60,13 +67,33 @@ export function CrewRail() {
 
   const closePopover = useCallback(() => setOpenPopoverId(null), []);
 
-  function selectionState(id: PlayerId): 'none' | 'commit' | 'attempter' {
-    if (mode === 'commit' && committed.has(id)) return 'commit';
-    if (mode === 'attempter' && selectedAttempter === id) return 'attempter';
-    return 'none';
+  function picked(id: PlayerId): 'commit-on' | 'pick' | 'idle' {
+    if (mode === 'commit') {
+      if (committed.has(id)) return 'commit-on';
+      const player = crew.find(p => p.id === id);
+      if (player && !isResting(player, roomIndex)) return 'pick';
+      return 'idle';
+    }
+    if (mode === 'attempter') {
+      if (selectedAttempter === id) return 'commit-on';
+      const player = crew.find(p => p.id === id);
+      if (player && !isResting(player, roomIndex)) return 'pick';
+      return 'idle';
+    }
+    return 'idle';
   }
 
   const openPlayer = crew.find(p => p.id === openPopoverId);
+
+  // Mode label and chip class for the rail header
+  const modeChipCls =
+    mode === 'commit' ? 'mode committing'
+    : mode === 'attempter' ? 'mode attempter'
+    : 'mode default';
+  const modeLabel =
+    mode === 'commit' ? 'Commit'
+    : mode === 'attempter' ? 'Pick one'
+    : 'Roster';
 
   return (
     <div data-testid="crew-rail" style={{ display: 'contents' }}>
@@ -76,19 +103,7 @@ export function CrewRail() {
           <Users size={15} strokeWidth={1.75} aria-hidden="true" />
           Crew · {crew.length}
         </span>
-        {mode !== 'idle' && (
-          <span
-            style={{
-              fontSize: 10,
-              fontFamily: 'var(--font-data)',
-              letterSpacing: '.1em',
-              textTransform: 'uppercase',
-              color: mode === 'commit' ? 'var(--accent)' : 'var(--data)',
-            }}
-          >
-            {mode === 'commit' ? 'Select crew' : 'Pick player'}
-          </span>
-        )}
+        <span className={modeChipCls}>{modeLabel}</span>
       </div>
 
       {/* Avatar list — scrolls internally */}
@@ -99,7 +114,8 @@ export function CrewRail() {
               key={player.id}
               player={player}
               roomIndex={roomIndex}
-              selectionState={selectionState(player.id)}
+              railMode={mode}
+              picked={picked(player.id)}
               onClick={handleAvatarClick}
               onGearDrop={handleGearDrop}
             />

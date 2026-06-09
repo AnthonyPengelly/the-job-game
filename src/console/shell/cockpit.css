@@ -687,46 +687,62 @@
 }
 
 /* ============================================================
-   CREW RAIL — E13.2
-   Bigger, legible avatars. Internally scrolling at 7 players.
+   CREW RAIL — E19.2
+   Redesigned member cards matching the cockpit design spec.
+   Internally scrolling at 7 players.
    ============================================================ */
 
-/* Crew avatar card */
-.crew-av {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 11px 12px;
+/* Mode chip in the rail header */
+.cockpit-crewrail-head .mode {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+.cockpit-crewrail-head .mode.default {
+  color: var(--fg-faint);
+  background: var(--c-surface-2);
+  border: 1px solid var(--border);
+}
+.cockpit-crewrail-head .mode.committing {
+  color: var(--data);
+  background: var(--data-tint);
+  border: 1px solid var(--c-cyan-500);
+}
+.cockpit-crewrail-head .mode.attempter {
+  color: var(--caution);
+  background: var(--caution-tint);
+  border: 1px solid var(--c-amber-700);
+}
+
+/* Member card */
+.member {
+  position: relative;
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: border-color var(--dur-fast), background var(--dur-fast);
-  position: relative;
+  padding: 10px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-base);
+  cursor: default;
   user-select: none;
 }
-.crew-av:hover { border-color: var(--border-strong); background: var(--bg-panel-raised); }
-.crew-av.resting { opacity: .5; }
-.crew-av.selected-commit {
-  border-color: var(--accent);
-  background: var(--accent-tint);
-  box-shadow: 0 0 0 1px var(--accent);
-}
-.crew-av.selected-attempter {
-  border-color: var(--data);
-  background: color-mix(in srgb, var(--data) 12%, transparent);
-  box-shadow: 0 0 0 1px var(--data);
-}
 
-/* Avatar row: initial box + name */
-.crew-av-row {
+/* Top row: avatar box + name/role + state badge */
+.member .m-top {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
 }
-.crew-av-initial {
-  width: 34px;
-  height: 34px;
+.member .av {
+  width: 38px;
+  height: 38px;
   flex: none;
   border-radius: var(--radius-sm);
   background: var(--c-surface-3);
@@ -736,73 +752,125 @@
   justify-content: center;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 17px;
+  font-size: 19px;
   color: var(--accent);
 }
-.crew-av.resting .crew-av-initial { color: var(--fg-faint); }
-.crew-av-name-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.crew-av-name {
+.member .who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.member .nm {
   font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .02em;
+  font-size: 17px;
+  letter-spacing: .01em;
   line-height: 1;
   color: var(--fg);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.crew-av-status {
+.member .role {
   font-family: var(--font-data);
   font-size: 10px;
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--fg-faint);
 }
-.crew-av.resting .crew-av-status { color: var(--danger); }
+.member .mstate {
+  flex: none;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  border-radius: var(--radius-xs);
+}
 
-/* Lane stats row */
-.crew-av-stats {
+/* Lane stat strip */
+.lanes {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
 }
-.crew-av-stat {
+.lane {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
+  padding: 5px 0 4px;
+  background: var(--c-surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
 }
-.crew-av-stat .k {
-  font-family: var(--font-data);
-  font-size: 8px;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--fg-faint);
-}
-.crew-av-stat .v {
+.lane .ll {
   font-family: var(--font-data);
   font-weight: 700;
-  font-size: 15px;
+  font-size: 8px;
+  letter-spacing: .06em;
+  color: var(--fg-faint);
+}
+.lane .lv {
+  font-family: var(--font-data);
+  font-weight: 800;
+  font-size: 16px;
   line-height: 1;
   color: var(--fg);
   font-variant-numeric: tabular-nums;
 }
+.lane.hot {
+  border-color: var(--c-cyan-500);
+  background: var(--data-tint);
+}
+.lane.hot .ll { color: var(--data); }
+.lane.hot .lv { color: var(--data); }
 
-/* Power-up pips */
-.crew-av-pips {
-  display: flex;
+/* Power-up pips — four diamonds aligned to lane columns */
+.pips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
+  align-items: center;
 }
-.crew-av-pip {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.pip {
+  width: 11px;
+  height: 11px;
+  transform: rotate(45deg);
+  border: 1px solid var(--border-strong);
+  background: var(--c-surface-2);
+  border-radius: 1px;
+  justify-self: center;
+}
+.pip.on {
   background: var(--accent);
-  box-shadow: 0 0 4px var(--glow-accent);
-  flex: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 7px -1px var(--accent);
 }
+
+/* Member state variants */
+.member.rest { opacity: .62; }
+.member.rest .mstate { color: var(--caution); background: var(--caution-tint); }
+.member.rest .av { color: var(--fg-faint); }
+
+.member.idle .mstate { color: var(--fg-faint); background: var(--c-surface-2); }
+
+.member.pick {
+  cursor: pointer;
+  border-style: dashed;
+  border-color: var(--c-cyan-500);
+}
+.member.pick:hover { background: var(--data-tint); }
+
+.member.commit-on {
+  border-color: var(--c-cyan-500);
+  box-shadow: var(--glow-data);
+}
+.member.commit-on .mstate { color: var(--data); background: var(--data-tint); }
 
 /* ── Crew detail popover (per-player override) ──────────────── */
 

@@ -384,7 +384,7 @@ describe('CrewRail — commit mode', () => {
     });
 
     expect(railCtx.committed.has('player-0' as PlayerId)).toBe(true);
-    expect(screen.getByTestId('crew-member-player-0')).toHaveClass('selected-commit');
+    expect(screen.getByTestId('crew-member-player-0')).toHaveClass('commit-on');
   });
 
   it('clicking a committed avatar in commit mode deselects it', async () => {
@@ -483,7 +483,7 @@ describe('CrewRail — attempter mode', () => {
     });
 
     expect(railCtx.selectedAttempter).toBe('player-0' as PlayerId);
-    expect(screen.getByTestId('crew-member-player-0')).toHaveClass('selected-attempter');
+    expect(screen.getByTestId('crew-member-player-0')).toHaveClass('commit-on');
   });
 
   it('clicking a different avatar replaces the attempter selection', async () => {
@@ -508,8 +508,8 @@ describe('CrewRail — attempter mode', () => {
     });
 
     expect(railCtx.selectedAttempter).toBe('player-1' as PlayerId);
-    expect(screen.getByTestId('crew-member-player-1')).toHaveClass('selected-attempter');
-    expect(screen.getByTestId('crew-member-player-0')).not.toHaveClass('selected-attempter');
+    expect(screen.getByTestId('crew-member-player-1')).toHaveClass('commit-on');
+    expect(screen.getByTestId('crew-member-player-0')).not.toHaveClass('commit-on');
   });
 
   it('does not open the detail popover in attempter mode', async () => {
@@ -531,6 +531,203 @@ describe('CrewRail — attempter mode', () => {
     });
 
     expect(screen.queryByTestId('crew-detail-popover-player-0')).toBeNull();
+  });
+});
+
+// ── State labels ──────────────────────────────────────────────────────────────
+
+describe('CrewRail — state labels', () => {
+  it('shows GOING for committed and PICK for uncommitted in commit mode', async () => {
+    const store = makeStore(['Alice', 'Bob']);
+    let railCtx!: ReturnType<typeof useCrewRailMode>;
+
+    await act(async () => {
+      render(
+        <ControlledCrewRail
+          store={store}
+          onMount={ctx => { railCtx = ctx; }}
+        />,
+      );
+    });
+
+    await act(async () => { railCtx.activateCommit(1, 2); });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('crew-member-player-0'));
+    });
+
+    expect(screen.getByTestId('crew-state-player-0')).toHaveTextContent('GOING');
+    expect(screen.getByTestId('crew-state-player-1')).toHaveTextContent('PICK');
+  });
+
+  it('shows ATTEMPTS for the attempter and PICK for others in attempter mode', async () => {
+    const store = makeStore(['Alice', 'Bob']);
+    let railCtx!: ReturnType<typeof useCrewRailMode>;
+
+    await act(async () => {
+      render(
+        <ControlledCrewRail
+          store={store}
+          onMount={ctx => { railCtx = ctx; }}
+        />,
+      );
+    });
+
+    await act(async () => { railCtx.activateAttempter(); });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('crew-member-player-0'));
+    });
+
+    expect(screen.getByTestId('crew-state-player-0')).toHaveTextContent('ATTEMPTS');
+    expect(screen.getByTestId('crew-state-player-1')).toHaveTextContent('PICK');
+  });
+
+  it('shows RESTS for a resting member in commit mode and does not allow selecting them', async () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    const playerId = 'player-0' as PlayerId;
+
+    await act(async () => {
+      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+      store.getState().dispatch({ t: 'OVERRIDE_SET_RESTING', player: playerId, untilRoom: 5 });
+    });
+
+    let railCtx!: ReturnType<typeof useCrewRailMode>;
+    await act(async () => {
+      render(
+        <ControlledCrewRail
+          store={store}
+          onMount={ctx => { railCtx = ctx; }}
+        />,
+      );
+    });
+
+    await act(async () => { railCtx.activateCommit(1, 2); });
+
+    expect(screen.getByTestId('crew-state-player-0')).toHaveTextContent('RESTS');
+
+    // Clicking a resting member should NOT add them to committed
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('crew-member-player-0'));
+    });
+    expect(railCtx.committed.has(playerId)).toBe(false);
+  });
+
+  it('shows RESTS for a resting member in attempter mode and does not allow selecting them', async () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    const playerId = 'player-0' as PlayerId;
+
+    await act(async () => {
+      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+      store.getState().dispatch({ t: 'OVERRIDE_SET_RESTING', player: playerId, untilRoom: 5 });
+    });
+
+    let railCtx!: ReturnType<typeof useCrewRailMode>;
+    await act(async () => {
+      render(
+        <ControlledCrewRail
+          store={store}
+          onMount={ctx => { railCtx = ctx; }}
+        />,
+      );
+    });
+
+    await act(async () => { railCtx.activateAttempter(); });
+
+    expect(screen.getByTestId('crew-state-player-0')).toHaveTextContent('RESTS');
+
+    // Clicking a resting member should NOT set them as attempter
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('crew-member-player-0'));
+    });
+    expect(railCtx.selectedAttempter).toBeNull();
+  });
+
+  it('shows READY in idle mode for a non-resting member', async () => {
+    const store = makeStore(['Alice']);
+    await act(async () => { renderCrewRail(store); });
+
+    expect(screen.getByTestId('crew-state-player-0')).toHaveTextContent('READY');
+  });
+});
+
+// ── Pick state CSS classes ─────────────────────────────────────────────────────
+
+describe('CrewRail — pick state CSS classes', () => {
+  it('non-committed members get "pick" class in commit mode', async () => {
+    const store = makeStore(['Alice', 'Bob']);
+    let railCtx!: ReturnType<typeof useCrewRailMode>;
+
+    await act(async () => {
+      render(
+        <ControlledCrewRail
+          store={store}
+          onMount={ctx => { railCtx = ctx; }}
+        />,
+      );
+    });
+
+    await act(async () => { railCtx.activateCommit(1, 2); });
+
+    // player-1 is not committed yet — should have 'pick' class
+    expect(screen.getByTestId('crew-member-player-1')).toHaveClass('pick');
+  });
+
+  it('non-selected members get "pick" class in attempter mode', async () => {
+    const store = makeStore(['Alice', 'Bob']);
+    let railCtx!: ReturnType<typeof useCrewRailMode>;
+
+    await act(async () => {
+      render(
+        <ControlledCrewRail
+          store={store}
+          onMount={ctx => { railCtx = ctx; }}
+        />,
+      );
+    });
+
+    await act(async () => { railCtx.activateAttempter(); });
+
+    // Before picking: both are 'pick'
+    expect(screen.getByTestId('crew-member-player-0')).toHaveClass('pick');
+    expect(screen.getByTestId('crew-member-player-1')).toHaveClass('pick');
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('crew-member-player-0'));
+    });
+
+    // player-0 is now 'commit-on'; player-1 is still 'pick'
+    expect(screen.getByTestId('crew-member-player-0')).toHaveClass('commit-on');
+    expect(screen.getByTestId('crew-member-player-1')).toHaveClass('pick');
+  });
+});
+
+// ── Lane stats redesign ───────────────────────────────────────────────────────
+
+describe('CrewRail — lane stats and power-up pips', () => {
+  it('renders hot lane when player has a power-up for that lane', async () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: testCfg, storage });
+    const playerId = 'player-0' as PlayerId;
+
+    await act(async () => {
+      store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+      store.getState().dispatch({ t: 'OVERRIDE_SET_POWERUP', player: playerId, lane: 'tech', held: true });
+    });
+    await act(async () => { renderCrewRail(store); });
+
+    // The tech lane cell should have 'hot' class
+    const techStat = screen.getByTestId(`crew-stat-${playerId}-tech`);
+    expect(techStat.closest('.lane')).toHaveClass('hot');
+  });
+
+  it('renders four pip cells (all lanes)', async () => {
+    const store = makeStore(['Alice']);
+    await act(async () => { renderCrewRail(store); });
+
+    // All four pips should be in the DOM (even inactive ones)
+    const pipsContainer = screen.getByTestId('crew-powerups-player-0');
+    expect(pipsContainer.querySelectorAll('.pip').length).toBe(4);
   });
 });
 
