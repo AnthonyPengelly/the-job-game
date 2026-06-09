@@ -495,6 +495,88 @@ describe('ObstacleRoom — full-team game (no crew-select)', () => {
   });
 });
 
+// ── Difficulty dial with a registered game ────────────────────────────────────
+
+describe('ObstacleRoom — GM difficulty dial (registered game)', () => {
+  /** Config with a safeCrack obstacle — gameId is in the static minigame registry. */
+  const safeCrackObstacleCfg = {
+    ...obstacleOnlyCfg,
+    scaling: {
+      ...obstacleOnlyCfg.scaling,
+      minCommit: { ...obstacleOnlyCfg.scaling.minCommit, safeCrack: 1 },
+    },
+    roomTemplates: {
+      ...obstacleOnlyCfg.roomTemplates,
+      obstacles: [
+        {
+          id: 'obs-sc',
+          gameId: 'safeCrack',
+          lane: 'tech',
+          options: [
+            { id: 'sc-safe',   greedy: false, heatCost: 1, reward: 1 },
+            { id: 'sc-greedy', greedy: true,  heatCost: 2, reward: 2 },
+          ] as [
+            { id: string; greedy: false; heatCost: number; reward: number },
+            { id: string; greedy: true;  heatCost: number; reward: number },
+          ],
+        },
+      ],
+    },
+  };
+
+  function makeDialStore(seed = 1) {
+    const narration = makeNarrationFixture();
+    const store = createGameStore({ cfg: safeCrackObstacleCfg, storage: makeStorage(), narration });
+    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], seed);
+    return store;
+  }
+
+  function renderDialRoom(seed = 1) {
+    const store = makeDialStore(seed);
+    render(
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <CrewRailModeProvider>
+            <RailButtons />
+            <ObstacleRoom />
+          </CrewRailModeProvider>
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
+    );
+    return store;
+  }
+
+  it('renders option-dial when a registered-game option is selected', () => {
+    const store = renderDialRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+
+    expect(screen.getByTestId('option-dial')).toBeInTheDocument();
+    expect(screen.getByText('Difficulty dial')).toBeInTheDocument();
+  });
+
+  it('dial fill width decreases as crew are committed (more crew → lower difficulty)', () => {
+    const store = renderDialRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+
+    const fill = screen.getByTestId('option-dial').querySelector('.dfill') as HTMLElement;
+    const fillBefore = parseFloat(fill.style.width);
+    expect(fillBefore).toBeGreaterThan(0);
+
+    // Committing a crew member adds more lane ratings — dial eases, fill narrows.
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
+    const fillAfter = parseFloat(fill.style.width);
+    expect(fillAfter).toBeLessThan(fillBefore);
+  });
+});
+
 // ── MinigameStub tests ────────────────────────────────────────────────────────
 
 describe('MinigameStub screen', () => {
