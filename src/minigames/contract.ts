@@ -63,6 +63,8 @@ export interface MiniGame<Params, ChallengeState> {
    * Assembly Line). No crew-select UI is shown; no exhaustion rotation applies afterward.
    */
   fullTeam?: boolean;
+  /** Human-readable display name shown in the ARMED state header. Falls back to the id if absent. */
+  name?: string;
   /** Short how-to-play shown in the ARMED state so the GM can brief the crew before START. */
   armedInstructions?: string;
 }

@@ -90,7 +90,7 @@ export function MinigameHost() {
   }
 
   const GameComponent = game.Component;
-  const gameName = resolvedGameId ?? '';
+  const gameName = game.name ?? resolvedGameId ?? '';
 
   return (
     <div data-testid="screen-minigame">

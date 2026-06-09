@@ -10,6 +10,7 @@ export type { Beat16State } from './judge';
 
 export const beat16: MiniGame<Beat16Params, Beat16State> = {
   id: 'beat16' as import('@/engine').GameId,
+  name: 'Beat 16',
   lanes: ['physical'],
   minCommit: 1,
   generate,

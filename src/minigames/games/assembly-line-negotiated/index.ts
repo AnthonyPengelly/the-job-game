@@ -10,6 +10,7 @@ export type { AssemblyLineNegotiatedState } from './judge';
 
 export const assemblyLineNegotiated: MiniGame<AssemblyLineNegotiatedParams, AssemblyLineNegotiatedState> = {
   id: 'assemblyLineNegotiated' as import('@/engine').GameId,
+  name: 'Assembly Line (Negotiated)',
   lanes: ['physical', 'charm'],
   minCommit: 2,
   fullTeam: true,

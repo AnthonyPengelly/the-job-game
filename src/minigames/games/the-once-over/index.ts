@@ -10,6 +10,7 @@ export type { OnceOverState } from './judge';
 
 export const theOnceOver: MiniGame<OnceOverParams, OnceOverState> = {
   id: 'theOnceOver' as import('@/engine').GameId,
+  name: 'The Once-Over',
   lanes: ['stealth'],
   minCommit: 1,
   generate,

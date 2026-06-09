@@ -10,6 +10,7 @@ export type { CrackTheTumblersSoloState } from './judge';
 
 export const crackTheTumblersSolo: MiniGame<CrackTheTumblersSoloParams, CrackTheTumblersSoloState> = {
   id: 'crackTheTumblersSolo' as import('@/engine').GameId,
+  name: 'Crack the Tumblers (Solo)',
   lanes: ['tech'],
   minCommit: 1,
   generate,

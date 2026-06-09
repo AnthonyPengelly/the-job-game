@@ -16,6 +16,7 @@ export type { InsideKnowledgeState } from './judge';
 export function makeInsideKnowledge(items: TriviaItemConfig[]): MiniGame<InsideKnowledgeParams, InsideKnowledgeState> {
   return {
     id: 'insideKnowledge' as import('@/engine').GameId,
+    name: 'Inside Knowledge',
     lanes: ['tech', 'charm'],
     minCommit: 1,
     fullTeam: true,

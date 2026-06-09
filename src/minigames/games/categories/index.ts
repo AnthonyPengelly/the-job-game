@@ -15,6 +15,7 @@ export type { CategoriesState } from './judge';
 export function makeCategories(items: string[]): MiniGame<CategoriesParams, CategoriesState> {
   return {
     id: 'categories' as import('@/engine').GameId,
+    name: 'Categories',
     lanes: ['charm'],
     minCommit: 1,
     fullTeam: true,

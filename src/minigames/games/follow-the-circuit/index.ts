@@ -10,6 +10,7 @@ export type { FollowTheCircuitState } from './judge';
 
 export const followTheCircuit: MiniGame<FollowTheCircuitParams, FollowTheCircuitState> = {
   id: 'followTheCircuit' as import('@/engine').GameId,
+  name: 'Follow the Circuit',
   lanes: ['tech', 'physical'],
   minCommit: 1,
   generate,
