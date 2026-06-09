@@ -12,6 +12,7 @@ export const assemblyLine: MiniGame<AssemblyLineParams, AssemblyLineState> = {
   id: 'assemblyLine' as import('@/engine').GameId,
   lanes: ['physical', 'charm'],
   minCommit: 2,
+  fullTeam: true,
   generate,
   Component: AssemblyLineComponent,
   judge,

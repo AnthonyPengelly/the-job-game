@@ -123,6 +123,7 @@ export function ObstacleRoom() {
     maxCommit,
     toggleCommit,
     activateCommit,
+    activateFullTeam,
     deactivate,
   } = useCrewRailMode();
 
@@ -182,9 +183,13 @@ export function ObstacleRoom() {
   const lane = template?.lane ?? room.templateId;
 
   function handleSelectOption(option: ObstacleOption) {
-    const [min, max] = option.commitRange ?? [1, Math.max(1, crew.length)];
     setSelectedOptionId(option.id);
-    activateCommit(min, max);
+    if (option.fullTeam === true) {
+      activateFullTeam(crew.map(p => p.id));
+    } else {
+      const [min, max] = option.commitRange ?? [1, Math.max(1, crew.length)];
+      activateCommit(min, max);
+    }
   }
 
   function handleCommit() {
@@ -202,6 +207,11 @@ export function ObstacleRoom() {
 
   const currentLine = lines[lineIndex] ?? '';
   const hasNext = lineIndex < lines.length - 1;
+
+  const selectedOption = selectedOptionId !== null
+    ? room.options.find(o => o.id === selectedOptionId)
+    : undefined;
+  const isFullTeam = selectedOption?.fullTeam === true;
 
   const commitCount = committed.size;
   const canCommit =
@@ -232,25 +242,33 @@ export function ObstacleRoom() {
       </div>
 
       {selectedOptionId !== null && (
-        <Panel live title="Crew" tag={`Commit ${minCommit}–${maxCommit}`}>
-          <div data-testid="crew-commit">
-            <p data-testid="commit-range">
-              Commit {minCommit}–{maxCommit} crew ({commitCount} selected)
+        isFullTeam ? (
+          <Panel live title="Crew" tag="Full team">
+            <p data-testid="crew-full-team">
+              All {crew.length} players commit — no resting after this game
             </p>
-            {crew.map(player => (
-              <label key={player.id} data-testid={`crew-label-${player.id}`}>
-                <input
-                  type="checkbox"
-                  data-testid={`crew-checkbox-${player.id}`}
-                  checked={committed.has(player.id)}
-                  onChange={() => toggleCommit(player.id)}
-                  disabled={!committed.has(player.id) && commitCount >= maxCommit}
-                />
-                {player.name}
-              </label>
-            ))}
-          </div>
-        </Panel>
+          </Panel>
+        ) : (
+          <Panel live title="Crew" tag={`Commit ${minCommit}–${maxCommit}`}>
+            <div data-testid="crew-commit">
+              <p data-testid="commit-range">
+                Commit {minCommit}–{maxCommit} crew ({commitCount} selected)
+              </p>
+              {crew.map(player => (
+                <label key={player.id} data-testid={`crew-label-${player.id}`}>
+                  <input
+                    type="checkbox"
+                    data-testid={`crew-checkbox-${player.id}`}
+                    checked={committed.has(player.id)}
+                    onChange={() => toggleCommit(player.id)}
+                    disabled={!committed.has(player.id) && commitCount >= maxCommit}
+                  />
+                  {player.name}
+                </label>
+              ))}
+            </div>
+          </Panel>
+        )
       )}
 
       <ActionBar

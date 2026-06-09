@@ -23,6 +23,7 @@ const obstacleTemplateSchema = z.object({
     ([a, b]) => !a.greedy && b.greedy,
     { message: 'options must be [safe, greedy] — first greedy:false, second greedy:true' },
   ),
+  fullTeam: z.boolean().optional(),
 }).strict();
 
 export const roomTemplatesSchema = z.object({

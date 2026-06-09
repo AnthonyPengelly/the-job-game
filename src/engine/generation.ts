@@ -138,6 +138,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         reward: Math.round(template.options[0].reward * m),
         ...(template.options[0].gear !== undefined && { gear: template.options[0].gear }),
         ...(range !== undefined && { commitRange: range }),
+        ...(template.fullTeam === true && { fullTeam: true }),
       },
       {
         id: template.options[1].id,
@@ -147,6 +148,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         reward: Math.round(template.options[1].reward * m),
         ...(template.options[1].gear !== undefined && { gear: template.options[1].gear }),
         ...(range !== undefined && { commitRange: range }),
+        ...(template.fullTeam === true && { fullTeam: true }),
       },
     ];
 

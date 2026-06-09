@@ -287,6 +287,98 @@ describe('ObstacleRoom narration', () => {
   });
 });
 
+// ── Full-team game tests ──────────────────────────────────────────────────────
+
+describe('ObstacleRoom — full-team game (no crew-select)', () => {
+  /** Config with one full-team obstacle and one normal obstacle so generation picks up. */
+  const fullTeamCfg = {
+    ...obstacleOnlyCfg,
+    scaling: {
+      ...obstacleOnlyCfg.scaling,
+      minCommit: { alpha: 1, bravo: 1, charlie: 1, 'ft-game': 1 },
+    },
+    roomTemplates: {
+      ...obstacleOnlyCfg.roomTemplates,
+      obstacles: [
+        {
+          id: 'obs-ft',
+          gameId: 'ft-game',
+          lane: 'charm' as const,
+          fullTeam: true,
+          options: [
+            { id: 'ft-safe',   greedy: false, heatCost: 1, reward: 1 },
+            { id: 'ft-greedy', greedy: true,  heatCost: 2, reward: 2 },
+          ] as [{ id: string; greedy: false; heatCost: number; reward: number }, { id: string; greedy: true; heatCost: number; reward: number }],
+        },
+      ],
+    },
+  };
+
+  function makeFullTeamStore(playerCount = 3) {
+    const narration = makeNarrationFixture();
+    const store = createGameStore({ cfg: fullTeamCfg, storage: makeStorage(), narration });
+    const players = Array.from({ length: playerCount }, (_, i) => ({ name: `P${i}` }));
+    store.getState().startRun(players, 1);
+    return store;
+  }
+
+  function renderFullTeamRoom(playerCount = 3) {
+    const store = makeFullTeamStore(playerCount);
+    render(
+      <StoreContext.Provider value={store}>
+        <CrewRailModeProvider>
+          <ObstacleRoom />
+        </CrewRailModeProvider>
+      </StoreContext.Provider>,
+    );
+    return store;
+  }
+
+  it('shows "Full team" tag and no crew checkboxes when a full-team option is selected', () => {
+    const store = renderFullTeamRoom(3);
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+
+    // Select the safe full-team option.
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+
+    // No crew-commit checkboxes should be shown.
+    expect(screen.queryByTestId('crew-commit')).not.toBeInTheDocument();
+    // Full-team panel is shown instead.
+    expect(screen.getByTestId('crew-full-team')).toBeInTheDocument();
+  });
+
+  it('commit button is immediately enabled for a full-team option (all crew pre-selected)', () => {
+    const store = renderFullTeamRoom(3);
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+    expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
+  });
+
+  it('dispatches CHOOSE_OPTION with all crew IDs for a full-team game', () => {
+    const store = renderFullTeamRoom(3);
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+    fireEvent.click(screen.getByTestId('btn-commit'));
+
+    const updatedRoom = store.getState().session.present.currentRoom;
+    if (updatedRoom === null || updatedRoom.kind !== 'obstacle') {
+      throw new Error('Expected obstacle room after commit');
+    }
+    expect(store.getState().session.present.phase).toBe('minigame');
+    // All 3 crew members should be committed.
+    expect(updatedRoom.committedBy).toHaveLength(crew.length);
+    for (const player of crew) {
+      expect(updatedRoom.committedBy).toContain(player.id);
+    }
+  });
+});
+
 // ── MinigameStub tests ────────────────────────────────────────────────────────
 
 describe('MinigameStub screen', () => {

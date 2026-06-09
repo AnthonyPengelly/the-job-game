@@ -17,6 +17,7 @@ export function makeCategories(items: string[]): MiniGame<CategoriesParams, Cate
     id: 'categories' as import('@/engine').GameId,
     lanes: ['charm'],
     minCommit: 1,
+    fullTeam: true,
     generate: makeGenerate(items),
     Component: CategoriesComponent,
     judge,

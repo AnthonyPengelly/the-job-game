@@ -28,6 +28,7 @@
       "id": "categories-lobby",
       "gameId": "categories",
       "lane": "charm",
+      "fullTeam": true,
       "options": [
         { "id": "categories-quiet",  "greedy": false, "heatCost": 1, "reward": 20000, "gear": { "kind": "statBoost", "lane": "charm" } },
         { "id": "categories-brash",  "greedy": true,  "heatCost": 2, "reward": 45000 }
@@ -55,6 +56,7 @@
       "id": "knowledge-archive",
       "gameId": "insideKnowledge",
       "lane": "tech",
+      "fullTeam": true,
       "options": [
         { "id": "knowledge-careful",  "greedy": false, "heatCost": 1, "reward": 20000 },
         { "id": "knowledge-thorough", "greedy": true,  "heatCost": 2, "reward": 40000 }
@@ -82,6 +84,7 @@
       "id": "assembly-storeroom",
       "gameId": "assemblyLine",
       "lane": "physical",
+      "fullTeam": true,
       "options": [
         { "id": "assembly-quiet", "greedy": false, "heatCost": 1, "reward": 20000, "gear": { "kind": "powerUp", "lane": "physical" } },
         { "id": "assembly-fast",  "greedy": true,  "heatCost": 2, "reward": 40000 }

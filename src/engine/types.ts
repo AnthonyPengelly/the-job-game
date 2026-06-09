@@ -117,6 +117,8 @@ export interface ObstacleOption {
   gear?: GearGrantDescriptor;
   /** Scaling-aware [minCrew, maxCrew] commit range for the current headcount. Set by generateRoom when crew ≥ 2. */
   commitRange?: [number, number];
+  /** True for games where the whole crew plays and no exhaustion rotation applies afterward. */
+  fullTeam?: boolean;
 }
 
 export interface ObstacleRoom {
