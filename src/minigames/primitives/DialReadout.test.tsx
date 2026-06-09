@@ -19,6 +19,6 @@ describe('DialReadout', () => {
 
   it('carries aria-label for accessibility', () => {
     render(<DialReadout dial={{ level: 5 }} />);
-    expect(screen.getByTestId('dial-readout')).toHaveAttribute('aria-label', 'Difficulty: 5');
+    expect(screen.getByTestId('dial-readout')).toHaveAttribute('aria-label', 'Difficulty: 5.0');
   });
 });

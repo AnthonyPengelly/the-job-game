@@ -6,9 +6,10 @@ export interface DialReadoutProps {
 
 /** GM-only display of the resolved difficulty level. The crew never sees this. */
 export function DialReadout({ dial }: DialReadoutProps): JSX.Element {
+  const display = dial.level.toFixed(1);
   return (
-    <div data-testid="dial-readout" aria-label={`Difficulty: ${dial.level}`}>
-      <span data-testid="dial-level">Difficulty: {dial.level.toFixed(1)}</span>
+    <div data-testid="dial-readout" aria-label={`Difficulty: ${display}`}>
+      <span data-testid="dial-level">Difficulty: {display}</span>
     </div>
   );
 }
