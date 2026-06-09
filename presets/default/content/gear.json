@@ -75,7 +75,7 @@
       "id": "powerup-physical",
       "kind": "powerUp",
       "lane": "physical",
-      "flavour": ["Iron Grip", "Second Wind", "Quick Hands"]
+      "flavour": ["Iron Grip", "Second Wind", "Sure Footing"]
     },
     {
       "id": "powerup-charm",

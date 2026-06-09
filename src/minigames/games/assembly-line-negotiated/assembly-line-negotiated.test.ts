@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
-import { judge, quickHandsBoost, tipOffBoost } from './judge';
+import { judge, tipOffBoost } from './judge';
 import type { AssemblyLineNegotiatedState } from './judge';
 import { assemblyLineNegotiated } from './index';
 import { getGame } from '@/minigames/registry';
@@ -32,8 +32,9 @@ describe('assemblyLineNegotiated registry', () => {
     expect(assemblyLineNegotiated.soloVariantId).toBeUndefined();
   });
 
-  it('has two boost hooks', () => {
-    expect(assemblyLineNegotiated.boosts).toHaveLength(2);
+  it('has one boost hook (Tip-Off)', () => {
+    expect(assemblyLineNegotiated.boosts).toHaveLength(1);
+    expect(assemblyLineNegotiated.boosts[0]!.label).toBe('Tip-Off');
   });
 });
 
@@ -121,7 +122,6 @@ function makeState(overrides: Partial<AssemblyLineNegotiatedState> = {}): Assemb
     timerExpired: false,
     setsCompleted: 0,
     targetSets: 2,
-    quickHandsUsed: false,
     tipOffUsed: false,
     ...overrides,
   };
@@ -148,37 +148,6 @@ describe('judge — three tier boundaries', () => {
 
   it('complication when timer expires but all sets complete (at buzzer)', () => {
     expect(judge(makeState({ timerExpired: true, setsCompleted: 2, targetSets: 2 }))).toBe('complication');
-  });
-});
-
-// ── quickHandsBoost (Physical) ────────────────────────────────────────────────
-
-describe('quickHandsBoost (Quick Hands)', () => {
-  it('has lane physical', () => {
-    expect(quickHandsBoost.lane).toBe('physical');
-  });
-
-  it('has label Quick Hands', () => {
-    expect(quickHandsBoost.label).toBe('Quick Hands');
-  });
-
-  it('sets quickHandsUsed on first use', () => {
-    const state = makeState();
-    const next = quickHandsBoost.apply(state, baseParams);
-    expect(next.quickHandsUsed).toBe(true);
-  });
-
-  it('is idempotent — same reference returned when already used', () => {
-    const state = makeState({ quickHandsUsed: true });
-    const next = quickHandsBoost.apply(state, baseParams);
-    expect(next).toBe(state);
-  });
-
-  it('does not mutate the input state', () => {
-    const state = makeState();
-    const before = JSON.stringify(state);
-    quickHandsBoost.apply(state, baseParams);
-    expect(JSON.stringify(state)).toBe(before);
   });
 });
 

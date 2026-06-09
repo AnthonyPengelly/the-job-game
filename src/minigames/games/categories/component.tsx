@@ -79,6 +79,7 @@ export function CategoriesComponent({
         <div className="mg-boost-slot">
           <BoostButton<CategoriesState, CategoriesParams>
             hook={skipBoost}
+            gameLanes={['charm']}
             committed={committed}
             onFire={handleBoost}
           />

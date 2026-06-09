@@ -2,7 +2,7 @@ import type { MiniGame } from '@/minigames/contract';
 import type { DefuseParams } from './generate';
 import { generate } from './generate';
 import type { DefuseState } from './judge';
-import { judge, clearChannelBoost, spareWireBoost } from './judge';
+import { judge, clearChannelBoost } from './judge';
 import { DefuseComponent } from './component';
 
 export type { DefuseParams } from './generate';
@@ -15,5 +15,5 @@ export const defuseTheAlarm: MiniGame<DefuseParams, DefuseState> = {
   generate,
   Component: DefuseComponent,
   judge,
-  boosts: [clearChannelBoost, spareWireBoost],
+  boosts: [clearChannelBoost],
 };

@@ -8,7 +8,7 @@ import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import { publishSlice } from '@/platform/channel';
 import type { DefuseParams } from './generate';
-import { judge, clearChannelBoost, spareWireBoost } from './judge';
+import { judge, clearChannelBoost } from './judge';
 import type { DefuseState } from './judge';
 
 function initState(): DefuseState {
@@ -16,7 +16,6 @@ function initState(): DefuseState {
     cutIds: [],
     timerExpired: false,
     clearChannelUsed: false,
-    spareWireUsed: false,
   };
 }
 
@@ -43,8 +42,7 @@ export function DefuseComponent({
   const safeCutsDone = state.cutIds.filter(id => params.safeWireIds.includes(id)).length;
   const allSafeDone = safeCutsDone >= params.safeWireIds.length;
 
-  const alarmTripped = wrongCutIds.length > 0 && !state.spareWireUsed;
-  const wrongCutForgiven = wrongCutIds.length > 0 && state.spareWireUsed && wrongCutIds.length === 1;
+  const alarmTripped = wrongCutIds.length > 0;
 
   const fillPct = params.safeWireIds.length > 0
     ? Math.min((safeCutsDone / params.safeWireIds.length) * 100, 100)
@@ -63,15 +61,11 @@ export function DefuseComponent({
     badgeIcon = <XCircle size={14} />;
     badgeLabel = 'TIME';
   } else if (allSafeDone) {
-    badgeClass = wrongCutForgiven
+    badgeClass = state.timerExpired
       ? 'mg-status-badge mg-status-badge--complication'
-      : (state.timerExpired ? 'mg-status-badge mg-status-badge--complication' : 'mg-status-badge mg-status-badge--clean');
+      : 'mg-status-badge mg-status-badge--clean';
     badgeIcon = <CheckCircle size={14} />;
-    badgeLabel = allSafeDone ? 'DEFUSED' : 'In Progress';
-  } else if (wrongCutForgiven) {
-    badgeClass = 'mg-status-badge mg-status-badge--complication';
-    badgeIcon = <AlertTriangle size={14} />;
-    badgeLabel = 'FORGIVEN';
+    badgeLabel = 'DEFUSED';
   }
 
   function handleCut(wireId: CardId) {
@@ -125,7 +119,6 @@ export function DefuseComponent({
       </StatusZone>
 
       <ChallengeZone>
-        {/* Wire cards are the hero — tap to cut */}
         <div data-testid="defuse-wires">
           <CardSpread
             cards={wireCards}
@@ -135,16 +128,9 @@ export function DefuseComponent({
           />
         </div>
 
-        {/* Alarm variants */}
         {alarmTripped && (
           <div data-testid="defuse-wrong-cuts" className="mg-status-badge mg-status-badge--botched" style={{ marginTop: '0.75rem', display: 'inline-flex', fontSize: '1rem' }}>
             <AlertTriangle size={16} /> ALARM TRIPPED — wrong cut!
-          </div>
-        )}
-
-        {wrongCutForgiven && (
-          <div data-testid="defuse-wrong-cuts" className="mg-status-badge mg-status-badge--complication" style={{ marginTop: '0.75rem', display: 'inline-flex' }}>
-            Wrong cut — FORGIVEN (Spare Wire)
           </div>
         )}
 
@@ -175,13 +161,7 @@ export function DefuseComponent({
         <div className="mg-boost-slot">
           <BoostButton<DefuseState, DefuseParams>
             hook={clearChannelBoost}
-            committed={committed}
-            onFire={handleBoost}
-          />
-        </div>
-        <div className="mg-boost-slot">
-          <BoostButton<DefuseState, DefuseParams>
-            hook={spareWireBoost}
+            gameLanes={['charm', 'stealth']}
             committed={committed}
             onFire={handleBoost}
           />

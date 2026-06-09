@@ -2,7 +2,7 @@ import type { MiniGame } from '@/minigames/contract';
 import type { FollowTheCircuitParams } from './generate';
 import { generate } from './generate';
 import type { FollowTheCircuitState } from './judge';
-import { judge, photographicBoost, muscleMemoryBoost } from './judge';
+import { judge, photographicBoost } from './judge';
 import { FollowTheCircuitComponent } from './component';
 
 export type { FollowTheCircuitParams } from './generate';
@@ -15,5 +15,5 @@ export const followTheCircuit: MiniGame<FollowTheCircuitParams, FollowTheCircuit
   generate,
   Component: FollowTheCircuitComponent,
   judge,
-  boosts: [photographicBoost, muscleMemoryBoost],
+  boosts: [photographicBoost],
 };

@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Triangle, CheckCircle, XCircle, Users } from 'lucide-react';
+import { Triangle, XCircle, Users } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { SteadyHandsParams } from './generate';
 import type { SteadyHandsState } from './judge';
-import { judge, extraHandsBoost, steadyBreathBoost } from './judge';
+import { judge, extraHandsBoost } from './judge';
 
 const EXTRA_HANDS_SECONDS = 10;
 
@@ -15,8 +15,6 @@ function initState(): SteadyHandsState {
     timerExpired: false,
     extraHandsUsed: false,
     extraHandsActive: false,
-    steadyBreathUsed: false,
-    wobbleForgiven: false,
   };
 }
 
@@ -34,10 +32,6 @@ export function SteadyHandsComponent({
     badgeClass = 'mg-status-badge mg-status-badge--botched';
     badgeIcon = <XCircle size={14} />;
     badgeLabel = 'TIME';
-  } else if (state.wobbleForgiven) {
-    badgeClass = 'mg-status-badge mg-status-badge--complication';
-    badgeIcon = <CheckCircle size={14} />;
-    badgeLabel = 'WOBBLE FORGIVEN';
   }
 
   function handleTimerExpire() {
@@ -82,12 +76,6 @@ export function SteadyHandsComponent({
           <span style={{ fontSize: '1rem', marginLeft: 8, color: 'var(--fg-muted)' }}>blocks</span>
         </div>
 
-        {state.wobbleForgiven && (
-          <div data-testid="sh-wobble-forgiven" className="mg-status-badge mg-status-badge--complication" style={{ marginTop: '0.75rem', display: 'inline-flex' }}>
-            Steady Breath — wobble forgiven
-          </div>
-        )}
-
         {state.extraHandsActive && (
           <div data-testid="sh-extra-hands" style={{
             marginTop: '1rem',
@@ -116,13 +104,7 @@ export function SteadyHandsComponent({
         <div className="mg-boost-slot">
           <BoostButton<SteadyHandsState, SteadyHandsParams>
             hook={extraHandsBoost}
-            committed={committed}
-            onFire={handleBoost}
-          />
-        </div>
-        <div className="mg-boost-slot">
-          <BoostButton<SteadyHandsState, SteadyHandsParams>
-            hook={steadyBreathBoost}
+            gameLanes={['physical', 'stealth']}
             committed={committed}
             onFire={handleBoost}
           />

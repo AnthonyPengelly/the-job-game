@@ -9,12 +9,8 @@ export interface InsideKnowledgeState {
   answers: AnswerStatus[];
   /** True once the countdown timer expires. */
   timerExpired: boolean;
-  /** True after the Cheat Sheet (Tech) boost fires. */
-  techBoostUsed: boolean;
   /** True after the Narrow It Down (Charm) boost fires. */
   charmBoostUsed: boolean;
-  /** Index of the question that Cheat Sheet auto-marked correct, or -1 if unused. */
-  cheatSheetIndex: number;
   /** Index of the question for which Narrow It Down revealed options, or -1 if unused. */
   narrowItDownIndex: number;
 }
@@ -39,20 +35,6 @@ export function judge(state: InsideKnowledgeState, params: InsideKnowledgeParams
 function firstUnansweredIndex(state: InsideKnowledgeState): number {
   return state.answers.findIndex(a => a === 'unanswered');
 }
-
-/** Tech boost: Cheat Sheet — skip the current question, counted as correct. Once per game. */
-export const cheatSheetBoost: BoostHook<InsideKnowledgeState, InsideKnowledgeParams> = {
-  lane: 'tech',
-  label: 'Cheat Sheet',
-  apply(state): InsideKnowledgeState {
-    if (state.techBoostUsed) return state;
-    const idx = firstUnansweredIndex(state);
-    if (idx === -1) return state;
-    const newAnswers = [...state.answers] as AnswerStatus[];
-    newAnswers[idx] = 'correct';
-    return { ...state, techBoostUsed: true, cheatSheetIndex: idx, answers: newAnswers };
-  },
-};
 
 /** Charm boost: Narrow It Down — reveal multiple-choice options on the current question. Once per game. */
 export const narrowItDownBoost: BoostHook<InsideKnowledgeState, InsideKnowledgeParams> = {

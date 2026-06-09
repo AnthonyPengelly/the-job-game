@@ -3,7 +3,7 @@ import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
 import type { DefuseParams } from './generate';
-import { judge, clearChannelBoost, spareWireBoost } from './judge';
+import { judge, clearChannelBoost } from './judge';
 import type { DefuseState } from './judge';
 import { defuseTheAlarm } from './index';
 import { getGame } from '@/minigames/registry';
@@ -34,8 +34,9 @@ describe('defuseTheAlarm registry', () => {
     expect(defuseTheAlarm.soloVariantId).toBeUndefined();
   });
 
-  it('has two boost hooks', () => {
-    expect(defuseTheAlarm.boosts).toHaveLength(2);
+  it('has one boost hook (Clear Channel)', () => {
+    expect(defuseTheAlarm.boosts).toHaveLength(1);
+    expect(defuseTheAlarm.boosts[0]!.label).toBe('Clear Channel');
   });
 });
 
@@ -52,7 +53,6 @@ describe('generate — reproducibility', () => {
   it('different seed + same dial ⇒ may differ (RNG drives wire/rule selection)', () => {
     const p1 = generate(mulberry32(1), dial(0));
     const p2 = generate(mulberry32(9999), dial(0));
-    // timerSeconds and counts are dial-driven; wire/rule content differs by seed
     expect(p1.timerSeconds).toBe(p2.timerSeconds);
   });
 
@@ -155,7 +155,6 @@ function makeState(overrides: Partial<DefuseState> = {}): DefuseState {
     cutIds: [],
     timerExpired: false,
     clearChannelUsed: false,
-    spareWireUsed: false,
     ...overrides,
   };
 }
@@ -165,7 +164,6 @@ function allSafeCuts(p: DefuseParams): DefuseState {
 }
 
 function withWrongCut(p: DefuseParams): CardId {
-  // Find a wire id that is NOT in safeWireIds
   const unsafe = p.wires.find(w => !p.safeWireIds.includes(w.id));
   if (!unsafe) throw new Error('No unsafe wire in params — test setup issue');
   return unsafe.id;
@@ -191,44 +189,14 @@ describe('judge — three tier boundaries', () => {
     expect(judge(state, baseParams)).toBe('botched');
   });
 
-  it('botched when wrong cut and spareWire not used', () => {
+  it('botched when any wrong cut is made', () => {
     const wrongId = withWrongCut(baseParams);
     const state = makeState({ cutIds: [wrongId] });
     expect(judge(state, baseParams)).toBe('botched');
   });
 
-  it('complication when wrong cut forgiven via spareWireUsed and all safe cuts done', () => {
-    const wrongId = withWrongCut(baseParams);
-    const state = {
-      ...allSafeCuts(baseParams),
-      cutIds: [...baseParams.safeWireIds, wrongId],
-      spareWireUsed: true,
-    };
-    expect(judge(state, baseParams)).toBe('complication');
-  });
-
-  it('botched when two wrong cuts even with spareWire used (boundary: forgives exactly one)', () => {
-    // Use explicit params so the test does not rely on RNG wire distribution
-    const params: DefuseParams = {
-      wires: [
-        { id: 'wire-0' as CardId, color: 'red', symbol: 'circle' },
-        { id: 'wire-1' as CardId, color: 'blue', symbol: 'square' },
-        { id: 'wire-2' as CardId, color: 'green', symbol: 'square' },
-      ],
-      cutRules: [{ property: 'color', value: 'red', text: 'Cut RED wires' }],
-      safeWireIds: ['wire-0' as CardId],
-      timerSeconds: 120,
-    };
-    // Two wrong cuts with spareWire used → still botched (only one forgiven)
-    const state = makeState({
-      cutIds: ['wire-0', 'wire-1', 'wire-2'] as CardId[],
-      spareWireUsed: true,
-    });
-    expect(judge(state, params)).toBe('botched');
-  });
-
-  it('still botched if spareWire used but timer also expired with cuts incomplete', () => {
-    const state = makeState({ timerExpired: true, spareWireUsed: true });
+  it('still botched if timer also expired with cuts incomplete', () => {
+    const state = makeState({ timerExpired: true });
     expect(judge(state, baseParams)).toBe('botched');
   });
 });
@@ -260,37 +228,6 @@ describe('clearChannelBoost (Clear Channel)', () => {
     const state = makeState();
     const before = JSON.stringify(state);
     clearChannelBoost.apply(state, baseParams);
-    expect(JSON.stringify(state)).toBe(before);
-  });
-});
-
-// ── spareWireBoost (Stealth) ──────────────────────────────────────────────────
-
-describe('spareWireBoost (Spare Wire)', () => {
-  it('has lane stealth', () => {
-    expect(spareWireBoost.lane).toBe('stealth');
-  });
-
-  it('has label Spare Wire', () => {
-    expect(spareWireBoost.label).toBe('Spare Wire');
-  });
-
-  it('sets spareWireUsed on first use', () => {
-    const state = makeState();
-    const next = spareWireBoost.apply(state, baseParams);
-    expect(next.spareWireUsed).toBe(true);
-  });
-
-  it('is idempotent — same reference returned when already used', () => {
-    const state = makeState({ spareWireUsed: true });
-    const next = spareWireBoost.apply(state, baseParams);
-    expect(next).toBe(state);
-  });
-
-  it('does not mutate the input state', () => {
-    const state = makeState();
-    const before = JSON.stringify(state);
-    spareWireBoost.apply(state, baseParams);
     expect(JSON.stringify(state)).toBe(before);
   });
 });

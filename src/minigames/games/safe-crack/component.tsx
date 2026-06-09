@@ -6,7 +6,7 @@ import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { SafeCrackParams } from './generate';
-import { computeFeedback, judge, techBoost, stealthBoost } from './judge';
+import { computeFeedback, judge, techBoost } from './judge';
 import type { SafeCrackState } from './judge';
 
 function initState(guessBudget: number): SafeCrackState {
@@ -15,7 +15,6 @@ function initState(guessBudget: number): SafeCrackState {
     guessesRemaining: guessBudget,
     solved: false,
     techBoostUsed: false,
-    stealthBoostUsed: false,
   };
 }
 
@@ -114,11 +113,9 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
               <span data-testid={`guess-digits-${i}`} className="mg-card-label">
                 {g.guess.join(' ')}
               </span>
-              {/* Right-place pips (filled squares) */}
               <span data-testid={`guess-right-place-${i}`} style={{ color: 'var(--c-green-200, #b6f7d2)' }}>
                 {'■'.repeat(g.rightPlace)}
               </span>
-              {/* Right-digit pips (open squares) */}
               <span data-testid={`guess-right-digit-${i}`} style={{ color: 'var(--caution, #f7b84b)' }}>
                 {'□'.repeat(g.rightDigit)}
               </span>
@@ -160,13 +157,7 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
         <div className="mg-boost-slot">
           <BoostButton<SafeCrackState, SafeCrackParams>
             hook={techBoost}
-            committed={committed}
-            onFire={handleBoost}
-          />
-        </div>
-        <div className="mg-boost-slot">
-          <BoostButton<SafeCrackState, SafeCrackParams>
-            hook={stealthBoost}
+            gameLanes={['tech', 'stealth']}
             committed={committed}
             onFire={handleBoost}
           />

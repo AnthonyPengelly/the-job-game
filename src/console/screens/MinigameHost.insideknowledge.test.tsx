@@ -245,19 +245,19 @@ describe('MinigameHost — inside-knowledge question marking', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — inside-knowledge boosts', () => {
-  it('Cheat Sheet boost surfaces in ACTIVE when tech power-up is held', () => {
-    const store = makeInsideKnowledgeStore(1, { techPowerUp: true });
+  it('Narrow It Down boost surfaces in ACTIVE when charm power-up is held', () => {
+    const store = makeInsideKnowledgeStore(1, { charmPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
+    expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 
-  it('Narrow It Down boost surfaces in ACTIVE when charm power-up is held', () => {
-    const store = makeInsideKnowledgeStore(1, { charmPowerUp: true });
+  it('Narrow It Down surfaces when tech power-up is held (any-lane eligibility)', () => {
+    const store = makeInsideKnowledgeStore(1, { techPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
         <MinigameHost />
@@ -275,22 +275,7 @@ describe('MinigameHost — inside-knowledge boosts', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.queryByTestId('boost-tech')).not.toBeInTheDocument();
     expect(screen.queryByTestId('boost-charm')).not.toBeInTheDocument();
-  });
-
-  it('Cheat Sheet fires once then disables', () => {
-    const store = makeInsideKnowledgeStore(1, { techPowerUp: true });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const btn = screen.getByTestId('boost-tech');
-    expect(btn).not.toBeDisabled();
-    fireEvent.click(btn);
-    expect(btn).toBeDisabled();
   });
 
   it('Narrow It Down fires once then disables', () => {
@@ -305,18 +290,6 @@ describe('MinigameHost — inside-knowledge boosts', () => {
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
     expect(btn).toBeDisabled();
-  });
-
-  it('both boosts surface independently when both power-ups are held by two players', () => {
-    const store = makeInsideKnowledgeStore(1, { techPowerUp: true, charmPowerUp: true });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
-    expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 });
 

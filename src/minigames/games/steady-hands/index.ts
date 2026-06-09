@@ -2,7 +2,7 @@ import type { MiniGame } from '@/minigames/contract';
 import type { SteadyHandsParams } from './generate';
 import { generate } from './generate';
 import type { SteadyHandsState } from './judge';
-import { judge, extraHandsBoost, steadyBreathBoost } from './judge';
+import { judge, extraHandsBoost } from './judge';
 import { SteadyHandsComponent } from './component';
 
 export type { SteadyHandsParams } from './generate';
@@ -15,5 +15,5 @@ export const steadyHands: MiniGame<SteadyHandsParams, SteadyHandsState> = {
   generate,
   Component: SteadyHandsComponent,
   judge,
-  boosts: [extraHandsBoost, steadyBreathBoost],
+  boosts: [extraHandsBoost],
 };

@@ -219,11 +219,21 @@ describe('MinigameHost — safeCrack end-to-end', () => {
   });
 
   describe('boost surfacing', () => {
-    it('both Stethoscope (tech) and Patient Touch (stealth) surface when both power-ups are held', () => {
+    it('Stethoscope surfaces when tech power-up is held', () => {
+      const store = makeSafeCrackStore(1, { alicePowerUps: ['tech'] });
+      render(
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>,
+      );
+      fireEvent.click(screen.getByTestId('btn-minigame-start'));
+      expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
+    });
+
+    it('Stethoscope surfaces when stealth power-up is held (any-lane eligibility)', () => {
       const store = makeSafeCrackStore(1, {
-        twoPlayers:    true,
-        alicePowerUps: ['tech'],
-        bobPowerUps:   ['stealth'],
+        twoPlayers:  true,
+        bobPowerUps: ['stealth'],
       });
       render(
         <StoreContext.Provider value={store}>
@@ -232,7 +242,6 @@ describe('MinigameHost — safeCrack end-to-end', () => {
       );
       fireEvent.click(screen.getByTestId('btn-minigame-start'));
       expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
-      expect(screen.getByTestId('boost-stealth')).toBeInTheDocument();
     });
 
     it('no boost button renders when no committed player holds a power-up', () => {
@@ -244,7 +253,6 @@ describe('MinigameHost — safeCrack end-to-end', () => {
       );
       fireEvent.click(screen.getByTestId('btn-minigame-start'));
       expect(screen.queryByTestId('boost-tech')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('boost-stealth')).not.toBeInTheDocument();
     });
 
     it('Stethoscope (tech) fires once and then disables', () => {
@@ -256,23 +264,6 @@ describe('MinigameHost — safeCrack end-to-end', () => {
       );
       fireEvent.click(screen.getByTestId('btn-minigame-start'));
       const btn = screen.getByTestId('boost-tech');
-      expect(btn).not.toBeDisabled();
-      fireEvent.click(btn);
-      expect(btn).toBeDisabled();
-    });
-
-    it('Patient Touch (stealth) fires once and then disables', () => {
-      const store = makeSafeCrackStore(1, {
-        twoPlayers:  true,
-        bobPowerUps: ['stealth'],
-      });
-      render(
-        <StoreContext.Provider value={store}>
-          <MinigameHost />
-        </StoreContext.Provider>,
-      );
-      fireEvent.click(screen.getByTestId('btn-minigame-start'));
-      const btn = screen.getByTestId('boost-stealth');
       expect(btn).not.toBeDisabled();
       fireEvent.click(btn);
       expect(btn).toBeDisabled();

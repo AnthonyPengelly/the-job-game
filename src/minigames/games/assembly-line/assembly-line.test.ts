@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
-import { judge, quickHandsBoost, tipOffBoost } from './judge';
+import { judge, tipOffBoost } from './judge';
 import type { AssemblyLineState } from './judge';
 import { assemblyLine } from './index';
 import { getGame } from '@/minigames/registry';
@@ -32,8 +32,9 @@ describe('assemblyLine registry', () => {
     expect(assemblyLine.soloVariantId).toBeUndefined();
   });
 
-  it('has two boost hooks', () => {
-    expect(assemblyLine.boosts).toHaveLength(2);
+  it('has one boost hook (Tip-Off)', () => {
+    expect(assemblyLine.boosts).toHaveLength(1);
+    expect(assemblyLine.boosts[0]!.label).toBe('Tip-Off');
   });
 });
 
@@ -51,10 +52,8 @@ describe('generate — reproducibility', () => {
     const d = dial(0);
     const p1 = generate(mulberry32(1), d);
     const p2 = generate(mulberry32(9999), d);
-    // setTypesInPlay drawn from RNG, so different seeds usually differ
-    // (deterministic but seed-dependent)
-    expect(p1.handSize).toBe(p2.handSize);       // dial-driven, not RNG
-    expect(p1.timerSeconds).toBe(p2.timerSeconds); // dial-driven, not RNG
+    expect(p1.handSize).toBe(p2.handSize);
+    expect(p1.timerSeconds).toBe(p2.timerSeconds);
   });
 
   it('handSize is a positive integer', () => {
@@ -135,13 +134,10 @@ function makeState(overrides: Partial<AssemblyLineState> = {}): AssemblyLineStat
     timerExpired: false,
     setsCompleted: 0,
     targetSets: 2,
-    quickHandsUsed: false,
     tipOffUsed: false,
     ...overrides,
   };
 }
-
-const baseParams = generate(mulberry32(1), dial(0));
 
 describe('judge — three tier boundaries', () => {
   it('complication when game is in progress (default suggestion)', () => {
@@ -169,38 +165,9 @@ describe('judge — three tier boundaries', () => {
   });
 });
 
-// ── quickHandsBoost (Physical) ────────────────────────────────────────────────
-
-describe('quickHandsBoost (Quick Hands)', () => {
-  it('has lane physical', () => {
-    expect(quickHandsBoost.lane).toBe('physical');
-  });
-
-  it('has label Quick Hands', () => {
-    expect(quickHandsBoost.label).toBe('Quick Hands');
-  });
-
-  it('sets quickHandsUsed on first use', () => {
-    const state = makeState();
-    const next = quickHandsBoost.apply(state, baseParams);
-    expect(next.quickHandsUsed).toBe(true);
-  });
-
-  it('is idempotent — same reference returned when already used', () => {
-    const state = makeState({ quickHandsUsed: true });
-    const next = quickHandsBoost.apply(state, baseParams);
-    expect(next).toBe(state);
-  });
-
-  it('does not mutate the input state', () => {
-    const state = makeState();
-    const before = JSON.stringify(state);
-    quickHandsBoost.apply(state, baseParams);
-    expect(JSON.stringify(state)).toBe(before);
-  });
-});
-
 // ── tipOffBoost (Charm) ───────────────────────────────────────────────────────
+
+const baseParams = generate(mulberry32(1), dial(0));
 
 describe('tipOffBoost (Tip-Off)', () => {
   it('has lane charm', () => {

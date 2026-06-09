@@ -70,11 +70,11 @@ export function MinigameHost() {
     return game.generate(rng, dial);
   }, [present.rngState, resolvedGameId, dial.level]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Boost previews: committed players holding a relevant lane power-up
+  // Boost previews: committed players holding a power-up in any of the game's lanes
   const boostPreviews: BoostPreviewEntry[] = useMemo(() => {
     if (game === undefined) return [];
     return game.boosts.flatMap(boost => {
-      const holder = committed.find(p => p.powerUps[boost.lane] === true);
+      const holder = committed.find(p => game.lanes.some(l => p.powerUps[l] === true));
       if (holder === undefined) return [];
       return [{ lane: boost.lane, label: boost.label, holderName: holder.name }];
     });

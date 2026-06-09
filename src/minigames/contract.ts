@@ -52,7 +52,7 @@ export interface MiniGame<Params, ChallengeState> {
   Component: FC<MiniGameProps<Params>>;
   /** Suggest an outcome from the terminal challenge state. Pure: (state, params) → outcome. */
   judge(state: ChallengeState, params: Params): Outcome;
-  /** Power-up boost hooks, one per lane in `lanes`. Empty array if the game has none. */
+  /** One signature ability per game. A committed player fires it if they hold a power-up in any of `lanes`. */
   boosts: BoostHook<ChallengeState, Params>[];
   /** Hard floor on committed crew size; the generator never offers this game below this count. */
   minCommit: number;

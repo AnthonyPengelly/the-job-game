@@ -5,7 +5,7 @@ import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { AssemblyLineNegotiatedParams } from './generate';
-import { judge, quickHandsBoost, tipOffBoost } from './judge';
+import { judge, tipOffBoost } from './judge';
 import type { AssemblyLineNegotiatedState } from './judge';
 
 function initState(targetSets: number): AssemblyLineNegotiatedState {
@@ -13,7 +13,6 @@ function initState(targetSets: number): AssemblyLineNegotiatedState {
     timerExpired: false,
     setsCompleted: 0,
     targetSets,
-    quickHandsUsed: false,
     tipOffUsed: false,
   };
 }
@@ -99,12 +98,6 @@ export function AssemblyLineNegotiatedComponent({
           </div>
         )}
 
-        {state.quickHandsUsed && (
-          <div data-testid="aln-quick-hands-active" className="mg-status-badge mg-status-badge--clean" style={{ marginTop: '0.5rem', display: 'inline-flex' }}>
-            Quick Hands — 2-for-1 trade!
-          </div>
-        )}
-
         <div data-testid="aln-tally" style={{ marginTop: '1rem' }}>
           <button
             data-testid="aln-tally-increment"
@@ -120,14 +113,8 @@ export function AssemblyLineNegotiatedComponent({
       <RefereeZone>
         <div className="mg-boost-slot">
           <BoostButton<AssemblyLineNegotiatedState, AssemblyLineNegotiatedParams>
-            hook={quickHandsBoost}
-            committed={committed}
-            onFire={handleBoost}
-          />
-        </div>
-        <div className="mg-boost-slot">
-          <BoostButton<AssemblyLineNegotiatedState, AssemblyLineNegotiatedParams>
             hook={tipOffBoost}
+            gameLanes={['physical', 'charm']}
             committed={committed}
             onFire={handleBoost}
           />

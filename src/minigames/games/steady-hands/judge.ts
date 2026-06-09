@@ -9,10 +9,6 @@ export interface SteadyHandsState {
   extraHandsUsed: boolean;
   /** True while the 10s all-hands window is active. */
   extraHandsActive: boolean;
-  /** Stealth boost (Steady Breath) used flag. */
-  steadyBreathUsed: boolean;
-  /** True when Steady Breath absorbed a wobble. */
-  wobbleForgiven: boolean;
 }
 
 /**
@@ -23,12 +19,10 @@ export interface SteadyHandsState {
  *   complication — a wobble survived / just short but standing
  *   botched      — toppled / well short / timed out
  *
- * Timer expiry suggests botched. Steady Breath use suggests complication.
- * All cases are GM-overridable via OutcomeJudge.
+ * Timer expiry suggests botched. All cases are GM-overridable via OutcomeJudge.
  */
 export function judge(state: SteadyHandsState): Outcome {
   if (state.timerExpired) return 'botched';
-  if (state.wobbleForgiven) return 'complication';
   return 'complication';
 }
 
@@ -39,15 +33,5 @@ export const extraHandsBoost: BoostHook<SteadyHandsState, SteadyHandsParams> = {
   apply(state): SteadyHandsState {
     if (state.extraHandsUsed) return state;
     return { ...state, extraHandsUsed: true, extraHandsActive: true };
-  },
-};
-
-/** Stealth boost: Steady Breath — one wobble forgiven. */
-export const steadyBreathBoost: BoostHook<SteadyHandsState, SteadyHandsParams> = {
-  lane: 'stealth',
-  label: 'Steady Breath',
-  apply(state): SteadyHandsState {
-    if (state.steadyBreathUsed) return state;
-    return { ...state, steadyBreathUsed: true, wobbleForgiven: true };
   },
 };

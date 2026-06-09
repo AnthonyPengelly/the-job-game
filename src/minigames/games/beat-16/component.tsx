@@ -139,6 +139,7 @@ export function Beat16Component({
         <div className="mg-boost-slot">
           <BoostButton<Beat16State, Beat16Params>
             hook={inTheBonesBoost}
+            gameLanes={['physical']}
             committed={committed}
             onFire={handleBoost}
           />

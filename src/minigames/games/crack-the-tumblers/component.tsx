@@ -115,6 +115,7 @@ export function CrackTheTumblersComponent({
         <div className="mg-boost-slot">
           <BoostButton<CrackTheTumblersState, CrackTheTumblersParams>
             hook={resetPinBoost}
+            gameLanes={['tech']}
             committed={committed}
             onFire={handleBoost}
           />
