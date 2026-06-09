@@ -462,13 +462,20 @@ describe('ScenarioRoom app mode roll', () => {
     expect(screen.queryByTestId('input-physical-roll')).toBeNull();
   });
 
-  it('clicking Roll dispatches RESOLVE_SCENARIO_ROLL and advances to offer', () => {
+  it('clicking Roll dispatches RESOLVE_SCENARIO_ROLL and exposes resolvedRoll', () => {
     const { store } = renderRollRoom(42, false);
     advanceToRollReveal(store);
 
     fireEvent.click(screen.getByTestId('btn-roll'));
 
-    expect(store.getState().session.present.phase).toBe('offer');
+    // RESOLVE_SCENARIO_ROLL now stays in room phase with resolvedRoll set;
+    // ACK_SCENARIO_ROLL (dispatched by the Continue CTA in E19.5) advances to offer.
+    expect(store.getState().session.present.phase).toBe('room');
+    const room = store.getState().session.present.currentRoom;
+    expect(room?.kind).toBe('scenario');
+    if (room?.kind === 'scenario') {
+      expect(room.resolvedRoll).toBeDefined();
+    }
   });
 
   it('app mode roll resolves via seeded RNG and is reproducible (same seed → same result)', () => {
@@ -553,14 +560,19 @@ describe('ScenarioRoom physical mode roll', () => {
     expect(screen.queryByTestId('physical-roll-error')).toBeNull();
   });
 
-  it('submitting a valid physical roll advances phase to offer', () => {
+  it('submitting a valid physical roll exposes resolvedRoll (stays in room phase)', () => {
     const { store } = renderRollRoom(42, true);
     advanceToRollReveal(store);
 
     fireEvent.change(screen.getByTestId('input-physical-roll'), { target: { value: '15' } });
     fireEvent.click(screen.getByTestId('btn-submit-physical'));
 
-    expect(store.getState().session.present.phase).toBe('offer');
+    // RESOLVE_SCENARIO_ROLL stays in room phase with resolvedRoll set.
+    expect(store.getState().session.present.phase).toBe('room');
+    const room = store.getState().session.present.currentRoom;
+    if (room?.kind === 'scenario') {
+      expect(room.resolvedRoll).toBeDefined();
+    }
   });
 
   it('physical roll uses the entered value as externalRoll in history', () => {
@@ -596,17 +608,18 @@ describe('ScenarioRoom physical mode roll', () => {
     fireEvent.change(screen.getByTestId('input-physical-roll'), { target: { value: '15' } });
     fireEvent.click(screen.getByTestId('btn-submit-physical'));
 
-    expect(store.getState().session.present.phase).toBe('offer');
+    // After submit, phase is 'room' with resolvedRoll set.
+    expect(store.getState().session.present.phase).toBe('room');
 
     act(() => { store.getState().undo(); });
 
-    // After undo the offer-phase change is reversed; pendingRoll is restored.
-    expect(store.getState().session.present.phase).not.toBe('offer');
+    // After undo the resolvedRoll state is reversed; pendingRoll is restored.
     const room = store.getState().session.present.currentRoom;
     expect(room?.kind).toBe('scenario');
     if (room?.kind === 'scenario') {
       expect(room.pendingRoll).toBeDefined();
       expect(room.pendingRoll?.dc).toBe(13);
+      expect(room.resolvedRoll).toBeUndefined();
     }
   });
 });

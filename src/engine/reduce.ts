@@ -4,7 +4,7 @@
 // is a compile error (the default: never assert below).
 import { rngFromState } from './rng';
 import type { EngineConfig } from './config';
-import type { RunState, RunEvent, ScenarioRoom, PendingRoll } from './types';
+import type { RunState, RunEvent, ScenarioRoom, PendingRoll, ResolvedRoll, Outcome } from './types';
 import { startRun } from './run';
 import { applyGear, applyExhaustion } from './crew';
 import { generateRoom } from './generation';
@@ -217,12 +217,38 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
       const success = resolveRoll(roll, pendingRoll.dc, cfg.scenario.critFumble);
       const effect = success ? choiceDef.roll.success : choiceDef.roll.failure;
 
+      // Map success/failure to the Outcome taxonomy, respecting critFumble.
+      const result: Outcome = success
+        ? 'clean'
+        : cfg.scenario.critFumble && roll === 1
+          ? 'botched'
+          : 'complication';
+
       const stateWithRoll: RunState = { ...state, rngState: nextRngState };
+      // Apply and bank the effect immediately — grants are deterministic from this point.
       const next = applyScenarioEffect(stateWithRoll, effect, cfg);
 
-      const intermediate: RunState = {
+      const resolvedRoll: ResolvedRoll = {
+        roll,
+        total: roll + pendingRoll.laneRating,
+        dc: pendingRoll.dc,
+        lane: pendingRoll.lane,
+        laneRating: pendingRoll.laneRating,
+        baseDifficulty: pendingRoll.baseDifficulty,
+        result,
+        lootDelta: effect.lootDelta,
+        heatDelta: effect.heatDelta,
+        ...(effect.gear !== undefined && { gear: effect.gear }),
+      };
+
+      // Omit pendingRoll (exactOptionalPropertyTypes: spreading undefined is not allowed).
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { pendingRoll: _pr, ...roomWithoutPending } = room;
+      const updatedRoom: ScenarioRoom = { ...roomWithoutPending, resolvedRoll };
+
+      const resolvedState: RunState = {
         ...next,
-        currentRoom: null,
+        currentRoom: updatedRoom,
         history: [
           ...next.history,
           {
@@ -236,6 +262,22 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
             success,
           },
         ],
+        phase: 'room',
+      };
+      return { ...resolvedState, escapeSignal: computeEscapeSignal(resolvedState, cfg) };
+    }
+
+    case 'ACK_SCENARIO_ROLL': {
+      const room = state.currentRoom;
+      if (room === null || room.kind !== 'scenario') {
+        throw new Error('ACK_SCENARIO_ROLL requires an active scenario room');
+      }
+      if (room.resolvedRoll === undefined) {
+        throw new Error('ACK_SCENARIO_ROLL requires a resolvedRoll (dispatch RESOLVE_SCENARIO_ROLL first)');
+      }
+      const intermediate: RunState = {
+        ...state,
+        currentRoom: null,
         phase: 'offer',
       };
       return { ...intermediate, escapeSignal: computeEscapeSignal(intermediate, cfg) };

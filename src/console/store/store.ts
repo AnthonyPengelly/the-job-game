@@ -75,7 +75,7 @@ export interface GameStoreState {
 
   /**
    * True when the engine just transitioned from 'minigame' or 'room' to 'offer'
-   * via natural resolution (RESOLVE_MINIGAME / RESOLVE_SCENARIO_ROLL /
+   * via natural resolution (RESOLVE_MINIGAME / ACK_SCENARIO_ROLL /
    * CHOOSE_SCENARIO). The PhaseRouter shows the Spoils interstitial instead of
    * the Offer screen until the GM clicks Continue.
    */

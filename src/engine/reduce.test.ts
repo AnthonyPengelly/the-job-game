@@ -987,6 +987,7 @@ describe('determinism: event log replay', () => {
           if (attempter === undefined) throw new Error('No crew for roll attempt');
           state = reduce(state, { t: 'CHOOSE_SCENARIO', choiceId: choice.id, attemptedBy: attempter }, cfg);
           state = reduce(state, { t: 'RESOLVE_SCENARIO_ROLL' }, cfg);
+          state = reduce(state, { t: 'ACK_SCENARIO_ROLL' }, cfg);
         }
       }
       state = reduce(state, { t: 'CALL_GETAWAY' }, cfg);

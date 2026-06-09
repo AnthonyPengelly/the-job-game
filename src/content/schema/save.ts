@@ -45,6 +45,8 @@ const resolveScenarioRollSchema = z.object({
   externalRoll: z.number().int().min(1).max(20).optional(),
 });
 
+const ackScenarioRollSchema = z.object({ t: z.literal('ACK_SCENARIO_ROLL') });
+
 const assignGearSchema = z.object({
   t: z.literal('ASSIGN_GEAR'),
   gear: z.string(),
@@ -121,6 +123,7 @@ export const runEventSchema = z.discriminatedUnion('t', [
   resolveMinigameSchema,
   chooseScenarioSchema,
   resolveScenarioRollSchema,
+  ackScenarioRollSchema,
   assignGearSchema,
   sellGearSchema,
   pushOnSchema,

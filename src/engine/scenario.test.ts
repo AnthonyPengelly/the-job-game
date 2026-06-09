@@ -467,11 +467,25 @@ describe('RESOLVE_SCENARIO_ROLL — seeded roll', () => {
     expect(r1.rngState).toBe(r2.rngState);
   });
 
-  it('advances to offer phase after resolving the roll', () => {
+  it('stays in room phase with resolvedRoll set after RESOLVE_SCENARIO_ROLL', () => {
     const s = makeState('scen-roll');
     const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfg);
     const next = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL' }, cfg);
+    expect(next.phase).toBe('room');
+    expect(next.currentRoom?.kind).toBe('scenario');
+    if (next.currentRoom?.kind === 'scenario') {
+      expect(next.currentRoom.resolvedRoll).toBeDefined();
+      expect(next.currentRoom.pendingRoll).toBeUndefined();
+    }
+  });
+
+  it('ACK_SCENARIO_ROLL advances to offer phase', () => {
+    const s = makeState('scen-roll');
+    const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfg);
+    const afterRoll = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL' }, cfg);
+    const next = reduce(afterRoll, { t: 'ACK_SCENARIO_ROLL' }, cfg);
     expect(next.phase).toBe('offer');
+    expect(next.currentRoom).toBeNull();
   });
 
   it('records roll, dc, and success in history', () => {
@@ -493,6 +507,64 @@ describe('RESOLVE_SCENARIO_ROLL — seeded roll', () => {
     const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfg);
     const next = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL' }, cfg);
     expect(next.rngState).not.toBe(afterChoose.rngState);
+  });
+
+  it('resolvedRoll exposes roll, total, dc, lane, laneRating, baseDifficulty', () => {
+    const s = makeState('scen-roll');
+    const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfg);
+    const next = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL' }, cfg);
+    if (next.currentRoom?.kind !== 'scenario') throw new Error('Expected scenario room');
+    const rr = next.currentRoom.resolvedRoll;
+    expect(rr).toBeDefined();
+    if (rr === undefined) return;
+    expect(typeof rr.roll).toBe('number');
+    expect(rr.roll).toBeGreaterThanOrEqual(1);
+    expect(rr.roll).toBeLessThanOrEqual(20);
+    expect(rr.total).toBe(rr.roll + rr.laneRating);
+    expect(rr.dc).toBe(11); // baseDifficulty(13) - techRating(2) = 11
+    expect(rr.lane).toBe('tech');
+    expect(rr.laneRating).toBe(2);
+    expect(rr.baseDifficulty).toBe(13);
+    expect(['clean', 'complication', 'botched']).toContain(rr.result);
+  });
+
+  it('resolvedRoll.result is clean on success, complication on failure (critFumble off)', () => {
+    // critFumble=false: success → clean, failure → complication (never botched)
+    const s = makeState('scen-roll');
+    const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfg);
+    // roll 15 ≥ dc 11 → success → clean
+    const successNext = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 15 }, cfg);
+    if (successNext.currentRoom?.kind === 'scenario') {
+      expect(successNext.currentRoom.resolvedRoll?.result).toBe('clean');
+    }
+    // roll 5 < dc 11 → failure → complication
+    const failNext = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 5 }, cfg);
+    if (failNext.currentRoom?.kind === 'scenario') {
+      expect(failNext.currentRoom.resolvedRoll?.result).toBe('complication');
+    }
+  });
+
+  it('grant is provably applied: loot and heat change reflects effect, gear in earnedGear', () => {
+    // failure: heatDelta=+2, lootDelta=0
+    const s = makeState('scen-roll', { heat: 3, loot: 5 });
+    const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfg);
+    const next = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 5 }, cfg);
+    // heat should be 3 + 2 = 5 (grant already applied)
+    expect(next.heat).toBe(5);
+    expect(next.loot).toBe(5); // lootDelta = 0
+    // resolvedRoll carries the deltas for display
+    if (next.currentRoom?.kind === 'scenario') {
+      expect(next.currentRoom.resolvedRoll?.heatDelta).toBe(2);
+      expect(next.currentRoom.resolvedRoll?.lootDelta).toBe(0);
+    }
+  });
+
+  it('grant is provably applied: success info effect lands (easeNextObstacle carried)', () => {
+    // success: info=true → easeNextObstacle carried effect
+    const s = makeState('scen-roll');
+    const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfg);
+    const next = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 15 }, cfg);
+    expect(next.carried.some(e => e.kind === 'easeNextObstacle')).toBe(true);
   });
 });
 
@@ -542,6 +614,15 @@ describe('RESOLVE_SCENARIO_ROLL — externalRoll (physical dice mode)', () => {
     const next = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 5 }, cfg);
     expect(next.heat).toBe(5); // 3 + 2
   });
+
+  it('resolvedRoll.roll matches externalRoll', () => {
+    const s = makeState('scen-roll');
+    const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfg);
+    const next = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 17 }, cfg);
+    if (next.currentRoom?.kind === 'scenario') {
+      expect(next.currentRoom.resolvedRoll?.roll).toBe(17);
+    }
+  });
 });
 
 // ── UNDO_LAST after RESOLVE_SCENARIO_ROLL ────────────────────────────────────
@@ -567,12 +648,37 @@ describe('UNDO_LAST restores prior state after a roll (mistyped physical roll is
       return;
     }
 
+    // RESOLVE_SCENARIO_ROLL now stays in room phase with resolvedRoll set.
     const s3 = reduceSession(s2, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 15 }, cfg);
-    expect(s3.present.phase).toBe('offer');
+    expect(s3.present.phase).toBe('room');
+    expect(s3.present.currentRoom?.kind).toBe('scenario');
+    if (s3.present.currentRoom?.kind === 'scenario') {
+      expect(s3.present.currentRoom.resolvedRoll).toBeDefined();
+    }
 
-    // Undo the roll — should restore the pre-roll state (pendingRoll set).
+    // Undo the roll — should restore the pre-roll state (pendingRoll set, no resolvedRoll).
     const s4 = reduceSession(s3, { t: 'UNDO_LAST' }, cfg);
     expect(s4.present).toEqual(s2.present);
+  });
+
+  it('UNDO_LAST after ACK_SCENARIO_ROLL restores the resolvedRoll state', () => {
+    const session = initialSession(initialState(42));
+    const s1 = reduceSession(session, { t: 'START_RUN', crew: [{ name: 'Alice' }], seed: 42 }, cfg);
+    if (s1.present.currentRoom?.kind !== 'scenario') return;
+    const room = s1.present.currentRoom;
+    const rollChoice = room.choices.find(c => c.isRoll);
+    if (rollChoice === undefined) return;
+    const attempter = s1.present.crew[0]?.id;
+    if (attempter === undefined) return;
+
+    const s2 = reduceSession(s1, { t: 'CHOOSE_SCENARIO', choiceId: rollChoice.id, attemptedBy: attempter }, cfg);
+    const s3 = reduceSession(s2, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 15 }, cfg);
+    const s4 = reduceSession(s3, { t: 'ACK_SCENARIO_ROLL' }, cfg);
+    expect(s4.present.phase).toBe('offer');
+
+    // Undo the ack — should restore the resolvedRoll state (before offer).
+    const s5 = reduceSession(s4, { t: 'UNDO_LAST' }, cfg);
+    expect(s5.present).toEqual(s3.present);
   });
 });
 
@@ -616,6 +722,34 @@ describe('critFumble flag', () => {
     expect(resolveRoll(20, 20, false)).toBe(true);
     // DC=1; roll 1 → success (1 >= 1)
     expect(resolveRoll(1, 1, false)).toBe(true);
+  });
+
+  it('resolvedRoll.result is botched for nat-1 when critFumble=true', () => {
+    const s = makeState('scen-roll', { heat: 0 });
+    const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfgCrit);
+    const next = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 1 }, cfgCrit);
+    if (next.currentRoom?.kind === 'scenario') {
+      expect(next.currentRoom.resolvedRoll?.result).toBe('botched');
+    }
+  });
+
+  it('resolvedRoll.result is clean for nat-20 when critFumble=true', () => {
+    const s = makeState('scen-roll', { heat: 0 });
+    const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfgCrit);
+    const next = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 20 }, cfgCrit);
+    if (next.currentRoom?.kind === 'scenario') {
+      expect(next.currentRoom.resolvedRoll?.result).toBe('clean');
+    }
+  });
+
+  it('resolvedRoll.result is complication for non-crit failure when critFumble=true', () => {
+    // roll=5, DC=11, critFumble=true → regular failure → complication (not botched)
+    const s = makeState('scen-roll', { heat: 0 });
+    const afterChoose = reduce(s, { t: 'CHOOSE_SCENARIO', choiceId: 'listen-in', attemptedBy: 'p0' as PlayerId }, cfgCrit);
+    const next = reduce(afterChoose, { t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 5 }, cfgCrit);
+    if (next.currentRoom?.kind === 'scenario') {
+      expect(next.currentRoom.resolvedRoll?.result).toBe('complication');
+    }
   });
 });
 
