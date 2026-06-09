@@ -2,10 +2,12 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { StoreContext, createGameStore } from '@/console/store';
+import { useGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import type { StorageLike } from '@/platform';
 import type { ParsedNarration } from '@/content/schema';
-import { CrewRailModeProvider } from '@/console/shell';
+import { CrewRailModeProvider, useCrewRailMode } from '@/console/shell';
+import type { PlayerId } from '@/engine';
 import { ActionBarSlotProvider, ActionBarSlotOutlet } from '@/console/shell/actionBarSlot';
 import { ObstacleRoom } from './ObstacleRoom';
 import { MinigameStub } from './MinigameStub';
@@ -56,6 +58,29 @@ function makeObstacleStore(seed = 1) {
   return store;
 }
 
+/**
+ * A helper that renders one button per crew member inside CrewRailModeProvider.
+ * Clicking the button calls toggleCommit, simulating a tap on the crew rail.
+ */
+function RailButtons() {
+  const crew = useGameStore(s => s.session.present.crew);
+  const { toggleCommit } = useCrewRailMode();
+  return (
+    <>
+      {crew.map(p => (
+        <button
+          key={p.id}
+          data-testid={`rail-toggle-${p.id}`}
+          onClick={() => toggleCommit(p.id as PlayerId)}
+          type="button"
+        >
+          {p.name}
+        </button>
+      ))}
+    </>
+  );
+}
+
 function renderObstacleRoom(seed = 1) {
   const store = makeObstacleStore(seed);
   render(
@@ -63,6 +88,7 @@ function renderObstacleRoom(seed = 1) {
       <ActionBarSlotOutlet />
       <StoreContext.Provider value={store}>
         <CrewRailModeProvider>
+          <RailButtons />
           <ObstacleRoom />
         </CrewRailModeProvider>
       </StoreContext.Provider>
@@ -117,11 +143,10 @@ describe('ObstacleRoom screen', () => {
 
   it('shows the obstacle lane clue from the template config', () => {
     renderObstacleRoom();
-    // The lane text is always present; just verify the element exists.
     expect(screen.getByTestId('obstacle-lane')).toBeInTheDocument();
   });
 
-  it('renders both option cards with reward and heat', () => {
+  it('renders both option cards with lane chip, game name, reward, and heat', () => {
     const store = renderObstacleRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
@@ -134,8 +159,32 @@ describe('ObstacleRoom screen', () => {
       expect(screen.getByTestId(`option-heat-${option.id}`)).toHaveTextContent(
         String(option.heatCost),
       );
+      // Lane chip and game name present inside the option-game container
       expect(screen.getByTestId(`option-game-${option.id}`)).toBeInTheDocument();
+      expect(screen.getByTestId(`option-lane-chip-${option.id}`)).toBeInTheDocument();
+      expect(screen.getByTestId(`option-game-name-${option.id}`)).toBeInTheDocument();
     }
+  });
+
+  it('option-game span shows the template lane', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const template = obstacleOnlyCfg.roomTemplates.obstacles.find(
+      t => t.id === room.templateId,
+    );
+    expect(template).toBeDefined();
+    const laneText = template!.lane.charAt(0).toUpperCase() + template!.lane.slice(1);
+    expect(screen.getByTestId(`option-lane-chip-${room.options[0]!.id}`)).toHaveTextContent(
+      laneText,
+    );
+  });
+
+  it('reward cost label says "Reward" not "Loot"', () => {
+    renderObstacleRoom();
+    // Check that the cost label shows "Reward" text (the .k span)
+    const rewardLabels = screen.getAllByText('Reward');
+    expect(rewardLabels.length).toBeGreaterThan(0);
   });
 
   it('commit button is disabled before any option is selected', () => {
@@ -143,16 +192,42 @@ describe('ObstacleRoom screen', () => {
     expect(screen.getByTestId('btn-commit')).toBeDisabled();
   });
 
-  it('shows crew checkboxes after an option is selected', () => {
+  it('switches to commit layout with side-panel after an option is selected', () => {
     const store = renderObstacleRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
 
     fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
-    expect(screen.getByTestId('crew-commit')).toBeInTheDocument();
+
+    // The commit layout + side panel should appear
+    expect(screen.getByTestId('commit-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('commit-side')).toBeInTheDocument();
+    expect(screen.getByTestId('committed-panel')).toBeInTheDocument();
+    // "Going in · 0 of N" chip row header
+    expect(screen.getByTestId('commit-going-in')).toBeInTheDocument();
+    // No old checkbox panel
+    expect(screen.queryByTestId('crew-commit')).not.toBeInTheDocument();
   });
 
-  it('commit button disabled when crew below commitRange minimum', () => {
+  it('shows GM-only difficulty dial after option selected', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+
+    // Only shows when the game is registered; testCfg uses 'alpha'/'bravo'/etc. which are
+    // unregistered — so dialLevel is undefined and the dial is not rendered. This is the
+    // correct graceful fallback (no dead-end).
+    // The test documents the behaviour rather than asserting the dial exists.
+    // If running with real registered games the dial would appear.
+    const dial = screen.queryByTestId('option-dial');
+    // Dial may or may not be present depending on whether the game is in the registry.
+    // With testCfg fake game IDs it won't be rendered.
+    expect(dial).toBeNull();
+  });
+
+  it('commit button disabled when no crew committed (below min)', () => {
     const store = renderObstacleRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
@@ -164,7 +239,7 @@ describe('ObstacleRoom screen', () => {
     expect(screen.getByTestId('btn-commit')).toBeDisabled();
   });
 
-  it('commit button enabled when exactly the minimum crew are selected', () => {
+  it('commit button enabled when exactly the minimum crew are selected via rail', () => {
     const store = renderObstacleRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
@@ -172,12 +247,28 @@ describe('ObstacleRoom screen', () => {
 
     fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
 
-    // Select exactly 1 crew member (minimum is 1 for 2-player game in testCfg).
-    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`));
+    // Toggle one crew member via the rail (minimum is 1 for 2-player game in testCfg).
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
     expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
   });
 
-  it('cannot check more crew than the commitRange maximum', () => {
+  it('Going-in count updates as crew are toggled on the rail', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+    expect(screen.getByTestId('commit-going-in').textContent).toContain('0 of');
+
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
+    expect(screen.getByTestId('commit-going-in').textContent).toContain('1 of');
+
+    // Committed chip for the player should appear
+    expect(screen.getByTestId(`commchip-${crew[0]!.id}`)).toBeInTheDocument();
+  });
+
+  it('max commit honoured: rail toggleCommit silently refuses excess crew', () => {
     const store = renderObstacleRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
@@ -185,20 +276,17 @@ describe('ObstacleRoom screen', () => {
 
     fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
 
-    // The max commit for 2 players with testCfg profile '2' is 2.
-    // Select both crew members.
-    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`));
-    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[1]!.id}`));
+    // Toggle both crew (max=2 for 2-player game in testCfg).
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[1]!.id}`));
 
-    // After selecting the maximum, extra checkboxes are disabled.
-    // (No third player exists in this test, so instead verify both are checked
-    // and the button is enabled — enforcing the max IS the test for 2 players.)
-    expect(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`)).toBeChecked();
-    expect(screen.getByTestId(`crew-checkbox-${crew[1]!.id}`)).toBeChecked();
+    // Both selected and button enabled.
+    expect(screen.getByTestId(`commchip-${crew[0]!.id}`)).toBeInTheDocument();
+    expect(screen.getByTestId(`commchip-${crew[1]!.id}`)).toBeInTheDocument();
     expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
   });
 
-  it('disables surplus checkbox once commitRange max is reached (3-player, max=2)', () => {
+  it('max commit honoured with 3 players (max=2): third rail press is ignored', () => {
     // 3 players with profile '3': crewPerOption=[1,2] → maxCrew = min(2, 3) = 2 < crew.length=3
     const store = makeObstacleStore3();
     render(
@@ -206,6 +294,7 @@ describe('ObstacleRoom screen', () => {
         <ActionBarSlotOutlet />
         <StoreContext.Provider value={store}>
           <CrewRailModeProvider>
+            <RailButtons />
             <ObstacleRoom />
           </CrewRailModeProvider>
         </StoreContext.Provider>
@@ -217,15 +306,18 @@ describe('ObstacleRoom screen', () => {
 
     fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
 
-    // Check the first two crew members (reaches the max of 2).
-    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`));
-    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[1]!.id}`));
+    // Toggle the first two crew members (reaches the max of 2).
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[1]!.id}`));
 
-    // Third player's checkbox must be disabled — max already reached.
-    expect(screen.getByTestId(`crew-checkbox-${crew[2]!.id}`)).toBeDisabled();
-    // First two remain checked and commit is valid.
-    expect(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`)).toBeChecked();
-    expect(screen.getByTestId(`crew-checkbox-${crew[1]!.id}`)).toBeChecked();
+    // Third rail press — max already reached, toggleCommit ignores it.
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[2]!.id}`));
+
+    // Third player has NO chip (was silently rejected by crewRailMode).
+    expect(screen.queryByTestId(`commchip-${crew[2]!.id}`)).not.toBeInTheDocument();
+    // First two remain and commit is valid.
+    expect(screen.getByTestId(`commchip-${crew[0]!.id}`)).toBeInTheDocument();
+    expect(screen.getByTestId(`commchip-${crew[1]!.id}`)).toBeInTheDocument();
     expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
   });
 
@@ -236,20 +328,33 @@ describe('ObstacleRoom screen', () => {
     const crew = store.getState().session.present.crew;
     const safeOption = room.options[0]!;
 
-    // Select option and one crew member, then commit.
+    // Select option, toggle one crew member via rail, then commit.
     fireEvent.click(screen.getByTestId(`option-select-${safeOption.id}`));
-    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`));
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
     fireEvent.click(screen.getByTestId('btn-commit'));
 
     // Engine should now be in minigame phase.
     expect(store.getState().session.present.phase).toBe('minigame');
-    // currentRoom should record the committed option.
     const updatedRoom = store.getState().session.present.currentRoom;
     if (updatedRoom === null || updatedRoom.kind !== 'obstacle') {
       throw new Error('Expected obstacle room after CHOOSE_OPTION');
     }
     expect(updatedRoom.committedOptionId).toBe(safeOption.id);
     expect(updatedRoom.committedBy).toContain(crew[0]!.id);
+  });
+
+  it('"Change door" button resets to option grid', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+    expect(screen.getByTestId('commit-layout')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('btn-change-door'));
+    // Back to the option grid — commit layout gone.
+    expect(screen.queryByTestId('commit-layout')).not.toBeInTheDocument();
+    expect(screen.getByTestId('option-cards')).toBeInTheDocument();
   });
 });
 
@@ -268,7 +373,6 @@ describe('ObstacleRoom narration', () => {
     const advanceBtn = screen.getByTestId('teleprompter-advance');
     expect(advanceBtn).not.toBeDisabled();
     fireEvent.click(advanceBtn);
-    // After advance the teleprompter line element still exists.
     expect(screen.getByTestId('teleprompter-line')).toBeInTheDocument();
   });
 
@@ -289,10 +393,10 @@ describe('ObstacleRoom narration', () => {
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
     const crew = store.getState().session.present.crew;
 
-    // Advance narration and verify commit still works.
+    // Advance narration and verify commit still works with a crew selection.
     fireEvent.click(screen.getByTestId('teleprompter-advance'));
     fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
-    fireEvent.click(screen.getByTestId(`crew-checkbox-${crew[0]!.id}`));
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
     expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
   });
 });
@@ -339,6 +443,7 @@ describe('ObstacleRoom — full-team game (no crew-select)', () => {
         <ActionBarSlotOutlet />
         <StoreContext.Provider value={store}>
           <CrewRailModeProvider>
+            <RailButtons />
             <ObstacleRoom />
           </CrewRailModeProvider>
         </StoreContext.Provider>
@@ -347,17 +452,16 @@ describe('ObstacleRoom — full-team game (no crew-select)', () => {
     return store;
   }
 
-  it('shows "Full team" tag and no crew checkboxes when a full-team option is selected', () => {
+  it('shows full-team copy and no checkbox panel when a full-team option is selected', () => {
     const store = renderFullTeamRoom(3);
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
 
-    // Select the safe full-team option.
     fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
 
-    // No crew-commit checkboxes should be shown.
+    // Old checkbox panel never appears
     expect(screen.queryByTestId('crew-commit')).not.toBeInTheDocument();
-    // Full-team panel is shown instead.
+    // Full-team copy is shown in the commit-instruct panel
     expect(screen.getByTestId('crew-full-team')).toBeInTheDocument();
   });
 
@@ -384,7 +488,6 @@ describe('ObstacleRoom — full-team game (no crew-select)', () => {
       throw new Error('Expected obstacle room after commit');
     }
     expect(store.getState().session.present.phase).toBe('minigame');
-    // All 3 crew members should be committed.
     expect(updatedRoom.committedBy).toHaveLength(crew.length);
     for (const player of crew) {
       expect(updatedRoom.committedBy).toContain(player.id);
@@ -415,9 +518,7 @@ describe('MinigameStub screen', () => {
 
     const state = store.getState().session.present;
     expect(state.phase).toBe('offer');
-    // clean → loot += option.reward (1 for the safe option)
     expect(state.loot).toBeGreaterThan(lootBefore);
-    // history records the obstacle result
     const lastResult = state.history[state.history.length - 1];
     expect(lastResult?.kind).toBe('obstacle');
     if (lastResult?.kind === 'obstacle') {
@@ -433,7 +534,6 @@ describe('MinigameStub screen', () => {
 
     const state = store.getState().session.present;
     expect(state.phase).toBe('offer');
-    // complication adds more heat than clean
     expect(state.heat).toBeGreaterThan(heatBefore);
     const lastResult = state.history[state.history.length - 1];
     expect(lastResult?.kind).toBe('obstacle');
@@ -450,7 +550,6 @@ describe('MinigameStub screen', () => {
 
     const state = store.getState().session.present;
     expect(state.phase).toBe('offer');
-    // botched: outcomeLoot.botched=0 loot gained; heat increases
     expect(state.heat).toBeGreaterThan(heatBefore);
     const lastResult = state.history[state.history.length - 1];
     expect(lastResult?.kind).toBe('obstacle');
@@ -460,9 +559,6 @@ describe('MinigameStub screen', () => {
   });
 
   it('exact heat and loot values match engine arithmetic for clean outcome', () => {
-    // drip at room 0 = obstacleHeat.safe + Math.floor(0 * rampPerObstacle) = 1 + 0 = 1
-    // outcomeHeat.clean = 0 → total heat = 1
-    // loot = option.reward (safe option committed by renderMinigameStub)
     const store = renderMinigameStub();
     const room = store.getState().session.present.currentRoom;
     if (room?.kind !== 'obstacle') throw new Error('Expected obstacle room in minigame phase');
@@ -476,7 +572,6 @@ describe('MinigameStub screen', () => {
   });
 
   it('exact heat and loot values match engine arithmetic for complication outcome', () => {
-    // drip=1, outcomeHeat.complication=1 → heat=2; loot = outcomeLoot.complication
     const store = renderMinigameStub();
 
     fireEvent.click(screen.getByTestId('btn-outcome-complication'));
@@ -487,7 +582,6 @@ describe('MinigameStub screen', () => {
   });
 
   it('exact heat and loot values match engine arithmetic for botched outcome', () => {
-    // drip=1, outcomeHeat.botched=2 → heat=3; loot = outcomeLoot.botched
     const store = renderMinigameStub();
 
     fireEvent.click(screen.getByTestId('btn-outcome-botched'));

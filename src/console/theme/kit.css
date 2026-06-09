@@ -172,20 +172,48 @@ body {
    via ActionBarSlotProvider. The real bar styles live in cockpit.css
    (.cockpit-actionbar). */
 
-/* ---- option / choice cards (Offer) ---- */
+/* ---- option / choice cards (Offer + Obstacle Room) ---- */
 .opt { border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); padding:var(--space-5); display:flex; flex-direction:column; gap:var(--space-3); cursor:pointer; transition:all var(--dur-base) var(--ease-out); }
 .opt:hover { border-color:var(--border-strong); transform:translateY(-2px); box-shadow:var(--elev-3); }
 .opt.risk:hover { border-color:color-mix(in srgb, var(--danger) 60%, transparent); }
 .opt.safe:hover { border-color:color-mix(in srgb, var(--accent) 60%, transparent); }
-.opt .opt-tag { font-family:var(--font-data); font-weight:700; font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
+.opt .opt-tag { font-family:var(--font-data); font-weight:700; font-size:12px; letter-spacing:.12em; text-transform:uppercase; display:flex; align-items:center; gap:7px; }
 .opt.risk .opt-tag { color:var(--danger); }
 .opt.safe .opt-tag { color:var(--accent); }
+.opt.selected .opt-tag { color:var(--data); }
 .opt h4 { font-family:var(--font-display); text-transform:uppercase; font-weight:700; font-size:26px; letter-spacing:-.01em; }
 .opt .opt-cost { display:flex; gap:var(--space-4); margin-top:auto; padding-top:var(--space-3); border-top:1px solid var(--border); }
 .opt .opt-cost .c { display:flex; flex-direction:column; gap:2px; }
 .opt .opt-cost .c .k { font-family:var(--font-data); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-faint); }
 .opt .opt-cost .c .v { font-family:var(--font-data); font-weight:800; font-size:20px; display:inline-flex; align-items:center; gap:7px; }
 .gpill { font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.06em; text-transform:uppercase; padding:3px 7px; border-radius:var(--radius-xs); background:var(--data-tint); color:var(--data); border:1px solid var(--c-cyan-500); white-space:nowrap; }
+
+/* ---- obstacle room: option grid, game chip row, commit layout ---- */
+.opts { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:14px; }
+.lanechip { font-family:var(--font-data); font-weight:700; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:4px 8px; border-radius:var(--radius-xs); background:var(--data-tint); color:var(--data); border:1px solid var(--c-cyan-500); white-space:nowrap; }
+.opt .game { display:flex; align-items:center; gap:8px; }
+.opt .game .gn { font-family:var(--font-body); font-size:14px; color:var(--fg-muted); }
+/* selected door (commit state) */
+.opt.selected { border-color:var(--c-cyan-500); box-shadow:var(--glow-data); cursor:default; }
+.opt.selected:hover { transform:none; }
+/* dialbar: GM-only difficulty preview inside the selected door card */
+.dialbar { display:flex; align-items:center; gap:12px; }
+.dialbar .dlabel { font-family:var(--font-data); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-faint); white-space:nowrap; }
+.dialbar .dtrack { flex:1; height:8px; border-radius:var(--radius-pill); background:var(--c-surface-3); overflow:hidden; }
+.dialbar .dfill { height:100%; background:var(--data); border-radius:var(--radius-pill); transition:width .3s var(--ease-out); }
+.dialbar .dval { font-family:var(--font-data); font-weight:800; font-size:14px; color:var(--data); white-space:nowrap; }
+/* two-column commit layout (selected door + commit side-panel) */
+.commit { display:grid; grid-template-columns:1.3fr 1fr; gap:16px; }
+.commit-side { display:flex; flex-direction:column; gap:14px; }
+.commit-instruct { padding:16px; border:1px solid var(--c-cyan-500); border-radius:var(--radius-lg); background:var(--data-tint); display:flex; flex-direction:column; gap:8px; }
+.commit-instruct .ci-k { font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--data); display:flex; align-items:center; gap:8px; }
+.commit-instruct p { font-family:var(--font-body); font-size:15px; line-height:1.5; color:var(--fg); margin:0; }
+.committed { display:flex; flex-direction:column; gap:8px; padding:16px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg-panel); }
+.committed .ch { font-family:var(--font-data); font-weight:700; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--fg-faint); }
+.commchips { display:flex; gap:8px; flex-wrap:wrap; min-height:40px; }
+.commchip { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-md); background:var(--data-tint); border:1px solid var(--c-cyan-500); }
+.commchip .av { width:24px; height:24px; border-radius:var(--radius-xs); background:var(--c-surface-3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--data); }
+.commchip .nm { font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:14px; color:var(--fg); }
 
 /* ---- big getaway clock ---- */
 .clock-wrap { display:flex; flex-direction:column; align-items:center; gap:var(--space-4); padding:var(--space-7) 0; }
