@@ -246,7 +246,7 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
       const { pendingRoll: _pr, ...roomWithoutPending } = room;
       const updatedRoom: ScenarioRoom = { ...roomWithoutPending, resolvedRoll };
 
-      return {
+      const resolvedState: RunState = {
         ...next,
         currentRoom: updatedRoom,
         history: [
@@ -264,6 +264,7 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
         ],
         phase: 'room',
       };
+      return { ...resolvedState, escapeSignal: computeEscapeSignal(resolvedState, cfg) };
     }
 
     case 'ACK_SCENARIO_ROLL': {

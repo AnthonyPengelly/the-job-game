@@ -93,7 +93,10 @@ export interface PendingRoll {
  * Stays on the room until ACK_SCENARIO_ROLL, letting the UI reveal the result
  * dramatically before transitioning to the offer phase.
  *
- * total = roll + laneRating (compare against baseDifficulty for "roll + bonus vs target" display).
+ * total = roll + laneRating (display convenience only — NOT the pass/fail comparison).
+ * The honest verdict comparison is roll >= dc. dc already folds in the lane bonus
+ * AND a heat/depth term (see computeDC in scenario.ts), so total >= baseDifficulty
+ * diverges from the actual result once heat/depth are nonzero.
  * The engine already applied the loot/heat/gear grant when storing this — these
  * deltas are carried here for display only.
  */
