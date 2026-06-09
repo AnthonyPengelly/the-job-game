@@ -20,6 +20,7 @@ export function CategoriesComponent({
   const [state, setState] = useState<CategoriesState>(initState);
 
   const activeCategory = state.skipped ? params.skipCategory : params.category;
+  const targetMet = state.tally >= params.targetCount;
   const fillPct = Math.min((state.tally / params.targetCount) * 100, 100);
   const remaining = Math.max(0, params.targetCount - state.tally);
 
@@ -51,14 +52,14 @@ export function CategoriesComponent({
     <div data-testid="categories">
       <StatusZone>
         <span
-          className={`mg-status-badge${state.timerExpired ? ' mg-status-badge--botched' : ' mg-status-badge--active'}`}
+          className={`mg-status-badge${targetMet ? ' mg-status-badge--clean' : state.timerExpired ? ' mg-status-badge--botched' : ' mg-status-badge--active'}`}
           data-testid="categories-mode-badge"
         >
-          {state.timerExpired ? 'BUZZER' : 'Active'}
+          {targetMet ? 'DONE' : state.timerExpired ? 'BUZZER' : 'Active'}
         </span>
         <Timer
           seconds={params.timerSeconds}
-          running={!state.timerExpired}
+          running={!state.timerExpired && !targetMet}
           onExpire={handleTimerExpire}
           audible
         />

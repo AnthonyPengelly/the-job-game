@@ -201,6 +201,41 @@ describe('CategoriesComponent — boost slot', () => {
   });
 });
 
+// ── Status badge ──────────────────────────────────────────────────────────────
+
+describe('CategoriesComponent — status badge', () => {
+  it('shows Active badge initially', () => {
+    const params = makeParams(1);
+    render(
+      <CategoriesComponent
+        params={params}
+        dial={dial}
+        committed={makeCommitted()}
+        onResolve={() => {}}
+      />,
+    );
+    expect(screen.getByTestId('categories-mode-badge').textContent).toBe('Active');
+    expect(screen.getByTestId('categories-mode-badge').className).toContain('mg-status-badge--active');
+  });
+
+  it('shows DONE badge with clean class when target is met, even before timer expires', () => {
+    const params = { ...makeParams(1), targetCount: 1 };
+    render(
+      <CategoriesComponent
+        params={params}
+        dial={dial}
+        committed={makeCommitted()}
+        onResolve={() => {}}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('tally-increment'));
+    const badge = screen.getByTestId('categories-mode-badge');
+    expect(badge.textContent).toBe('DONE');
+    expect(badge.className).toContain('mg-status-badge--clean');
+    expect(badge.className).not.toContain('mg-status-badge--botched');
+  });
+});
+
 // ── Progress bar ──────────────────────────────────────────────────────────────
 
 describe('CategoriesComponent — progress bar', () => {
