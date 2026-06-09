@@ -17,4 +17,8 @@ export const assemblyLineNegotiated: MiniGame<AssemblyLineNegotiatedParams, Asse
   Component: AssemblyLineNegotiatedComponent,
   judge,
   boosts: [tipOffBoost],
+  armedInstructions:
+    'The whole table plays — take turns offering one card at a time (negotiated swap). ' +
+    'Accept, counter-offer, or pass. Each player tries to collect a complete set. ' +
+    'Tell me every time one is complete. Tip-Off reveals which types are actually in play.',
 };

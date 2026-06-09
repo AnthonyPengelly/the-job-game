@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, Package } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
@@ -19,6 +19,7 @@ function initState(targetSets: number): AssemblyLineNegotiatedState {
 
 export function AssemblyLineNegotiatedComponent({
   params,
+  dial,
   committed,
   onResolve,
 }: MiniGameProps<AssemblyLineNegotiatedParams>): JSX.Element {
@@ -27,25 +28,16 @@ export function AssemblyLineNegotiatedComponent({
   const fillPct = Math.min((state.setsCompleted / state.targetSets) * 100, 100);
   const allDone = state.setsCompleted >= state.targetSets;
 
-  let badgeClass = 'mg-status-badge mg-status-badge--active';
-  let badgeIcon: React.ReactNode = <Package size={14} />;
-  let badgeLabel = 'Negotiating';
-  if (allDone && !state.timerExpired) {
-    badgeClass = 'mg-status-badge mg-status-badge--clean';
-    badgeIcon = <CheckCircle size={14} />;
-    badgeLabel = 'DONE';
-  } else if (state.timerExpired && !allDone) {
-    badgeClass = 'mg-status-badge mg-status-badge--botched';
-    badgeIcon = <XCircle size={14} />;
-    badgeLabel = 'TIME';
-  }
-
   function handleTimerExpire() {
     setState(s => ({ ...s, timerExpired: true }));
   }
 
   function handleSetComplete() {
     setState(s => ({ ...s, setsCompleted: Math.min(s.setsCompleted + 1, s.targetSets) }));
+  }
+
+  function handleUndo() {
+    setState(s => ({ ...s, setsCompleted: Math.max(0, s.setsCompleted - 1) }));
   }
 
   function handleBoost(hook: BoostHook<AssemblyLineNegotiatedState, AssemblyLineNegotiatedParams>) {
@@ -56,57 +48,87 @@ export function AssemblyLineNegotiatedComponent({
     onResolve(judge(state));
   }
 
+  const badgeClass = allDone
+    ? 'mg-status-badge mg-status-badge--clean'
+    : state.timerExpired
+      ? 'mg-status-badge mg-status-badge--botched'
+      : 'mg-status-badge mg-status-badge--active';
+  const badgeLabel = allDone ? 'DONE' : state.timerExpired ? 'TIME' : state.tipOffUsed ? 'Active · tip-off' : 'Negotiating';
+
   return (
     <div data-testid="assembly-line-negotiated">
       <StatusZone>
-        <span className={badgeClass}>
-          {badgeIcon}
-          <span>{badgeLabel}</span>
+        <span className={badgeClass} data-testid="aln-mode-badge">
+          {badgeLabel}
         </span>
         <Timer
           seconds={params.timerSeconds}
-          running={!state.timerExpired}
+          running={!state.timerExpired && !allDone}
           onExpire={handleTimerExpire}
           audible
         />
-        <div className="mg-progress-bar">
+        <div className="mg-progress-bar" data-testid="aln-progress">
+          <div className="mg-progress-bar__label">
+            <span data-testid="aln-sets-completed">
+              Sets complete · {state.setsCompleted} / {state.targetSets}
+            </span>
+          </div>
           <div className="mg-progress-bar__track">
             <div
               className="mg-progress-bar__fill"
               style={{ width: `${fillPct}%` }}
             />
           </div>
-          <span className="mg-progress-bar__label" data-testid="aln-sets-completed">
-            {state.setsCompleted} / {state.targetSets} sets
-          </span>
         </div>
+        <span className="mg-dial-inline" data-testid="aln-dial">
+          Dial {dial.level.toFixed(1)}
+        </span>
+        <span className="mg-dial-inline" data-testid="aln-hand-size">
+          {params.handSize} cards
+        </span>
+        <span className="mg-dial-inline" data-testid="aln-type-count">
+          {params.setTypesInPlay.length} types
+        </span>
       </StatusZone>
 
       <ChallengeZone>
-        <div data-testid="aln-info">
-          <span data-testid="aln-hand-size">Hand size: {params.handSize} cards</span>
-          <span data-testid="aln-type-count"> | {params.setTypesInPlay.length} types in play</span>
-        </div>
-
-        <div data-testid="aln-instructions" style={{ color: 'var(--fg-muted, #a4b2ad)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-          Negotiated swap — take turns offering one card at a time.
-        </div>
-
         {state.tipOffUsed && (
-          <div data-testid="aln-types-revealed" className="mg-status-badge mg-status-badge--complication" style={{ marginTop: '0.5rem', display: 'inline-flex' }}>
-            Types: {params.setTypesInPlay.join(', ')}
+          <div className="al-type-strip" data-testid="aln-types-revealed">
+            <Eye size={14} className="al-type-strip-icon" />
+            <span className="al-type-strip-label">Types in play</span>
+            <span className="al-type-strip-values">
+              {params.setTypesInPlay.join(' · ')}
+            </span>
+            <span className="al-type-strip-hint">
+              no others — don't chase them
+            </span>
           </div>
         )}
 
-        <div data-testid="aln-tally" style={{ marginTop: '1rem' }}>
-          <button
-            data-testid="aln-tally-increment"
-            className="mg-call-outcome-btn"
-            onClick={handleSetComplete}
-            disabled={state.setsCompleted >= state.targetSets}
-          >
-            + Set complete
-          </button>
+        <div className="al-hero-row" data-testid="aln-hero-row">
+          <div className="al-hero-block">
+            <div className="mg-hero-num" data-testid="aln-sets-num">{state.setsCompleted}</div>
+            <div className="mg-hero-sub">sets complete</div>
+          </div>
+          <div className="al-tally-controls">
+            <button
+              className="mg-tbtn"
+              data-testid="aln-tally-increment"
+              onClick={handleSetComplete}
+              disabled={allDone}
+            >
+              <span className="mg-tl">+1</span>
+              <span className="mg-ts">Set done</span>
+            </button>
+            <button
+              className="mg-tbtn mg-tbtn--ghost"
+              data-testid="aln-tally-undo"
+              onClick={handleUndo}
+              disabled={state.setsCompleted === 0}
+            >
+              Undo
+            </button>
+          </div>
         </div>
       </ChallengeZone>
 

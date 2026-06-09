@@ -22,5 +22,9 @@ export function makeCategories(items: string[]): MiniGame<CategoriesParams, Cate
     Component: CategoriesComponent,
     judge,
     boosts: [skipBoost],
+    armedInstructions:
+      'The whole table plays — read the category loud and fast, then start the clock. ' +
+      'Every answer that fits, tap the tally. Hit the count before the buzzer for a clean pass. ' +
+      'Skip swaps a dud category before you start.',
   };
 }
