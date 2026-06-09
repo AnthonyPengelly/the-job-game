@@ -15,16 +15,13 @@ export interface AssemblyLineState {
 /**
  * Suggest an outcome for Assembly Line (GM-watched — MINIGAMES.md §5).
  *
- *   clean        — everyone has a complete set with time to spare
- *   complication — completed at the buzzer / all-but-one still standing
- *   botched      — not solved when the timer ran out
+ *   clean        — everyone has a complete set (regardless of whether timer also expired)
+ *   complication — all-but-one complete, or game in progress
+ *   botched      — timer ran out without all sets completed
  */
 export function judge(state: AssemblyLineState): Outcome {
-  if (state.timerExpired) {
-    if (state.setsCompleted >= state.targetSets) return 'complication';
-    return 'botched';
-  }
   if (state.setsCompleted >= state.targetSets) return 'clean';
+  if (state.timerExpired) return 'botched';
   if (state.targetSets > 1 && state.setsCompleted >= state.targetSets - 1) return 'complication';
   return 'complication';
 }

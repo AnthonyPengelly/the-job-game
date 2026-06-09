@@ -138,16 +138,16 @@ describe('judge — three tier boundaries', () => {
     expect(judge(makeState({ setsCompleted: 2, targetSets: 2 }))).toBe('clean');
   });
 
+  it('clean when all sets completed even if timer also expired (target met trumps timer)', () => {
+    expect(judge(makeState({ timerExpired: true, setsCompleted: 2, targetSets: 2 }))).toBe('clean');
+  });
+
   it('complication when all-but-one complete with time remaining', () => {
     expect(judge(makeState({ setsCompleted: 1, targetSets: 2 }))).toBe('complication');
   });
 
   it('botched when timer expires and sets not complete', () => {
     expect(judge(makeState({ timerExpired: true, setsCompleted: 0, targetSets: 2 }))).toBe('botched');
-  });
-
-  it('complication when timer expires but all sets complete (at buzzer)', () => {
-    expect(judge(makeState({ timerExpired: true, setsCompleted: 2, targetSets: 2 }))).toBe('complication');
   });
 });
 

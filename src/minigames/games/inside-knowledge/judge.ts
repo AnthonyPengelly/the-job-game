@@ -17,17 +17,16 @@ export interface InsideKnowledgeState {
 
 /**
  * Suggest an outcome for Inside Knowledge (App-assist, MINIGAMES.md §5):
- *   clean        — correctCount >= threshold, timer not expired
- *   complication — correctCount >= threshold, timer expired (at the buzzer)
- *   botched      — correctCount < threshold
+ *   clean        — correctCount >= threshold (regardless of whether the timer also expired)
+ *   complication — correctCount fell short by one (one below threshold)
+ *   botched      — correctCount fell short by more than one
  *
  * Unanswered questions count as wrong for the suggestion.
  */
 export function judge(state: InsideKnowledgeState, params: InsideKnowledgeParams): Outcome {
   const correctCount = state.answers.filter(a => a === 'correct').length;
-  if (correctCount >= params.threshold) {
-    return state.timerExpired ? 'complication' : 'clean';
-  }
+  if (correctCount >= params.threshold) return 'clean';
+  if (correctCount >= params.threshold - 1) return 'complication';
   return 'botched';
 }
 

@@ -14,9 +14,9 @@ export interface DefuseState {
 
 /**
  * Suggest an outcome for Defuse the Alarm (app fully judges — MINIGAMES.md §5):
- *   clean        — all safe cuts made, no wrong cut, timer still running
- *   complication — completed at the buzzer (timerExpired)
- *   botched      — a wrong cut trips the alarm / timer expired before all safe cuts done
+ *   clean        — all safe cuts made, no wrong cut (regardless of whether timer also expired)
+ *   complication — game still in progress (no wrong cut yet, not all safe cuts done)
+ *   botched      — a wrong cut trips the alarm, or timer expired before all safe cuts done
  */
 export function judge(state: DefuseState, params: DefuseParams): Outcome {
   const hasWrongCut = state.cutIds.some(id => !params.safeWireIds.includes(id));
@@ -27,13 +27,11 @@ export function judge(state: DefuseState, params: DefuseParams): Outcome {
   // Any wrong cut trips the alarm
   if (hasWrongCut) return 'botched';
 
-  // Timer expired without completing all safe cuts
-  if (state.timerExpired && !allSafeCut) return 'botched';
+  // All safe cuts done — clean regardless of timer
+  if (allSafeCut) return 'clean';
 
-  if (allSafeCut) {
-    if (state.timerExpired) return 'complication';
-    return 'clean';
-  }
+  // Timer expired without completing all safe cuts
+  if (state.timerExpired) return 'botched';
 
   // Game still in progress — middle-ground suggestion
   return 'complication';

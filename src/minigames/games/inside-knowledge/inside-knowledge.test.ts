@@ -191,24 +191,28 @@ const baseParams = {
 };
 
 describe('judge', () => {
-  it('botched when not enough correct regardless of timer', () => {
-    expect(judge(makeState({ answers: ['correct', 'wrong', 'wrong', 'wrong'] }), baseParams)).toBe('botched');
-    expect(judge(makeState({ answers: ['correct', 'correct', 'wrong', 'wrong'] }), baseParams)).toBe('botched');
-    expect(judge(makeState({ answers: ['unanswered', 'unanswered', 'unanswered', 'unanswered'] }), baseParams)).toBe('botched');
-  });
+  // baseParams has threshold 3 (ceil(4 * 0.6))
 
-  it('botched when not enough correct and timer expired', () => {
-    expect(judge(makeState({ answers: ['correct', 'wrong', 'wrong', 'wrong'], timerExpired: true }), baseParams)).toBe('botched');
-  });
-
-  it('clean when enough correct and timer has not expired', () => {
+  it('clean when correctCount meets the threshold (timer not expired)', () => {
     expect(judge(makeState({ answers: ['correct', 'correct', 'correct', 'wrong'] }), baseParams)).toBe('clean');
     expect(judge(makeState({ answers: ['correct', 'correct', 'correct', 'correct'] }), baseParams)).toBe('clean');
   });
 
-  it('complication when enough correct and timer expired (at the buzzer)', () => {
-    expect(judge(makeState({ answers: ['correct', 'correct', 'correct', 'wrong'], timerExpired: true }), baseParams)).toBe('complication');
-    expect(judge(makeState({ answers: ['correct', 'correct', 'correct', 'correct'], timerExpired: true }), baseParams)).toBe('complication');
+  it('target met, then timer expires ⇒ clean', () => {
+    expect(judge(makeState({ answers: ['correct', 'correct', 'correct', 'wrong'], timerExpired: true }), baseParams)).toBe('clean');
+    expect(judge(makeState({ answers: ['correct', 'correct', 'correct', 'correct'], timerExpired: true }), baseParams)).toBe('clean');
+  });
+
+  it('complication when correctCount is one below threshold (small margin)', () => {
+    // threshold=3, so correctCount=2 is one short
+    expect(judge(makeState({ answers: ['correct', 'correct', 'wrong', 'wrong'] }), baseParams)).toBe('complication');
+    expect(judge(makeState({ answers: ['correct', 'correct', 'wrong', 'wrong'], timerExpired: true }), baseParams)).toBe('complication');
+  });
+
+  it('botched when correctCount misses threshold by more than one', () => {
+    expect(judge(makeState({ answers: ['correct', 'wrong', 'wrong', 'wrong'] }), baseParams)).toBe('botched');
+    expect(judge(makeState({ answers: ['unanswered', 'unanswered', 'unanswered', 'unanswered'] }), baseParams)).toBe('botched');
+    expect(judge(makeState({ answers: ['correct', 'wrong', 'wrong', 'wrong'], timerExpired: true }), baseParams)).toBe('botched');
   });
 });
 

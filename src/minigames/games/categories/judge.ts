@@ -15,16 +15,13 @@ export interface CategoriesState {
 
 /**
  * Suggest an outcome for Categories (GM-judged, MINIGAMES.md §5):
- *   clean        — tally reached the target before the timer expired
- *   complication — tally reached the target only at/after the timer expired
- *   botched      — tally fell short of the target
- *
- * params is accepted for signature symmetry but only targetCount is used.
+ *   clean        — tally met the target (regardless of whether the timer also expired)
+ *   complication — tally fell short by one (scraped/late-but-short by a small margin)
+ *   botched      — tally missed by more than one
  */
 export function judge(state: CategoriesState, params: CategoriesParams): Outcome {
-  if (state.tally >= params.targetCount) {
-    return state.timerExpired ? 'complication' : 'clean';
-  }
+  if (state.tally >= params.targetCount) return 'clean';
+  if (state.tally >= params.targetCount - 1) return 'complication';
   return 'botched';
 }
 
