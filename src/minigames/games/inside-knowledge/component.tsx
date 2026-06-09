@@ -5,16 +5,14 @@ import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { InsideKnowledgeParams } from './generate';
-import { judge, cheatSheetBoost, narrowItDownBoost } from './judge';
+import { judge, narrowItDownBoost } from './judge';
 import type { InsideKnowledgeState, AnswerStatus } from './judge';
 
 function initState(questionCount: number): InsideKnowledgeState {
   return {
     answers: Array(questionCount).fill('unanswered') as AnswerStatus[],
     timerExpired: false,
-    techBoostUsed: false,
     charmBoostUsed: false,
-    cheatSheetIndex: -1,
     narrowItDownIndex: -1,
   };
 }
@@ -35,7 +33,6 @@ export function InsideKnowledgeComponent({
   const currentQuestion = currentIndex !== -1 ? params.questions[currentIndex] : undefined;
   const showOptions = state.narrowItDownIndex === currentIndex && currentQuestion?.options !== undefined;
 
-  // Status badge
   let badgeClass = 'mg-status-badge mg-status-badge--active';
   let badgeIcon: React.ReactNode = <BookOpen size={14} />;
   let badgeLabel = 'In Progress';
@@ -164,14 +161,8 @@ export function InsideKnowledgeComponent({
       <RefereeZone>
         <div className="mg-boost-slot">
           <BoostButton<InsideKnowledgeState, InsideKnowledgeParams>
-            hook={cheatSheetBoost}
-            committed={committed}
-            onFire={handleBoost}
-          />
-        </div>
-        <div className="mg-boost-slot">
-          <BoostButton<InsideKnowledgeState, InsideKnowledgeParams>
             hook={narrowItDownBoost}
+            gameLanes={['tech', 'charm']}
             committed={committed}
             onFire={handleBoost}
           />

@@ -198,7 +198,7 @@ describe('MinigameHost — followTheCircuit boost surfacing', () => {
     expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
   });
 
-  it('Muscle Memory boost surfaces in ACTIVE when physical power-up is held', () => {
+  it('Photographic surfaces when physical power-up is held (any-lane eligibility)', () => {
     const store = makeFtcStore(1, { physicalPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
@@ -206,7 +206,7 @@ describe('MinigameHost — followTheCircuit boost surfacing', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
+    expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
   });
 
   it('no boost renders when neither power-up is held', () => {
@@ -218,7 +218,6 @@ describe('MinigameHost — followTheCircuit boost surfacing', () => {
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-tech')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('boost-physical')).not.toBeInTheDocument();
   });
 
   it('Photographic boost fires once then disables', () => {
@@ -233,45 +232,6 @@ describe('MinigameHost — followTheCircuit boost surfacing', () => {
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
     expect(btn).toBeDisabled();
-  });
-
-  it('Muscle Memory boost fires once then disables', () => {
-    const store = makeFtcStore(1, { physicalPowerUp: true });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const btn = screen.getByTestId('boost-physical');
-    expect(btn).not.toBeDisabled();
-    fireEvent.click(btn);
-    expect(btn).toBeDisabled();
-  });
-
-  it('both boosts surface independently when both power-ups are held', () => {
-    const store = createGameStore({ cfg: ftcCfg, storage: makeStorage() });
-    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
-    const crew = store.getState().session.present.crew;
-    const alice = crew[0]!;
-    const bob = crew[1]!;
-    store.getState().dispatch({ t: 'OVERRIDE_SET_POWERUP', player: alice.id, lane: 'tech', held: true });
-    store.getState().dispatch({ t: 'OVERRIDE_SET_POWERUP', player: bob.id, lane: 'physical', held: true });
-    const room = store.getState().session.present.currentRoom;
-    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle');
-    store.getState().dispatch({
-      t: 'CHOOSE_OPTION',
-      optionId: room.options[0]!.id,
-      committed: crew.map(p => p.id),
-    });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
-    expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
   });
 });
 

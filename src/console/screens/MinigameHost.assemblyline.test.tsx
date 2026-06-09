@@ -284,10 +284,10 @@ describe('MinigameHost — seeded params stable', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
-  it('Quick Hands boost surfaces in ACTIVE when physical power-up is held', () => {
+  it('Tip-Off boost surfaces in ACTIVE when charm power-up is held', () => {
     const store = makeAssemblyLineStore(1, {
       players: [{ name: 'Alice' }, { name: 'Bob' }],
-      physicalPowerUp: true,
+      charmPowerUp: true,
     });
     render(
       <StoreContext.Provider value={store}>
@@ -295,13 +295,13 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
+    expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 
-  it('Tip-Off boost surfaces in ACTIVE when charm power-up is held', () => {
+  it('Tip-Off surfaces when physical power-up is held (any-lane eligibility)', () => {
     const store = makeAssemblyLineStore(1, {
       players: [{ name: 'Alice' }, { name: 'Bob' }],
-      charmPowerUp: true,
+      physicalPowerUp: true,
     });
     render(
       <StoreContext.Provider value={store}>
@@ -320,25 +320,7 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.queryByTestId('boost-physical')).not.toBeInTheDocument();
     expect(screen.queryByTestId('boost-charm')).not.toBeInTheDocument();
-  });
-
-  it('Quick Hands boost fires once then disables', () => {
-    const store = makeAssemblyLineStore(1, {
-      players: [{ name: 'Alice' }, { name: 'Bob' }],
-      physicalPowerUp: true,
-    });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const btn = screen.getByTestId('boost-physical');
-    expect(btn).not.toBeDisabled();
-    fireEvent.click(btn);
-    expect(btn).toBeDisabled();
   });
 
   it('Tip-Off boost fires once then disables', () => {
@@ -372,22 +354,6 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
     expect(screen.queryByTestId('aln-types-revealed')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-charm'));
     expect(screen.getByTestId('aln-types-revealed')).toBeInTheDocument();
-  });
-
-  it('Quick Hands shows active banner after firing', () => {
-    const store = makeAssemblyLineStore(1, {
-      players: [{ name: 'Alice' }, { name: 'Bob' }],
-      physicalPowerUp: true,
-    });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.queryByTestId('aln-quick-hands-active')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('boost-physical'));
-    expect(screen.getByTestId('aln-quick-hands-active')).toBeInTheDocument();
   });
 });
 

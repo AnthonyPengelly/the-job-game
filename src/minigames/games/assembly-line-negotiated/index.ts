@@ -2,7 +2,7 @@ import type { MiniGame } from '@/minigames/contract';
 import type { AssemblyLineNegotiatedParams } from './generate';
 import { generate } from './generate';
 import type { AssemblyLineNegotiatedState } from './judge';
-import { judge, quickHandsBoost, tipOffBoost } from './judge';
+import { judge, tipOffBoost } from './judge';
 import { AssemblyLineNegotiatedComponent } from './component';
 
 export type { AssemblyLineNegotiatedParams } from './generate';
@@ -15,5 +15,5 @@ export const assemblyLineNegotiated: MiniGame<AssemblyLineNegotiatedParams, Asse
   generate,
   Component: AssemblyLineNegotiatedComponent,
   judge,
-  boosts: [quickHandsBoost, tipOffBoost],
+  boosts: [tipOffBoost],
 };

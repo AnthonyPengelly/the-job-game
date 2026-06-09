@@ -8,8 +8,6 @@ export interface AssemblyLineNegotiatedState {
   setsCompleted: number;
   /** Total sets needed — initialised from committed.length in the component. */
   targetSets: number;
-  /** Physical boost (Quick Hands) used flag. */
-  quickHandsUsed: boolean;
   /** Charm boost (Tip-Off) used flag. */
   tipOffUsed: boolean;
 }
@@ -30,16 +28,6 @@ export function judge(state: AssemblyLineNegotiatedState): Outcome {
   if (state.targetSets > 1 && state.setsCompleted >= state.targetSets - 1) return 'complication';
   return 'complication';
 }
-
-/** Physical boost: Quick Hands — one 2-for-1 trade, once per game. */
-export const quickHandsBoost: BoostHook<AssemblyLineNegotiatedState, AssemblyLineNegotiatedParams> = {
-  lane: 'physical',
-  label: 'Quick Hands',
-  apply(state): AssemblyLineNegotiatedState {
-    if (state.quickHandsUsed) return state;
-    return { ...state, quickHandsUsed: true };
-  },
-};
 
 /** Charm boost: Tip-Off — reveal which set-types are in play, once per game. */
 export const tipOffBoost: BoostHook<AssemblyLineNegotiatedState, AssemblyLineNegotiatedParams> = {

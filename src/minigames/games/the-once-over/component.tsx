@@ -118,6 +118,7 @@ export function TheOnceOverComponent({
         <div className="mg-boost-slot">
           <BoostButton<OnceOverState, OnceOverParams>
             hook={hunchBoost}
+            gameLanes={['stealth']}
             committed={committed}
             onFire={handleBoost}
           />

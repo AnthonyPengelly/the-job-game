@@ -15,7 +15,6 @@ export interface SafeCrackState {
   guessesRemaining: number;
   solved: boolean;
   techBoostUsed: boolean;
-  stealthBoostUsed: boolean;
   /** Set by Stethoscope: reveals one unconfirmed digit's position to the GM. */
   stethoscopeReveal?: { position: number; digit: number };
 }
@@ -90,15 +89,5 @@ export const techBoost: BoostHook<SafeCrackState, SafeCrackParams> = {
   apply(state, params): SafeCrackState {
     if (state.techBoostUsed) return state;
     return { ...state, techBoostUsed: true, stethoscopeReveal: findStethoscopeReveal(state, params) };
-  },
-};
-
-/** Stealth boost: Patient Touch — one extra guess. Pure apply, once per game. */
-export const stealthBoost: BoostHook<SafeCrackState, SafeCrackParams> = {
-  lane: 'stealth',
-  label: 'Patient Touch',
-  apply(state): SafeCrackState {
-    if (state.stealthBoostUsed) return state;
-    return { ...state, stealthBoostUsed: true, guessesRemaining: state.guessesRemaining + 1 };
   },
 };

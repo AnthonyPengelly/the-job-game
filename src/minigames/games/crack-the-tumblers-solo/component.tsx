@@ -143,6 +143,7 @@ export function CrackTheTumblersSoloComponent({
         <div className="mg-boost-slot">
           <BoostButton<CrackTheTumblersSoloState, CrackTheTumblersSoloParams>
             hook={resetPinBoost}
+            gameLanes={['tech']}
             committed={committed}
             onFire={handleBoost}
           />

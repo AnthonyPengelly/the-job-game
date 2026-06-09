@@ -3,7 +3,7 @@ import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import type { TriviaItemConfig } from '@/engine/config';
 import { makeGenerate } from './generate';
-import { judge, cheatSheetBoost, narrowItDownBoost } from './judge';
+import { judge, narrowItDownBoost } from './judge';
 import type { InsideKnowledgeState, AnswerStatus } from './judge';
 import { makeInsideKnowledge } from './index';
 import { loadPreset } from '@/platform/presets/load';
@@ -52,8 +52,9 @@ describe('inside-knowledge registry', () => {
     expect(makeInsideKnowledge(TEST_ITEMS).soloVariantId).toBeUndefined();
   });
 
-  it('makeInsideKnowledge has two boost hooks', () => {
-    expect(makeInsideKnowledge(TEST_ITEMS).boosts).toHaveLength(2);
+  it('makeInsideKnowledge has one boost hook (Narrow It Down)', () => {
+    expect(makeInsideKnowledge(TEST_ITEMS).boosts).toHaveLength(1);
+    expect(makeInsideKnowledge(TEST_ITEMS).boosts[0]!.label).toBe('Narrow It Down');
   });
 });
 
@@ -160,7 +161,6 @@ describe('generate — dial levers (higher dial = harder)', () => {
 describe('generate — tier fallback', () => {
   it('falls back to all items when filtered tier pool is too small', () => {
     const generate = makeGenerate(SINGLE_TIER_ITEMS);
-    // SINGLE_TIER_ITEMS has only 'medium' items; dial(-2) requests 'easy'
     const p = generate(mulberry32(1), dial(-2));
     expect(p.questions.length).toBeGreaterThan(0);
   });
@@ -172,9 +172,7 @@ function makeState(overrides: Partial<InsideKnowledgeState> = {}): InsideKnowled
   return {
     answers: ['unanswered', 'unanswered', 'unanswered', 'unanswered'] as AnswerStatus[],
     timerExpired: false,
-    techBoostUsed: false,
     charmBoostUsed: false,
-    cheatSheetIndex: -1,
     narrowItDownIndex: -1,
     ...overrides,
   };
@@ -215,43 +213,6 @@ describe('judge', () => {
 });
 
 // ── boost hooks ───────────────────────────────────────────────────────────────
-
-describe('cheatSheetBoost', () => {
-  it('has lane tech', () => {
-    expect(cheatSheetBoost.lane).toBe('tech');
-  });
-
-  it('has label Cheat Sheet', () => {
-    expect(cheatSheetBoost.label).toBe('Cheat Sheet');
-  });
-
-  it('marks the first unanswered question as correct on first use', () => {
-    const state = makeState({ answers: ['wrong', 'unanswered', 'unanswered', 'wrong'] });
-    const next = cheatSheetBoost.apply(state, baseParams);
-    expect(next.answers[1]).toBe('correct');
-    expect(next.techBoostUsed).toBe(true);
-    expect(next.cheatSheetIndex).toBe(1);
-  });
-
-  it('is idempotent — same reference returned when already used', () => {
-    const state = makeState({ techBoostUsed: true });
-    const next = cheatSheetBoost.apply(state, baseParams);
-    expect(next).toBe(state);
-  });
-
-  it('does nothing if all questions are already answered', () => {
-    const state = makeState({ answers: ['correct', 'wrong', 'correct', 'wrong'], techBoostUsed: false });
-    const next = cheatSheetBoost.apply(state, baseParams);
-    expect(next).toBe(state);
-  });
-
-  it('does not mutate the input state', () => {
-    const state = makeState({ answers: ['unanswered', 'unanswered', 'unanswered', 'unanswered'] });
-    const before = JSON.stringify(state);
-    cheatSheetBoost.apply(state, baseParams);
-    expect(JSON.stringify(state)).toBe(before);
-  });
-});
 
 describe('narrowItDownBoost', () => {
   it('has lane charm', () => {

@@ -3,7 +3,7 @@ import type { TriviaItemConfig } from '@/engine/config';
 import type { InsideKnowledgeParams } from './generate';
 import { makeGenerate } from './generate';
 import type { InsideKnowledgeState } from './judge';
-import { judge, cheatSheetBoost, narrowItDownBoost } from './judge';
+import { judge, narrowItDownBoost } from './judge';
 import { InsideKnowledgeComponent } from './component';
 
 export type { InsideKnowledgeParams } from './generate';
@@ -21,6 +21,6 @@ export function makeInsideKnowledge(items: TriviaItemConfig[]): MiniGame<InsideK
     generate: makeGenerate(items),
     Component: InsideKnowledgeComponent,
     judge,
-    boosts: [cheatSheetBoost, narrowItDownBoost],
+    boosts: [narrowItDownBoost],
   };
 }

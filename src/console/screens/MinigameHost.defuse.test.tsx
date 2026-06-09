@@ -265,7 +265,7 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
     expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 
-  it('Spare Wire boost surfaces in ACTIVE when stealth power-up is held', () => {
+  it('Clear Channel surfaces when stealth power-up is held (any-lane eligibility)', () => {
     const store = makeDefuseStore(1, { stealthPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
@@ -273,7 +273,7 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('boost-stealth')).toBeInTheDocument();
+    expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 
   it('no boost renders when no power-up is held', () => {
@@ -285,7 +285,6 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-charm')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('boost-stealth')).not.toBeInTheDocument();
   });
 
   it('Clear Channel fires once then disables', () => {
@@ -297,20 +296,6 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
     const btn = screen.getByTestId('boost-charm');
-    expect(btn).not.toBeDisabled();
-    fireEvent.click(btn);
-    expect(btn).toBeDisabled();
-  });
-
-  it('Spare Wire fires once then disables', () => {
-    const store = makeDefuseStore(1, { stealthPowerUp: true });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const btn = screen.getByTestId('boost-stealth');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
     expect(btn).toBeDisabled();

@@ -8,7 +8,7 @@ import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { FollowTheCircuitParams } from './generate';
 import type { FollowTheCircuitState } from './judge';
-import { judge, photographicBoost, muscleMemoryBoost } from './judge';
+import { judge, photographicBoost } from './judge';
 
 type Phase = 'watching' | 'inputting' | 'done';
 
@@ -16,9 +16,7 @@ function initState(): FollowTheCircuitState {
   return {
     lengthReached: 0,
     chainBroke: false,
-    fumbleForgiven: false,
     photographicUsed: false,
-    muscleMemoryUsed: false,
     tapsThisRound: [],
   };
 }
@@ -34,10 +32,7 @@ export function FollowTheCircuitComponent({
   const [currentRoundLength, setCurrentRoundLength] = useState(1);
   const [replayVersion, setReplayVersion] = useState(0);
 
-  const effectivePlaybackSpeedMs = state.muscleMemoryUsed
-    ? params.playbackSpeedMs * 2
-    : params.playbackSpeedMs;
-  const effectiveBpm = Math.round(60000 / effectivePlaybackSpeedMs);
+  const effectiveBpm = Math.round(60000 / params.playbackSpeedMs);
   const audibleBeats = currentRoundLength;
 
   const clock = useAudioClock();
@@ -108,17 +103,12 @@ export function FollowTheCircuitComponent({
         }
       }
     } else {
-      if (currentSt.muscleMemoryUsed && !currentSt.fumbleForgiven) {
-        setState(s => ({ ...s, fumbleForgiven: true, tapsThisRound: [] }));
-        setPhase('watching');
-      } else {
-        setState(s => ({
-          ...s,
-          tapsThisRound: [...s.tapsThisRound, id],
-          chainBroke: true,
-        }));
-        setPhase('done');
-      }
+      setState(s => ({
+        ...s,
+        tapsThisRound: [...s.tapsThisRound, id],
+        chainBroke: true,
+      }));
+      setPhase('done');
     }
   }
 
@@ -151,7 +141,6 @@ export function FollowTheCircuitComponent({
     1,
   );
 
-  // Status badge for current phase
   let phaseBadgeClass = 'mg-status-badge mg-status-badge--active';
   let phaseIcon: React.ReactNode = <Eye size={14} />;
   let phaseLabel = 'WATCH';
@@ -181,7 +170,6 @@ export function FollowTheCircuitComponent({
         </span>
         <span data-testid="ftc-progress">Progress: {progressText}</span>
         {state.chainBroke && <span data-testid="ftc-broke">CHAIN BROKE</span>}
-        {state.fumbleForgiven && <span data-testid="ftc-forgiven">fumble forgiven</span>}
         <div className="mg-progress-bar">
           <div className="mg-progress-bar__track">
             <div
@@ -211,13 +199,7 @@ export function FollowTheCircuitComponent({
         <div className="mg-boost-slot">
           <BoostButton<FollowTheCircuitState, FollowTheCircuitParams>
             hook={photographicBoost}
-            committed={committed}
-            onFire={handleBoost}
-          />
-        </div>
-        <div className="mg-boost-slot">
-          <BoostButton<FollowTheCircuitState, FollowTheCircuitParams>
-            hook={muscleMemoryBoost}
+            gameLanes={['tech', 'physical']}
             committed={committed}
             onFire={handleBoost}
           />

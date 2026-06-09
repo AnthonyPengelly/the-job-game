@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
-import { judge, photographicBoost, muscleMemoryBoost } from './judge';
+import { judge, photographicBoost } from './judge';
 import type { FollowTheCircuitState } from './judge';
 import { followTheCircuit } from './index';
 import { getGame } from '@/minigames/registry';
@@ -32,8 +32,9 @@ describe('followTheCircuit registry', () => {
     expect(followTheCircuit.soloVariantId).toBeUndefined();
   });
 
-  it('has two boost hooks', () => {
-    expect(followTheCircuit.boosts).toHaveLength(2);
+  it('has one boost hook (Photographic)', () => {
+    expect(followTheCircuit.boosts).toHaveLength(1);
+    expect(followTheCircuit.boosts[0]!.label).toBe('Photographic');
   });
 });
 
@@ -112,9 +113,7 @@ function makeState(overrides: Partial<FollowTheCircuitState> = {}): FollowTheCir
   return {
     lengthReached: 0,
     chainBroke: false,
-    fumbleForgiven: false,
     photographicUsed: false,
-    muscleMemoryUsed: false,
     tapsThisRound: [],
     ...overrides,
   };
@@ -142,22 +141,13 @@ describe('judge — outcome boundaries', () => {
     ).toBe('complication');
   });
 
-  it('clean when target length reached without forgiveness', () => {
+  it('clean when target length reached', () => {
     expect(
       judge(makeState({ lengthReached: params.targetLength }), params),
     ).toBe('clean');
     expect(
       judge(makeState({ lengthReached: params.targetLength + 1 }), params),
     ).toBe('clean');
-  });
-
-  it('complication when target reached but a fumble was forgiven', () => {
-    expect(
-      judge(
-        makeState({ lengthReached: params.targetLength, fumbleForgiven: true }),
-        params,
-      ),
-    ).toBe('complication');
   });
 });
 
@@ -198,38 +188,6 @@ describe('photographicBoost', () => {
     const state = makeState();
     const before = JSON.stringify(state);
     photographicBoost.apply(state, params);
-    expect(JSON.stringify(state)).toBe(before);
-  });
-});
-
-describe('muscleMemoryBoost', () => {
-  it('has lane physical', () => {
-    expect(muscleMemoryBoost.lane).toBe('physical');
-  });
-
-  it('has label Muscle Memory', () => {
-    expect(muscleMemoryBoost.label).toBe('Muscle Memory');
-  });
-
-  it('sets muscleMemoryUsed to true on first use', () => {
-    const params = generate(mulberry32(1), dial(0));
-    const state = makeState();
-    const next = muscleMemoryBoost.apply(state, params);
-    expect(next.muscleMemoryUsed).toBe(true);
-  });
-
-  it('is idempotent when already used', () => {
-    const params = generate(mulberry32(1), dial(0));
-    const state = makeState({ muscleMemoryUsed: true });
-    const next = muscleMemoryBoost.apply(state, params);
-    expect(next).toBe(state);
-  });
-
-  it('does not mutate the input state', () => {
-    const params = generate(mulberry32(1), dial(0));
-    const state = makeState();
-    const before = JSON.stringify(state);
-    muscleMemoryBoost.apply(state, params);
     expect(JSON.stringify(state)).toBe(before);
   });
 });

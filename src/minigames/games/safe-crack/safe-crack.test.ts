@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
-import { judge, computeFeedback, techBoost, stealthBoost } from './judge';
+import { judge, computeFeedback, techBoost } from './judge';
 import type { SafeCrackState } from './judge';
 import { safeCrack } from './index';
 import { getGame } from '@/minigames/registry';
@@ -28,8 +28,9 @@ describe('safeCrack registry', () => {
     expect(safeCrack.minCommit).toBe(1);
   });
 
-  it('has two boost hooks', () => {
-    expect(safeCrack.boosts).toHaveLength(2);
+  it('has one boost hook (Stethoscope)', () => {
+    expect(safeCrack.boosts).toHaveLength(1);
+    expect(safeCrack.boosts[0]!.label).toBe('Stethoscope');
   });
 });
 
@@ -120,7 +121,6 @@ function makeState(overrides: Partial<SafeCrackState> = {}): SafeCrackState {
     guessesRemaining: 3,
     solved: false,
     techBoostUsed: false,
-    stealthBoostUsed: false,
     ...overrides,
   };
 }
@@ -183,39 +183,6 @@ describe('techBoost (Stethoscope)', () => {
     const state = makeState();
     const before = { ...state };
     techBoost.apply(state, params);
-    expect(state).toEqual(before);
-  });
-});
-
-describe('stealthBoost (Patient Touch)', () => {
-  it('has lane stealth', () => {
-    expect(stealthBoost.lane).toBe('stealth');
-  });
-
-  it('has label Patient Touch', () => {
-    expect(stealthBoost.label).toBe('Patient Touch');
-  });
-
-  it('adds one extra guess on first use', () => {
-    const params = { code: [3, 7, 1], guessBudget: 5, timerSeconds: 120 };
-    const state = makeState({ guessesRemaining: 2 });
-    const next = stealthBoost.apply(state, params);
-    expect(next.stealthBoostUsed).toBe(true);
-    expect(next.guessesRemaining).toBe(3);
-  });
-
-  it('is idempotent — same reference returned when already used', () => {
-    const params = { code: [3, 7, 1], guessBudget: 5, timerSeconds: 120 };
-    const state = makeState({ stealthBoostUsed: true, guessesRemaining: 3 });
-    const next = stealthBoost.apply(state, params);
-    expect(next).toBe(state);
-  });
-
-  it('does not mutate the input state', () => {
-    const params = { code: [3, 7, 1], guessBudget: 5, timerSeconds: 120 };
-    const state = makeState({ guessesRemaining: 2 });
-    const before = { ...state };
-    stealthBoost.apply(state, params);
     expect(state).toEqual(before);
   });
 });

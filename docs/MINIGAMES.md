@@ -134,24 +134,34 @@ never sees it — they feel it.
 
 ## 4. The boost system
 
-> **⚠ Revised in design v0.9 (implemented by EPIC E18).** Each game now has **one**
-> signature ability, fired by a committed holder of a power-up in **any** of the game's
-> lanes — *not* a different effect per lane. The combo-game dual boosts and the per-game
-> sections further down are **stale** until E18 lands: collapse each combo game to its single
-> ability and **retire** Muscle Memory, Cheat Sheet, Patient Touch, Quick Hands, Steady Breath
-> and Spare Wire. Canonical single abilities live in `heist-content.md` (§"per game"). The
-> contract sketch below (one `BoostHook` per lane, a button per held lane) changes accordingly:
-> one ability per game, surfaced when the holder has a power-up in any of its `lanes`.
+Each game has **one** signature ability (design v0.9). A committed player fires it if they
+hold a power-up in **any** of the game's `lanes` — not a specific lane. This applies to combo
+games (two lanes) and single-lane games alike: any lane power-up held is enough.
+
+The six retired combo-game boosts (Muscle Memory, Cheat Sheet, Patient Touch, Quick Hands,
+Steady Breath, Spare Wire) have been removed. The ten canonical abilities are:
+
+| Game | Ability |
+|------|---------|
+| Crack the Tumblers / Solo | **Reset Pin** |
+| Beat 16 | **In the Bones** |
+| Categories | **Skip** |
+| The Once-Over | **Hunch** |
+| Follow the Circuit | **Photographic** |
+| Inside Knowledge | **Narrow It Down** |
+| Safe-Crack | **Stethoscope** |
+| Assembly Line / Negotiated | **Tip-Off** |
+| Steady Hands | **Extra Hands** |
+| Defuse the Alarm | **Clear Channel** |
 
 There are exactly **four power-ups, one per lane** (design doc; heist-content.md
-GEAR). Holding a lane's power-up means *"you're an ace at that lane's games"*:
-the holder gets the **game's signature effect they shout to use, once per game**.
+GEAR). Holding any lane's power-up means *"you're an ace at that lane's games"*:
+the holder gets the **game's single signature ability to shout once per game**.
 One per lane per player, no stacking; a player can hold up to four.
 
-- **Surfacing.** `BoostButton` renders **only** when a *committed* player holds
-  the lane power-up for one of the game's `lanes`. In a combo, a button surfaces
-  for each held lane independently (so a crew holding both Tech and Stealth
-  power-ups in Safe-Crack sees both Stethoscope and Patient Touch).
+- **Eligibility.** `BoostButton` renders **only** when a *committed* player holds a power-up
+  in **any** of the game's `lanes`. For a combo game (two lanes), either lane's power-up qualifies.
+  `BoostButton` accepts `gameLanes: Lane[]` for this check.
 - **Once per game.** Each `BoostHook` fires exactly once per challenge, then its
   button disables. Tracked in `ChallengeState`.
 - **The shout.** The button is a physical "shout to use" affordance — the player
@@ -160,11 +170,14 @@ One per lane per player, no stacking; a player can hold up to four.
 
 ```ts
 interface BoostHook {
-  lane: Lane;                 // which power-up unlocks it
+  lane: Lane;                 // the boost's nominal lane (for display)
   label: string;             // the shout, e.g. "Reset Pin"
   apply(state: ChallengeState, params: Params): ChallengeState;  // pure
 }
 ```
+
+The `MiniGame.boosts` array carries **exactly one** `BoostHook`. Eligibility fires on
+`game.lanes.some(l => player.powerUps[l])` — any held lane power-up qualifies.
 
 The four lane power-ups and their per-game faces are fixed in
 `heist-content.md`. Each game's `boosts` array reproduces its row of that table;
@@ -291,10 +304,8 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 - **ChallengeState:** current round/length reached; the taps this round; whether
   the chain broke; boost-used flags (per lane).
 - **judge:** **clean** = reached the target length; **complication** = broke one
-  short of target (or used Muscle Memory's forgiveness); **botched** = broke
-  early.
-- **Boosts:** **Tech → Photographic** (replay the sequence once); **Physical →
-  Muscle Memory** (slower playback, one fumble forgiven).
+  short of target; **botched** = broke early.
+- **Boost:** **Photographic** (replay the sequence once). Fires for holder of Tech or Physical power-up.
 - **Dial levers:** target length (fewer items); playback speed (tempo).
 - **minCommit:** **1.** Dial-only solo and 2–3.
 
@@ -307,8 +318,7 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
   boost-used flags (per lane).
 - **judge:** **clean** = enough correct comfortably; **complication** = just
   past the threshold / at the buzzer; **botched** = fell short.
-- **Boosts:** **Tech → Cheat Sheet** (skip a question, counted right); **Charm →
-  Narrow It Down** (multiple choice on a question).
+- **Boost:** **Narrow It Down** (multiple choice on a question). Fires for holder of Tech or Charm power-up.
 - **Dial levers:** easier tier (more tolerance); fewer questions; more time.
 - **minCommit:** **1.** Dial-only solo and 2–3.
 
@@ -322,8 +332,7 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 - **judge (app fully judges):** **clean** = solved with guesses to spare;
   **complication** = solved on the last guess; **botched** = guesses exhausted
   unsolved.
-- **Boosts:** **Tech → Stethoscope** (reveal a digit's position); **Stealth →
-  Patient Touch** (one extra guess).
+- **Boost:** **Stethoscope** (reveal a digit's position). Fires for holder of Tech or Stealth power-up.
 - **Dial levers:** fewer digits in play (fewer items); more guesses (tolerance);
   more time. Both lanes aggregate into one scalar — see §3 for the accepted
   approximation note on per-lane differentiation.
@@ -339,8 +348,7 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 - **judge (GM-watched):** **clean** = everyone holds a complete set with time to
   spare; **complication** = completed at the buzzer / all-but-one; **botched** =
   not solved.
-- **Boosts:** **Physical → Quick Hands** (one 2-for-1 trade); **Charm → Tip-Off**
-  (reveal which set-types are in play).
+- **Boost:** **Tip-Off** (reveal which set-types are in play). Fires for holder of Physical or Charm power-up.
 - **Dial levers:** hand size; number of types in play (fewer items); time.
 - **minCommit:** **2.** **Excluded from solo** (no one to trade with). At **2**:
   the **negotiated-swap variant**. At **3+**: full Pit-style. True game at 3.
@@ -354,11 +362,8 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 - **ChallengeState:** the timer; boost-used flags (per lane). The tower itself
   is physical — the app does not sense it.
 - **judge (GM-judged):** **clean** = reached target height standing;
-  **complication** = a wobble survived / just short but standing; **botched** =
-  toppled / well short.
-- **Boosts:** **Physical → Extra Hands** (10s where everyone, benched included,
-  helps build — the one sanctioned all-hands moment); **Stealth → Steady Breath**
-  (one wobble forgiven).
+  **complication** = a wobble survived / just short; **botched** = toppled / well short.
+- **Boost:** **Extra Hands** (10s where everyone, benched included, helps build — the one sanctioned all-hands moment). Fires for holder of Physical or Stealth power-up.
 - **Dial levers:** target height (fewer items / tolerance); timer.
 - **minCommit:** **1.** Dial-only solo and 2–3.
 
@@ -373,10 +378,8 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
   wrong-cut record; the timer; boost-used flags (per lane).
 - **judge (app fully judges):** the app generated both wiring and rules, so it
   knows every correct cut. **clean** = all safe cuts, no wrong cut;
-  **complication** = finished but with a forgiven wrong cut (Spare Wire) / at the
-  buzzer; **botched** = a wrong cut trips the alarm (un-forgiven) / timeout.
-- **Boosts:** **Charm → Clear Channel** (one full sentence allowed); **Stealth →
-  Spare Wire** (one wrong cut forgiven).
+  **complication** = finished at the buzzer; **botched** = a wrong cut trips the alarm / timeout.
+- **Boost:** **Clear Channel** (one full sentence allowed). Fires for holder of Charm or Stealth power-up.
 - **Dial levers:** simpler rulebook; fewer wires (fewer items); more time.
 - **minCommit:** **2.** **Excluded from solo** — asymmetric info collapses with
   one player (the defuser sees wires, the expert reads rules; one person can't be

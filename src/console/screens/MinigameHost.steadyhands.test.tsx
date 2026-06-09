@@ -223,7 +223,7 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
     expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
   });
 
-  it('Steady Breath boost surfaces in ACTIVE when stealth power-up is held', () => {
+  it('Extra Hands surfaces when stealth power-up is held (any-lane eligibility)', () => {
     const store = makeSteadyHandsStore(1, { stealthPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
@@ -231,7 +231,7 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('boost-stealth')).toBeInTheDocument();
+    expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
   });
 
   it('no boost renders when no power-up is held', () => {
@@ -243,7 +243,6 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.queryByTestId('boost-physical')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('boost-stealth')).not.toBeInTheDocument();
   });
 
   it('Extra Hands boost fires once then disables', () => {
@@ -260,20 +259,6 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
     expect(btn).toBeDisabled();
   });
 
-  it('Steady Breath boost fires once then disables', () => {
-    const store = makeSteadyHandsStore(1, { stealthPowerUp: true });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const btn = screen.getByTestId('boost-stealth');
-    expect(btn).not.toBeDisabled();
-    fireEvent.click(btn);
-    expect(btn).toBeDisabled();
-  });
-
   it('Extra Hands shows all-hands banner after firing', () => {
     const store = makeSteadyHandsStore(1, { physicalPowerUp: true });
     render(
@@ -285,44 +270,6 @@ describe('MinigameHost — steadyHands boost surfacing', () => {
     expect(screen.queryByTestId('sh-extra-hands')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-physical'));
     expect(screen.getByTestId('sh-extra-hands')).toBeInTheDocument();
-  });
-
-  it('Steady Breath shows wobble-forgiven indicator after firing', () => {
-    const store = makeSteadyHandsStore(1, { stealthPowerUp: true });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.queryByTestId('sh-wobble-forgiven')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('boost-stealth'));
-    expect(screen.getByTestId('sh-wobble-forgiven')).toBeInTheDocument();
-  });
-
-  it('both boosts surface independently when both power-ups are held', () => {
-    const store = createGameStore({ cfg: steadyHandsCfg, storage: makeStorage() });
-    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
-    const crew = store.getState().session.present.crew;
-    const alice = crew[0]!;
-    const bob = crew[1]!;
-    store.getState().dispatch({ t: 'OVERRIDE_SET_POWERUP', player: alice.id, lane: 'physical', held: true });
-    store.getState().dispatch({ t: 'OVERRIDE_SET_POWERUP', player: bob.id, lane: 'stealth', held: true });
-    const room = store.getState().session.present.currentRoom;
-    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle');
-    store.getState().dispatch({
-      t: 'CHOOSE_OPTION',
-      optionId: room.options[0]!.id,
-      committed: crew.map(p => p.id),
-    });
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('boost-physical')).toBeInTheDocument();
-    expect(screen.getByTestId('boost-stealth')).toBeInTheDocument();
   });
 });
 

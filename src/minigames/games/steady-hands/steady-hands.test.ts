@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
-import { judge, extraHandsBoost, steadyBreathBoost } from './judge';
+import { judge, extraHandsBoost } from './judge';
 import type { SteadyHandsState } from './judge';
 import { steadyHands } from './index';
 import { getGame } from '@/minigames/registry';
@@ -32,8 +32,9 @@ describe('steadyHands registry', () => {
     expect(steadyHands.soloVariantId).toBeUndefined();
   });
 
-  it('has two boost hooks', () => {
-    expect(steadyHands.boosts).toHaveLength(2);
+  it('has one boost hook (Extra Hands)', () => {
+    expect(steadyHands.boosts).toHaveLength(1);
+    expect(steadyHands.boosts[0]!.label).toBe('Extra Hands');
   });
 });
 
@@ -100,13 +101,9 @@ function makeState(overrides: Partial<SteadyHandsState> = {}): SteadyHandsState 
     timerExpired: false,
     extraHandsUsed: false,
     extraHandsActive: false,
-    steadyBreathUsed: false,
-    wobbleForgiven: false,
     ...overrides,
   };
 }
-
-const baseParams = generate(mulberry32(1), dial(0));
 
 describe('judge — three tier boundaries', () => {
   it('complication when game is in progress (default suggestion)', () => {
@@ -116,17 +113,11 @@ describe('judge — three tier boundaries', () => {
   it('botched when timer expires', () => {
     expect(judge(makeState({ timerExpired: true }))).toBe('botched');
   });
-
-  it('complication when wobble was forgiven via Steady Breath', () => {
-    expect(judge(makeState({ wobbleForgiven: true }))).toBe('complication');
-  });
-
-  it('botched when timer expires even if boost was used', () => {
-    expect(judge(makeState({ timerExpired: true, wobbleForgiven: true }))).toBe('botched');
-  });
 });
 
 // ── extraHandsBoost (Physical) ────────────────────────────────────────────────
+
+const baseParams = generate(mulberry32(1), dial(0));
 
 describe('extraHandsBoost (Extra Hands)', () => {
   it('has lane physical', () => {
@@ -154,38 +145,6 @@ describe('extraHandsBoost (Extra Hands)', () => {
     const state = makeState();
     const before = JSON.stringify(state);
     extraHandsBoost.apply(state, baseParams);
-    expect(JSON.stringify(state)).toBe(before);
-  });
-});
-
-// ── steadyBreathBoost (Stealth) ───────────────────────────────────────────────
-
-describe('steadyBreathBoost (Steady Breath)', () => {
-  it('has lane stealth', () => {
-    expect(steadyBreathBoost.lane).toBe('stealth');
-  });
-
-  it('has label Steady Breath', () => {
-    expect(steadyBreathBoost.label).toBe('Steady Breath');
-  });
-
-  it('sets steadyBreathUsed and wobbleForgiven on first use', () => {
-    const state = makeState();
-    const next = steadyBreathBoost.apply(state, baseParams);
-    expect(next.steadyBreathUsed).toBe(true);
-    expect(next.wobbleForgiven).toBe(true);
-  });
-
-  it('is idempotent — same reference returned when already used', () => {
-    const state = makeState({ steadyBreathUsed: true, wobbleForgiven: true });
-    const next = steadyBreathBoost.apply(state, baseParams);
-    expect(next).toBe(state);
-  });
-
-  it('does not mutate the input state', () => {
-    const state = makeState();
-    const before = JSON.stringify(state);
-    steadyBreathBoost.apply(state, baseParams);
     expect(JSON.stringify(state)).toBe(before);
   });
 });
