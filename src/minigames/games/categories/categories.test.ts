@@ -134,24 +134,25 @@ function makeState(overrides: Partial<CategoriesState> = {}): CategoriesState {
 const baseParams = { category: 'Things made of gold', skipCategory: 'Types of cheese', targetCount: 8, timerSeconds: 60 };
 
 describe('judge', () => {
-  it('botched when tally is below target regardless of timer', () => {
-    expect(judge(makeState({ tally: 5 }), baseParams)).toBe('botched');
-    expect(judge(makeState({ tally: 7 }), baseParams)).toBe('botched');
-    expect(judge(makeState({ tally: 0 }), baseParams)).toBe('botched');
-  });
-
-  it('botched when tally is below target and timer expired', () => {
-    expect(judge(makeState({ tally: 5, timerExpired: true }), baseParams)).toBe('botched');
-  });
-
-  it('clean when tally reaches target and timer has not expired', () => {
+  it('clean when tally meets the target (timer not expired)', () => {
     expect(judge(makeState({ tally: 8 }), baseParams)).toBe('clean');
     expect(judge(makeState({ tally: 10 }), baseParams)).toBe('clean');
   });
 
-  it('complication when tally reaches target and timer expired (at the buzzer)', () => {
-    expect(judge(makeState({ tally: 8, timerExpired: true }), baseParams)).toBe('complication');
-    expect(judge(makeState({ tally: 12, timerExpired: true }), baseParams)).toBe('complication');
+  it('target met, then timer expires ⇒ clean', () => {
+    expect(judge(makeState({ tally: 8, timerExpired: true }), baseParams)).toBe('clean');
+    expect(judge(makeState({ tally: 12, timerExpired: true }), baseParams)).toBe('clean');
+  });
+
+  it('complication when tally is one short of target (small margin)', () => {
+    expect(judge(makeState({ tally: 7 }), baseParams)).toBe('complication');
+    expect(judge(makeState({ tally: 7, timerExpired: true }), baseParams)).toBe('complication');
+  });
+
+  it('botched when tally misses by more than one', () => {
+    expect(judge(makeState({ tally: 5 }), baseParams)).toBe('botched');
+    expect(judge(makeState({ tally: 0 }), baseParams)).toBe('botched');
+    expect(judge(makeState({ tally: 5, timerExpired: true }), baseParams)).toBe('botched');
   });
 });
 

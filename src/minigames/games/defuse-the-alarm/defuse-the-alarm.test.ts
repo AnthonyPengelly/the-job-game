@@ -179,9 +179,9 @@ describe('judge — three tier boundaries', () => {
     expect(judge(state, baseParams)).toBe('clean');
   });
 
-  it('complication when all safe cuts made at the buzzer (timerExpired)', () => {
+  it('clean when all safe cuts made even if timer also expired (target met trumps timer)', () => {
     const state = { ...allSafeCuts(baseParams), timerExpired: true };
-    expect(judge(state, baseParams)).toBe('complication');
+    expect(judge(state, baseParams)).toBe('clean');
   });
 
   it('botched when timer expires before all safe cuts done', () => {

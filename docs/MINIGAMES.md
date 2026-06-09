@@ -276,9 +276,8 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
   timer length.
 - **ChallengeState:** the running tally (GM taps per valid answer); the timer;
   boost-used flag.
-- **judge (GM-counted):** **clean** = hit the target with time/margin to spare;
-  **complication** = hit it just in time / with a forgiven repeat; **botched** =
-  fell short.
+- **judge (GM-counted):** **clean** = hit the target (regardless of timer);
+  **complication** = one short of target; **botched** = fell short.
 - **Boosts (Charm):** **Skip** — swap a category you hate.
 - **Dial levers:** lower target; longer timer.
 - **minCommit:** **1.** Dial-only solo and 2–3.
@@ -316,8 +315,8 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
   question count; the timer.
 - **ChallengeState:** per-question right/wrong (GM marks); the timer;
   boost-used flags (per lane).
-- **judge:** **clean** = enough correct comfortably; **complication** = just
-  past the threshold / at the buzzer; **botched** = fell short.
+- **judge:** **clean** = reached the threshold (regardless of timer);
+  **complication** = one short of threshold; **botched** = fell short.
 - **Boost:** **Narrow It Down** (multiple choice on a question). Fires for holder of Tech or Charm power-up.
 - **Dial levers:** easier tier (more tolerance); fewer questions; more time.
 - **minCommit:** **1.** Dial-only solo and 2–3.
@@ -345,9 +344,9 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
   actually in play — *not necessarily one of each*); the timer.
 - **ChallengeState:** the timer; optional sets-complete tally; boost-used flags
   (per lane).
-- **judge (GM-watched):** **clean** = everyone holds a complete set with time to
-  spare; **complication** = completed at the buzzer / all-but-one; **botched** =
-  not solved.
+- **judge (GM-watched):** **clean** = everyone holds a complete set (regardless
+  of timer); **complication** = all-but-one / game in progress; **botched** =
+  timer expired unsolved.
 - **Boost:** **Tip-Off** (reveal which set-types are in play). Fires for holder of Physical or Charm power-up.
 - **Dial levers:** hand size; number of types in play (fewer items); time.
 - **minCommit:** **2.** **Excluded from solo** (no one to trade with). At **2**:
@@ -377,8 +376,10 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 - **ChallengeState:** each "cut" entered (a card flipped face-down); safe vs
   wrong-cut record; the timer; boost-used flags (per lane).
 - **judge (app fully judges):** the app generated both wiring and rules, so it
-  knows every correct cut. **clean** = all safe cuts, no wrong cut;
-  **complication** = finished at the buzzer; **botched** = a wrong cut trips the alarm / timeout.
+  knows every correct cut. **clean** = all safe cuts, no wrong cut (regardless
+  of timer); **complication** = in progress (no wrong cut, not all safe cuts done
+  yet, timer still running); **botched** = a wrong cut trips the alarm / timer
+  expired before all safe cuts done.
 - **Boost:** **Clear Channel** (one full sentence allowed). Fires for holder of Charm or Stealth power-up.
 - **Dial levers:** simpler rulebook; fewer wires (fewer items); more time.
 - **minCommit:** **2.** **Excluded from solo** — asymmetric info collapses with
