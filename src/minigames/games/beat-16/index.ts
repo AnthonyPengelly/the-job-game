@@ -16,4 +16,7 @@ export const beat16: MiniGame<Beat16Params, Beat16State> = {
   Component: Beat16Component,
   judge,
   boosts: [inTheBonesBoost],
+  armedInstructions:
+    'The metronome plays then mutes. Keep counting silently to the target beat, ' +
+    'then TAP on the dot. In the Bones adds two more audible beats before the mute.',
 };

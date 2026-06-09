@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { ShieldCheck, Clock, XCircle } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { useMetronome, useAudioClock, useScheduleBeep } from '@/minigames/primitives';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
@@ -12,7 +11,7 @@ function initState(): Beat16State {
   return { tapTimestampMs: null, measuredDeltaMs: null, boostUsed: false };
 }
 
-type FeedbackKind = 'hit' | 'close' | 'miss' | 'recorded' | null;
+type FeedbackKind = 'on-the-beat' | 'early' | 'late' | 'recorded' | null;
 
 function classifyFeedback(
   delta: number | null,
@@ -21,9 +20,9 @@ function classifyFeedback(
 ): FeedbackKind {
   if (delta === null) return 'recorded';
   const abs = Math.abs(delta);
-  if (abs <= cleanWindowMs) return 'hit';
-  if (abs <= complicationWindowMs) return 'close';
-  return 'miss';
+  if (abs <= cleanWindowMs) return 'on-the-beat';
+  if (abs <= complicationWindowMs) return delta < 0 ? 'early' : 'late';
+  return delta < 0 ? 'early' : 'late';
 }
 
 export function Beat16Component({
@@ -33,30 +32,28 @@ export function Beat16Component({
 }: MiniGameProps<Beat16Params>): JSX.Element {
   const [state, setState] = useState<Beat16State>(initState);
 
-  // Re-run the metronome from scratch when the boost adds 2 extra audible beats.
   const effectiveAudibleBeats = params.audibleBeats + (state.boostUsed ? 2 : 0);
   const clock = useAudioClock();
   const scheduleBeep = useScheduleBeep();
   const metronome = useMetronome({ bpm: params.bpm, audibleBeats: effectiveAudibleBeats, clock, scheduleBeep });
 
-  // Track when beat 1 fires so we can compute expected target-beat time.
+  const [currentBeat, setCurrentBeat] = useState(0);
   const beat1TimestampRef = useRef<number | null>(null);
-  // Track the most recent reset key so the component can detect boost-triggered restart.
   const boostKeyRef = useRef(state.boostUsed);
 
-  // Reset timing when the boost fires (audibleBeats changes → metronome restarts).
   useEffect(() => {
     if (boostKeyRef.current !== state.boostUsed) {
       boostKeyRef.current = state.boostUsed;
       beat1TimestampRef.current = null;
+      setCurrentBeat(0);
     }
   }, [state.boostUsed]);
 
-  // Register beat callback.
   metronome.onBeat((beatNumber: number) => {
     if (beatNumber === 1) {
       beat1TimestampRef.current = performance.now();
     }
+    setCurrentBeat(beatNumber);
   });
 
   const hasTapped = state.tapTimestampMs !== null;
@@ -71,8 +68,7 @@ export function Beat16Component({
       const expectedTargetBeatTime = beat1Time + (params.targetBeat - 1) * beatIntervalMs;
       delta = now - expectedTargetBeatTime;
     }
-    const nextState: Beat16State = { ...state, tapTimestampMs: now, measuredDeltaMs: delta };
-    setState(nextState);
+    setState({ ...state, tapTimestampMs: now, measuredDeltaMs: delta });
   }
 
   function handleBoost(hook: BoostHook<Beat16State, Beat16Params>) {
@@ -87,52 +83,97 @@ export function Beat16Component({
     ? classifyFeedback(state.measuredDeltaMs, params.cleanWindowMs, params.complicationWindowMs)
     : null;
 
+  const displayBeat = hasTapped ? params.targetBeat : currentBeat;
+  const isMuted = currentBeat > effectiveAudibleBeats && !hasTapped;
+  const progressPct = params.targetBeat > 0 ? (displayBeat / params.targetBeat) * 100 : 0;
+
   return (
     <div data-testid="beat-16">
       <StatusZone>
-        <span data-testid="target-beat">Count to: {params.targetBeat}</span>
-        <span> | BPM: {params.bpm}</span>
-        <span data-testid="audible-beats"> | Audible: {effectiveAudibleBeats}</span>
+        <span className="mg-status-badge mg-status-badge--active" data-testid="beat16-mode">
+          {isMuted ? 'Muted' : 'Counting'}
+        </span>
+
+        <div className="mg-progress-bar" aria-label="Metronome progress">
+          <div className="mg-progress-bar__label">
+            <span data-testid="target-beat">
+              {hasTapped
+                ? `Landed on beat ${displayBeat} of ${params.targetBeat}`
+                : `Beat ${displayBeat} of ${params.targetBeat}${isMuted ? ' · muted' : ''}`}
+            </span>
+            {' · '}
+            <span data-testid="audible-beats">Audible: {effectiveAudibleBeats}</span>
+          </div>
+          <div className="mg-progress-bar__track">
+            <div
+              className="mg-progress-bar__fill mg-progress-bar__fill--data"
+              style={{ width: `${Math.min(progressPct, 100)}%` }}
+            />
+          </div>
+        </div>
       </StatusZone>
 
       <ChallengeZone>
-        <button
-          data-testid="btn-tap"
-          className="mg-big-tap"
-          onClick={handleTap}
-          disabled={hasTapped}
-        >
-          TAP
-        </button>
+        {/* Beat dots row — one dot per beat up to targetBeat */}
+        <div className="b16-beatrow" data-testid="beat-dots" aria-label="Beat dots">
+          {Array.from({ length: params.targetBeat }, (_, i) => {
+            const beatNum = i + 1;
+            const isDone = beatNum < displayBeat;
+            const isOn = beatNum === displayBeat && !hasTapped;
+            const isTarget = beatNum === params.targetBeat;
+            const isMuteZone = beatNum > effectiveAudibleBeats;
+            const classes = [
+              'b16-dot',
+              isDone ? 'b16-dot--done' : '',
+              isOn ? 'b16-dot--on' : '',
+              isTarget ? 'b16-dot--target' : '',
+              isMuteZone && !isDone && !isOn ? 'b16-dot--mute' : '',
+            ].filter(Boolean).join(' ');
+            return <div key={beatNum} className={classes} data-testid={`beat-dot-${beatNum}`} />;
+          })}
+        </div>
 
-        {hasTapped && (
-          <div data-testid="tap-result">
-            {state.measuredDeltaMs !== null
-              ? `Delta: ${state.measuredDeltaMs.toFixed(0)} ms`
-              : 'Tap recorded (timing unavailable)'}
-          </div>
-        )}
-
-        {feedback === 'hit' && (
-          <span className="mg-status-badge mg-status-badge--clean">
-            <ShieldCheck size={14} /> HIT
-          </span>
-        )}
-        {feedback === 'close' && (
-          <span className="mg-status-badge mg-status-badge--complication">
-            <Clock size={14} /> CLOSE
-          </span>
-        )}
-        {feedback === 'miss' && (
-          <span className="mg-status-badge mg-status-badge--botched">
-            <XCircle size={14} /> MISS
-          </span>
-        )}
-        {feedback === 'recorded' && (
-          <span className="mg-status-badge mg-status-badge--active">
-            Tap recorded
-          </span>
-        )}
+        {/* Hero area: beat count + TAP button or feedback */}
+        <div className="b16-hero">
+          {!hasTapped ? (
+            <>
+              <div className="b16-count" data-testid="beat-count">
+                <span className="b16-num" data-testid="current-beat-num">{currentBeat || '—'}</span>
+                <span className="b16-of">of {params.targetBeat}</span>
+                {isMuted && <span className="b16-muted-label" data-testid="audible-beats">muted</span>}
+              </div>
+              <button
+                data-testid="btn-tap"
+                className="mg-big-tap"
+                onClick={handleTap}
+                disabled={hasTapped}
+              >
+                TAP
+                <span className="b16-tap-sub">On beat {params.targetBeat}</span>
+              </button>
+            </>
+          ) : (
+            <div className="b16-feedback-area" data-testid="tap-result">
+              {feedback === 'on-the-beat' && (
+                <div className="b16-feedback b16-feedback--hit">On the beat</div>
+              )}
+              {feedback === 'early' && (
+                <div className="b16-feedback b16-feedback--early">Early</div>
+              )}
+              {feedback === 'late' && (
+                <div className="b16-feedback b16-feedback--late">Late</div>
+              )}
+              {feedback === 'recorded' && (
+                <div className="b16-feedback b16-feedback--recorded">Tap recorded</div>
+              )}
+              <div className="b16-feedback-sub">
+                {state.measuredDeltaMs !== null
+                  ? `${state.measuredDeltaMs > 0 ? '+' : ''}${state.measuredDeltaMs.toFixed(0)} ms · suggest ${judge(state, params)}`
+                  : 'Timing unavailable'}
+              </div>
+            </div>
+          )}
+        </div>
       </ChallengeZone>
 
       <RefereeZone>

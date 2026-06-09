@@ -51,6 +51,8 @@ type ShellState = 'armed' | 'active' | 'resolve';
 export interface MinigameShellProps {
   /** Human-readable game name shown in the ARMED briefing. */
   gameName: string;
+  /** Short how-to-play text shown in the ARMED state (GM reads aloud before START). */
+  instructions?: string;
   /** GM-only difficulty dial. */
   dial: Difficulty;
   /** Available boosts: committed players who hold a relevant lane power-up. */
@@ -85,6 +87,7 @@ export interface MinigameShellProps {
  */
 export function MinigameShell({
   gameName,
+  instructions,
   dial,
   boostPreviews,
   onConfirm,
@@ -117,6 +120,12 @@ export function MinigameShell({
         <div className="mg-armed-title" data-testid="mg-game-name">
           {gameName}
         </div>
+
+        {instructions && (
+          <p className="mg-armed-instructions" data-testid="mg-armed-instructions">
+            {instructions}
+          </p>
+        )}
 
         <DialReadout dial={dial} />
 

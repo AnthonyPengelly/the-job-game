@@ -16,4 +16,7 @@ export const followTheCircuit: MiniGame<FollowTheCircuitParams, FollowTheCircuit
   Component: FollowTheCircuitComponent,
   judge,
   boosts: [photographicBoost],
+  armedInstructions:
+    'Watch the sequence of lit nodes on the grid, then tap them back in the same order. ' +
+    'A wrong tap ends the run. Photographic replays the sequence once.',
 };
