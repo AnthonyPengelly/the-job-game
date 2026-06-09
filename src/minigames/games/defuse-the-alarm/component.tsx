@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, AlertTriangle, Eye, BookOpen, MessageSquare } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, BookOpen, MessageSquare } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import type { CardId } from '@/minigames/primitives/CardSpread';
 import { Timer } from '@/minigames/primitives/Timer';
@@ -50,22 +50,18 @@ function WireCardView({
   position,
   isCut,
   isBadCut,
-  isNextCorrect,
   onClick,
 }: {
   wire: WireCard;
   position: number;
   isCut: boolean;
   isBadCut: boolean;
-  isNextCorrect: boolean;
   onClick: () => void;
 }): JSX.Element {
   const stateClass = isBadCut
     ? ' dfz-card--badcut'
     : isCut
     ? ' dfz-card--cut'
-    : isNextCorrect
-    ? ' dfz-card--correct'
     : '';
 
   return (
@@ -88,7 +84,7 @@ function WireCardView({
         </span>
       </div>
       <span className="dfz-card-pos" data-testid={`wire-pos-${wire.id}`}>
-        {position}{isBadCut ? ' · cut!' : isCut ? ' · cut' : isNextCorrect ? ' · next' : ''}
+        {position}{isBadCut ? ' · cut!' : isCut ? ' · cut' : ''}
       </span>
     </div>
   );
@@ -121,13 +117,6 @@ export function DefuseComponent({
   const fillPct = params.safeWireIds.length > 0
     ? Math.min((safeCutsDone / params.safeWireIds.length) * 100, 100)
     : 0;
-
-  // Find the next safe wire to cut (first uncut safe wire in order)
-  const nextCorrectId = params.safeWireIds.find(id => !state.cutIds.includes(id));
-  const nextCorrectWire = nextCorrectId ? params.wires.find(w => w.id === nextCorrectId) : undefined;
-  const nextCorrectPosition = nextCorrectWire
-    ? params.wires.findIndex(w => w.id === nextCorrectId) + 1
-    : undefined;
 
   let badgeClass = 'mg-status-badge mg-status-badge--active';
   let badgeIcon: React.ReactNode = null;
@@ -166,15 +155,6 @@ export function DefuseComponent({
     onResolve(judge(state, params));
   }
 
-  // GM-only resolution: describe the next correct cut or the alarm state
-  const gmResolutionText = alarmTripped
-    ? `Wrong cut made — alarm tripped. ${wrongCutIds.length} bad cut${wrongCutIds.length !== 1 ? 's' : ''}.`
-    : allSafeDone
-    ? 'All safe cuts made — device defused.'
-    : nextCorrectWire && nextCorrectPosition !== undefined
-    ? `Next: cut position ${nextCorrectPosition} — ${nextCorrectWire.color} ${nextCorrectWire.symbol}.`
-    : 'No safe wires remain to cut.';
-
   return (
     <div data-testid="defuse-the-alarm">
       <StatusZone>
@@ -207,7 +187,6 @@ export function DefuseComponent({
           {params.wires.map((wire, i) => {
             const isCut = state.cutIds.includes(wire.id) && params.safeWireIds.includes(wire.id);
             const isBadCut = state.cutIds.includes(wire.id) && !params.safeWireIds.includes(wire.id);
-            const isNextCorrect = !alarmTripped && wire.id === nextCorrectId && !state.cutIds.includes(wire.id);
             return (
               <WireCardView
                 key={wire.id}
@@ -215,30 +194,10 @@ export function DefuseComponent({
                 position={i + 1}
                 isCut={isCut}
                 isBadCut={isBadCut}
-                isNextCorrect={isNextCorrect}
                 onClick={() => handleCut(wire.id)}
               />
             );
           })}
-        </div>
-
-        {/* GM-only resolution indicator */}
-        <div
-          data-testid="defuse-gm-resolution"
-          className={`dfz-gmcut${alarmTripped ? ' dfz-gmcut--danger' : ''}`}
-        >
-          {alarmTripped
-            ? <AlertTriangle size={16} className="dfz-gmcut-icon" />
-            : <Eye size={16} className="dfz-gmcut-icon" />
-          }
-          <div>
-            <div className="dfz-gmcut-label">
-              {alarmTripped ? 'Mis-cut · GM only' : 'Manual resolves to · GM only'}
-            </div>
-            <div className="dfz-gmcut-text" data-testid="defuse-gm-text">
-              {gmResolutionText}
-            </div>
-          </div>
         </div>
 
         {state.clearChannelUsed && (
