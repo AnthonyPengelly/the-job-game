@@ -101,6 +101,7 @@ function makeState(overrides: Partial<SteadyHandsState> = {}): SteadyHandsState 
     timerExpired: false,
     extraHandsUsed: false,
     extraHandsActive: false,
+    currentHeight: 0,
     ...overrides,
   };
 }

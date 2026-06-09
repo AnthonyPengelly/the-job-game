@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, Lock } from 'lucide-react';
+import { CheckCircle, XCircle, Lock, Eye } from 'lucide-react';
 import type { MiniGameProps } from '@/minigames/contract';
 import type { BoostHook } from '@/minigames/contract';
-import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { SafeCrackParams } from './generate';
@@ -21,12 +20,12 @@ function initState(guessBudget: number): SafeCrackState {
 export function SafeCrackComponent({ params, committed, onResolve }: MiniGameProps<SafeCrackParams>): JSX.Element {
   const [state, setState] = useState<SafeCrackState>(() => initState(params.guessBudget));
   const [currentInput, setCurrentInput] = useState('');
-  const [timerRunning, setTimerRunning] = useState(true);
 
   const gameOver = state.solved || state.guessesRemaining === 0;
+  const guessesUsed = params.guessBudget - state.guessesRemaining;
   const fillPct = state.solved
     ? 100
-    : Math.max(0, ((params.guessBudget - state.guessesRemaining) / params.guessBudget) * 100);
+    : Math.min((guessesUsed / params.guessBudget) * 100, 100);
 
   let badgeClass = 'mg-status-badge mg-status-badge--active';
   let badgeIcon: React.ReactNode = <Lock size={14} />;
@@ -39,10 +38,6 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
     badgeClass = 'mg-status-badge mg-status-badge--botched';
     badgeIcon = <XCircle size={14} />;
     badgeLabel = 'LOCKED';
-  }
-
-  function handleTimerExpire() {
-    setTimerRunning(false);
   }
 
   function handleBoost(hook: BoostHook<SafeCrackState, SafeCrackParams>) {
@@ -65,10 +60,6 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
       solved,
     }));
     setCurrentInput('');
-
-    if (solved || newRemaining === 0) {
-      setTimerRunning(false);
-    }
   }
 
   function handleInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -79,6 +70,10 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
     onResolve(judge(state));
   }
 
+  const maskedCode = state.stethoscopeReveal !== undefined
+    ? params.code.map((d, i) => i === state.stethoscopeReveal!.position ? String(d) : '_').join(' ')
+    : null;
+
   return (
     <div data-testid="safe-crack">
       <StatusZone>
@@ -86,46 +81,66 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
           {badgeIcon}
           <span>{badgeLabel}</span>
         </span>
-        <span data-testid="code-length">{params.code.length}-digit code</span>
-        <div className="mg-progress-bar">
+        <span data-testid="code-length" className="mg-dial-inline">{params.code.length}-digit code · {params.guessBudget} tries</span>
+        <div className="mg-progress-bar" data-testid="sc-progress">
           <div className="mg-progress-bar__track">
             <div
-              className="mg-progress-bar__fill"
+              className="mg-progress-bar__fill mg-progress-bar__fill--data"
               style={{ width: `${fillPct}%` }}
+              data-testid="sc-progress-fill"
             />
           </div>
           <span className="mg-progress-bar__label" data-testid="guesses-remaining">
-            {state.guessesRemaining} guess{state.guessesRemaining !== 1 ? 'es' : ''} left
+            Guesses used · {guessesUsed} / {params.guessBudget}
           </span>
         </div>
-        <Timer
-          seconds={params.timerSeconds}
-          running={timerRunning}
-          onExpire={handleTimerExpire}
-          audible
-        />
       </StatusZone>
 
       <ChallengeZone>
-        <div data-testid="guess-history">
-          {state.guesses.map((g, i) => (
-            <div key={i} data-testid={`guess-row-${i}`} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.25rem' }}>
-              <span data-testid={`guess-digits-${i}`} className="mg-card-label">
-                {g.guess.join(' ')}
-              </span>
-              <span data-testid={`guess-right-place-${i}`} style={{ color: 'var(--c-green-200, #b6f7d2)' }}>
-                {'■'.repeat(g.rightPlace)}
-              </span>
-              <span data-testid={`guess-right-digit-${i}`} style={{ color: 'var(--caution, #f7b84b)' }}>
-                {'□'.repeat(g.rightDigit)}
-              </span>
+        {maskedCode && (
+          <div data-testid="stethoscope-hint" className="sc-gm-code" style={{ marginBottom: '0.75rem' }}>
+            <Eye size={16} style={{ color: 'var(--data, #00bcd4)', flexShrink: 0 }} />
+            <div>
+              <div className="sc-gm-code-label">Code · GM only</div>
+              <div className="sc-gm-code-value">{maskedCode}</div>
             </div>
-          ))}
+          </div>
+        )}
+
+        <div className="sc-guess-history" data-testid="guess-history">
+          {state.guesses.map((g, i) => {
+            const isCurrent = i === state.guesses.length - 1;
+            return (
+              <div
+                key={i}
+                data-testid={`guess-row-${i}`}
+                className={`sc-guess-row${isCurrent ? ' sc-guess-row--current' : ''}`}
+              >
+                <span data-testid={`guess-digits-${i}`} className="sc-guess-digits">
+                  {g.guess.join(' ')}
+                </span>
+                <div className="sc-pegs" data-testid={`guess-pegs-${i}`}>
+                  {Array.from({ length: g.rightPlace }).map((_, j) => (
+                    <div key={`p-${j}`} className="sc-peg sc-peg--place" />
+                  ))}
+                  {Array.from({ length: g.rightDigit }).map((_, j) => (
+                    <div key={`d-${j}`} className="sc-peg sc-peg--digit" />
+                  ))}
+                  {Array.from({ length: params.code.length - g.rightPlace - g.rightDigit }).map((_, j) => (
+                    <div key={`e-${j}`} className="sc-peg" />
+                  ))}
+                </div>
+                <span data-testid={`guess-right-place-${i}`} style={{ display: 'none' }}>{g.rightPlace}</span>
+                <span data-testid={`guess-right-digit-${i}`} style={{ display: 'none' }}>{g.rightDigit}</span>
+              </div>
+            );
+          })}
         </div>
 
-        {state.stethoscopeReveal !== undefined && (
-          <div data-testid="stethoscope-hint" className="mg-status-badge mg-status-badge--complication" style={{ marginTop: '0.5rem' }}>
-            Position {state.stethoscopeReveal.position + 1} = {state.stethoscopeReveal.digit}
+        {state.guesses.length > 0 && (
+          <div className="sc-peg-legend" data-testid="peg-legend">
+            <span className="sc-peg-legend-item"><div className="sc-peg sc-peg--place" />Right digit &amp; place</span>
+            <span className="sc-peg-legend-item"><div className="sc-peg sc-peg--digit" />Right digit, wrong place</span>
           </div>
         )}
 
