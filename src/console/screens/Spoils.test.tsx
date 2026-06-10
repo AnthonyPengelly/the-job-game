@@ -6,6 +6,7 @@ import { testCfg } from '@/engine/test-config';
 import type { EngineConfig, PlayerId, ScenarioChoiceDef } from '@/engine';
 import type { StorageLike } from '@/platform';
 import type { ParsedNarration } from '@/content/schema';
+import { ActionBarSlotProvider, ActionBarSlotOutlet } from '@/console/shell/actionBarSlot';
 import { Spoils } from './Spoils';
 
 afterEach(cleanup);
@@ -103,9 +104,12 @@ function makeSpoilsStore(opts: { narration?: ParsedNarration; seed?: number } = 
 function renderSpoils(opts: { narration?: ParsedNarration; seed?: number } = {}) {
   const store = makeSpoilsStore(opts);
   const result = render(
-    <StoreContext.Provider value={store}>
-      <Spoils />
-    </StoreContext.Provider>,
+    <ActionBarSlotProvider>
+      <ActionBarSlotOutlet />
+      <StoreContext.Provider value={store}>
+        <Spoils />
+      </StoreContext.Provider>
+    </ActionBarSlotProvider>,
   );
   return { store, ...result };
 }
@@ -124,14 +128,21 @@ describe('Spoils — rendering', () => {
     expect(screen.getByTestId('spoils-loot-value')).toBeInTheDocument();
   });
 
-  it('loot value matches the engine result for a clean safe obstacle', () => {
+  it('loot banked value shows + prefix for clean safe obstacle (reward=1)', () => {
     renderSpoils();
     // Safe option reward = 1 (from obstacleOnlyCfg); clean outcome → reward = 1; formatLoot(1) = '$1'
     const val = screen.getByTestId('spoils-loot-value').textContent;
-    expect(val).toBe('$1');
+    expect(val).toBe('+$1');
   });
 
-  it('renders the Continue button', () => {
+  it('shows the run total in spoils-loot-total', () => {
+    renderSpoils();
+    expect(screen.getByTestId('spoils-loot-total')).toBeInTheDocument();
+    const total = screen.getByTestId('spoils-loot-total').textContent ?? '';
+    expect(total).toContain('$');
+  });
+
+  it('renders the Continue button (in action bar)', () => {
     renderSpoils();
     expect(screen.getByTestId('btn-spoils-continue')).toBeInTheDocument();
   });
@@ -145,6 +156,43 @@ describe('Spoils — rendering', () => {
     // 2-player crew → exhaustion class 'tired' (restRooms=0) → no one rests.
     renderSpoils();
     expect(screen.queryByTestId('spoils-resting')).toBeNull();
+  });
+});
+
+// ── Outcome banner ────────────────────────────────────────────────────────────
+
+describe('Spoils — outcome banner', () => {
+  it('shows the outcome banner for obstacle rooms', () => {
+    renderSpoils();
+    expect(screen.getByTestId('spoils-outcome-banner')).toBeInTheDocument();
+  });
+
+  it('shows "Clean" for a clean obstacle outcome', () => {
+    renderSpoils();
+    const val = screen.getByTestId('spoils-outcome-value').textContent;
+    expect(val).toBe('Clean');
+  });
+
+  it('shows "Complication" for a complication obstacle outcome', () => {
+    const storage = makeStorage();
+    const store = createGameStore({ cfg: obstacleOnlyCfg, storage });
+    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle');
+    const alice = store.getState().session.present.crew[0]!;
+    store.getState().dispatch({ t: 'CHOOSE_OPTION', optionId: room.options[0]!.id, committed: [alice.id] });
+    store.getState().dispatch({ t: 'RESOLVE_MINIGAME', outcome: 'complication' });
+
+    render(
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
+    );
+    const val = screen.getByTestId('spoils-outcome-value').textContent;
+    expect(val).toBe('Complication');
   });
 });
 
@@ -175,9 +223,12 @@ describe('Spoils — resting crew', () => {
     const store = makeSpoilsStoreWithResting();
     const alice = store.getState().session.present.crew[0]!;
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId(`spoils-resting-${alice.id}`)).toBeInTheDocument();
   });
@@ -186,9 +237,12 @@ describe('Spoils — resting crew', () => {
     const store = makeSpoilsStoreWithResting();
     const bob = store.getState().session.present.crew[1]!;
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.queryByTestId(`spoils-resting-${bob.id}`)).toBeNull();
   });
@@ -202,9 +256,12 @@ describe('Spoils — Continue', () => {
     expect(store.getState().pendingSpoils).toBe(true);
 
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
 
     fireEvent.click(screen.getByTestId('btn-spoils-continue'));
@@ -246,9 +303,12 @@ describe('Spoils — gear assignment', () => {
   it('shows gear section when earnedGear is non-empty', () => {
     const store = makeGearSpoilsStore();
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId('spoils-gear-section')).toBeInTheDocument();
     expect(screen.getByTestId('spoils-gear-cards')).toBeInTheDocument();
@@ -257,30 +317,31 @@ describe('Spoils — gear assignment', () => {
   it('renders a card for each earned gear item', () => {
     const store = makeGearSpoilsStore();
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId('spoils-gear-card-stat-tech-1')).toBeInTheDocument();
   });
 
-  it('tap-card shows crew picker, tap crew dispatches ASSIGN_GEAR', () => {
+  it('selecting a crew member from the assign dropdown dispatches ASSIGN_GEAR', () => {
     const store = makeGearSpoilsStore();
     const bob = store.getState().session.present.crew[1]!;
 
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
 
-    // Tap card to select it
-    fireEvent.click(screen.getByTestId('spoils-gear-card-stat-tech-1'));
-    // Crew picker should appear
-    expect(screen.getByTestId('spoils-crew-picker-stat-tech-1')).toBeInTheDocument();
-
-    // Tap crew member to assign
-    fireEvent.click(screen.getByTestId(`spoils-assign-stat-tech-1-${bob.id}`));
+    const select = screen.getByTestId('spoils-assign-stat-tech-1');
+    fireEvent.change(select, { target: { value: bob.id } });
 
     const lastEvent = store.getState().eventLog.at(-1);
     expect(lastEvent?.t).toBe('ASSIGN_GEAR');
@@ -288,22 +349,6 @@ describe('Spoils — gear assignment', () => {
       expect(lastEvent.gear).toBe('stat-tech-1');
       expect(lastEvent.to).toBe(bob.id);
     }
-  });
-
-  it('tapping the same card again deselects it', () => {
-    const store = makeGearSpoilsStore();
-    render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
-    );
-
-    fireEvent.click(screen.getByTestId('spoils-gear-card-stat-tech-1'));
-    expect(screen.getByTestId('spoils-crew-picker-stat-tech-1')).toBeInTheDocument();
-
-    // Tap again to deselect
-    fireEvent.click(screen.getByTestId('spoils-gear-card-stat-tech-1'));
-    expect(screen.queryByTestId('spoils-crew-picker-stat-tech-1')).toBeNull();
   });
 });
 
@@ -338,9 +383,12 @@ describe('Spoils — sell gear button', () => {
   it('renders a sell button for each earned gear card', () => {
     const store = makeGearSpoilsStore();
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId('spoils-sell-stat-tech-1')).toBeInTheDocument();
   });
@@ -348,9 +396,12 @@ describe('Spoils — sell gear button', () => {
   it('sell button label contains formatted sell value via formatLoot', () => {
     const store = makeGearSpoilsStore();
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     const sellBtn = screen.getByTestId('spoils-sell-stat-tech-1');
     // gearSellValue from testCfg: base=1000, perRoom=500; roomIndex=0 after start → $1k
@@ -360,9 +411,12 @@ describe('Spoils — sell gear button', () => {
   it('clicking sell button dispatches SELL_GEAR with correct index', () => {
     const store = makeGearSpoilsStore();
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     fireEvent.click(screen.getByTestId('spoils-sell-stat-tech-1'));
 
@@ -377,15 +431,18 @@ describe('Spoils — sell gear button', () => {
     const store = makeGearSpoilsStore();
     const lootBefore = store.getState().session.present.loot;
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     fireEvent.click(screen.getByTestId('spoils-sell-stat-tech-1'));
     expect(store.getState().session.present.loot).toBeGreaterThan(lootBefore);
   });
 
-  it('gear can still be assigned through the existing flow after another card is sold', () => {
+  it('gear can still be assigned after another card is sold', () => {
     // Add two gear items to earnedGear so we can sell one and assign the other
     const storage = makeStorage();
     const storeWith2Gear = createGameStore({ cfg: obstacleWithGearCfg, storage });
@@ -404,9 +461,12 @@ describe('Spoils — sell gear button', () => {
     }));
 
     render(
-      <StoreContext.Provider value={storeWith2Gear}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={storeWith2Gear}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
 
     // Sell the first card (stat-tech-1)
@@ -415,8 +475,8 @@ describe('Spoils — sell gear button', () => {
     // The remaining card (powerup-tech) should still be assignable
     expect(screen.getByTestId('spoils-gear-card-powerup-tech')).toBeInTheDocument();
     const bob = storeWith2Gear.getState().session.present.crew[1]!;
-    fireEvent.click(screen.getByTestId('spoils-gear-card-powerup-tech'));
-    fireEvent.click(screen.getByTestId(`spoils-assign-powerup-tech-${bob.id}`));
+    const select = screen.getByTestId('spoils-assign-powerup-tech');
+    fireEvent.change(select, { target: { value: bob.id } });
 
     const lastEvent = storeWith2Gear.getState().eventLog.at(-1);
     expect(lastEvent?.t).toBe('ASSIGN_GEAR');
@@ -428,9 +488,12 @@ describe('Spoils — sell gear button', () => {
     const gearCountBefore = store.getState().session.present.earnedGear.length;
 
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
 
     fireEvent.click(screen.getByTestId('spoils-sell-stat-tech-1'));
@@ -560,9 +623,12 @@ describe('Spoils — scenario reveal narration', () => {
       narration: makeScenarioNarrationFixture(),
     });
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     expect(screen.getByTestId('outcome-quip')).toBeInTheDocument();
   });
@@ -573,9 +639,12 @@ describe('Spoils — scenario reveal narration', () => {
       narration: makeScenarioNarrationFixture(),
     });
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     const line = screen.getByTestId('teleprompter-line').textContent ?? '';
     expect(line).toContain('Scenario clean reveal');
@@ -587,9 +656,12 @@ describe('Spoils — scenario reveal narration', () => {
       narration: makeScenarioNarrationFixture(),
     });
     render(
-      <StoreContext.Provider value={store}>
-        <Spoils />
-      </StoreContext.Provider>,
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
     );
     const line = screen.getByTestId('teleprompter-line').textContent ?? '';
     expect(line).toContain('Scenario complication reveal');
