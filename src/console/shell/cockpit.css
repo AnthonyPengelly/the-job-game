@@ -452,6 +452,8 @@
   backdrop-filter: blur(4px);
 }
 .cockpit-scrim.soft { background: rgba(4,6,7,.35); }
+/* For right-side drawers: don't cover the tools rail so Undo is always one tap */
+.cockpit-scrim.right-drawer { right: 88px; }
 
 /* Dialog — centred, blocking */
 .cockpit-dialog {
@@ -534,7 +536,7 @@
   overflow: hidden;
 }
 .cockpit-drawer.right {
-  right: 0;
+  right: 88px; /* stop at left edge of tools rail so Undo is always reachable */
   border-left: 1px solid var(--border-strong);
 }
 .cockpit-drawer.left {

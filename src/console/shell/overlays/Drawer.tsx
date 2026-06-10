@@ -59,9 +59,9 @@ export function Drawer({
 
   return (
     <>
-      {/* Soft scrim — stage stays visible */}
+      {/* Soft scrim — stage stays visible; right drawers exclude the tools rail */}
       <div
-        className="cockpit-scrim soft"
+        className={`cockpit-scrim soft${side === 'right' ? ' right-drawer' : ''}`}
         onClick={onClose}
         data-testid="cockpit-scrim"
         aria-hidden="true"
