@@ -183,7 +183,7 @@ describe('ScenarioRoom screen', () => {
     expect(screen.queryByTestId('btn-confirm')).toBeNull();
   });
 
-  it('choosing a choice transitions to stage two and reveals the picked label', () => {
+  it('choosing a choice transitions to confirm stage and reveals the picked label', () => {
     const { store } = renderScenarioRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'scenario') throw new Error('Expected scenario room');
@@ -195,7 +195,7 @@ describe('ScenarioRoom screen', () => {
     expect(screen.getByTestId('confirmed-label')).toHaveTextContent(choice.label);
   });
 
-  it('stage two shows a confirm button and no raw choice buttons', () => {
+  it('confirm stage shows a commit button and no raw choice buttons', () => {
     const { store } = renderScenarioRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'scenario') throw new Error('Expected scenario room');
@@ -203,12 +203,28 @@ describe('ScenarioRoom screen', () => {
     fireEvent.click(screen.getByTestId(`btn-choice-${room.choices[0].id}`));
 
     expect(screen.getByTestId('btn-confirm')).toBeInTheDocument();
-    // Original choice buttons are gone from stage two
+    // Original choice buttons are gone from confirm stage
     expect(screen.queryByTestId(`btn-choice-${room.choices[0].id}`)).toBeNull();
     expect(screen.queryByTestId(`btn-choice-${room.choices[1].id}`)).toBeNull();
   });
 
-  it('confirming dispatches CHOOSE_SCENARIO and advances the engine to offer', () => {
+  it('committing reveals the effect panel (04e) without dispatching CHOOSE_SCENARIO', () => {
+    const { store } = renderScenarioRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'scenario') throw new Error('Expected scenario room');
+    const choice = room.choices[0];
+    const histLenBefore = store.getState().session.present.history.length;
+
+    fireEvent.click(screen.getByTestId(`btn-choice-${choice.id}`));
+    fireEvent.click(screen.getByTestId('btn-confirm'));
+
+    // Effect panel appears, no new history entry yet (CHOOSE_SCENARIO not dispatched)
+    expect(screen.getByTestId('effect-reveal')).toBeInTheDocument();
+    expect(store.getState().session.present.history.length).toBe(histLenBefore);
+    expect(store.getState().session.present.phase).not.toBe('offer');
+  });
+
+  it('continuing from effect panel dispatches CHOOSE_SCENARIO and advances to offer', () => {
     const { store } = renderScenarioRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'scenario') throw new Error('Expected scenario room');
@@ -216,11 +232,12 @@ describe('ScenarioRoom screen', () => {
 
     fireEvent.click(screen.getByTestId(`btn-choice-${choice.id}`));
     fireEvent.click(screen.getByTestId('btn-confirm'));
+    fireEvent.click(screen.getByTestId('btn-continue-effect'));
 
     expect(store.getState().session.present.phase).toBe('offer');
   });
 
-  it('confirming records the correct choiceId in the run history', () => {
+  it('effect reveal records the correct choiceId in the run history', () => {
     const { store } = renderScenarioRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'scenario') throw new Error('Expected scenario room');
@@ -228,6 +245,7 @@ describe('ScenarioRoom screen', () => {
 
     fireEvent.click(screen.getByTestId(`btn-choice-${choice.id}`));
     fireEvent.click(screen.getByTestId('btn-confirm'));
+    fireEvent.click(screen.getByTestId('btn-continue-effect'));
 
     const state = store.getState().session.present;
     const lastResult = state.history[state.history.length - 1];
@@ -237,7 +255,7 @@ describe('ScenarioRoom screen', () => {
     }
   });
 
-  it('confirming reflects the engine heat/loot change in the store', () => {
+  it('effect reveal reflects the engine heat/loot change after continue', () => {
     const { store } = renderScenarioRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'scenario') throw new Error('Expected scenario room');
@@ -248,6 +266,7 @@ describe('ScenarioRoom screen', () => {
 
     fireEvent.click(screen.getByTestId(`btn-choice-${choice.id}`));
     fireEvent.click(screen.getByTestId('btn-confirm'));
+    fireEvent.click(screen.getByTestId('btn-continue-effect'));
 
     const state = store.getState().session.present;
     const lastResult = state.history[state.history.length - 1];
@@ -258,7 +277,7 @@ describe('ScenarioRoom screen', () => {
     expect(state.loot).toBe(lootBefore + lastResult.lootGained);
   });
 
-  it('second choice also correctly dispatches CHOOSE_SCENARIO', () => {
+  it('second choice also correctly dispatches CHOOSE_SCENARIO via effect reveal', () => {
     const { store } = renderScenarioRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'scenario') throw new Error('Expected scenario room');
@@ -266,6 +285,7 @@ describe('ScenarioRoom screen', () => {
 
     fireEvent.click(screen.getByTestId(`btn-choice-${choice.id}`));
     fireEvent.click(screen.getByTestId('btn-confirm'));
+    fireEvent.click(screen.getByTestId('btn-continue-effect'));
 
     const state = store.getState().session.present;
     expect(state.phase).toBe('offer');
@@ -333,6 +353,21 @@ describe('ScenarioRoom stage one (opaque) — roll scenario', () => {
     expect(screen.queryByTestId('reveal-dc')).toBeNull();
     expect(screen.queryByTestId('reveal-odds')).toBeNull();
   });
+
+  it('shows blind A/B letter badges on choice cards', () => {
+    renderRollRoom();
+    // The A/B cards are inside the btn-choice containers
+    const cardA = screen.getByTestId('btn-choice-sr-roll');
+    const cardB = screen.getByTestId('btn-choice-sr-effect');
+    expect(cardA).toHaveTextContent('A');
+    expect(cardB).toHaveTextContent('B');
+  });
+
+  it('shows hidden-foot on each choice card', () => {
+    renderRollRoom();
+    expect(screen.getByTestId('choice-foot-sr-roll')).toHaveTextContent('Outcome hidden · may need a roll');
+    expect(screen.getByTestId('choice-foot-sr-effect')).toHaveTextContent('Outcome hidden · no roll');
+  });
 });
 
 // ── Attempter picker (stage 1b) ───────────────────────────────────────────────
@@ -392,9 +427,9 @@ describe('ScenarioRoom attempter picker — roll choice', () => {
   });
 });
 
-// ── Stage two (transparent): DC and odds reveal ───────────────────────────────
+// ── Stage two (transparent): DC derivation and odds reveal ────────────────────
 
-describe('ScenarioRoom stage two — DC and odds reveal', () => {
+describe('ScenarioRoom stage two — DC derivation and odds reveal', () => {
   it('revealed DC equals clamp(baseDifficulty − laneRating, 1, 20)', () => {
     const { store } = renderRollRoom();
     advanceToRollReveal(store);
@@ -403,21 +438,43 @@ describe('ScenarioRoom stage two — DC and odds reveal', () => {
     expect(screen.getByTestId('reveal-dc')).toHaveTextContent('13');
   });
 
-  it('revealed odds equal (21 − DC) / 20', () => {
+  it('revealed odds show "need N+" format (not raw decimal)', () => {
     const { store } = renderRollRoom();
     advanceToRollReveal(store);
 
-    // DC=13 → odds = (21−13)/20 = 8/20 = 0.4
-    expect(screen.getByTestId('reveal-odds')).toHaveTextContent('0.4');
+    // DC=13 → "need 13+"
+    expect(screen.getByTestId('reveal-odds')).toHaveTextContent('need 13+');
   });
 
-  it('shows lane and rating in the reveal', () => {
+  it('revealed odds percentage equals (21 − DC) / 20 * 100', () => {
+    const { store } = renderRollRoom();
+    advanceToRollReveal(store);
+
+    // DC=13 → (21-13)/20 = 40%
+    expect(screen.getByTestId('reveal-odds-pct')).toHaveTextContent('40%');
+  });
+
+  it('shows lane and rating in the derivation row', () => {
     const { store } = renderRollRoom();
     advanceToRollReveal(store);
 
     expect(screen.getByTestId('reveal-lane')).toHaveTextContent('charm');
     // Alice has charm=0
     expect(screen.getByTestId('reveal-rating')).toHaveTextContent('0');
+  });
+
+  it('shows base difficulty in the derivation row', () => {
+    const { store } = renderRollRoom();
+    advanceToRollReveal(store);
+
+    expect(screen.getByTestId('reveal-base-difficulty')).toHaveTextContent('13');
+  });
+
+  it('derivation row is present in the roll reveal', () => {
+    const { store } = renderRollRoom();
+    advanceToRollReveal(store);
+
+    expect(screen.getByTestId('reveal-derivation')).toBeInTheDocument();
   });
 
   it('choice buttons are not shown in stage two', () => {
@@ -428,7 +485,7 @@ describe('ScenarioRoom stage two — DC and odds reveal', () => {
     expect(screen.queryByTestId('btn-choice-sr-effect')).toBeNull();
   });
 
-  it('DC with boosted stat: baseDifficulty=13, stat=3 → DC=10', () => {
+  it('DC with boosted stat: baseDifficulty=13, stat=3 → DC=10, need 10+', () => {
     const store = makeRollStore(42);
     // Boost Alice's charm to 3
     const alice = store.getState().session.present.crew[0]!;
@@ -446,8 +503,10 @@ describe('ScenarioRoom stage two — DC and odds reveal', () => {
     advanceToRollReveal(store);
     // DC = clamp(13-3, 1, 20) = 10
     expect(screen.getByTestId('reveal-dc')).toHaveTextContent('10');
-    // odds = (21-10)/20 = 0.55
-    expect(screen.getByTestId('reveal-odds')).toHaveTextContent('0.55');
+    // odds label = "need 10+"
+    expect(screen.getByTestId('reveal-odds')).toHaveTextContent('need 10+');
+    // odds % = (21-10)/20 = 55%
+    expect(screen.getByTestId('reveal-odds-pct')).toHaveTextContent('55%');
   });
 });
 
@@ -468,8 +527,8 @@ describe('ScenarioRoom app mode roll', () => {
 
     fireEvent.click(screen.getByTestId('btn-roll'));
 
-    // RESOLVE_SCENARIO_ROLL now stays in room phase with resolvedRoll set;
-    // ACK_SCENARIO_ROLL (dispatched by the Continue CTA in E19.5) advances to offer.
+    // RESOLVE_SCENARIO_ROLL stays in room phase with resolvedRoll set;
+    // ACK_SCENARIO_ROLL (dispatched by the Continue CTA) advances to offer.
     expect(store.getState().session.present.phase).toBe('room');
     const room = store.getState().session.present.currentRoom;
     expect(room?.kind).toBe('scenario');
@@ -518,6 +577,46 @@ describe('ScenarioRoom app mode roll', () => {
     expect(typeof hist.roll).toBe('number');
     expect(hist.dc).toBe(13);
     expect(typeof hist.success).toBe('boolean');
+  });
+
+  it('after Roll, shows the roll result panel with d20 value, outcome, loot, heat', () => {
+    const { store } = renderRollRoom(42, false);
+    advanceToRollReveal(store);
+
+    fireEvent.click(screen.getByTestId('btn-roll'));
+
+    expect(screen.getByTestId('roll-result')).toBeInTheDocument();
+    // Roll reveal panel is replaced by result panel
+    expect(screen.queryByTestId('btn-roll')).toBeNull();
+
+    const hist = store.getState().session.present.history.at(-1);
+    if (hist?.kind !== 'scenario') throw new Error('Expected scenario result');
+
+    expect(screen.getByTestId('result-roll-value')).toHaveTextContent(String(hist.roll));
+    expect(screen.getByTestId('result-outcome')).toBeInTheDocument();
+    expect(screen.getByTestId('result-loot')).toBeInTheDocument();
+    expect(screen.getByTestId('result-heat')).toBeInTheDocument();
+  });
+
+  it('result outcome label matches the engine verdict', () => {
+    const { store } = renderRollRoom(42, false);
+    advanceToRollReveal(store);
+    fireEvent.click(screen.getByTestId('btn-roll'));
+
+    const hist = store.getState().session.present.history.at(-1);
+    if (hist?.kind !== 'scenario') throw new Error('Expected scenario result');
+    const expectedLabel = hist.success ? 'Clean' : 'Complication';
+    expect(screen.getByTestId('result-outcome')).toHaveTextContent(expectedLabel);
+  });
+
+  it('Continue CTA in roll result panel dispatches ACK_SCENARIO_ROLL and advances to offer', () => {
+    const { store } = renderRollRoom(42, false);
+    advanceToRollReveal(store);
+    fireEvent.click(screen.getByTestId('btn-roll'));
+
+    expect(store.getState().session.present.phase).toBe('room');
+    fireEvent.click(screen.getByTestId('btn-continue'));
+    expect(store.getState().session.present.phase).toBe('offer');
   });
 });
 
@@ -622,6 +721,18 @@ describe('ScenarioRoom physical mode roll', () => {
       expect(room.resolvedRoll).toBeUndefined();
     }
   });
+
+  it('after submit, shows roll result panel and Continue dispatches ACK_SCENARIO_ROLL', () => {
+    const { store } = renderRollRoom(42, true);
+    advanceToRollReveal(store);
+
+    fireEvent.change(screen.getByTestId('input-physical-roll'), { target: { value: '15' } });
+    fireEvent.click(screen.getByTestId('btn-submit-physical'));
+
+    expect(screen.getByTestId('roll-result')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('btn-continue'));
+    expect(store.getState().session.present.phase).toBe('offer');
+  });
 });
 
 // ── Dice mode switching ───────────────────────────────────────────────────────
@@ -658,9 +769,9 @@ describe('ScenarioRoom dice mode switching', () => {
   });
 });
 
-// ── No-roll choice resolves directly ─────────────────────────────────────────
+// ── No-roll choice resolves via effect reveal ─────────────────────────────────
 
-describe('ScenarioRoom no-roll choice resolves directly', () => {
+describe('ScenarioRoom no-roll choice via effect reveal', () => {
   it('clicking the no-roll choice shows confirmation (no attempter picker, no roll reveal)', () => {
     renderRollRoom();
     fireEvent.click(screen.getByTestId('btn-choice-sr-effect'));
@@ -671,10 +782,31 @@ describe('ScenarioRoom no-roll choice resolves directly', () => {
     expect(screen.queryByTestId('roll-reveal')).toBeNull();
   });
 
-  it('confirming a no-roll choice dispatches CHOOSE_SCENARIO and advances to offer', () => {
+  it('committing shows the 04e effect reveal panel without dispatching yet', () => {
+    renderRollRoom();
+    fireEvent.click(screen.getByTestId('btn-choice-sr-effect'));
+    fireEvent.click(screen.getByTestId('btn-confirm'));
+
+    expect(screen.getByTestId('effect-reveal')).toBeInTheDocument();
+    // No Back button on 04e (no peek-and-switch)
+    expect(screen.queryByTestId('btn-back')).toBeNull();
+  });
+
+  it('effect reveal shows effect consequence readouts', () => {
+    renderRollRoom();
+    fireEvent.click(screen.getByTestId('btn-choice-sr-effect'));
+    fireEvent.click(screen.getByTestId('btn-confirm'));
+
+    // sr-effect has heatDelta:0, lootDelta:0
+    expect(screen.getByTestId('effect-loot')).toBeInTheDocument();
+    expect(screen.getByTestId('effect-heat')).toBeInTheDocument();
+  });
+
+  it('continuing from 04e dispatches CHOOSE_SCENARIO and advances to offer', () => {
     const { store } = renderRollRoom();
     fireEvent.click(screen.getByTestId('btn-choice-sr-effect'));
     fireEvent.click(screen.getByTestId('btn-confirm'));
+    fireEvent.click(screen.getByTestId('btn-continue-effect'));
 
     expect(store.getState().session.present.phase).toBe('offer');
     const hist = store.getState().session.present.history.at(-1);
