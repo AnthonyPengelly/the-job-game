@@ -534,9 +534,12 @@ nothing; the action bar covering the bottom of the stage; crew cards not matchin
   Room.html`. The same rail is the **attempter-picker** for scenario rolls (`4 - Scenario Room.html`).
   (Full-team games from E18 skip this and send the whole crew.)
 - **Dramatic, honest roll reveal.** Rebuild the scenario roll (`src/console/screens/ScenarioRoom.tsx`
-  `RollReveal`) to `4 - Scenario Room.html`: show the full maths (lane · attempter rating · base DC ·
-  needed · odds bar) **before** the roll, then **roll with drama** and **show the actual d20 value**,
-  the total vs DC, the **clean/complication/botched result**, and **exactly what was gained** (Loot via
+  `RollReveal`) to `4 - Scenario Room.html`: show the full maths as a **DC-derivation row** (base
+  difficulty − attempter rating + heat → DC, all four §10.3 items) plus a **`d20 vs DC` / "need N+"**
+  comparison row and odds bar **before** the roll, then **roll with drama** and **show the actual d20
+  value**, the **raw roll vs DC** result, the **clean/complication/botched result** (matching the engine
+  verdict in every Heat state — never double-count the lane rating into the comparison), and **exactly
+  what was gained** (Loot via
   the E14 formatter, Heat, Gear). Kill the cryptic `lootgained2` text and **verify the Loot is actually
   applied** (`src/engine/reduce.ts` RESOLVE_SCENARIO_ROLL ~167-220 grants it but it was never revealed,
   and some choices may have `lootDelta:0` — surface the real outcome and confirm the grant).
