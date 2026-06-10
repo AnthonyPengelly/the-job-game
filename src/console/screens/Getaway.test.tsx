@@ -110,6 +110,25 @@ function makeGetawayStoreAtHeat(heat: number) {
   return store;
 }
 
+/**
+ * Advance store to getaway and grant `skips` power-ups to the first crew member.
+ * Used for tests that exercise the skip-card mechanic.
+ */
+function makeGetawayStoreWithSkips(skips: number) {
+  const store = makeGetawayStore();
+  const crew = store.getState().session.present.crew;
+  const lanes = ['tech', 'physical', 'charm', 'stealth'] as const;
+  for (let i = 0; i < skips && i < lanes.length; i++) {
+    store.getState().dispatch({
+      t: 'OVERRIDE_SET_POWERUP',
+      player: crew[0]!.id,
+      lane: lanes[i]!,
+      held: true,
+    });
+  }
+  return store;
+}
+
 function renderGetaway(store = makeGetawayStore()) {
   render(
     <ActionBarSlotProvider>
@@ -143,9 +162,9 @@ describe('Getaway screen', () => {
     expect(screen.getByTestId('cards-cleared').textContent).toContain('0');
   });
 
-  it('shows clue-giver starting with first crew member', () => {
+  it('shows Reading clues column with "Round the table" text', () => {
     renderGetaway();
-    expect(screen.getByTestId('clue-giver').textContent).toBe('Alice');
+    expect(screen.getByTestId('clue-giver').textContent).toBe('Round the table');
   });
 
   it('shows timer display with initial seconds from brief', () => {
@@ -167,11 +186,12 @@ describe('Getaway screen', () => {
     expect(screen.getByTestId('btn-force-bust')).toBeInTheDocument();
   });
 
-  it('renders the round bar with target/cleared/clue-giver cells', () => {
+  it('renders the round bar with four columns: target/cleared/skips-left/clue-giver', () => {
     renderGetaway();
     expect(screen.getByTestId('getaway-roundbar')).toBeInTheDocument();
     expect(screen.getByTestId('target-cards')).toBeInTheDocument();
     expect(screen.getByTestId('cards-cleared')).toBeInTheDocument();
+    expect(screen.getByTestId('skips-left')).toBeInTheDocument();
     expect(screen.getByTestId('clue-giver')).toBeInTheDocument();
   });
 });
@@ -363,11 +383,17 @@ describe('Getaway round actions', () => {
     expect(screen.getByTestId('cards-cleared').textContent).toContain('1');
   });
 
-  it('cleared advances clue-giver to next crew member', () => {
-    renderGetaway();
-    expect(screen.getByTestId('clue-giver').textContent).toBe('Alice');
+  it('cleared advances clue-giver (reflected in next published slice)', () => {
+    const publishedSlices: PlayerViewSlice[] = [];
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation((s: PlayerViewSlice) => {
+      publishedSlices.push(s);
+    });
+    const store = renderGetaway();
+    publishedSlices.length = 0;
     fireEvent.click(screen.getByTestId('btn-cleared'));
-    expect(screen.getByTestId('clue-giver').textContent).toBe('Bob');
+    const last = publishedSlices.filter(s => s.kind === 'getaway').at(-1);
+    expect(last?.kind === 'getaway' && last.clueGiverIndex).toBe(1 % store.getState().session.present.crew.length);
+    vi.restoreAllMocks();
   });
 
   it('ditch dispatches GETAWAY_DITCH (drops Loot)', () => {
@@ -382,12 +408,19 @@ describe('Getaway round actions', () => {
   });
 
   it('ditch advances clue-giver without incrementing cards-cleared', () => {
+    const publishedSlices: PlayerViewSlice[] = [];
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation((s: PlayerViewSlice) => {
+      publishedSlices.push(s);
+    });
     renderGetaway();
     const beforeText = screen.getByTestId('cards-cleared').textContent ?? '';
     expect(beforeText).toContain('0');
+    publishedSlices.length = 0;
     fireEvent.click(screen.getByTestId('btn-ditch'));
-    expect(screen.getByTestId('clue-giver').textContent).toBe('Bob');
     expect(screen.getByTestId('cards-cleared').textContent).toContain('0');
+    const last = publishedSlices.filter(s => s.kind === 'getaway').at(-1);
+    expect(last?.kind === 'getaway' && last.clueGiverIndex).toBe(1);
+    vi.restoreAllMocks();
   });
 
   it('ditch is undoable via store undo', () => {
@@ -401,28 +434,97 @@ describe('Getaway round actions', () => {
     expect(store.getState().session.present.loot).toBe(lootBefore);
   });
 
-  it('skip card advances clue-giver without incrementing cards-cleared', () => {
-    renderGetaway();
-    expect(screen.getByTestId('clue-giver').textContent).toBe('Alice');
+  it('skip card (with power-up) advances clue-giver without incrementing cards-cleared', () => {
+    const publishedSlices: PlayerViewSlice[] = [];
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation((s: PlayerViewSlice) => {
+      publishedSlices.push(s);
+    });
+    const store = makeGetawayStoreWithSkips(1);
+    renderGetaway(store);
+    publishedSlices.length = 0;
     fireEvent.click(screen.getByTestId('btn-skip-card'));
-    expect(screen.getByTestId('clue-giver').textContent).toBe('Bob');
     expect(screen.getByTestId('cards-cleared').textContent).toContain('0');
+    const last = publishedSlices.filter(s => s.kind === 'getaway').at(-1);
+    expect(last?.kind === 'getaway' && last.clueGiverIndex).toBe(1);
+    vi.restoreAllMocks();
   });
 
   it('skip card dispatches no engine event (heat unchanged)', () => {
-    const store = renderGetaway();
+    const store = makeGetawayStoreWithSkips(1);
+    renderGetaway(store);
     const heatBefore = store.getState().session.present.heat;
     fireEvent.click(screen.getByTestId('btn-skip-card'));
     expect(store.getState().session.present.heat).toBe(heatBefore);
   });
 
-  it('clue-giver cycles back to first after last crew member', () => {
-    renderGetaway(); // Alice (idx 0), Bob (idx 1)
-    expect(screen.getByTestId('clue-giver').textContent).toBe('Alice'); // idx 0
-    fireEvent.click(screen.getByTestId('btn-cleared')); // idx → 1 (Bob)
-    expect(screen.getByTestId('clue-giver').textContent).toBe('Bob');
-    fireEvent.click(screen.getByTestId('btn-skip-card')); // idx → 2 % 2 = 0 (Alice)
-    expect(screen.getByTestId('clue-giver').textContent).toBe('Alice');
+  it('clue-giver cycles back to first after last crew member (via published slice)', () => {
+    const publishedSlices: PlayerViewSlice[] = [];
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation((s: PlayerViewSlice) => {
+      publishedSlices.push(s);
+    });
+    const store = makeGetawayStoreWithSkips(1);
+    renderGetaway(store); // Alice (idx 0), Bob (idx 1)
+    publishedSlices.length = 0;
+    fireEvent.click(screen.getByTestId('btn-cleared')); // idx → 1
+    fireEvent.click(screen.getByTestId('btn-skip-card')); // idx → 2 % 2 = 0
+    const last = publishedSlices.filter(s => s.kind === 'getaway').at(-1);
+    expect(last?.kind === 'getaway' && last.clueGiverIndex).toBe(0);
+    vi.restoreAllMocks();
+  });
+});
+
+// ── Power-up skips ─────────────────────────────────────────────────────────────
+
+describe('Getaway power-up skips', () => {
+  it('skips-left column shows 0 when crew has no power-ups', () => {
+    renderGetaway();
+    const el = screen.getByTestId('skips-left');
+    expect(el.textContent).toContain('0');
+  });
+
+  it('skips-left column shows count from crew power-ups', () => {
+    const store = makeGetawayStoreWithSkips(2);
+    renderGetaway(store);
+    const el = screen.getByTestId('skips-left');
+    expect(el.textContent).toContain('2');
+  });
+
+  it('skip button is disabled when no power-ups remain', () => {
+    renderGetaway();
+    const btn = screen.getByTestId('btn-skip-card');
+    expect(btn).toBeDisabled();
+  });
+
+  it('skip button is enabled when crew holds at least one power-up', () => {
+    const store = makeGetawayStoreWithSkips(1);
+    renderGetaway(store);
+    expect(screen.getByTestId('btn-skip-card')).not.toBeDisabled();
+  });
+
+  it('skip decrements skips-left and the button disables at zero', () => {
+    const store = makeGetawayStoreWithSkips(1);
+    renderGetaway(store);
+    expect(screen.getByTestId('skips-left').textContent).toContain('1');
+    fireEvent.click(screen.getByTestId('btn-skip-card'));
+    expect(screen.getByTestId('skips-left').textContent).toContain('0');
+    expect(screen.getByTestId('btn-skip-card')).toBeDisabled();
+  });
+
+  it('Cleared, Ditch and Force controls remain enabled when skip is exhausted (no dead-end)', () => {
+    renderGetaway(); // 0 power-ups → skip already disabled
+    expect(screen.getByTestId('btn-skip-card')).toBeDisabled();
+    expect(screen.getByTestId('btn-cleared')).not.toBeDisabled();
+    expect(screen.getByTestId('btn-ditch')).not.toBeDisabled();
+    expect(screen.getByTestId('btn-force-win')).not.toBeDisabled();
+    expect(screen.getByTestId('btn-force-bust')).not.toBeDisabled();
+  });
+
+  it('skip sub-label reads "N left · 1 per power-up"', () => {
+    const store = makeGetawayStoreWithSkips(3);
+    renderGetaway(store);
+    const btn = screen.getByTestId('btn-skip-card');
+    expect(btn.textContent).toContain('3 left');
+    expect(btn.textContent).toContain('1 per power-up');
   });
 });
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, Banknote, SkipForward, Play, Pause } from 'lucide-react';
+import { Check, Banknote, SkipForward, RotateCw, Play, Pause } from 'lucide-react';
 import { useGameStore } from '@/console/store';
 import { getawayBrief } from '@/engine';
 import { publishSlice } from '@/platform/channel';
@@ -54,6 +54,11 @@ export function Getaway() {
   const [secondsLeft, setSecondsLeft] = useState(brief.timerSeconds);
   const [timerActive, setTimerActive] = useState(false);
   const [clueGiverIndex, setClueGiverIndex] = useState(0);
+
+  // Starting skip count: one per power-up held across the whole crew (locked at mount).
+  const [skipsLeft, setSkipsLeft] = useState(() =>
+    crew.reduce((sum, p) => sum + Object.values(p.powerUps).filter(v => v === true).length, 0)
+  );
 
   // Guard against double-dispatch if both timer + clear race.
   const resolvedRef = useRef(false);
@@ -123,6 +128,8 @@ export function Getaway() {
 
   function handleSkipCard() {
     if (resolvedRef.current) return;
+    if (skipsLeft <= 0) return;
+    setSkipsLeft(s => Math.max(0, s - 1));
     setClueGiverIndex(i => i + 1);
   }
 
@@ -182,7 +189,7 @@ export function Getaway() {
 
       <div className="gaway">
 
-        {/* Round bar: target · cleared (with meter) · clue-giver */}
+        {/* Round bar: target · cleared (with meter) · skips left · reading clues */}
         <div className="roundbar" data-testid="getaway-roundbar">
           <div className="rc">
             <span className="k">Target</span>
@@ -200,10 +207,17 @@ export function Getaway() {
             </div>
           </div>
           <div className="rc">
-            <span className="k">Clue-giver</span>
-            <span className="v" data-testid="clue-giver">
-              {currentPlayer?.name ?? '—'}
+            <span className="k">Skips left</span>
+            <span className="v data" data-testid="skips-left">
+              {skipsLeft} <small>from power-ups</small>
             </span>
+          </div>
+          <div className="rc">
+            <span className="k">Reading clues</span>
+            <div className="who">
+              <RotateCw size={16} />
+              <span className="nm" data-testid="clue-giver">Round the table</span>
+            </div>
           </div>
         </div>
 
@@ -239,10 +253,11 @@ export function Getaway() {
             className="gctrl skip"
             data-testid="btn-skip-card"
             onClick={handleSkipCard}
+            disabled={skipsLeft <= 0}
           >
             <SkipForward />
             <span className="gl">Skip card</span>
-            <span className="gs">advance clue-giver</span>
+            <span className="gs">{skipsLeft} left · 1 per power-up</span>
           </button>
 
           <button
