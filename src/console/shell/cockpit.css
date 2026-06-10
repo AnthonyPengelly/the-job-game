@@ -429,6 +429,73 @@
   gap: 8px;
 }
 
+/* Cue row — phase-contextual quick-cue buttons in the centre of the action bar */
+.cues-label {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  flex: none;
+}
+
+.cue {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: .06em;
+  cursor: pointer;
+  transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+  white-space: nowrap;
+}
+
+.cue:hover:not(:disabled) {
+  background: var(--bg-panel-raised);
+  border-color: var(--border-strong);
+  color: var(--fg);
+}
+
+.cue.playing {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cue.missing {
+  opacity: .45;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.cue-icon {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.cue-label {
+  line-height: 1;
+}
+
+.cue-missing-badge {
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 1px 4px;
+  border-radius: var(--radius-xs);
+  background: var(--danger-tint, rgba(240,70,58,.15));
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  flex: none;
+}
+
 /* Supplementary note shown before the primary CTA (e.g. difficulty readout) */
 .cockpit-actionbar-note {
   font-family: var(--font-data);

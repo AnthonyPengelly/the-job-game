@@ -134,14 +134,19 @@ export function Soundboard({ fullBoard = false }: SoundboardProps): JSX.Element 
                 {cues.map(cue => {
                   const isActive = activeCues.has(cue.id);
                   const isLooping = cue.loop === true;
+                  const available = engine.isCueAvailable(cue.id);
                   return (
                     <button
                       key={cue.id}
                       data-testid={`btn-cue-${cue.id}`}
                       onClick={() => handleCueClick(cue.id, isLooping)}
+                      disabled={!available}
                       aria-pressed={isLooping ? isActive : undefined}
+                      data-missing={available ? undefined : true}
                     >
-                      {isLooping
+                      {!available
+                        ? `⚠ ${cue.id} (missing)`
+                        : isLooping
                         ? (isActive ? `■ ${cue.id}` : `▶ ${cue.id}`)
                         : `▶ ${cue.id}`}
                     </button>
