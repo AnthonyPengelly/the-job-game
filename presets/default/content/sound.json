@@ -31,6 +31,35 @@
       "phases": ["room", "minigame", "offer"]
     },
     {
+      "id": "sfx-tick",
+      "src": "sound/sfx-tick.wav",
+      "channel": "heistSfx",
+      "loop": true,
+      "gain": 0.85,
+      "phases": ["room", "minigame", "getaway"]
+    },
+    {
+      "id": "sfx-wiresnip",
+      "src": "sound/sfx-wiresnip.wav",
+      "channel": "heistSfx",
+      "gain": 1.0,
+      "phases": ["room", "minigame"]
+    },
+    {
+      "id": "sfx-chaching",
+      "src": "sound/sfx-chaching.wav",
+      "channel": "heistSfx",
+      "gain": 1.0,
+      "phases": ["room", "minigame", "offer", "getaway", "result"]
+    },
+    {
+      "id": "sfx-gear",
+      "src": "sound/sfx-gear.wav",
+      "channel": "heistSfx",
+      "gain": 0.9,
+      "phases": ["briefing", "room", "offer"]
+    },
+    {
       "id": "sting-win",
       "src": "sound/sting-win.wav",
       "channel": "sting",
@@ -45,6 +74,27 @@
       "phases": ["result"]
     },
     {
+      "id": "sting-clean",
+      "src": "sound/sting-clean.wav",
+      "channel": "sting",
+      "gain": 0.9,
+      "phases": ["room", "minigame", "offer"]
+    },
+    {
+      "id": "sting-complication",
+      "src": "sound/sting-complication.wav",
+      "channel": "sting",
+      "gain": 0.9,
+      "phases": ["room", "minigame", "offer"]
+    },
+    {
+      "id": "sting-botch",
+      "src": "sound/sting-botch.wav",
+      "channel": "sting",
+      "gain": 1.0,
+      "phases": ["room", "minigame", "offer"]
+    },
+    {
       "id": "danger-alarm",
       "src": "sound/danger-alarm.wav",
       "channel": "danger",
@@ -55,6 +105,21 @@
     {
       "id": "finale-escape",
       "src": "sound/finale-escape.wav",
+      "channel": "finale",
+      "gain": 1.0,
+      "phases": ["getaway"]
+    },
+    {
+      "id": "finale-engine",
+      "src": "sound/finale-engine.wav",
+      "channel": "finale",
+      "loop": true,
+      "gain": 0.8,
+      "phases": ["getaway"]
+    },
+    {
+      "id": "finale-tyres",
+      "src": "sound/finale-tyres.wav",
       "channel": "finale",
       "gain": 1.0,
       "phases": ["getaway"]
