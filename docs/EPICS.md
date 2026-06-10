@@ -540,6 +540,12 @@ nothing; the action bar covering the bottom of the stage; crew cards not matchin
   the E14 formatter, Heat, Gear). Kill the cryptic `lootgained2` text and **verify the Loot is actually
   applied** (`src/engine/reduce.ts` RESOLVE_SCENARIO_ROLL ~167-220 grants it but it was never revealed,
   and some choices may have `lootDelta:0` — surface the real outcome and confirm the grant).
+  **Blind gamble — reveal only after commit.** A Scenario's hidden effect stays concealed until the
+  crew commits the choice: blind A/B cards → commit → reveal (roll maths/roll/result, or the no-roll
+  effect panel) → Continue → Spoils. **Do not show the effect pre-commit and do not add any
+  "Back"/peek-then-switch affordance** — that breaks the gamble. The design docs
+  (`heist-game-design.md`, `the-job-app-design.md` §10.3) are authoritative here **over** the
+  `4 - Scenario Room.html` `04e` panel, which is the *post*-commit reveal screen, not a pre-commit peek.
 - **Spoils / Wrap-up.** Bring the stage up to `6 - Spoils.html`: outcome banner + sting, **Loot banked
   + run total**, the **gear-share panel** (per-card assign dropdown, lane-of-choice picker for
   lane-of-choice boosts, the E14 **sell-for-Loot** option), and the **rests-next-room** bar. Unassigned
