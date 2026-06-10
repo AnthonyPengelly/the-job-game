@@ -5,6 +5,7 @@ import { getawayBrief } from '@/engine';
 import { publishSlice } from '@/platform/channel';
 import { Teleprompter } from '@/console/teleprompter';
 import { ActionBar, Button } from '@/console/ui';
+import { useAudio } from '@/console/audio';
 
 /**
  * Getaway referee screen — decluttered hero-clock layout.
@@ -63,6 +64,14 @@ export function Getaway() {
   // Guard against double-dispatch if both timer + clear race.
   const resolvedRef = useRef(false);
 
+  // Audio — null when no AudioProvider present (headless/tests).
+  const audio = useAudio();
+  // Stable ref so cleanup effects can reach the latest handle without stale closure.
+  const audioRef = useRef(audio);
+  audioRef.current = audio;
+  // Track whether the tick loop is currently playing so we don't restart on every render.
+  const tickPlayingRef = useRef(false);
+
   // ── Crew helpers ─────────────────────────────────────────────────────────────
 
   const currentClueGiverIdx = clueGiverIndex % crew.length;
@@ -88,6 +97,48 @@ export function Getaway() {
     };
   }, []);
 
+  // ── Audio: stop all looping getaway cues on unmount ──────────────────────────
+
+  useEffect(() => {
+    return () => {
+      const a = audioRef.current;
+      if (!a) return;
+      a.engine.stop('sfx-tick');
+      a.engine.stop('finale-engine');
+      a.engine.setChannelGain('heistSfx', 1.0);
+    };
+  }, []); // audioRef is stable — safe to omit from deps
+
+  // ── Audio: start/stop tick and engine cue with timerActive ───────────────────
+
+  useEffect(() => {
+    if (!audio) return;
+    if (timerActive) {
+      // Start cue fires every time the timer goes active (fresh engine roar on resume too).
+      audio.engine.play('finale-engine');
+      if (!tickPlayingRef.current) {
+        audio.engine.play('sfx-tick');
+        tickPlayingRef.current = true;
+      }
+    } else {
+      // Timer paused or not yet started — stop looping cues.
+      if (tickPlayingRef.current) {
+        audio.engine.stop('sfx-tick');
+        tickPlayingRef.current = false;
+      }
+      audio.engine.stop('finale-engine');
+      audio.engine.setChannelGain('heistSfx', 1.0);
+    }
+  }, [audio, timerActive]);
+
+  // ── Audio: tighten tick intensity at near-bust ────────────────────────────────
+
+  useEffect(() => {
+    if (!audio || !timerActive) return;
+    // Raise heistSfx channel gain at near-bust (≤15 s) to make the tick more urgent.
+    audio.engine.setChannelGain('heistSfx', secondsLeft <= 15 ? 1.4 : 1.0);
+  }, [audio, timerActive, secondsLeft]);
+
   // ── Countdown timer ──────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -96,6 +147,10 @@ export function Getaway() {
       if (!resolvedRef.current) {
         resolvedRef.current = true;
         setTimerActive(false);
+        audio?.engine.stop('sfx-tick');
+        audio?.engine.stop('finale-engine');
+        audio?.engine.setChannelGain('heistSfx', 1.0);
+        audio?.engine.play('sting-bust');
         dispatch({ t: 'RESOLVE_GETAWAY', win: false });
       }
       return;
@@ -104,7 +159,7 @@ export function Getaway() {
       setSecondsLeft(s => s - 1);
     }, 1000);
     return () => clearTimeout(id);
-  }, [timerActive, secondsLeft, dispatch]);
+  }, [timerActive, secondsLeft, dispatch, audio]);
 
   // ── Action handlers ──────────────────────────────────────────────────────────
 
@@ -116,6 +171,10 @@ export function Getaway() {
     if (next >= brief.targetCards) {
       resolvedRef.current = true;
       setTimerActive(false);
+      audio?.engine.stop('sfx-tick');
+      audio?.engine.stop('finale-engine');
+      audio?.engine.setChannelGain('heistSfx', 1.0);
+      audio?.engine.play('sting-win');
       dispatch({ t: 'RESOLVE_GETAWAY', win: true });
     }
   }
@@ -137,6 +196,10 @@ export function Getaway() {
     if (resolvedRef.current) return;
     resolvedRef.current = true;
     setTimerActive(false);
+    audio?.engine.stop('sfx-tick');
+    audio?.engine.stop('finale-engine');
+    audio?.engine.setChannelGain('heistSfx', 1.0);
+    audio?.engine.play('sting-win');
     dispatch({ t: 'RESOLVE_GETAWAY', win: true });
   }
 
@@ -144,6 +207,10 @@ export function Getaway() {
     if (resolvedRef.current) return;
     resolvedRef.current = true;
     setTimerActive(false);
+    audio?.engine.stop('sfx-tick');
+    audio?.engine.stop('finale-engine');
+    audio?.engine.setChannelGain('heistSfx', 1.0);
+    audio?.engine.play('sting-bust');
     dispatch({ t: 'RESOLVE_GETAWAY', win: false });
   }
 

@@ -5,11 +5,18 @@ import { StoreContext, createGameStore } from '@/console/store';
 import { testCfg } from '@/engine/test-config';
 import { getawayBrief } from '@/engine';
 import type { StorageLike } from '@/platform';
+import type { AudioEngine } from '@/platform';
 import type { PlayerViewSlice } from '@/platform/channel';
 import type { ParsedNarration } from '@/content/schema';
 import * as channelModule from '@/platform/channel';
 import { ActionBarSlotProvider, ActionBarSlotOutlet } from '@/console/shell/actionBarSlot';
+import { AudioHandleContext } from '@/console/audio';
+import type { AudioHandle } from '@/console/audio';
+import soundJson from '../../../presets/default/content/sound.json';
+import { soundManifestSchema } from '@/content/schema';
 import { Getaway } from './Getaway';
+
+const manifest = soundManifestSchema.parse(soundJson);
 
 afterEach(() => {
   cleanup();
@@ -822,5 +829,248 @@ describe('Getaway screen — narration', () => {
     );
     expect(screen.queryByTestId('getaway-intro-narration')).toBeNull();
     expect(screen.queryByTestId('getaway-countdown-narration')).toBeNull();
+  });
+});
+
+// ── Audio: Getaway audio cues ─────────────────────────────────────────────────
+
+function makeMockEngine(): AudioEngine {
+  return {
+    preload: vi.fn().mockResolvedValue(undefined),
+    resume: vi.fn().mockResolvedValue(undefined),
+    play: vi.fn(),
+    stop: vi.fn(),
+    setChannelGain: vi.fn(),
+    setMasterGain: vi.fn(),
+    mute: vi.fn(),
+    setAmbient: vi.fn(),
+    scheduleBeep: vi.fn(),
+    isCueAvailable: vi.fn().mockReturnValue(true),
+    clock: {
+      now: vi.fn().mockReturnValue(0),
+      scheduleAt: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn(),
+    },
+    get loaded() { return false; },
+  };
+}
+
+function renderGetawayWithAudio(store = makeGetawayStore(), engine = makeMockEngine()) {
+  const handle: AudioHandle = { engine, manifest };
+  render(
+    <ActionBarSlotProvider>
+      <ActionBarSlotOutlet />
+      <AudioHandleContext.Provider value={handle}>
+        <StoreContext.Provider value={store}>
+          <Getaway />
+        </StoreContext.Provider>
+      </AudioHandleContext.Provider>
+    </ActionBarSlotProvider>,
+  );
+  return { store, engine };
+}
+
+describe('Getaway audio — start cue', () => {
+  beforeEach(() => {
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('plays finale-engine when START is pressed', () => {
+    const { engine } = renderGetawayWithAudio();
+    const play = engine.play as ReturnType<typeof vi.fn>;
+    play.mockClear();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer'));
+    expect(play).toHaveBeenCalledWith('finale-engine');
+  });
+
+  it('plays sfx-tick when START is pressed', () => {
+    const { engine } = renderGetawayWithAudio();
+    const play = engine.play as ReturnType<typeof vi.fn>;
+    play.mockClear();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer'));
+    expect(play).toHaveBeenCalledWith('sfx-tick');
+  });
+
+  it('does not play start cues before START is pressed', () => {
+    const { engine } = renderGetawayWithAudio();
+    const play = engine.play as ReturnType<typeof vi.fn>;
+    play.mockClear();
+    // No action — timer not yet started
+    expect(play).not.toHaveBeenCalledWith('finale-engine');
+    expect(play).not.toHaveBeenCalledWith('sfx-tick');
+  });
+});
+
+describe('Getaway audio — ticking control', () => {
+  beforeEach(() => {
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('stops sfx-tick when timer is paused', () => {
+    const { engine } = renderGetawayWithAudio();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer')); // start
+    (engine.stop as ReturnType<typeof vi.fn>).mockClear();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer')); // pause
+    expect(engine.stop).toHaveBeenCalledWith('sfx-tick');
+  });
+
+  it('stops finale-engine when timer is paused', () => {
+    const { engine } = renderGetawayWithAudio();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer')); // start
+    (engine.stop as ReturnType<typeof vi.fn>).mockClear();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer')); // pause
+    expect(engine.stop).toHaveBeenCalledWith('finale-engine');
+  });
+
+  it('resets heistSfx channel gain to 1.0 when timer pauses', () => {
+    const { engine } = renderGetawayWithAudio();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer')); // start
+    (engine.setChannelGain as ReturnType<typeof vi.fn>).mockClear();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer')); // pause
+    expect(engine.setChannelGain).toHaveBeenCalledWith('heistSfx', 1.0);
+  });
+
+  it('raises heistSfx channel gain at near-bust (≤15 s)', () => {
+    vi.useFakeTimers();
+    const store = makeGetawayStoreWithCfg(shortTimerCfg); // timerSeconds=3
+    const { engine } = renderGetawayWithAudio(store);
+
+    fireEvent.click(screen.getByTestId('btn-toggle-timer')); // start
+    (engine.setChannelGain as ReturnType<typeof vi.fn>).mockClear();
+
+    // With shortTimerCfg (3 s), all seconds qualify as ≤15 — intensity is already raised.
+    // Tick 1 second to confirm the channel gain is above 1.0.
+    act(() => { vi.advanceTimersByTime(1000); });
+
+    const calls = (engine.setChannelGain as ReturnType<typeof vi.fn>).mock.calls
+      .filter((c: unknown[]) => c[0] === 'heistSfx');
+    expect(calls.some((c: unknown[]) => (c[1] as number) > 1.0)).toBe(true);
+    vi.useRealTimers();
+  });
+});
+
+describe('Getaway audio — win sting', () => {
+  beforeEach(() => {
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('plays sting-win when cards are cleared to target', () => {
+    const store = makeGetawayStore();
+    const brief = getawayBrief(
+      store.getState().session.present.heat,
+      store.getState().cfg,
+    );
+    const { engine } = renderGetawayWithAudio(store);
+    (engine.play as ReturnType<typeof vi.fn>).mockClear();
+    for (let i = 0; i < brief.targetCards; i++) {
+      fireEvent.click(screen.getByTestId('btn-cleared'));
+    }
+    expect(engine.play).toHaveBeenCalledWith('sting-win');
+    expect(engine.play).not.toHaveBeenCalledWith('sting-bust');
+  });
+
+  it('plays sting-win on Force win', () => {
+    const { engine } = renderGetawayWithAudio();
+    (engine.play as ReturnType<typeof vi.fn>).mockClear();
+    fireEvent.click(screen.getByTestId('btn-force-win'));
+    expect(engine.play).toHaveBeenCalledWith('sting-win');
+    expect(engine.play).not.toHaveBeenCalledWith('sting-bust');
+  });
+
+  it('stops looping cues before playing sting-win', () => {
+    const { engine } = renderGetawayWithAudio();
+    fireEvent.click(screen.getByTestId('btn-toggle-timer')); // start tick/engine
+    const callOrder: string[] = [];
+    (engine.stop as ReturnType<typeof vi.fn>).mockImplementation((id: string) => callOrder.push(`stop:${id}`));
+    (engine.play as ReturnType<typeof vi.fn>).mockImplementation((id: string) => callOrder.push(`play:${id}`));
+    fireEvent.click(screen.getByTestId('btn-force-win'));
+    const stingIdx = callOrder.indexOf('play:sting-win');
+    const stopTickIdx = callOrder.indexOf('stop:sfx-tick');
+    expect(stingIdx).toBeGreaterThan(-1);
+    expect(stopTickIdx).toBeGreaterThan(-1);
+    expect(stopTickIdx).toBeLessThan(stingIdx);
+  });
+});
+
+describe('Getaway audio — bust sting', () => {
+  beforeEach(() => {
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('plays sting-bust on Force bust', () => {
+    const { engine } = renderGetawayWithAudio();
+    (engine.play as ReturnType<typeof vi.fn>).mockClear();
+    fireEvent.click(screen.getByTestId('btn-force-bust'));
+    expect(engine.play).toHaveBeenCalledWith('sting-bust');
+    expect(engine.play).not.toHaveBeenCalledWith('sting-win');
+  });
+
+  it('plays sting-bust on timer expiry', () => {
+    vi.useFakeTimers();
+    const store = makeGetawayStoreWithCfg(shortTimerCfg);
+    const brief = getawayBrief(
+      store.getState().session.present.heat,
+      store.getState().cfg,
+    );
+    const { engine } = renderGetawayWithAudio(store);
+
+    fireEvent.click(screen.getByTestId('btn-toggle-timer')); // start
+    (engine.play as ReturnType<typeof vi.fn>).mockClear();
+
+    tickSeconds(brief.timerSeconds + 1);
+
+    expect(engine.play).toHaveBeenCalledWith('sting-bust');
+    expect(engine.play).not.toHaveBeenCalledWith('sting-win');
+    vi.useRealTimers();
+  });
+
+  it('does not fire sting twice on double resolve attempt', () => {
+    const { engine } = renderGetawayWithAudio();
+    (engine.play as ReturnType<typeof vi.fn>).mockClear();
+    // Two rapid force-bust clicks — second must be no-op (resolvedRef guard)
+    fireEvent.click(screen.getByTestId('btn-force-bust'));
+    fireEvent.click(screen.getByTestId('btn-force-bust'));
+    const bustCalls = (engine.play as ReturnType<typeof vi.fn>).mock.calls
+      .filter((c: unknown[]) => c[0] === 'sting-bust');
+    expect(bustCalls.length).toBe(1);
+  });
+});
+
+describe('Getaway audio — headless (no AudioProvider)', () => {
+  beforeEach(() => {
+    vi.spyOn(channelModule, 'publishSlice').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('renders without throwing when no AudioProvider is present', () => {
+    expect(() => renderGetaway()).not.toThrow();
+  });
+
+  it('START, resolve, and force actions do not throw without AudioProvider', () => {
+    expect(() => {
+      renderGetaway();
+      fireEvent.click(screen.getByTestId('btn-toggle-timer'));
+      fireEvent.click(screen.getByTestId('btn-force-win'));
+    }).not.toThrow();
   });
 });
