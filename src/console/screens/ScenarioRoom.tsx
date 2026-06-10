@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import './ScenarioRoom.css';
 import { useGameStore } from '@/console/store';
 import { PhaseHead, ActionBar, Button } from '@/console/ui';
 import { Teleprompter } from '@/console/teleprompter';

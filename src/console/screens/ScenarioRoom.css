@@ -1,0 +1,68 @@
+/* ============================================================
+   SCENARIO ROOM — screen-specific styles (04a–04e)
+   Ported from design-system/redesign/4 - Scenario Room.html
+   ============================================================ */
+
+/* ---- blind choice cards (04a) ---- */
+.choices2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.choice { display: flex; flex-direction: column; gap: 12px; padding: 22px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-panel); box-shadow: var(--elev-2); cursor: pointer; transition: all var(--dur-base) var(--ease-out); }
+.choice:hover { transform: translateY(-3px); border-color: var(--c-amber-700); box-shadow: var(--elev-3); }
+.choice .ltr { width: 42px; height: 42px; border-radius: var(--radius-md); border: 1px solid var(--c-amber-700); background: var(--caution-tint); color: var(--caution); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 22px; }
+.choice h4 { font-family: var(--font-display); text-transform: uppercase; font-weight: 700; font-size: 28px; line-height: .98; letter-spacing: -.01em; color: var(--fg); }
+.choice p { font-family: var(--font-body); font-size: 16px; line-height: 1.5; color: var(--fg-muted); flex: 1; }
+.choice .hidden-foot { display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); font-family: var(--font-data); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-faint); }
+.choice .hidden-foot svg { width: 14px; height: 14px; }
+.choice.chosen { border-color: var(--caution); box-shadow: var(--glow-accent); cursor: default; }
+
+/* ---- scwrap + action header (04b–04e) ---- */
+.scwrap { display: flex; flex-direction: column; gap: 14px; }
+.actionhdr { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--c-amber-700); border-radius: var(--radius-md); background: var(--caution-tint); }
+.actionhdr .ltr { width: 34px; height: 34px; flex: none; border-radius: var(--radius-sm); background: var(--caution); color: var(--c-fg-ink); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 18px; }
+.actionhdr .t { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 22px; color: var(--fg); }
+.actionhdr .lanechip { margin-left: auto; }
+
+/* ---- reveal card (DC equation + roll controls) ---- */
+.reveal { display: flex; flex-direction: column; gap: 16px; padding: 20px; border: 1px solid var(--data); border-radius: var(--radius-lg); background: var(--bg-panel); box-shadow: var(--glow-data); }
+.reveal .rk { font-family: var(--font-data); font-weight: 700; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--data); display: flex; align-items: center; gap: 8px; }
+.reveal .rk svg { width: 15px; height: 15px; }
+
+/* ---- DC derivation equation ---- */
+.equation { display: flex; align-items: stretch; gap: 12px; }
+.eqcell { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 14px 10px; background: var(--c-surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.eqcell .ek { font-family: var(--font-data); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-faint); }
+.eqcell .ev { font-family: var(--font-data); font-weight: 800; font-size: 32px; line-height: 1; color: var(--fg); }
+.eqcell .es { font-family: var(--font-body); font-size: 12px; color: var(--fg-faint); }
+.eqop { display: flex; align-items: center; font-family: var(--font-data); font-weight: 800; font-size: 24px; color: var(--fg-faint); }
+.eqcell.dc { border-color: var(--c-amber-700); background: var(--caution-tint); }
+.eqcell.dc .ev { color: var(--caution); }
+.eqcell.target { border-color: var(--data); background: var(--data-tint); }
+.eqcell.target .ev { color: var(--data); }
+
+/* ---- odds bar ---- */
+.odds { display: flex; align-items: center; gap: 14px; }
+.odds .olabel { font-family: var(--font-data); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-faint); white-space: nowrap; }
+.odds .otrack { flex: 1; height: 12px; border-radius: var(--radius-pill); background: var(--c-surface-3); overflow: hidden; border: 1px solid var(--border); }
+.odds .ofill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--c-green-400)); }
+.odds .oval { font-family: var(--font-data); font-weight: 800; font-size: 20px; color: var(--accent); }
+
+/* ---- roll controls ---- */
+.rollctl { display: flex; align-items: center; gap: 14px; }
+.die { width: 84px; height: 84px; flex: none; border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--c-surface-2); display: flex; align-items: center; justify-content: center; font-family: var(--font-data); font-weight: 800; font-size: 42px; color: var(--fg-faint); }
+.die.armed { border-style: dashed; }
+.rollctl .rc-note { font-family: var(--font-body); font-size: 14px; color: var(--fg-muted); }
+.keypad { display: grid; grid-template-columns: repeat(10, 1fr); gap: 7px; }
+.key { padding: 16px 0; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--c-surface-3); color: var(--fg); font-family: var(--font-data); font-weight: 800; font-size: 20px; text-align: center; cursor: pointer; }
+.key:hover { background: var(--c-surface-4); }
+.key.sel { border-color: var(--data); background: var(--data-tint); color: var(--data); box-shadow: var(--glow-data); }
+
+/* ---- non-roll effect reveal (04e) ---- */
+.effect { display: flex; flex-direction: column; gap: 14px; padding: 28px 32px; border: 1px solid var(--c-green-700); border-radius: var(--radius-lg); background: var(--bg-panel); box-shadow: var(--glow-accent); align-items: flex-start; width: 840px; max-width: 100%; }
+.effect .eyebrow { font-family: var(--font-data); font-weight: 700; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+.effect h3 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 34px; line-height: 1; letter-spacing: -.01em; color: var(--fg); white-space: nowrap; }
+.effect p { font-family: var(--font-body); font-size: 17px; line-height: 1.5; color: var(--fg-muted); max-width: 60ch; }
+
+/* ---- consequences row (used in .effect and .reveal post-roll) ---- */
+.consq { display: flex; gap: 14px; }
+.consq .c { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--c-surface-2); }
+.consq .c .k { font-family: var(--font-data); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-faint); }
+.consq .c .v { font-family: var(--font-data); font-weight: 800; font-size: 24px; white-space: nowrap; }
