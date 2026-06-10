@@ -509,11 +509,11 @@ describe('Getaway brief difficulty bands', () => {
     const targetBefore = screen.getByTestId('target-cards').textContent;
     const timerBefore = screen.getByTestId('timer-display').getAttribute('data-remaining');
 
-    // Ditch raises heat but brief should stay the same
+    // Ditch drops Loot but the brief should stay the same
     fireEvent.click(screen.getByTestId('btn-ditch'));
 
     expect(screen.getByTestId('target-cards').textContent).toBe(targetBefore);
-    // Timer may change only if buy-seconds was clicked; ditch itself doesn't touch it
+    // Ditch doesn't touch the timer
     expect(screen.getByTestId('timer-display').getAttribute('data-remaining')).toBe(timerBefore);
   });
 });
