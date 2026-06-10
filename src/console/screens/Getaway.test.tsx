@@ -163,7 +163,6 @@ describe('Getaway screen', () => {
     expect(screen.getByTestId('btn-cleared')).toBeInTheDocument();
     expect(screen.getByTestId('btn-ditch')).toBeInTheDocument();
     expect(screen.getByTestId('btn-skip-card')).toBeInTheDocument();
-    expect(screen.getByTestId('btn-buy-seconds')).toBeInTheDocument();
     expect(screen.getByTestId('btn-force-win')).toBeInTheDocument();
     expect(screen.getByTestId('btn-force-bust')).toBeInTheDocument();
   });
@@ -371,12 +370,15 @@ describe('Getaway round actions', () => {
     expect(screen.getByTestId('clue-giver').textContent).toBe('Bob');
   });
 
-  it('ditch dispatches GETAWAY_DITCH (raises Heat)', () => {
+  it('ditch dispatches GETAWAY_DITCH (drops Loot)', () => {
     const store = renderGetaway();
+    const lootBefore = store.getState().session.present.loot;
     const heatBefore = store.getState().session.present.heat;
     fireEvent.click(screen.getByTestId('btn-ditch'));
+    const lootAfter = store.getState().session.present.loot;
     const heatAfter = store.getState().session.present.heat;
-    expect(heatAfter).toBe(heatBefore + obstacleOnlyCfg.getaway.ditchHeatCost);
+    expect(lootAfter).toBe(Math.max(0, lootBefore - obstacleOnlyCfg.getaway.ditchLootCost));
+    expect(heatAfter).toBe(heatBefore);
   });
 
   it('ditch advances clue-giver without incrementing cards-cleared', () => {
@@ -390,13 +392,13 @@ describe('Getaway round actions', () => {
 
   it('ditch is undoable via store undo', () => {
     const store = renderGetaway();
-    const heatBefore = store.getState().session.present.heat;
+    const lootBefore = store.getState().session.present.loot;
     fireEvent.click(screen.getByTestId('btn-ditch'));
-    expect(store.getState().session.present.heat).toBeGreaterThan(heatBefore);
+    expect(store.getState().session.present.loot).toBeLessThanOrEqual(lootBefore);
     act(() => {
       store.getState().undo();
     });
-    expect(store.getState().session.present.heat).toBe(heatBefore);
+    expect(store.getState().session.present.loot).toBe(lootBefore);
   });
 
   it('skip card advances clue-giver without incrementing cards-cleared', () => {
@@ -412,19 +414,6 @@ describe('Getaway round actions', () => {
     const heatBefore = store.getState().session.present.heat;
     fireEvent.click(screen.getByTestId('btn-skip-card'));
     expect(store.getState().session.present.heat).toBe(heatBefore);
-  });
-
-  it('buy seconds adds buySecondsBonus to the timer', () => {
-    const store = renderGetaway();
-    const heat = store.getState().session.present.heat;
-    const brief = getawayBrief(heat, store.getState().cfg);
-    const initialRemaining = brief.timerSeconds;
-
-    fireEvent.click(screen.getByTestId('btn-buy-seconds'));
-
-    const timerEl = screen.getByTestId('timer-display');
-    const remaining = Number(timerEl.getAttribute('data-remaining'));
-    expect(remaining).toBe(initialRemaining + obstacleOnlyCfg.getaway.buySecondsBonus);
   });
 
   it('clue-giver cycles back to first after last crew member', () => {

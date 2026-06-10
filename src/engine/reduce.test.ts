@@ -20,8 +20,7 @@ const cfg: EngineConfig = {
       lowHeat:  { heat: 0,  targetCards: 5,  timerSeconds: 90 },
       highHeat: { heat: 20, targetCards: 12, timerSeconds: 45 },
     },
-    ditchHeatCost: 2,
-    buySecondsBonus: 20,
+    ditchLootCost: 2000,
   },
   scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
   scaling: {
@@ -849,37 +848,42 @@ describe('CALL_GETAWAY', () => {
 // ─── GETAWAY_DITCH ────────────────────────────────────────────────────────────
 
 describe('GETAWAY_DITCH', () => {
-  it('raises heat by ditchHeatCost', () => {
-    const s = getawayState(0, 5);
+  it('subtracts ditchLootCost from loot', () => {
+    const s = getawayState(5000, 5);
     const next = reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
-    expect(next.heat).toBe(5 + cfg.getaway.ditchHeatCost);
+    expect(next.loot).toBe(5000 - cfg.getaway.ditchLootCost);
   });
 
-  it('clamps heat at hMax (does not exceed hMax)', () => {
-    const s = getawayState(0, 19);
+  it('clamps loot at 0 (never goes negative)', () => {
+    const s = getawayState(500, 10);
     const next = reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
-    expect(next.heat).toBe(cfg.heat.hMax);
+    expect(next.loot).toBe(0);
   });
 
-  it('clamps correctly when already at hMax', () => {
-    const s = getawayState(0, 20);
+  it('clamps correctly when loot is exactly 0', () => {
+    const s = getawayState(0, 10);
     const next = reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
-    expect(next.heat).toBe(cfg.heat.hMax);
+    expect(next.loot).toBe(0);
   });
 
-  it('preserves loot, phase, and other fields', () => {
-    const s = getawayState(7, 8);
+  it('leaves heat unchanged', () => {
+    const s = getawayState(5000, 8);
     const next = reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
-    expect(next.loot).toBe(7);
+    expect(next.heat).toBe(8);
+  });
+
+  it('preserves phase, rngState, and other fields', () => {
+    const s = getawayState(5000, 8);
+    const next = reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
     expect(next.phase).toBe('getaway');
     expect(next.rngState).toBe(s.rngState);
   });
 
   it('does not mutate input state', () => {
-    const s = getawayState(0, 5);
-    const before = s.heat;
+    const s = getawayState(5000, 5);
+    const before = s.loot;
     reduce(s, { t: 'GETAWAY_DITCH' }, cfg);
-    expect(s.heat).toBe(before);
+    expect(s.loot).toBe(before);
   });
 });
 

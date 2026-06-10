@@ -12,8 +12,8 @@ import type { RunState } from './types';
  * outputs are rounded to integers; targetCards is non-decreasing in heat and
  * timerSeconds is non-increasing in heat (monotone by construction).
  *
- * Difficulty is locked at call time — subsequent GETAWAY_DITCH events raise
- * Heat in state but do not affect an already-computed brief.
+ * Difficulty is locked at call time — subsequent GETAWAY_DITCH events drop
+ * Loot in state but do not affect an already-computed brief.
  */
 export function getawayBrief(
   heat: number,

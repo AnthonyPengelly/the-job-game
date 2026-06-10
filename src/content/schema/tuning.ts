@@ -53,8 +53,7 @@ export const tuningSchema = z.object({
         timerSeconds: z.number().int().positive(),
       }).strict(),
     }).strict(),
-    ditchHeatCost: z.number().int().positive(),
-    buySecondsBonus: z.number().int().positive(),
+    ditchLootCost: z.number().int().positive(),
   }).strict(),
   scoring: z.object({
     winBaseMultiplier: z.number().positive(),

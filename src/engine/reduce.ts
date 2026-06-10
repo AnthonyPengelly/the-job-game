@@ -343,8 +343,7 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
     }
 
     case 'GETAWAY_DITCH': {
-      const newHeat = Math.min(cfg.heat.hMax, state.heat + cfg.getaway.ditchHeatCost);
-      return { ...state, heat: newHeat };
+      return { ...state, loot: Math.max(0, state.loot - cfg.getaway.ditchLootCost) };
     }
 
     case 'OVERRIDE_SET_HEAT':

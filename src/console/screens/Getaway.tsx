@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, Banknote, SkipForward, Timer as TimerIcon, Play, Pause } from 'lucide-react';
+import { Check, Banknote, SkipForward, Play, Pause } from 'lucide-react';
 import { useGameStore } from '@/console/store';
 import { getawayBrief } from '@/engine';
 import { publishSlice } from '@/platform/channel';
@@ -124,11 +124,6 @@ export function Getaway() {
   function handleSkipCard() {
     if (resolvedRef.current) return;
     setClueGiverIndex(i => i + 1);
-  }
-
-  function handleBuySeconds() {
-    if (resolvedRef.current) return;
-    setSecondsLeft(s => s + cfg.getaway.buySecondsBonus);
   }
 
   function handleForceWin() {
@@ -257,20 +252,10 @@ export function Getaway() {
             onClick={handleDitch}
           >
             <Banknote />
-            <span className="gl">Ditch (+{cfg.getaway.ditchHeatCost} Heat)</span>
+            <span className="gl">Ditch</span>
             <span className="gs">drop loot, skip</span>
           </button>
 
-          <button
-            type="button"
-            className="gctrl buy"
-            data-testid="btn-buy-seconds"
-            onClick={handleBuySeconds}
-          >
-            <TimerIcon />
-            <span className="gl">Buy seconds</span>
-            <span className="gs">+{cfg.getaway.buySecondsBonus}s</span>
-          </button>
         </div>
 
         {/* GM overrides — always available (CLAUDE.md rule 1) */}
