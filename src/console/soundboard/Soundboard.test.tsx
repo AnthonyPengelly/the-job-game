@@ -91,22 +91,24 @@ afterEach(cleanup);
 // ── Visibility: correct groups per phase ──────────────────────────────────────
 
 describe('Soundboard — correct cue groups per phase', () => {
-  it('room phase: shows ambient, heistSfx, and danger groups', () => {
+  it('room phase: shows ambient, heistSfx, sting, and danger groups', () => {
+    // sting-clean/complication/botch are phase-relevant in room/minigame/offer
     renderSoundboard('room', makeMockEngine());
 
     expect(screen.getByTestId('soundboard-group-ambient')).toBeInTheDocument();
     expect(screen.getByTestId('soundboard-group-heistSfx')).toBeInTheDocument();
     expect(screen.getByTestId('soundboard-group-danger')).toBeInTheDocument();
-    expect(screen.queryByTestId('soundboard-group-sting')).toBeNull();
+    expect(screen.getByTestId('soundboard-group-sting')).toBeInTheDocument();
     expect(screen.queryByTestId('soundboard-group-finale')).toBeNull();
   });
 
-  it('getaway phase: shows only finale group', () => {
+  it('getaway phase: shows finale and heistSfx groups', () => {
+    // sfx-tick and sfx-chaching are phase-relevant in getaway
     renderSoundboard('getaway', makeMockEngine());
 
     expect(screen.getByTestId('soundboard-group-finale')).toBeInTheDocument();
+    expect(screen.getByTestId('soundboard-group-heistSfx')).toBeInTheDocument();
     expect(screen.queryByTestId('soundboard-group-ambient')).toBeNull();
-    expect(screen.queryByTestId('soundboard-group-heistSfx')).toBeNull();
     expect(screen.queryByTestId('soundboard-group-sting')).toBeNull();
     expect(screen.queryByTestId('soundboard-group-danger')).toBeNull();
   });
@@ -120,11 +122,12 @@ describe('Soundboard — correct cue groups per phase', () => {
     expect(screen.queryByTestId('soundboard-group-danger')).toBeNull();
   });
 
-  it('briefing phase: shows only ambient group', () => {
+  it('briefing phase: shows ambient and heistSfx groups', () => {
+    // sfx-gear (gear-receive chime) is phase-relevant during briefing
     renderSoundboard('briefing', makeMockEngine());
 
     expect(screen.getByTestId('soundboard-group-ambient')).toBeInTheDocument();
-    expect(screen.queryByTestId('soundboard-group-heistSfx')).toBeNull();
+    expect(screen.getByTestId('soundboard-group-heistSfx')).toBeInTheDocument();
     expect(screen.queryByTestId('soundboard-group-sting')).toBeNull();
     expect(screen.queryByTestId('soundboard-group-danger')).toBeNull();
     expect(screen.queryByTestId('soundboard-group-finale')).toBeNull();
@@ -263,8 +266,8 @@ describe('Soundboard — fullBoard mode', () => {
     expect(screen.getByTestId('btn-cue-finale-credits')).toBeInTheDocument();
   });
 
-  it('shows sting cues (phase-restricted to result) during room phase', () => {
-    // room phase normally hides sting; fullBoard must show them
+  it('shows sting-win and sting-bust in fullBoard mode during room phase', () => {
+    // sting-win/bust are result-only; fullBoard must show them even in room
     renderSoundboard('room', makeMockEngine(), true);
 
     expect(screen.getByTestId('soundboard-group-sting')).toBeInTheDocument();
