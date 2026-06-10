@@ -77,6 +77,13 @@ export interface AudioEngine {
   /** The precise audio-clock scheduler for metronome use. */
   readonly clock: AudioClock;
 
+  /**
+   * Returns true if the cue with the given id loaded successfully and is
+   * available for playback. Returns false for unknown ids and for cues whose
+   * decode failed. Also false before preload() has been called.
+   */
+  isCueAvailable(id: string): boolean;
+
   /** True after `preload()` completes (whether or not all cues succeeded). */
   readonly loaded: boolean;
 }
@@ -357,6 +364,10 @@ export function createAudioEngine(
     }
   }
 
+  function isCueAvailable(id: string): boolean {
+    return cues.get(id)?.available ?? false;
+  }
+
   return {
     preload,
     resume,
@@ -367,6 +378,7 @@ export function createAudioEngine(
     mute,
     setAmbient,
     scheduleBeep,
+    isCueAvailable,
     get clock() {
       return clock;
     },

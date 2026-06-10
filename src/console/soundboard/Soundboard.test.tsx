@@ -28,7 +28,7 @@ function makeStorage(): StorageLike {
   };
 }
 
-function makeMockEngine(): AudioEngine {
+function makeMockEngine(available = true): AudioEngine {
   return {
     preload: vi.fn().mockResolvedValue(undefined),
     resume: vi.fn().mockResolvedValue(undefined),
@@ -39,6 +39,7 @@ function makeMockEngine(): AudioEngine {
     mute: vi.fn(),
     setAmbient: vi.fn(),
     scheduleBeep: vi.fn(),
+    isCueAvailable: vi.fn().mockReturnValue(available),
     clock: {
       now: vi.fn().mockReturnValue(0),
       scheduleAt: vi.fn(),
@@ -292,5 +293,55 @@ describe('Soundboard — null fallback', () => {
     );
 
     expect(screen.queryByTestId('soundboard')).toBeNull();
+  });
+});
+
+// ── Unavailable cue surfacing ─────────────────────────────────────────────────
+
+describe('Soundboard — unavailable cue surfacing', () => {
+  it('shows "missing" text and disables button when cue is unavailable', () => {
+    // Engine reports all cues as unavailable (isCueAvailable returns false)
+    const engine = makeMockEngine(false);
+    renderSoundboard('room', engine);
+
+    // All visible cue buttons should be disabled with "missing" text
+    const droneBtn = screen.getByTestId('btn-cue-ambient-drone');
+    expect(droneBtn).toBeDisabled();
+    expect(droneBtn.textContent).toContain('missing');
+  });
+
+  it('shows normal text and enables button when cue is available', () => {
+    const engine = makeMockEngine(true);
+    renderSoundboard('room', engine);
+
+    const lockBtn = screen.getByTestId('btn-cue-sfx-lock');
+    expect(lockBtn).not.toBeDisabled();
+    expect(lockBtn.textContent).not.toContain('missing');
+    expect(lockBtn.textContent).toContain('sfx-lock');
+  });
+
+  it('does not call engine.play when an unavailable cue button is clicked', () => {
+    const engine = makeMockEngine(false);
+    renderSoundboard('room', engine);
+
+    fireEvent.click(screen.getByTestId('btn-cue-sfx-lock'));
+    // button is disabled — click handler should not fire
+    expect(engine.play).not.toHaveBeenCalled();
+  });
+
+  it('data-missing attribute is present on unavailable cue buttons', () => {
+    const engine = makeMockEngine(false);
+    renderSoundboard('room', engine);
+
+    const btn = screen.getByTestId('btn-cue-ambient-drone');
+    expect(btn.dataset['missing']).toBeDefined();
+  });
+
+  it('data-missing attribute is absent on available cue buttons', () => {
+    const engine = makeMockEngine(true);
+    renderSoundboard('room', engine);
+
+    const btn = screen.getByTestId('btn-cue-ambient-drone');
+    expect(btn.dataset['missing']).toBeUndefined();
   });
 });

@@ -341,6 +341,58 @@ describe('AudioEngine', () => {
     });
   });
 
+  describe('isCueAvailable', () => {
+    it('returns false for an unknown cue id before preload', () => {
+      const { engine } = makeEngine();
+      expect(engine.isCueAvailable('does-not-exist')).toBe(false);
+    });
+
+    it('returns false for all cues before preload (available not yet set)', () => {
+      const { engine } = makeEngine();
+      // cue map is populated during preload, so before preload nothing is available
+      expect(engine.isCueAvailable('sfx-lock')).toBe(false);
+    });
+
+    it('returns true for a successfully loaded cue after preload', async () => {
+      const { engine } = makeEngine();
+      await engine.preload();
+      expect(engine.isCueAvailable('sfx-lock')).toBe(true);
+    });
+
+    it('returns false for a cue whose decode failed', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { engine } = makeEngine(makeManifest(), 'sfx-lock');
+      await engine.preload();
+      expect(engine.isCueAvailable('sfx-lock')).toBe(false);
+      vi.restoreAllMocks();
+    });
+
+    it('returns true for other cues when one cue fails', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { engine } = makeEngine(makeManifest(), 'sfx-lock');
+      await engine.preload();
+      expect(engine.isCueAvailable('sting-win')).toBe(true);
+      vi.restoreAllMocks();
+    });
+
+    it('returns false for an unknown cue id after preload', async () => {
+      const { engine } = makeEngine();
+      await engine.preload();
+      expect(engine.isCueAvailable('not-a-real-cue')).toBe(false);
+    });
+
+    it('returns false when AudioContext creation fails', async () => {
+      const manifest = makeManifest();
+      const engine = createAudioEngine(manifest, {
+        createAudioContext: () => { throw new Error('no ctx'); },
+        fetchBuffer: async () => new ArrayBuffer(8),
+      });
+      await engine.preload();
+      // No context → no decode → all cues remain unavailable
+      expect(engine.isCueAvailable('sfx-lock')).toBe(false);
+    });
+  });
+
   describe('clock', () => {
     it('exposes a clock whose now() reflects the audio context currentTime', async () => {
       const { engine, mockCtx } = makeEngine();
