@@ -201,12 +201,13 @@ describe('reduceSession dispatches RunEvents through reduce', () => {
     expect(fromSession.present).toEqual(fromReduce);
   });
 
-  it('GETAWAY_DITCH raises heat and is reverted by UNDO_LAST', () => {
-    const s: RunState = { ...baseState(), phase: 'getaway', heat: 8 };
+  it('GETAWAY_DITCH drops loot and is reverted by UNDO_LAST', () => {
+    const s: RunState = { ...baseState(), phase: 'getaway', loot: 5000, heat: 8 };
     const session = initialSession(s);
     const after = reduceSession(session, { t: 'GETAWAY_DITCH' }, cfg);
-    expect(after.present.heat).toBe(8 + cfg.getaway.ditchHeatCost);
+    expect(after.present.loot).toBe(5000 - cfg.getaway.ditchLootCost);
+    expect(after.present.heat).toBe(8);
     const undone = reduceSession(after, { t: 'UNDO_LAST' }, cfg);
-    expect(undone.present.heat).toBe(8);
+    expect(undone.present.loot).toBe(5000);
   });
 });

@@ -101,10 +101,8 @@ export interface EngineConfig {
       lowHeat: { heat: number; targetCards: number; timerSeconds: number };
       highHeat: { heat: number; targetCards: number; timerSeconds: number };
     };
-    /** Heat added when the crew ditches a card during the Getaway. */
-    ditchHeatCost: number;
-    /** Seconds added to the countdown when the GM uses "buy seconds". */
-    buySecondsBonus: number;
+    /** Loot forfeited when the crew ditches a card during the Getaway. Clamped at 0. */
+    ditchLootCost: number;
   };
   scoring: {
     winBaseMultiplier: number;

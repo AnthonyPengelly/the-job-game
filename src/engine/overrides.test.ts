@@ -21,8 +21,7 @@ const cfg: EngineConfig = {
       lowHeat:  { heat: 0,  targetCards: 5,  timerSeconds: 90 },
       highHeat: { heat: 20, targetCards: 12, timerSeconds: 45 },
     },
-    ditchHeatCost: 2,
-    buySecondsBonus: 20,
+    ditchLootCost: 2000,
   },
   scoring: { winBaseMultiplier: 1.0, lowHeatStyleBonus: 0.5, bustMultiplier: 0.4 },
   scaling: {
