@@ -195,6 +195,78 @@
       ]
     }
   ],
+  "scenarioApproach": [
+    {
+      "id": "scenario-approach-1",
+      "text": [
+        "Hold up — room {roomNum} isn't a job, it's a situation. I'm seeing it on the feed.",
+        "No doors to pick here. Something's happened and the table has to decide what we do about it. Listen close."
+      ]
+    },
+    {
+      "id": "scenario-approach-2",
+      "text": [
+        "Room {roomNum}. Huh. That's not on the floor plan.",
+        "This one's a judgement call, not a lock. Hear it out, argue it round the table, and own whatever you choose."
+      ]
+    },
+    {
+      "id": "scenario-approach-3",
+      "text": [
+        "Easy, easy — something's moving in room {roomNum}. Nobody breathe.",
+        "It's a situation, not a job. The decision is yours and the consequences are hidden until you commit. Welcome to crime."
+      ]
+    },
+    {
+      "id": "scenario-approach-4",
+      "text": [
+        "{crew}, eyes up. Room {roomNum} just got interesting.",
+        "There's no clean way to plan for this one. Two calls on my screen, no prices on either. Talk it out."
+      ]
+    },
+    {
+      "id": "scenario-approach-5",
+      "text": [
+        "Room {roomNum}. The night's throwing us a curveball.",
+        "Forget stats for a second — this is a table decision. Read it aloud, weigh it, commit together."
+      ]
+    },
+    {
+      "id": "scenario-approach-6",
+      "text": [
+        "Wait — I've got chatter on the scanner about room {roomNum}. Something's up.",
+        "Nothing to deal, nothing to time. Just a choice with teeth. Make it as a crew."
+      ]
+    },
+    {
+      "id": "scenario-approach-7",
+      "text": [
+        "Room {roomNum}, and my feed says: complication.",
+        "This is the part of the job no one rehearses. Two ways to play it, both blind. Decide and live with it."
+      ]
+    },
+    {
+      "id": "scenario-approach-8",
+      "text": [
+        "Door's open on room {roomNum}. What's inside isn't a lock — it's a problem.",
+        "Judgement call. The smart move and the brave move are rarely the same one. Pick yours."
+      ]
+    },
+    {
+      "id": "scenario-approach-9",
+      "text": [
+        "Room {roomNum}. I'd tell you what to do here, but I'm in a van and you're in the building.",
+        "Read both calls to the table, argue your case, and commit. No take-backs once you do."
+      ]
+    },
+    {
+      "id": "scenario-approach-10",
+      "text": [
+        "Heads together, crew — room {roomNum} needs a decision, not a specialist.",
+        "Whatever you pick, pick it loud and pick it as one. The consequences come after the commitment."
+      ]
+    }
+  ],
   "obstacleClue": [
     {
       "id": "clue-crack-tumblers-1",

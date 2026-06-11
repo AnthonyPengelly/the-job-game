@@ -239,6 +239,7 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
       const next = applyScenarioEffect(stateWithRoll, effect, cfg);
 
       const resolvedRoll: ResolvedRoll = {
+        choiceId: pendingRoll.choiceId,
         roll,
         total: roll + pendingRoll.laneRating,
         dc: pendingRoll.dc,

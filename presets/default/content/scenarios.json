@@ -12,15 +12,18 @@
         {
           "id": "inside-man-pay",
           "label": "Pay him off",
+          "flavour": "Money buys silence. Usually.",
           "effect": {
             "heatDelta": 0,
             "lootDelta": -5000,
             "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
-          }
+          },
+          "aftermath": "The clerk pockets the roll, nods toward a service door, and slides something useful across the counter. Worth every penny, probably."
         },
         {
           "id": "inside-man-lean",
           "label": "Lean on him",
+          "flavour": "Some people just need reminding who they're talking to.",
           "roll": {
             "lane": "charm",
             "baseDifficulty": 13,
@@ -29,7 +32,9 @@
               "lootDelta": 0,
               "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
             },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "He folds fast — and throws in a little extra from under the counter to make you go away.",
+            "aftermathFailure": "He folds, then panics, then talks to exactly the wrong person. Loudly."
           }
         }
       ]
@@ -41,17 +46,22 @@
         {
           "id": "unmarked-van-hotwire",
           "label": "Hotwire it",
+          "flavour": "Free transport, if your fingers remember the trick.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 13,
             "success": { "heatDelta": -2, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Engine purrs on the first splice. Anyone tracking your movements just lost the trail.",
+            "aftermathFailure": "The alarm you didn't see goes off. The whole block now knows the van exists, and roughly where you're standing."
           }
         },
         {
           "id": "unmarked-van-leave",
           "label": "Leave it",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Free lunches are how they catch you.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "You walk past. The van idles on, keeping its secrets. Probably for the best."
         }
       ]
     },
@@ -62,17 +72,22 @@
         {
           "id": "sleeping-dog-tiptoe",
           "label": "Tiptoe past",
+          "flavour": "Dogs sleep light. So should you.",
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 13,
             "success": { "heatDelta": -2, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Not a whisker twitches. The corridor's yours, and quieter than ever.",
+            "aftermathFailure": "One floorboard. One bark. The whole building hears the second one."
           }
         },
         {
           "id": "sleeping-dog-toss",
           "label": "Toss it your lunch",
-          "effect": { "heatDelta": -2, "lootDelta": -5000 }
+          "flavour": "An old trick. Dogs respect catering.",
+          "effect": { "heatDelta": -2, "lootDelta": -5000 },
+          "aftermath": "The dog dines well — on the sandwich and the bribe money tucked under it. Cash gone, corridor peaceful, tail wagging."
         }
       ]
     },
@@ -83,12 +98,16 @@
         {
           "id": "champagne-room-pocket",
           "label": "Pocket a bottle",
-          "effect": { "heatDelta": 2, "lootDelta": 5000 }
+          "flavour": "One bottle. Who counts bottles?",
+          "effect": { "heatDelta": 2, "lootDelta": 5000 },
+          "aftermath": "The '82 sells itself. So does the empty slot in the rack — somebody is absolutely going to notice that gap."
         },
         {
           "id": "champagne-room-discipline",
           "label": "Stay disciplined",
-          "effect": { "heatDelta": -2, "lootDelta": 0 }
+          "flavour": "Professionals don't drink on the job.",
+          "effect": { "heatDelta": -2, "lootDelta": 0 },
+          "aftermath": "You close the cellar door gently behind you. The job stays tidy, and so do your heads."
         }
       ]
     },
@@ -99,17 +118,22 @@
         {
           "id": "fuse-box-cut",
           "label": "Cut the power",
+          "flavour": "Dark buildings hide a multitude of sins.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 14,
             "success": { "heatDelta": -4, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Half the floor goes dark, cameras included. You've never looked better — mostly because nobody can see you.",
+            "aftermathFailure": "Sparks, a pop, and every backup light in the place snaps on at once. Subtle."
           }
         },
         {
           "id": "fuse-box-leave",
           "label": "Leave it",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Live wires bite people who improvise.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "You leave the electrics to the electricians. The hum follows you down the hall, unbothered."
         }
       ]
     },
@@ -120,16 +144,20 @@
         {
           "id": "old-friend-team-up",
           "label": "Team up",
-          "effect": { "heatDelta": 2, "lootDelta": 5000 }
+          "flavour": "Two crews, one safe. What's a little history between thieves?",
+          "effect": { "heatDelta": 2, "lootDelta": 5000 },
+          "aftermath": "Old habits sync up fast and the haul gets heavier — but two crews make twice the footprints."
         },
         {
           "id": "old-friend-tip-off",
           "label": "Send them off with a tip",
+          "flavour": "Send them somewhere nicer. Far away.",
           "effect": {
             "heatDelta": 0,
             "lootDelta": -5000,
             "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
-          }
+          },
+          "aftermath": "You buy their exit with a fat tip; they leave you a parting gift from the old days. Fair trade, mostly."
         }
       ]
     },
@@ -140,17 +168,22 @@
         {
           "id": "other-safe-crack",
           "label": "Crack it open",
+          "flavour": "Safes that aren't on the plan are somebody's secret.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 13,
             "success": { "heatDelta": 0, "lootDelta": 5000 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "It gives on the third try — somebody's rainy-day fund, now relocating to a drier climate.",
+            "aftermathFailure": "It holds, and the drill's whine carries further than you'd like. Time to not be near this corner."
           }
         },
         {
           "id": "other-safe-leave",
           "label": "Leave it — stay on task",
-          "effect": { "heatDelta": -2, "lootDelta": 0 }
+          "flavour": "The plan exists for a reason.",
+          "effect": { "heatDelta": -2, "lootDelta": 0 },
+          "aftermath": "You let it keep its secret and stay on schedule. Discipline pays in quiet, which is my favourite currency."
         }
       ]
     },
@@ -161,16 +194,20 @@
         {
           "id": "cleaning-crew-uniform",
           "label": "Grab a uniform",
+          "flavour": "Nobody looks twice at a mop.",
           "effect": {
             "heatDelta": 0,
             "lootDelta": 0,
             "gear": { "kind": "statBoost", "lanes": ["charm", "stealth"] }
-          }
+          },
+          "aftermath": "One overall, lightly used, lifted off the trolley. Whoever wears it suddenly belongs here."
         },
         {
           "id": "cleaning-crew-hide",
           "label": "Hide and wait",
-          "effect": { "heatDelta": -2, "lootDelta": 0 }
+          "flavour": "Patience is free. Mostly.",
+          "effect": { "heatDelta": -2, "lootDelta": 0 },
+          "aftermath": "Twenty minutes behind a shelf of solvents, and the floor empties out on its own. Worth the cramp."
         }
       ]
     },
@@ -181,12 +218,16 @@
         {
           "id": "dropped-wallet-take",
           "label": "Take the cash",
-          "effect": { "heatDelta": 0, "lootDelta": 5000 }
+          "flavour": "Finders, keepers. That's the law, roughly.",
+          "effect": { "heatDelta": 0, "lootDelta": 5000 },
+          "aftermath": "Thicker than it looked. Whoever dropped it was having a very good night — was."
         },
         {
           "id": "dropped-wallet-leave",
           "label": "Wipe it and leave it",
-          "effect": { "heatDelta": -2, "lootDelta": 0 }
+          "flavour": "Touch nothing you don't need.",
+          "effect": { "heatDelta": -2, "lootDelta": 0 },
+          "aftermath": "Wiped clean and left where it fell. No prints, no story, no loose thread with your name on it."
         }
       ]
     },
@@ -197,17 +238,22 @@
         {
           "id": "the-scanner-listen",
           "label": "Listen in",
+          "flavour": "Know what they know. If the static lets you.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 12,
             "success": { "heatDelta": 0, "lootDelta": 0, "info": true },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Through the crackle you catch their patrol chatter — you now know exactly what's waiting in the next room.",
+            "aftermathFailure": "You key the wrong channel and broadcast two seconds of breathing to every cop in the precinct."
           }
         },
         {
           "id": "the-scanner-keep-moving",
           "label": "Keep moving",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Radios cut both ways.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "You let the static talk to itself and keep walking. Some conversations aren't yours to join."
         }
       ]
     },
@@ -218,17 +264,22 @@
         {
           "id": "loose-floorboard-pry",
           "label": "Pry it up",
+          "flavour": "People hide things under floors for a reason.",
           "roll": {
             "lane": "physical",
             "baseDifficulty": 13,
             "success": { "heatDelta": 0, "lootDelta": 10000 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Up it comes — and underneath, a strongbox somebody really didn't want found. Heavy strongbox.",
+            "aftermathFailure": "The board cracks like a gunshot. Nothing underneath, either. Insult, meet injury."
           }
         },
         {
           "id": "loose-floorboard-leave",
           "label": "Leave it",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Not every creak is treasure.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "You step over it and onward. Whatever's down there can stay somebody else's secret."
         }
       ]
     },
@@ -239,6 +290,7 @@
         {
           "id": "cold-feet-talk",
           "label": "Talk them round",
+          "flavour": "Everyone wobbles. Good crews catch each other.",
           "roll": {
             "lane": "charm",
             "baseDifficulty": 13,
@@ -247,13 +299,17 @@
               "lootDelta": 0,
               "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
             },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Five quiet words and they're back in — sharper than before, and they dig out their lucky kit to prove it.",
+            "aftermathFailure": "The pep talk turns into an argument, and arguments echo in empty buildings."
           }
         },
         {
           "id": "cold-feet-cut",
           "label": "Cut them loose",
-          "effect": { "heatDelta": -2, "lootDelta": -5000 }
+          "flavour": "A clean break beats a shaky hand.",
+          "effect": { "heatDelta": -2, "lootDelta": -5000 },
+          "aftermath": "They take their cut and the back stairs. Smaller share, calmer room — nobody freezes at the wrong moment now."
         }
       ]
     },
@@ -264,21 +320,27 @@
         {
           "id": "headlights-slip-out",
           "label": "Slip out the back",
+          "flavour": "Back doors exist for moments like this.",
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 12,
             "success": { "heatDelta": -2, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Out and gone before his engine stops ticking. He'll never know how close he came.",
+            "aftermathFailure": "The back gate squeals like it's paid to. Lights come on behind you."
           }
         },
         {
           "id": "headlights-play-it-cool",
           "label": "Play it cool as staff",
+          "flavour": "Confidence is a uniform.",
           "roll": {
             "lane": "charm",
             "baseDifficulty": 13,
             "success": { "heatDelta": -2, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "A nod, a 'good evening, sir', and he hands you his coat. You're staff now. Carry on.",
+            "aftermathFailure": "'I don't have staff tonight,' he says, reaching for his phone. Move."
           }
         }
       ]
@@ -290,16 +352,20 @@
         {
           "id": "forgotten-kit-grab",
           "label": "Grab it",
+          "flavour": "Tools don't ask whose hands they're in.",
           "effect": {
             "heatDelta": 0,
             "lootDelta": 0,
             "gear": { "kind": "statBoost", "lanes": ["tech", "physical", "charm", "stealth"] }
-          }
+          },
+          "aftermath": "Good kit, barely used. Somebody's loss is your trade upgrade — distribute accordingly."
         },
         {
           "id": "forgotten-kit-leave",
           "label": "Leave it — might be watched",
-          "effect": { "heatDelta": -2, "lootDelta": 0 }
+          "flavour": "Bait looks exactly like luck.",
+          "effect": { "heatDelta": -2, "lootDelta": 0 },
+          "aftermath": "You give it a wide berth. If it was a trap it's still waiting; if it wasn't, no harm done. Quiet either way."
         }
       ]
     },
@@ -310,12 +376,16 @@
         {
           "id": "bent-cop-bribe",
           "label": "Bribe him",
-          "effect": { "heatDelta": -4, "lootDelta": -5000 }
+          "flavour": "Expensive friends are still friends.",
+          "effect": { "heatDelta": -4, "lootDelta": -5000 },
+          "aftermath": "The envelope vanishes into his jacket, and so does tonight's report. Money well buried."
         },
         {
           "id": "bent-cop-refuse",
           "label": "Refuse",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Owe a cop nothing, ever.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "He shrugs and strolls off. No favour, no leash. You keep your money and your independence."
         }
       ]
     },
@@ -326,17 +396,22 @@
         {
           "id": "the-gallery-cut",
           "label": "Cut one out",
+          "flavour": "Canvas rolls up small. Alarms don't.",
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 14,
             "success": { "heatDelta": 0, "lootDelta": 10000 },
-            "failure": { "heatDelta": 4, "lootDelta": 0 }
+            "failure": { "heatDelta": 4, "lootDelta": 0 },
+            "aftermathSuccess": "The blade whispers around the frame and the old master rolls up like a newspaper. Museum-quality work, in every sense.",
+            "aftermathFailure": "The frame was wired. Every bell in the building agrees with it, emphatically."
           }
         },
         {
           "id": "the-gallery-photograph",
           "label": "Photograph them for the fence",
-          "effect": { "heatDelta": 0, "lootDelta": 5000 }
+          "flavour": "Sometimes the picture of the picture pays.",
+          "effect": { "heatDelta": 0, "lootDelta": 5000 },
+          "aftermath": "Twelve frames, no flash, and the fence already has a buyer who pays for knowing what hangs where. Easy money."
         }
       ]
     },
@@ -347,17 +422,22 @@
         {
           "id": "server-room-wipe",
           "label": "Wipe the footage",
+          "flavour": "Tonight never happened. If you type fast enough.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 13,
             "success": { "heatDelta": -4, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Eight hours of footage, gone like it was never filmed. As far as the record shows, you're a rumour.",
+            "aftermathFailure": "The system locks you out and flags the attempt. Now there's footage of you trying to delete the footage."
           }
         },
         {
           "id": "server-room-leave",
           "label": "Leave it",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Touch the servers, leave a fingerprint somewhere in them.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "You leave the blinking racks alone. The tapes keep what they already have — no more, no less."
         }
       ]
     },
@@ -368,17 +448,22 @@
         {
           "id": "the-distraction-pull",
           "label": "Pull it off",
+          "flavour": "All eyes one way, all hands the other.",
           "roll": {
             "lane": "charm",
             "baseDifficulty": 13,
             "success": { "heatDelta": -2, "lootDelta": 5000 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "The commotion blooms beautifully — every eye goes one way while the goods drift the other. Textbook.",
+            "aftermathFailure": "The 'fainting guest' overacts. Now there's a crowd, a first-aider, and far too much attention."
           }
         },
         {
           "id": "the-distraction-skip",
           "label": "Don't risk it",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "The quietest move is no move.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "You let the floor stay boring. Boring has never once called the police."
         }
       ]
     },
@@ -389,6 +474,7 @@
         {
           "id": "locked-briefcase-take",
           "label": "Take it along",
+          "flavour": "Heavy, locked, and humming with promise.",
           "effect": {
             "heatDelta": 0,
             "lootDelta": 0,
@@ -398,12 +484,15 @@
               "perRoomEffect": { "heatDelta": 2, "lootDelta": 0 },
               "payoff": { "heatDelta": 0, "lootDelta": 10000 }
             }
-          }
+          },
+          "aftermath": "It's cuffed to your evening now — conspicuous, awkward, and worth nothing until you've carried it far enough to crack."
         },
         {
           "id": "locked-briefcase-leave",
           "label": "Leave it",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Some bets you don't carry on your back.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "You leave the mystery on its shelf. Whatever's inside, it isn't slowing you down tonight."
         }
       ]
     },
@@ -414,17 +503,22 @@
         {
           "id": "spilled-jewels-scramble",
           "label": "Scramble for the lot",
+          "flavour": "Fast hands, full pockets.",
           "roll": {
             "lane": "physical",
             "baseDifficulty": 12,
             "success": { "heatDelta": 0, "lootDelta": 10000 },
-            "failure": { "heatDelta": 2, "lootDelta": 5000 }
+            "failure": { "heatDelta": 2, "lootDelta": 5000 },
+            "aftermathSuccess": "Every last stone, swept up before they stop bouncing. The marble's clean and you're carrying a jeweller's window.",
+            "aftermathFailure": "You come up with a decent fistful — and kick the tray across the floor doing it. That clatter had an audience."
           }
         },
         {
           "id": "spilled-jewels-handful",
           "label": "Grab a handful",
-          "effect": { "heatDelta": 0, "lootDelta": 5000 }
+          "flavour": "Greed trips. Take what's nearest.",
+          "effect": { "heatDelta": 0, "lootDelta": 5000 },
+          "aftermath": "A calm handful of the closest stones and you're moving again. The rest can glitter for whoever finds them."
         }
       ]
     },
@@ -435,21 +529,27 @@
         {
           "id": "honest-guard-overpower",
           "label": "Overpower him",
+          "flavour": "Some conversations are shorter than others.",
           "roll": {
             "lane": "physical",
             "baseDifficulty": 13,
             "success": { "heatDelta": -2, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Quick, quiet, and he's napping in a supply closet with his radio off. One less pair of eyes on the rounds.",
+            "aftermathFailure": "He's stronger than he looks and twice as loud. The scuffle rattles down three corridors."
           }
         },
         {
           "id": "honest-guard-slip-past",
           "label": "Slip past unseen",
+          "flavour": "He can't refuse what he never sees.",
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 12,
             "success": { "heatDelta": -2, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "He stares dutifully at nothing while you ghost by behind him. Integrity intact, route cleared.",
+            "aftermathFailure": "He turns at exactly the wrong second. Honest and observant — the worst combination."
           }
         }
       ]
@@ -461,12 +561,16 @@
         {
           "id": "blueprints-study",
           "label": "Study them",
-          "effect": { "heatDelta": 2, "lootDelta": 0, "info": true }
+          "flavour": "Knowledge weighs nothing. Time doesn't.",
+          "effect": { "heatDelta": 2, "lootDelta": 0, "info": true },
+          "aftermath": "Three minutes hunched over the plans — you know what the next room holds now, but the clock noticed you standing still."
         },
         {
           "id": "blueprints-sell",
           "label": "Pocket and sell them",
-          "effect": { "heatDelta": 0, "lootDelta": 5000 }
+          "flavour": "Paper's worth more to the right buyer.",
+          "effect": { "heatDelta": 0, "lootDelta": 5000 },
+          "aftermath": "Rolled, tubed, and pre-sold. The fence loves architecture — somebody's security budget just became your payday."
         }
       ]
     },
@@ -477,17 +581,22 @@
         {
           "id": "home-office-crack",
           "label": "Crack the wall safe",
+          "flavour": "Behind every portrait, an ego. Behind some, a safe.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 13,
             "success": { "heatDelta": 0, "lootDelta": 5000 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "The dial gives up its little secret and the safe coughs out the good stuff. The portrait looks on, scandalised.",
+            "aftermathFailure": "Three wrong combinations and a soft electronic chirp you really didn't want to hear."
           }
         },
         {
           "id": "home-office-desk-cash",
           "label": "Pocket the desk cash",
-          "effect": { "heatDelta": 0, "lootDelta": 5000 }
+          "flavour": "The obvious drawer, the obvious prize.",
+          "effect": { "heatDelta": 0, "lootDelta": 5000 },
+          "aftermath": "Top drawer, cash clip, done. Some men keep their walking-around money exactly where a professional would look first."
         }
       ]
     },
@@ -498,20 +607,24 @@
         {
           "id": "the-split-share",
           "label": "Share it evenly",
+          "flavour": "Even cuts keep crews together.",
           "effect": {
             "heatDelta": 0,
             "lootDelta": 5000,
             "gear": { "kind": "statBoost", "lanes": ["tech", "physical", "charm", "stealth"] }
-          }
+          },
+          "aftermath": "Everyone gets a slice, plus a little kit from the same stash — funny how fair maths makes a crew sharper."
         },
         {
           "id": "the-split-pocket",
           "label": "Pocket it quietly",
+          "flavour": "What they don't know can't be deducted.",
           "effect": {
             "heatDelta": 2,
             "lootDelta": 5000,
             "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
-          }
+          },
+          "aftermath": "Into one jacket it goes, cash and a clever little extra — and a sideways glance from someone who maybe noticed. That travels."
         }
       ]
     },
@@ -522,16 +635,21 @@
         {
           "id": "recognised-pay",
           "label": "Pay for silence",
-          "effect": { "heatDelta": 0, "lootDelta": -5000 }
+          "flavour": "Memory has a market rate.",
+          "effect": { "heatDelta": 0, "lootDelta": -5000 },
+          "aftermath": "The roll changes hands and the memory develops a convenient blur. Faces? What faces."
         },
         {
           "id": "recognised-lean",
           "label": "Lean on them",
+          "flavour": "A quiet word, properly delivered.",
           "roll": {
             "lane": "charm",
             "baseDifficulty": 13,
             "success": { "heatDelta": 0, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "You explain, gently, what forgetting is worth. They forget. Everyone walks away unbruised.",
+            "aftermathFailure": "They nod, wide-eyed — then make a phone call the moment you turn your back."
           }
         }
       ]
@@ -543,6 +661,7 @@
         {
           "id": "marks-study-safe",
           "label": "Go for the safe",
+          "flavour": "Personal safes hold personal favourites.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 14,
@@ -551,13 +670,17 @@
               "lootDelta": 0,
               "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
             },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Click. No cash inside — something rarer. The mark's private toy just became crew equipment.",
+            "aftermathFailure": "It's a better safe than he is a man. It holds, and the attempt leaves scratches somebody will read."
           }
         },
         {
           "id": "marks-study-cigar",
           "label": "Pocket a cigar and go",
-          "effect": { "heatDelta": 0, "lootDelta": 5000 }
+          "flavour": "Take the small luxury and keep walking.",
+          "effect": { "heatDelta": 0, "lootDelta": 5000 },
+          "aftermath": "One cigar for morale, one jade ashtray for the fence. In and out before the leather chair stops creaking."
         }
       ]
     },
@@ -568,21 +691,27 @@
         {
           "id": "the-tripwire-step-over",
           "label": "Step over it",
+          "flavour": "High knees, held breath.",
           "roll": {
             "lane": "physical",
             "baseDifficulty": 13,
             "success": { "heatDelta": 0, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "One long stride apiece and you're over. The wire keeps its tension and its silence.",
+            "aftermathFailure": "A trailing bootlace. The wire sings, and somewhere a panel lights up."
           }
         },
         {
           "id": "the-tripwire-disarm",
           "label": "Disarm it",
+          "flavour": "Cut the right end of the right wire.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 12,
             "success": { "heatDelta": -2, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Snipped at the anchor, coiled, pocketed. The doorway's safe for everyone behind you, too.",
+            "aftermathFailure": "Wrong end. The mechanism does exactly what it was built to do, loudly."
           }
         }
       ]
@@ -594,17 +723,22 @@
         {
           "id": "charity-gala-work-room",
           "label": "Work the room",
+          "flavour": "Crowds are camouflage with cocktails.",
           "roll": {
             "lane": "charm",
             "baseDifficulty": 13,
             "success": { "heatDelta": 0, "lootDelta": 5000 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Two handshakes, one dance, and a donation envelope finds a new charity: yours.",
+            "aftermathFailure": "Wrong name, wrong anecdote, and a hostess whose smile drops half an inch. You're being watched now."
           }
         },
         {
           "id": "charity-gala-skirt",
           "label": "Skirt the edges",
-          "effect": { "heatDelta": -2, "lootDelta": 0 }
+          "flavour": "Be the waiter nobody remembers.",
+          "effect": { "heatDelta": -2, "lootDelta": 0 },
+          "aftermath": "You hug the walls with a tray and a bland expression. Three hundred guests, zero memories of you."
         }
       ]
     },
@@ -615,17 +749,22 @@
         {
           "id": "friendly-face-chat",
           "label": "Chat them up",
+          "flavour": "Old colleagues love to talk shop.",
           "roll": {
             "lane": "charm",
             "baseDifficulty": 12,
             "success": { "heatDelta": -2, "lootDelta": 0, "info": true },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Five minutes of 'remember when' and he's waved you through — plus told you exactly what's around the next corner.",
+            "aftermathFailure": "The small talk hits a wrong detail. His smile stays; his hand drifts toward the radio."
           }
         },
         {
           "id": "friendly-face-avoid",
           "label": "Avoid them",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Familiar faces have long memories.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "A sharp turn down a side corridor, and the reunion never happens. Some friendships are best left unconfirmed."
         }
       ]
     },
@@ -636,17 +775,22 @@
         {
           "id": "the-dumbwaiter-send",
           "label": "Send your smallest through",
+          "flavour": "Small spaces, big shortcuts.",
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 12,
             "success": { "heatDelta": 0, "lootDelta": 5000 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Up the shaft, through the pantry, back with the silver. The hatch fits one thief and one very full bag.",
+            "aftermathFailure": "Halfway up, the pulley slips — the crash rattles two floors and the shortcut becomes a spotlight."
           }
         },
         {
           "id": "the-dumbwaiter-leave",
           "label": "Leave it",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Not everyone fits. Not everything's worth it.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "You close the hatch on the idea. The stairs are slower, but nobody gets stuck in a wall tonight."
         }
       ]
     },
@@ -657,17 +801,22 @@
         {
           "id": "counterfeit-stack-grab",
           "label": "Grab a bundle",
+          "flavour": "Crisp bills, suspicious shine.",
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 11,
             "success": { "heatDelta": 0, "lootDelta": 5000 },
-            "failure": { "heatDelta": 0, "lootDelta": 0 }
+            "failure": { "heatDelta": 0, "lootDelta": 0 },
+            "aftermathSuccess": "You skim the genuine notes off the top of the funny money. The fence can sort the rest from the rest.",
+            "aftermathFailure": "Closer up, it's all printer's art — pretty, worthless, not worth the bag space. You set it back down."
           }
         },
         {
           "id": "counterfeit-stack-leave",
           "label": "Leave it",
-          "effect": { "heatDelta": -2, "lootDelta": 0 }
+          "flavour": "Fake money buys real trouble.",
+          "effect": { "heatDelta": -2, "lootDelta": 0 },
+          "aftermath": "You leave the counterfeit where it lies. Passing fakes is somebody else's sentence — your night stays clean."
         }
       ]
     },
@@ -678,12 +827,16 @@
         {
           "id": "wine-steward-tip",
           "label": "Tip and follow",
-          "effect": { "heatDelta": 0, "lootDelta": -5000, "info": true }
+          "flavour": "Guides know where the bodies — sorry, bottles — are.",
+          "effect": { "heatDelta": 0, "lootDelta": -5000, "info": true },
+          "aftermath": "The tip stings, but the steward talks all the way down the stairs — you know exactly what the next room is hiding."
         },
         {
           "id": "wine-steward-decline",
           "label": "Decline",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Free tours come with witnesses.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "A polite no, and the steward melts back into the service corridor. You keep your money and your anonymity."
         }
       ]
     },
@@ -694,21 +847,27 @@
         {
           "id": "pressure-plate-pick",
           "label": "Pick across it",
+          "flavour": "Light feet, lighter conscience.",
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 13,
             "success": { "heatDelta": 0, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Heel, toe, breathe. You read the floor like sheet music and arrive on the far side unannounced.",
+            "aftermathFailure": "One tile sinks half an inch. Somewhere below, something begins to whir."
           }
         },
         {
           "id": "pressure-plate-disarm",
           "label": "Wedge and disarm it",
+          "flavour": "Beat the floor at its own game.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 12,
             "success": { "heatDelta": -2, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Wedged, jumpered, dead. The floor's just a floor now — for you and everyone coming after.",
+            "aftermathFailure": "The wedge slips mid-job, and the plate registers exactly the kind of visitor it was built for."
           }
         }
       ]
@@ -720,17 +879,22 @@
         {
           "id": "the-intercom-answer",
           "label": "Answer it",
+          "flavour": "Be the voice they expect to hear.",
           "roll": {
             "lane": "charm",
             "baseDifficulty": 14,
             "success": { "heatDelta": -4, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "'All quiet on three.' Beautifully bored delivery — they log it and move on. You just bought the whole floor some calm.",
+            "aftermathFailure": "'Who is this?' is not the response you wanted. The line goes dead in a way that means someone's coming."
           }
         },
         {
           "id": "the-intercom-ignore",
           "label": "Ignore it",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Silence is an answer too.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "You let it crackle into nothing. Maybe they'll assume the unit's broken. Units break all the time."
         }
       ]
     },
@@ -741,17 +905,22 @@
         {
           "id": "collectors-cabinet-force",
           "label": "Force a few open",
+          "flavour": "Little locks guard nice things.",
           "roll": {
             "lane": "physical",
             "baseDifficulty": 12,
             "success": { "heatDelta": 0, "lootDelta": 5000 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Three drawers, two disappointments, one velvet tray of very portable value. The pry bar earns its keep.",
+            "aftermathFailure": "The drawers are sturdier than they look, and prying them sounds like a woodshop. Nothing to show for the noise."
           }
         },
         {
           "id": "collectors-cabinet-ajar",
           "label": "Take the one left ajar",
-          "effect": { "heatDelta": 0, "lootDelta": 5000 }
+          "flavour": "Take what's offered.",
+          "effect": { "heatDelta": 0, "lootDelta": 5000 },
+          "aftermath": "The open drawer holds the collector's favourite — which is exactly why it was nearest to hand. Lifted, pocketed, gone."
         }
       ]
     },
@@ -762,16 +931,20 @@
         {
           "id": "the-whistleblower-take",
           "label": "Take it",
+          "flavour": "Evidence cuts whoever holds it.",
           "effect": {
             "heatDelta": 2,
             "lootDelta": 0,
             "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
-          }
+          },
+          "aftermath": "She hands over the folder and a little insurance to go with it — but a deal struck in a stairwell never stays whisper-quiet."
         },
         {
           "id": "the-whistleblower-stay-out",
           "label": "Stay out of it",
-          "effect": { "heatDelta": 0, "lootDelta": 0 }
+          "flavour": "Other people's wars stay other people's.",
+          "effect": { "heatDelta": 0, "lootDelta": 0 },
+          "aftermath": "You wish her luck and keep your distance. Her crusade, her consequences — your night stays simple."
         }
       ]
     },
@@ -782,21 +955,27 @@
         {
           "id": "glass-display-cut",
           "label": "Cut the glass",
+          "flavour": "Thick glass rewards a steady hand.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 15,
             "success": { "heatDelta": 0, "lootDelta": 10000 },
-            "failure": { "heatDelta": 4, "lootDelta": 0 }
+            "failure": { "heatDelta": 4, "lootDelta": 0 },
+            "aftermathSuccess": "The circle of glass lifts away like a lid and the jewel drops into a gloved palm. Surgery, basically.",
+            "aftermathFailure": "The pane crazes, then shatters — and a case like that doesn't break quietly. Sirens are a genre of music now."
           }
         },
         {
           "id": "glass-display-swap",
           "label": "Swap it for a fake",
+          "flavour": "If the fake is good, no one ever looks.",
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 14,
             "success": { "heatDelta": -2, "lootDelta": 10000 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "The replica settles onto the plinth like it grew there. They'll guard the fake for years while the real one travels with you.",
+            "aftermathFailure": "The fake catches the light all wrong, and you abort mid-reach with a guard inbound."
           }
         }
       ]
@@ -808,20 +987,24 @@
         {
           "id": "the-loadout-split",
           "label": "Split it among the crew",
+          "flavour": "Share the wealth, share the edge.",
           "effect": {
             "heatDelta": 0,
             "lootDelta": 0,
             "gear": { "kind": "statBoost", "lanes": ["tech", "physical", "charm", "stealth"] }
-          }
+          },
+          "aftermath": "The bag opens like a small Christmas. Everyone walks away a little better equipped than the crew that abandoned it."
         },
         {
           "id": "the-loadout-whole",
           "label": "Keep it whole for one specialist",
+          "flavour": "One perfect kit beats four half-measures.",
           "effect": {
             "heatDelta": 0,
             "lootDelta": 0,
             "gear": { "kind": "powerUp", "lanes": ["tech", "physical", "charm", "stealth"] }
-          }
+          },
+          "aftermath": "The whole rig goes to your specialist, who assembles it with frankly worrying glee. Quality over equality tonight."
         }
       ]
     },
@@ -832,17 +1015,22 @@
         {
           "id": "nosy-neighbour-reassure",
           "label": "Reassure them",
+          "flavour": "A calm voice closes more doors than a crowbar.",
           "roll": {
             "lane": "charm",
             "baseDifficulty": 12,
             "success": { "heatDelta": -2, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "'Building maintenance, ma'am. Gas check.' She nods, satisfied, and the door clicks shut on the whole question.",
+            "aftermathFailure": "She doesn't buy a word of it, and her hallway light stays on. So does her phone screen."
           }
         },
         {
           "id": "nosy-neighbour-duck",
           "label": "Duck away",
-          "effect": { "heatDelta": -2, "lootDelta": 0 }
+          "flavour": "What they can't describe, they can't report.",
+          "effect": { "heatDelta": -2, "lootDelta": 0 },
+          "aftermath": "Around the corner before her eyes adjust. She saw a shadow, and shadows don't make it into statements."
         }
       ]
     },
@@ -853,16 +1041,21 @@
         {
           "id": "managers-keys-pocket",
           "label": "Pocket them",
-          "effect": { "heatDelta": 2, "lootDelta": 0, "info": true }
+          "flavour": "Every key is a door you haven't met yet.",
+          "effect": { "heatDelta": 2, "lootDelta": 0, "info": true },
+          "aftermath": "The ring's in your pocket and the next room's lock is no mystery now — but an empty hook gets noticed fast."
         },
         {
           "id": "managers-keys-copy",
           "label": "Copy and replace",
+          "flavour": "Borrow, mould, return. Nobody's the wiser.",
           "roll": {
             "lane": "tech",
             "baseDifficulty": 13,
             "success": { "heatDelta": 0, "lootDelta": 0, "info": true },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Pressed in putty and back on the hook in ninety seconds. You know what the next door wants, and nobody's missing a thing.",
+            "aftermathFailure": "The mould smears and the keys jangle back onto the hook crooked. Somebody heard that, and somebody tidy will notice."
           }
         }
       ]
@@ -874,17 +1067,22 @@
         {
           "id": "hidden-compartment-reach",
           "label": "Reach in",
+          "flavour": "Recesses hold what shelves can't.",
           "roll": {
             "lane": "physical",
             "baseDifficulty": 13,
             "success": { "heatDelta": 0, "lootDelta": 10000 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Elbow-deep, and out comes the strongbox — small, dense, and very much the point of having a secret wall.",
+            "aftermathFailure": "A sleeve catches the frame and the painting swings down off its hinge. Empty recess, loud wall."
           }
         },
         {
           "id": "hidden-compartment-note",
           "label": "Note it and leave",
-          "effect": { "heatDelta": 0, "lootDelta": 5000 }
+          "flavour": "Mark it, mention it, monetise it.",
+          "effect": { "heatDelta": 0, "lootDelta": 5000 },
+          "aftermath": "You sketch the spot and lift the small stuff within reach. The fence pays for maps like this — buyers love a treasure hunt."
         }
       ]
     },
@@ -895,16 +1093,21 @@
         {
           "id": "drivers-tip-reroute",
           "label": "Reroute on their word",
-          "effect": { "heatDelta": -2, "lootDelta": 0 }
+          "flavour": "The van sees what you can't.",
+          "effect": { "heatDelta": -2, "lootDelta": 0 },
+          "aftermath": "You take the long way on my say-so, and the long way is beautifully empty. You're welcome, by the way."
         },
         {
           "id": "drivers-tip-stick",
           "label": "Stick to the plan",
+          "flavour": "Plans are plans for a reason.",
           "roll": {
             "lane": "stealth",
             "baseDifficulty": 13,
             "success": { "heatDelta": 0, "lootDelta": 0 },
-            "failure": { "heatDelta": 2, "lootDelta": 0 }
+            "failure": { "heatDelta": 2, "lootDelta": 0 },
+            "aftermathSuccess": "Fine, ignore the driver — you thread the original route clean anyway. I'd be annoyed if I weren't impressed.",
+            "aftermathFailure": "And there's the patrol I mentioned. Next time the van speaks, the van is right."
           }
         }
       ]
@@ -916,12 +1119,16 @@
         {
           "id": "vault-ledger-study",
           "label": "Study it",
-          "effect": { "heatDelta": 0, "lootDelta": 0, "info": true }
+          "flavour": "Read the house's own homework.",
+          "effect": { "heatDelta": 0, "lootDelta": 0, "info": true },
+          "aftermath": "The ledger reads like a guided tour — you know exactly what's sitting in the next room, and in whose name."
         },
         {
           "id": "vault-ledger-tear",
           "label": "Tear out a page and run",
-          "effect": { "heatDelta": 0, "lootDelta": 5000 }
+          "flavour": "One page, torn fast, sells faster.",
+          "effect": { "heatDelta": 0, "lootDelta": 5000 },
+          "aftermath": "Rrrip. One page of names and numbers — the kind certain buyers pay handsomely never to see published."
         }
       ]
     },
@@ -932,16 +1139,20 @@
         {
           "id": "champagne-toast-indulge",
           "label": "Indulge a moment",
+          "flavour": "Morale is equipment too.",
           "effect": {
             "heatDelta": 2,
             "lootDelta": 0,
             "gear": { "kind": "statBoost", "lanes": ["tech", "physical", "charm", "stealth"] }
-          }
+          },
+          "aftermath": "One glass each, one toast to the crew — spirits lift and hands steady. The laughter carried further than you think, though."
         },
         {
           "id": "champagne-toast-focus",
           "label": "Keep focused",
-          "effect": { "heatDelta": -2, "lootDelta": 0 }
+          "flavour": "Celebrate in the van, not the vault.",
+          "effect": { "heatDelta": -2, "lootDelta": 0 },
+          "aftermath": "Corks stay in. The crew swallows the grin and gets back to work — save the toast for when I'm driving you out of here."
         }
       ]
     }

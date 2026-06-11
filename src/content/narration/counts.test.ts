@@ -102,6 +102,21 @@ describe('narration bank — minimum variant counts', () => {
     });
   });
 
+  describe('scenarioApproach — ≥8 variants (scenario rooms ≈ 1/3 of a run)', () => {
+    it('has ≥8 total variants', () => {
+      expect(bank.scenarioApproach.length).toBeGreaterThanOrEqual(8);
+    });
+
+    it('never mentions doors or the quiet/greedy choice (obstacle-only language)', () => {
+      for (const v of bank.scenarioApproach) {
+        const text = (typeof v.text === 'string' ? [v.text] : v.text).join(' ').toLowerCase();
+        expect(text).not.toContain('two doors');
+        expect(text).not.toContain('greedy');
+        expect(text).not.toContain('quiet take');
+      }
+    });
+  });
+
   describe('scenarioReveal — ≥10 variants for full-run no-repeat', () => {
     it('has ≥10 total variants', () => {
       expect(bank.scenarioReveal.length).toBeGreaterThanOrEqual(10);

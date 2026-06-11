@@ -60,12 +60,21 @@ export interface ScenarioRollSpec {
   baseDifficulty: number;
   success: ScenarioEffect;
   failure: ScenarioEffect;
+  /** Van-narrator closure line read on a successful roll (playtest wave 2). */
+  aftermathSuccess?: string;
+  /** Van-narrator closure line read on a failed roll. */
+  aftermathFailure?: string;
 }
 
-/** A single scenario choice: either a flat effect or a lane-weighted roll. */
+/**
+ * A single scenario choice: either a flat effect or a lane-weighted roll.
+ * `flavour` is the one-line hook shown on the blind choice card; `aftermath`
+ * is the story closure read with the revealed effect. Optional at the engine
+ * boundary (test fixtures stay light); the content schema requires them.
+ */
 export type ScenarioChoiceDef =
-  | { id: string; label: string; effect: ScenarioEffect }
-  | { id: string; label: string; roll: ScenarioRollSpec };
+  | { id: string; label: string; flavour?: string; effect: ScenarioEffect; aftermath?: string }
+  | { id: string; label: string; flavour?: string; roll: ScenarioRollSpec };
 
 /** The canonical scenario content model resolved into the engine config. */
 export interface ScenarioDef {
@@ -101,6 +110,8 @@ export interface PendingRoll {
  * deltas are carried here for display only.
  */
 export interface ResolvedRoll {
+  /** The choice this roll resolved — lets the UI read the right aftermath line. */
+  choiceId: string;
   roll: number;
   total: number;
   dc: number;
@@ -164,6 +175,8 @@ export interface ObstacleRoom {
 export interface ScenarioChoice {
   id: string;
   label: string;
+  /** One-line hook shown on the blind choice card (copied from the template). */
+  flavour?: string;
   /** Whether this choice requires a d20 roll (opaque pre-commit; revealed in stage two). */
   isRoll: boolean;
 }
