@@ -1,54 +1,39 @@
 import { useState } from 'react';
-import { ShieldCheck, Siren } from 'lucide-react';
+import { Hand, ShieldCheck, Siren } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
-import { CardSpread } from '@/minigames/primitives/CardSpread';
-import type { CardId } from '@/minigames/primitives/CardSpread';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { CrackTheTumblersParams } from './generate';
 import { judge, resetPinBoost } from './judge';
 import type { CrackTheTumblersState } from './judge';
 
-function initState(): CrackTheTumblersState {
-  return { playedSequence: [], alarmTripped: false, resetPinUsed: false };
-}
-
-function cardValue(params: CrackTheTumblersParams, id: CardId): number {
-  return parseInt(params.cards.find(c => c.id === id)?.label ?? '0', 10);
-}
-
 export function CrackTheTumblersComponent({
   params,
   committed,
   onResolve,
 }: MiniGameProps<CrackTheTumblersParams>): JSX.Element {
-  const [state, setState] = useState<CrackTheTumblersState>(initState);
+  const totalCards = committed.length * params.cardsPerPlayer;
+  const [state, setState] = useState<CrackTheTumblersState>(() => ({
+    totalCards,
+    playsRecorded: 0,
+    alarmTripped: false,
+    resetPinUsed: false,
+  }));
+  const [dealt, setDealt] = useState(false);
 
-  const played = state.playedSequence.length;
-  const total = params.cards.length;
-  const gameComplete = state.alarmTripped || played === total;
-  const progressPct = total > 0 ? (played / total) * 100 : 0;
+  const gameComplete = state.alarmTripped || state.playsRecorded >= state.totalCards;
+  const progressPct = state.totalCards > 0 ? (state.playsRecorded / state.totalCards) * 100 : 0;
 
-  const lastPlayedId = state.playedSequence[played - 1];
-  const lastPlayedValue = lastPlayedId !== undefined ? cardValue(params, lastPlayedId) : null;
-
-  // Unplayed cards (in their original shuffled order) for tapping
-  const unplayedCards = params.cards.filter(c => !state.playedSequence.includes(c.id));
-
-  function handleCardTap(id: CardId) {
+  function handleInOrder() {
     if (gameComplete) return;
-    if (state.playedSequence.includes(id)) return;
+    setState(s =>
+      s.playsRecorded >= s.totalCards ? s : { ...s, playsRecorded: s.playsRecorded + 1 },
+    );
+  }
 
-    const last = state.playedSequence[state.playedSequence.length - 1];
-    const newVal = cardValue(params, id);
-    const prevVal = last !== undefined ? cardValue(params, last) : -Infinity;
-    const isClash = newVal <= prevVal;
-
-    setState(s => ({
-      ...s,
-      playedSequence: [...s.playedSequence, id],
-      alarmTripped: isClash,
-    }));
+  function handleClash() {
+    if (gameComplete) return;
+    setState(s => ({ ...s, alarmTripped: true }));
   }
 
   function handleBoost(hook: BoostHook<CrackTheTumblersState, CrackTheTumblersParams>) {
@@ -56,7 +41,7 @@ export function CrackTheTumblersComponent({
   }
 
   function handleCallOutcome() {
-    onResolve(judge(state, params));
+    onResolve(judge(state));
   }
 
   const progressBarClass = state.alarmTripped ? 'mg-progress-bar mg-progress-bar--danger' : 'mg-progress-bar';
@@ -72,13 +57,13 @@ export function CrackTheTumblersComponent({
         ) : (
           <span className="mg-status-badge mg-status-badge--active">
             <ShieldCheck size={14} />
-            Active
+            {dealt ? 'Active' : 'Setup'}
           </span>
         )}
 
         <div className={progressBarClass} aria-label="Pins set">
           <div className="mg-progress-bar__label">
-            <span data-testid="card-count">Pins set · {played} / {total}</span>
+            <span data-testid="card-count">Pins set · {state.playsRecorded} / {state.totalCards}</span>
           </div>
           <div className="mg-progress-bar__track">
             <div
@@ -90,79 +75,68 @@ export function CrackTheTumblersComponent({
       </StatusZone>
 
       <ChallengeZone>
-        {/* Pin board: played pins (lit), next slot (?), remaining (face-down) */}
-        <div className="ctb-pinboard" data-testid="pin-board" aria-label="Pin board">
-          {params.correctOrder.map((id, i) => {
-            const isPlayed = state.playedSequence.includes(id);
-            const isNext = i === played && !gameComplete;
-            const card = params.cards.find(c => c.id === id);
-            const playedCard = isPlayed
-              ? params.cards.find(c => c.id === state.playedSequence[i])
-              : null;
-
-            if (isPlayed) {
-              const clashIndex = state.alarmTripped
-                ? state.playedSequence.length - 1
-                : -1;
-              const isClash = state.alarmTripped && i === clashIndex;
-              return (
-                <div
-                  key={id}
-                  className={`ctb-pin ctb-pin--played${isClash ? ' ctb-pin--clash' : ''}`}
-                  data-testid={`pin-played-${i}`}
-                >
-                  {playedCard?.label ?? card?.label ?? '?'}
-                </div>
-              );
-            }
-            if (isNext) {
-              return (
-                <div key={id} className="ctb-pin ctb-pin--next" data-testid="pin-next">
-                  ?
-                </div>
-              );
-            }
-            return (
-              <div key={id} className="ctb-pin ctb-pin--empty" data-testid={`pin-empty-${i}`} />
-            );
-          })}
-        </div>
-
-        {/* Sub-text: what to beat next, or clash message */}
-        <div className={`ctb-subtext${state.alarmTripped ? ' ctb-subtext--danger' : ''}`}>
-          {state.alarmTripped
-            ? 'Clash — card out of sequence. Reset Pin forgives it once.'
-            : played === total
-              ? 'All pins set.'
-              : lastPlayedValue !== null
-                ? `Next must beat ${lastPlayedValue} · lower trips it`
-                : 'Play lowest card first'}
-        </div>
-
-        {/* Unplayed cards — tap to register a play */}
-        {!gameComplete && unplayedCards.length > 0 && (
-          <div className="ctb-hand">
-            <div className="ctb-hand-label">Tap to play:</div>
-            <CardSpread
-              cards={unplayedCards}
-              layout="row"
-              faceDown={[]}
-              onTap={handleCardTap}
-            />
+        {!dealt ? (
+          <div className="mg-setup-panel" data-testid="ctb-setup">
+            <div className="mg-setup-panel__title">
+              <Hand size={16} />
+              Set up the table
+            </div>
+            <ol className="mg-setup-panel__steps">
+              <li>Shuffle the pack.</li>
+              <li>
+                Deal <strong>{params.cardsPerPlayer} card{params.cardsPerPlayer !== 1 ? 's' : ''} face-down</strong> to
+                each of: <strong>{committed.map(p => p.name).join(', ')}</strong>.
+              </li>
+              <li>Players peek at their own cards only. No talking, no signalling.</li>
+            </ol>
+            <p className="mg-setup-panel__rule">
+              The crew plays every card to the table one at a time, <strong>lowest rank first,
+              ascending</strong> (Ace low, King high). Equal ranks may follow each other.
+              Record each play below — you are the referee.
+            </p>
+            <button
+              type="button"
+              className="mg-call-outcome-btn"
+              data-testid="ctb-dealt"
+              onClick={() => setDealt(true)}
+            >
+              Cards dealt — begin
+            </button>
           </div>
-        )}
+        ) : (
+          <>
+            <div className={`ctb-subtext${state.alarmTripped ? ' ctb-subtext--danger' : ''}`} data-testid="ctb-status-line">
+              {state.alarmTripped
+                ? 'Clash — card out of ascending order. Reset Pin forgives it once: hand the card back.'
+                : state.playsRecorded >= state.totalCards
+                  ? 'All pins set.'
+                  : 'Record each card as it hits the table.'}
+            </div>
 
-        {/* Played sequence readout for GM reference */}
-        <div className="ctb-played-row" data-testid="played-sequence">
-          {state.playedSequence.map((id, i) => {
-            const card = params.cards.find(c => c.id === id);
-            return (
-              <span key={id} data-testid={`played-${i}`} className="ctb-played-val">
-                {i > 0 ? ' → ' : ''}{card?.label ?? '?'}
-              </span>
-            );
-          })}
-        </div>
+            {!gameComplete && (
+              <div className="mg-record-controls" data-testid="ctb-record-controls">
+                <button
+                  type="button"
+                  className="mg-tbtn"
+                  data-testid="ctb-in-order"
+                  onClick={handleInOrder}
+                >
+                  <span className="mg-tl">✓</span>
+                  <span className="mg-ts">In order</span>
+                </button>
+                <button
+                  type="button"
+                  className="mg-tbtn mg-tbtn--danger"
+                  data-testid="ctb-clash"
+                  onClick={handleClash}
+                >
+                  <span className="mg-tl">✗</span>
+                  <span className="mg-ts">Clash</span>
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </ChallengeZone>
 
       <RefereeZone>

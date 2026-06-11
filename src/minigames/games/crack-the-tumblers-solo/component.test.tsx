@@ -18,117 +18,70 @@ function makeCommitted() {
   return [{ id: 'p1' as import('@/engine').PlayerId, name: 'Alice', stats: { tech: 3, physical: 3, charm: 3, stealth: 3 }, powerUps: {} }];
 }
 
-// ── Study phase ────────────────────────────────────────────────────────────────
+function renderGame(onResolve: (o: string) => void = () => {}) {
+  const params = makeParams(1);
+  render(
+    <CrackTheTumblersSoloComponent
+      params={params}
+      dial={dial}
+      committed={makeCommitted()}
+      onResolve={onResolve as never}
+    />,
+  );
+  return params;
+}
 
-describe('CrackTheTumblersSoloComponent — study phase', () => {
-  it('starts in study phase showing study pins', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersSoloComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    expect(screen.getByTestId('ctt-solo-phase').textContent).toContain('Study');
-    expect(screen.getByTestId('study-phase')).toBeInTheDocument();
+// ── Setup phase ───────────────────────────────────────────────────────────────
+
+describe('CrackTheTumblersSoloComponent — setup phase', () => {
+  it('starts in setup with deal instructions naming the player', () => {
+    const params = renderGame();
+    expect(screen.getByTestId('ctt-solo-phase').textContent).toBe('Setup');
+    const setup = screen.getByTestId('solo-setup');
+    expect(setup.textContent).toContain('Alice');
+    expect(setup.textContent).toContain(`${params.cardCount} cards face-up`);
   });
 
-  it('shows a pin for each study card', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersSoloComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    const pins = screen.queryAllByTestId(/^study-pin-/);
-    expect(pins.length).toBe(params.studyCards.length);
-  });
-
-  it('Start Recall button transitions to recall phase', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersSoloComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    fireEvent.click(screen.getByTestId('start-recall'));
-    expect(screen.getByTestId('recall-phase')).toBeInTheDocument();
-    expect(screen.getByTestId('ctt-solo-phase').textContent).toContain('Recall');
+  it('no Call Outcome until the study clock has started', () => {
+    renderGame();
+    expect(screen.queryByTestId('btn-call-outcome')).not.toBeInTheDocument();
   });
 });
 
-// ── Recall phase ───────────────────────────────────────────────────────────────
+// ── Study → recall flow ───────────────────────────────────────────────────────
 
-describe('CrackTheTumblersSoloComponent — recall phase', () => {
-  it('recall shows next slot as dashed ?', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersSoloComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    fireEvent.click(screen.getByTestId('start-recall'));
-    expect(screen.getByTestId('recall-next')).toBeInTheDocument();
-    expect(screen.getByTestId('recall-next').textContent).toBe('?');
+describe('CrackTheTumblersSoloComponent — study and recall', () => {
+  it('starting the study clock enters the study phase', () => {
+    renderGame();
+    fireEvent.click(screen.getByTestId('solo-start-study'));
+    expect(screen.getByTestId('ctt-solo-phase').textContent).toBe('Study');
+    expect(screen.getByTestId('study-phase')).toBeInTheDocument();
   });
 
-  it('progress meter updates after correct recall tap', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersSoloComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    fireEvent.click(screen.getByTestId('start-recall'));
-    const firstCorrectId = params.correctOrder[0]!;
-    fireEvent.click(screen.getByTestId(`card-${firstCorrectId}`));
-    expect(screen.getByTestId('recalled-pin-0')).toBeInTheDocument();
+  it('record controls are hidden during study', () => {
+    renderGame();
+    fireEvent.click(screen.getByTestId('solo-start-study'));
+    expect(screen.queryByTestId('solo-record-controls')).not.toBeInTheDocument();
   });
+});
 
-  it('call outcome yields botched when nothing recalled', () => {
-    const params = makeParams(1);
+// ── Recording (driven directly into recall via state) ────────────────────────
+
+describe('CrackTheTumblersSoloComponent — outcome', () => {
+  it('call outcome yields botched when nothing flipped', () => {
     const spy = vi.fn();
-    render(
-      <CrackTheTumblersSoloComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={spy}
-      />,
-    );
-    fireEvent.click(screen.getByTestId('start-recall'));
+    renderGame(spy);
+    fireEvent.click(screen.getByTestId('solo-start-study'));
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledWith('botched');
   });
 });
 
-// ── Boost slot ─────────────────────────────────────────────────────────────────
+// ── Boost slot ────────────────────────────────────────────────────────────────
 
 describe('CrackTheTumblersSoloComponent — boost slot', () => {
   it('mg-boost-slot always rendered (no layout shift)', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersSoloComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
+    renderGame();
     const slots = document.querySelectorAll('.mg-boost-slot');
     expect(slots.length).toBeGreaterThanOrEqual(1);
   });

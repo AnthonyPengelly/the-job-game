@@ -1289,3 +1289,70 @@
   font-size: 0.8rem;
   color: var(--fg-faint, #506a62);
 }
+
+/* ── Physical setup panel (shared: deal instructions before play) ─────────── */
+
+.mg-setup-panel {
+  max-width: 560px;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--edge, #233631);
+  border-left: 3px solid var(--accent, #1fd06e);
+  border-radius: 8px;
+  background: var(--bg-raise, #101b17);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mg-setup-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--accent, #1fd06e);
+}
+
+.mg-setup-panel__steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--fg, #e8f0ec);
+}
+
+.mg-setup-panel__rule {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--fg-muted, #a4b2ad);
+}
+
+/* ── GM record controls (shared: big ✓ / ✗ referee buttons) ───────────────── */
+
+.mg-record-controls {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.mg-tbtn--danger {
+  border-color: var(--danger, #f0463a);
+}
+
+.mg-tbtn--danger .mg-tl,
+.mg-tbtn--danger .mg-ts {
+  color: var(--danger, #f0463a);
+}
+
+.mg-tbtn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger, #f0463a) 12%, transparent);
+}

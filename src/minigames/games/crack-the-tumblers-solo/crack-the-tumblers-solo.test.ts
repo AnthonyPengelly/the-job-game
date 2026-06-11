@@ -33,61 +33,45 @@ describe('crackTheTumblersSolo registry', () => {
   });
 });
 
-// ── Generator reproducibility ─────────────────────────────────────────────────
+// ── Generator ────────────────────────────────────────────────────────────────
 
-describe('generate — reproducibility', () => {
+describe('generate — physical memory parameters', () => {
   it('same seed + same dial ⇒ identical params', () => {
     const d = dial(0);
-    const p1 = generate(mulberry32(1312), d);
-    const p2 = generate(mulberry32(1312), d);
-    expect(p1).toEqual(p2);
+    expect(generate(mulberry32(1312), d)).toEqual(generate(mulberry32(1312), d));
   });
 
-  it('different seeds produce different params', () => {
-    const p1 = generate(mulberry32(1), dial(0));
-    const p2 = generate(mulberry32(9999), dial(0));
-    expect(p1.correctOrder).not.toEqual(p2.correctOrder);
+  it('same dial gives same params regardless of seed (deal randomness is physical)', () => {
+    const d = dial(1);
+    expect(generate(mulberry32(1), d)).toEqual(generate(mulberry32(9999), d));
   });
 
-  it('correctOrder is ascending by studyCards label value', () => {
-    const params = generate(mulberry32(42), dial(0));
-    const values = params.correctOrder.map(
-      id => parseInt(params.studyCards.find(c => c.id === id)!.label, 10),
-    );
-    for (let i = 1; i < values.length; i++) {
-      expect(values[i]).toBeGreaterThan(values[i - 1]!);
+  it('higher dial ⇒ more cards to memorise', () => {
+    const easy = generate(mulberry32(1), dial(-2));
+    const hard = generate(mulberry32(1), dial(2));
+    expect(hard.cardCount).toBeGreaterThanOrEqual(easy.cardCount);
+  });
+
+  it('higher dial ⇒ less study time', () => {
+    const easy = generate(mulberry32(1), dial(-2));
+    const hard = generate(mulberry32(1), dial(2));
+    expect(hard.studySeconds).toBeLessThanOrEqual(easy.studySeconds);
+  });
+
+  it('cardCount stays within [4, 8]', () => {
+    for (const level of [-100, -2, 0, 2, 100]) {
+      const p = generate(mulberry32(1), dial(level));
+      expect(p.cardCount).toBeGreaterThanOrEqual(4);
+      expect(p.cardCount).toBeLessThanOrEqual(8);
     }
   });
 
-  it('recallCards contains the same cards as studyCards', () => {
-    const params = generate(mulberry32(7), dial(0));
-    const studyIds = params.studyCards.map(c => c.id).sort();
-    const recallIds = params.recallCards.map(c => c.id).sort();
-    expect(recallIds).toEqual(studyIds);
-  });
-
-  it('studySeconds decreases at higher dial (harder = less time)', () => {
-    const easy = generate(mulberry32(1), dial(-1));
-    const hard = generate(mulberry32(1), dial(1));
-    expect(hard.studySeconds).toBeLessThanOrEqual(easy.studySeconds);
-  });
-});
-
-// ── Dial lever direction ──────────────────────────────────────────────────────
-
-describe('generate — dial levers (higher dial = harder)', () => {
-  it('higher dial ⇒ more cards', () => {
-    const easy = generate(mulberry32(42), dial(-1));
-    const hard = generate(mulberry32(42), dial(1));
-    expect(hard.studyCards.length).toBeGreaterThanOrEqual(easy.studyCards.length);
-  });
-
-  it('clamps card count to minimum 3', () => {
-    expect(generate(mulberry32(1), dial(-100)).studyCards.length).toBe(3);
-  });
-
-  it('clamps card count to maximum 6', () => {
-    expect(generate(mulberry32(1), dial(100)).studyCards.length).toBe(6);
+  it('studySeconds stays within [6, 25]', () => {
+    for (const level of [-100, -2, 0, 2, 100]) {
+      const p = generate(mulberry32(1), dial(level));
+      expect(p.studySeconds).toBeGreaterThanOrEqual(6);
+      expect(p.studySeconds).toBeLessThanOrEqual(25);
+    }
   });
 });
 
@@ -96,38 +80,36 @@ describe('generate — dial levers (higher dial = harder)', () => {
 function makeState(overrides: Partial<CrackTheTumblersSoloState> = {}): CrackTheTumblersSoloState {
   return {
     phase: 'recall',
-    recallSequence: [],
+    flipsRecorded: 0,
     alarmTripped: false,
     resetPinUsed: false,
     ...overrides,
   };
 }
 
+const params = generate(mulberry32(1), dial(0));
+
 describe('judge', () => {
   it('botched when alarmTripped', () => {
-    const params = generate(mulberry32(1), dial(0));
-    expect(judge(makeState({ alarmTripped: true }), params)).toBe('botched');
+    expect(judge(makeState({ alarmTripped: true, flipsRecorded: params.cardCount }), params)).toBe('botched');
   });
 
-  it('botched when sequence incomplete', () => {
-    const params = generate(mulberry32(1), dial(0));
-    expect(judge(makeState({ recallSequence: [] }), params)).toBe('botched');
+  it('botched when row incomplete', () => {
+    expect(judge(makeState({ flipsRecorded: params.cardCount - 1 }), params)).toBe('botched');
   });
 
-  it('clean when full sequence correctly recalled', () => {
-    const params = generate(mulberry32(1), dial(0));
-    expect(judge(makeState({ recallSequence: [...params.correctOrder] }), params)).toBe('clean');
+  it('clean when full row flipped in order', () => {
+    expect(judge(makeState({ flipsRecorded: params.cardCount }), params)).toBe('clean');
   });
 
-  it('complication when full sequence recalled and Reset Pin was used', () => {
-    const params = generate(mulberry32(1), dial(0));
+  it('complication when completed but Reset Pin was used', () => {
     expect(
-      judge(makeState({ recallSequence: [...params.correctOrder], resetPinUsed: true }), params),
+      judge(makeState({ flipsRecorded: params.cardCount, resetPinUsed: true }), params),
     ).toBe('complication');
   });
 });
 
-// ── boost hooks ───────────────────────────────────────────────────────────────
+// ── resetPinBoost ─────────────────────────────────────────────────────────────
 
 describe('resetPinBoost (solo)', () => {
   it('has lane tech', () => {
@@ -138,29 +120,21 @@ describe('resetPinBoost (solo)', () => {
     expect(resetPinBoost.label).toBe('Reset Pin');
   });
 
-  it('removes the last recalled card and clears alarmTripped on first use', () => {
-    const params = generate(mulberry32(1), dial(0));
-    const ids = params.correctOrder;
-    const state = makeState({
-      recallSequence: [ids[0]!, ids[1]!],
-      alarmTripped: true,
-    });
+  it('clears the alarm without counting the wrong flip', () => {
+    const state = makeState({ flipsRecorded: 2, alarmTripped: true });
     const next = resetPinBoost.apply(state, params);
-    expect(next.resetPinUsed).toBe(true);
     expect(next.alarmTripped).toBe(false);
-    expect(next.recallSequence).toEqual([ids[0]!]);
+    expect(next.resetPinUsed).toBe(true);
+    expect(next.flipsRecorded).toBe(2);
   });
 
   it('is idempotent when already used', () => {
-    const params = generate(mulberry32(1), dial(0));
-    const state = makeState({ resetPinUsed: true });
-    const next = resetPinBoost.apply(state, params);
-    expect(next).toBe(state);
+    const state = makeState({ alarmTripped: true, resetPinUsed: true });
+    expect(resetPinBoost.apply(state, params)).toBe(state);
   });
 
   it('does not mutate the input state', () => {
-    const params = generate(mulberry32(1), dial(0));
-    const state = makeState({ recallSequence: [params.correctOrder[0]!] });
+    const state = makeState({ alarmTripped: true });
     const before = JSON.stringify(state);
     resetPinBoost.apply(state, params);
     expect(JSON.stringify(state)).toBe(before);

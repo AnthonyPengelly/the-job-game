@@ -15,146 +15,121 @@ function makeParams(seed = 1) {
 }
 
 function makeCommitted() {
-  return [{ id: 'p1' as import('@/engine').PlayerId, name: 'Alice', stats: { tech: 3, physical: 3, charm: 3, stealth: 3 }, powerUps: {} }];
+  return [
+    { id: 'p1' as import('@/engine').PlayerId, name: 'Alice', stats: { tech: 3, physical: 3, charm: 3, stealth: 3 }, powerUps: {} },
+    { id: 'p2' as import('@/engine').PlayerId, name: 'Bram', stats: { tech: 0, physical: 2, charm: 0, stealth: 0 }, powerUps: {} },
+  ];
 }
 
 function makeCommittedWithTech() {
-  return [{ id: 'p1' as import('@/engine').PlayerId, name: 'Alice', stats: { tech: 3, physical: 3, charm: 3, stealth: 3 }, powerUps: { tech: true as const } }];
+  return [
+    { id: 'p1' as import('@/engine').PlayerId, name: 'Alice', stats: { tech: 3, physical: 3, charm: 3, stealth: 3 }, powerUps: { tech: true as const } },
+    { id: 'p2' as import('@/engine').PlayerId, name: 'Bram', stats: { tech: 0, physical: 2, charm: 0, stealth: 0 }, powerUps: {} },
+  ];
 }
 
-// ── Pin board visibility ───────────────────────────────────────────────────────
+function renderGame(committed = makeCommitted(), onResolve: (o: string) => void = () => {}) {
+  const params = makeParams(1);
+  render(
+    <CrackTheTumblersComponent
+      params={params}
+      dial={dial}
+      committed={committed}
+      onResolve={onResolve as never}
+    />,
+  );
+  return params;
+}
 
-describe('CrackTheTumblersComponent — pin board', () => {
-  it('renders the pin board with correct total pin count', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    expect(screen.getByTestId('pin-board')).toBeInTheDocument();
-    // All pins present: N played + N-played empty/next
-    const total = params.cards.length;
-    expect(screen.getByTestId('pin-next')).toBeInTheDocument(); // first pin: next slot
-    // Remaining slots are empty
-    const emptyPins = screen.queryAllByTestId(/^pin-empty-/);
-    expect(emptyPins.length + 1).toBe(total); // next + empty = total
+function beginPlay() {
+  fireEvent.click(screen.getByTestId('ctb-dealt'));
+}
+
+// ── Setup panel ───────────────────────────────────────────────────────────────
+
+describe('CrackTheTumblersComponent — setup panel', () => {
+  it('shows deal instructions with every committed player named', () => {
+    renderGame();
+    const setup = screen.getByTestId('ctb-setup');
+    expect(setup.textContent).toContain('Alice');
+    expect(setup.textContent).toContain('Bram');
+    expect(setup.textContent).toContain('Shuffle the pack');
   });
 
-  it('next slot shows "?" when nothing played', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
+  it('states the cards-per-player count from params', () => {
+    const params = renderGame();
+    expect(screen.getByTestId('ctb-setup').textContent).toContain(
+      `${params.cardsPerPlayer} card`,
     );
-    expect(screen.getByTestId('pin-next').textContent).toBe('?');
   });
 
-  it('progress meter label shows pins set / total', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
+  it('total in the progress label is committed × cardsPerPlayer', () => {
+    const params = renderGame();
+    expect(screen.getByTestId('card-count').textContent).toContain(
+      `0 / ${params.cardsPerPlayer * 2}`,
     );
-    expect(screen.getByTestId('card-count').textContent).toContain(`0 / ${params.cards.length}`);
   });
 
-  it('played pin appears lit after a card is tapped in correct order', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    // Tap the first card in correct order
-    const firstCorrectId = params.correctOrder[0]!;
-    fireEvent.click(screen.getByTestId(`card-${firstCorrectId}`));
-    expect(screen.getByTestId('pin-played-0')).toBeInTheDocument();
+  it('record controls appear only after the GM confirms the deal', () => {
+    renderGame();
+    expect(screen.queryByTestId('ctb-record-controls')).not.toBeInTheDocument();
+    beginPlay();
+    expect(screen.getByTestId('ctb-record-controls')).toBeInTheDocument();
   });
 });
 
-// ── Clash state ────────────────────────────────────────────────────────────────
+// ── Recording plays ───────────────────────────────────────────────────────────
 
-describe('CrackTheTumblersComponent — clash / alarm', () => {
-  it('alarm-tripped badge shows when a wrong-order card is played', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
+describe('CrackTheTumblersComponent — recording', () => {
+  it('✓ In order increments the pins-set count', () => {
+    const params = renderGame();
+    beginPlay();
+    fireEvent.click(screen.getByTestId('ctb-in-order'));
+    expect(screen.getByTestId('card-count').textContent).toContain(
+      `1 / ${params.cardsPerPlayer * 2}`,
     );
-    // Play the highest-valued card first (out of order)
-    if (params.cards.length > 1) {
-      const highestId = params.correctOrder[params.correctOrder.length - 1]!;
-      fireEvent.click(screen.getByTestId(`card-${highestId}`));
-      // Now play a lower-valued card to trigger clash
-      const lowestId = params.correctOrder[0]!;
-      if (lowestId !== highestId) {
-        fireEvent.click(screen.getByTestId(`card-${lowestId}`));
-        expect(screen.getByTestId('alarm-tripped')).toBeInTheDocument();
-      }
-    }
+  });
+
+  it('✗ Clash trips the alarm badge', () => {
+    renderGame();
+    beginPlay();
+    fireEvent.click(screen.getByTestId('ctb-clash'));
+    expect(screen.getByTestId('alarm-tripped')).toBeInTheDocument();
+  });
+
+  it('record controls disappear once the alarm trips', () => {
+    renderGame();
+    beginPlay();
+    fireEvent.click(screen.getByTestId('ctb-clash'));
+    expect(screen.queryByTestId('ctb-record-controls')).not.toBeInTheDocument();
   });
 });
 
-// ── Boost slot (no layout shift) ──────────────────────────────────────────────
+// ── Boost slot ────────────────────────────────────────────────────────────────
 
 describe('CrackTheTumblersComponent — boost slot', () => {
   it('boost slot is always rendered (no layout shift when boost fires)', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    // mg-boost-slot must always be present (reserve space)
+    renderGame();
     const slots = document.querySelectorAll('.mg-boost-slot');
     expect(slots.length).toBeGreaterThanOrEqual(1);
   });
 
   it('Reset Pin boost renders for Tech power-up holder', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersComponent
-        params={params}
-        dial={dial}
-        committed={makeCommittedWithTech()}
-        onResolve={() => {}}
-      />,
-    );
+    renderGame(makeCommittedWithTech());
     expect(screen.getByTestId('boost-tech')).toBeInTheDocument();
   });
 
+  it('Reset Pin clears the alarm and re-enables recording', () => {
+    renderGame(makeCommittedWithTech());
+    beginPlay();
+    fireEvent.click(screen.getByTestId('ctb-clash'));
+    fireEvent.click(screen.getByTestId('boost-tech'));
+    expect(screen.queryByTestId('alarm-tripped')).not.toBeInTheDocument();
+    expect(screen.getByTestId('ctb-record-controls')).toBeInTheDocument();
+  });
+
   it('Reset Pin boost fires once then disables', () => {
-    const params = makeParams(1);
-    render(
-      <CrackTheTumblersComponent
-        params={params}
-        dial={dial}
-        committed={makeCommittedWithTech()}
-        onResolve={() => {}}
-      />,
-    );
+    renderGame(makeCommittedWithTech());
     const btn = screen.getByTestId('boost-tech');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -162,12 +137,19 @@ describe('CrackTheTumblersComponent — boost slot', () => {
   });
 });
 
-// ── Call Outcome ───────────────────────────────────────────────────────────────
+// ── Call Outcome ──────────────────────────────────────────────────────────────
 
 describe('CrackTheTumblersComponent — onResolve', () => {
-  it('calls onResolve with botched when nothing played', () => {
-    const params = makeParams(1);
+  it('calls onResolve with botched when nothing recorded', () => {
     const spy = vi.fn();
+    renderGame(makeCommitted(), spy);
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    expect(spy).toHaveBeenCalledWith('botched');
+  });
+
+  it('calls onResolve with clean when every card is recorded in order', () => {
+    const spy = vi.fn();
+    const params = makeParams(1);
     render(
       <CrackTheTumblersComponent
         params={params}
@@ -176,7 +158,12 @@ describe('CrackTheTumblersComponent — onResolve', () => {
         onResolve={spy}
       />,
     );
+    beginPlay();
+    const total = params.cardsPerPlayer * 2;
+    for (let i = 0; i < total; i++) {
+      fireEvent.click(screen.getByTestId('ctb-in-order'));
+    }
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
-    expect(spy).toHaveBeenCalledWith('botched');
+    expect(spy).toHaveBeenCalledWith('clean');
   });
 });

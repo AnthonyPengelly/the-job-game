@@ -1,66 +1,34 @@
 import type { Rng } from '@/engine';
 import type { Difficulty } from '@/minigames/contract';
-import type { Card, CardId } from '@/minigames/primitives/CardSpread';
 
 export interface CrackTheTumblersSoloParams {
-  /** Cards in their study display order (ascending). */
-  studyCards: Card[];
-  /** Cards in shuffled order for the recall phase. */
-  recallCards: Card[];
-  /** Correct play order (ascending) — what the player must recall. */
-  correctOrder: CardId[];
-  /** Seconds to study the sequence before the recall phase. */
+  /** How many random cards the GM deals face-up in a row for the study phase. */
+  cardCount: number;
+  /** Seconds the player gets to study the row before it is flipped face-down. */
   studySeconds: number;
-  /** Minimum gap between consecutive values (wider = more distinct = easier to remember). */
-  minGap: number;
 }
 
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
 }
 
-function shuffle<T>(arr: T[], rng: Rng): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = rng.int(0, i);
-    const tmp = a[i]!;
-    a[i] = a[j]!;
-    a[j] = tmp;
-  }
-  return a;
-}
-
 /**
- * Generate Crack the Tumblers Solo parameters from the seeded RNG and the resolved dial.
+ * Generate Crack the Tumblers Solo parameters from the resolved dial.
  *
- * Dial levers (lower dial.level = easier):
- *   - cardCount: fewer pins at lower difficulty (3..6)
- *   - studySeconds: more study time at lower difficulty (8..20)
- *   - minGap: wider gaps between values at lower difficulty (1..5)
+ * The memory test is physical: the GM deals `cardCount` random cards face-up
+ * in a row, the player studies them for `studySeconds`, the GM flips them
+ * face-down in place, and the player must flip them back one at a time in
+ * ascending rank order (Ace low, equal ranks may follow each other). Every
+ * flip is public, so the whole table can verify each reveal — the GM records
+ * in-order / clash on the console. The randomness lives in the physical
+ * shuffle; the RNG is accepted per contract but not consumed.
  *
- * Same Tech lane as the parent game; same dial curve applies.
+ * Dial levers (higher dial.level = harder):
+ *   - cardCount: more positions to memorise (4..8)
+ *   - studySeconds: less time to study (6..25)
  */
-export function generate(rng: Rng, dial: Difficulty): CrackTheTumblersSoloParams {
-  const cardCount = clamp(Math.round(4 + dial.level * 1.0), 3, 6);
-  const minGap = clamp(Math.round(4 - dial.level * 0.8), 1, 5);
-  const studySeconds = clamp(Math.round(14 - dial.level * 3), 8, 20);
-
-  const values: number[] = [];
-  let current = rng.int(1, 5);
-  values.push(current);
-  for (let i = 1; i < cardCount; i++) {
-    current += minGap + rng.int(0, 2);
-    values.push(current);
-  }
-
-  // Use value-based IDs so correctOrder varies with seed.
-  const studyCards: Card[] = values.map(v => ({
-    id: `pin-${v}` as CardId,
-    label: String(v),
-  }));
-
-  const correctOrder: CardId[] = studyCards.map(c => c.id);
-  const recallCards = shuffle(studyCards, rng);
-
-  return { studyCards, recallCards, correctOrder, studySeconds, minGap };
+export function generate(_rng: Rng, dial: Difficulty): CrackTheTumblersSoloParams {
+  const cardCount = clamp(Math.round(5 + dial.level), 4, 8);
+  const studySeconds = clamp(Math.round(15 - dial.level * 3), 6, 25);
+  return { cardCount, studySeconds };
 }
