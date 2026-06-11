@@ -6,9 +6,9 @@
         "mansionType": "villa"
       },
       "text": [
-        "Alright, listen up. {mark} — villa on the hill, three floors, old money. Security grade {security}, which means a gate, cameras on the garden side, and a guard who does his rounds like clockwork. The prize sits in {vault}. The owner's at the opera. We have the run of the place — for now.",
+        "Alright, listen up. {mark} — villa on the hill, three floors, old money. Security grade {security}, which means a gate, cameras on the garden side, and a guard who does his rounds like clockwork. Every room in there is hiding something worth carrying out. The owner's at the opera. We have the run of the place — for now.",
         "Here's the shape of the night. We go room by room. Every room I'll show you two ways through — a quiet take and a greedy take. You pick the door together, then you tell me exactly who's going in. The people you send do the work; everyone else holds their breath.",
-        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Heat builds the longer we stay; at twenty we're running. {targetHaul} if we do this right. Everybody ready? Then we breach on my mark."
+        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Every room pays out — loot, gear, or both — and heat builds the longer we stay; at twenty we're running. How fat the bag gets is down to how long you push. Everybody ready? Then we breach on my mark."
       ]
     },
     {
@@ -17,9 +17,9 @@
         "mansionType": "villa"
       },
       "text": [
-        "Eyes open. {mark}. Beautiful property — shame about what we're going to do to its insurance premium. Villa layout, two stairwells, service entrance on a separate circuit. {vault} is where the money lives, and the take is {targetHaul} if nobody sneezes.",
+        "Eyes open. {mark}. Beautiful property — shame about what we're going to do to its insurance premium. Villa layout, two stairwells, service entrance on a separate circuit. The money's spread through the whole house — how much of it leaves with us tonight is entirely up to you.",
         "Here's the shape of the night. We go room by room. Every room I'll show you two ways through — a quiet take and a greedy take. You pick the door together, then you tell me exactly who's going in. The people you send do the work; everyone else holds their breath.",
-        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Heat builds the longer we stay; at twenty we're running. {targetHaul} if we do this right. Everybody ready? Then we breach on my mark."
+        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Every room pays out — loot, gear, or both — and heat builds the longer we stay; at twenty we're running. How fat the bag gets is down to how long you push. Everybody ready? Then we breach on my mark."
       ]
     },
     {
@@ -28,9 +28,9 @@
         "mansionType": "villa"
       },
       "text": [
-        "Here's the mark: {mark}. Owner thinks a gate and a night guard makes it a fortress. It makes it a queue. The good stuff's in {vault}; security reads {security} on my sheet, which I'd call optimistic. Theirs, not ours.",
+        "Here's the mark: {mark}. Owner thinks a gate and a night guard makes it a fortress. It makes it a queue. There's a payday behind every door in there; security reads {security} on my sheet, which I'd call optimistic. Theirs, not ours.",
         "Here's the shape of the night. We go room by room. Every room I'll show you two ways through — a quiet take and a greedy take. You pick the door together, then you tell me exactly who's going in. The people you send do the work; everyone else holds their breath.",
-        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Heat builds the longer we stay; at twenty we're running. {targetHaul} if we do this right. Everybody ready? Then we breach on my mark."
+        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Every room pays out — loot, gear, or both — and heat builds the longer we stay; at twenty we're running. How fat the bag gets is down to how long you push. Everybody ready? Then we breach on my mark."
       ]
     },
     {
@@ -39,9 +39,9 @@
         "mansionType": "estate"
       },
       "text": [
-        "Listen up. {mark} — a proper estate, the kind with its own chapel and a wine cellar nobody's read the inventory on. Grounds patrol, dogs on the east lawn, and {vault} buried deep behind family portraits. Security grade {security}. The take: {targetHaul}.",
+        "Listen up. {mark} — a proper estate, the kind with its own chapel and a wine cellar nobody's read the inventory on. Grounds patrol, dogs on the east lawn, and more rooms than the staff can keep an eye on. Security grade {security}. We go room by room and carry out what we can.",
         "Here's the shape of the night. We go room by room. Every room I'll show you two ways through — a quiet take and a greedy take. You pick the door together, then you tell me exactly who's going in. The people you send do the work; everyone else holds their breath.",
-        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Heat builds the longer we stay; at twenty we're running. {targetHaul} if we do this right. Everybody ready? Then we breach on my mark."
+        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Every room pays out — loot, gear, or both — and heat builds the longer we stay; at twenty we're running. How fat the bag gets is down to how long you push. Everybody ready? Then we breach on my mark."
       ]
     },
     {
@@ -50,9 +50,9 @@
         "mansionType": "estate"
       },
       "text": [
-        "The mark is {mark}. Estates like this were built to keep peasants out, not us. Long corridors, staff doors everywhere, and {vault} sitting fat at the heart of it. {security}-grade security and a groundskeeper who's mostly asleep. Mostly.",
+        "The mark is {mark}. Estates like this were built to keep peasants out, not us. Long corridors, staff doors everywhere, and a take spread across more rooms than they can watch. {security}-grade security and a groundskeeper who's mostly asleep. Mostly.",
         "Here's the shape of the night. We go room by room. Every room I'll show you two ways through — a quiet take and a greedy take. You pick the door together, then you tell me exactly who's going in. The people you send do the work; everyone else holds their breath.",
-        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Heat builds the longer we stay; at twenty we're running. {targetHaul} if we do this right. Everybody ready? Then we breach on my mark."
+        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Every room pays out — loot, gear, or both — and heat builds the longer we stay; at twenty we're running. How fat the bag gets is down to how long you push. Everybody ready? Then we breach on my mark."
       ]
     },
     {
@@ -61,9 +61,9 @@
         "mansionType": "estate"
       },
       "text": [
-        "Here we go: {mark}. Old family, old money, old locks — and one very new alarm system they bought after the last crew got greedy. {vault} is the prize. We're better than the last crew. Prove me right.",
+        "Here we go: {mark}. Old family, old money, old locks — and one very new alarm system they bought after the last crew got greedy. The last crew left empty-handed. We're better than the last crew. Prove me right.",
         "Here's the shape of the night. We go room by room. Every room I'll show you two ways through — a quiet take and a greedy take. You pick the door together, then you tell me exactly who's going in. The people you send do the work; everyone else holds their breath.",
-        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Heat builds the longer we stay; at twenty we're running. {targetHaul} if we do this right. Everybody ready? Then we breach on my mark."
+        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Every room pays out — loot, gear, or both — and heat builds the longer we stay; at twenty we're running. How fat the bag gets is down to how long you push. Everybody ready? Then we breach on my mark."
       ]
     },
     {
@@ -72,9 +72,9 @@
         "mansionType": "penthouse"
       },
       "text": [
-        "Top of the city: {mark}. Penthouse job — one way in, one way out, and forty floors of consequences underneath us. Concierge, key-card lifts, {security}-grade cameras. {vault} holds the take: {targetHaul}. The view's free.",
+        "Top of the city: {mark}. Penthouse job — one way in, one way out, and forty floors of consequences underneath us. Concierge, key-card lifts, {security}-grade cameras. Everything up there is small, expensive, and ours if we keep our nerve. The view's free.",
         "Here's the shape of the night. We go room by room. Every room I'll show you two ways through — a quiet take and a greedy take. You pick the door together, then you tell me exactly who's going in. The people you send do the work; everyone else holds their breath.",
-        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Heat builds the longer we stay; at twenty we're running. {targetHaul} if we do this right. Everybody ready? Then we breach on my mark."
+        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Every room pays out — loot, gear, or both — and heat builds the longer we stay; at twenty we're running. How fat the bag gets is down to how long you push. Everybody ready? Then we breach on my mark."
       ]
     },
     {
@@ -83,9 +83,9 @@
         "mansionType": "penthouse"
       },
       "text": [
-        "The mark is {mark}, and it's a penthouse, which means everything is small, expensive, and alarmed. The lift logs every card. The stairs add eight minutes. {vault} is the prize and the clock starts the moment the lobby cameras blink.",
+        "The mark is {mark}, and it's a penthouse, which means everything is small, expensive, and alarmed. The lift logs every card. The stairs add eight minutes. The clock starts the moment the lobby cameras blink — every minute up there is heat on our necks.",
         "Here's the shape of the night. We go room by room. Every room I'll show you two ways through — a quiet take and a greedy take. You pick the door together, then you tell me exactly who's going in. The people you send do the work; everyone else holds their breath.",
-        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Heat builds the longer we stay; at twenty we're running. {targetHaul} if we do this right. Everybody ready? Then we breach on my mark."
+        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Every room pays out — loot, gear, or both — and heat builds the longer we stay; at twenty we're running. How fat the bag gets is down to how long you push. Everybody ready? Then we breach on my mark."
       ]
     },
     {
@@ -94,9 +94,9 @@
         "mansionType": "penthouse"
       },
       "text": [
-        "Look up — {mark}, the penthouse. Owner collects art, watches, and enemies. We're here for the first two. {vault}, security grade {security}, and a doorman who notices shoes. Walk like you're rich and follow my voice.",
+        "Look up — {mark}, the penthouse. Owner collects art, watches, and enemies. We're here for the first two. Security grade {security}, and a doorman who notices shoes. Walk like you're rich and follow my voice.",
         "Here's the shape of the night. We go room by room. Every room I'll show you two ways through — a quiet take and a greedy take. You pick the door together, then you tell me exactly who's going in. The people you send do the work; everyone else holds their breath.",
-        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Heat builds the longer we stay; at twenty we're running. {targetHaul} if we do this right. Everybody ready? Then we breach on my mark."
+        "The jobs themselves happen right there on your table — cards, dice, steady hands, fast mouths. I'll referee from the van and keep score. Every room pays out — loot, gear, or both — and heat builds the longer we stay; at twenty we're running. How fat the bag gets is down to how long you push. Everybody ready? Then we breach on my mark."
       ]
     }
   ],
@@ -118,9 +118,12 @@
     {
       "id": "room-approach-3",
       "text": [
-        "Moving to room {roomNum}. {vault} is getting closer — keep your heads.",
+        "Moving to room {roomNum}. The bag's getting heavier — keep your heads.",
         "Look at the two options, weigh the heat, and commit a crew. Whoever plays this room sits the next one out, so spend your specialists wisely."
-      ]
+      ],
+      "when": {
+        "restsApply": true
+      }
     },
     {
       "id": "room-approach-4",
@@ -155,7 +158,10 @@
       "text": [
         "Okay — room {roomNum}. Smells like furniture polish and poor decisions in there.",
         "Read both doors to the table. Whoever's freshest takes point; the played-out ones rest. Commit when ready."
-      ]
+      ],
+      "when": {
+        "restsApply": true
+      }
     },
     {
       "id": "room-approach-9",
@@ -167,9 +173,12 @@
     {
       "id": "room-approach-10",
       "text": [
-        "One more door between us and {vault}. Room {roomNum}.",
+        "One more door, one more payday. Room {roomNum}.",
         "Options are on screen. Quiet or greedy — and before you choose, look at who's rested. The next room won't wait for tired hands."
-      ]
+      ],
+      "when": {
+        "restsApply": true
+      }
     },
     {
       "id": "room-approach-11",
@@ -1160,7 +1169,7 @@
     },
     {
       "id": "scenario-reveal-10",
-      "text": "Outcome's locked in. {vault} is still ahead of us — eyes back on the prize."
+      "text": "Outcome's locked in. The night's not done with us yet — eyes back on the job."
     },
     {
       "id": "scenario-reveal-11",

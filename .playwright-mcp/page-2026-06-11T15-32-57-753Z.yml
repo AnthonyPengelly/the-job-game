@@ -1,0 +1,98 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - emphasis [ref=e9]: THE
+        - text: _JOB
+      - generic [ref=e10]: GM Console
+    - generic [ref=e12]:
+      - generic [ref=e13]: PHASE 02
+      - generic [ref=e14]: Briefing
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]: Heat
+        - generic [ref=e19]:
+          - text: "00"
+          - generic [ref=e20]: / 20
+      - 'generic "Heat: 0 of 20" [ref=e21]'
+    - generic [ref=e42]:
+      - img [ref=e43]
+      - generic [ref=e46]:
+        - generic [ref=e47]: Loot
+        - generic [ref=e48]: $0
+        - generic [ref=e49]: "0"
+  - complementary "Crew" [ref=e50]
+  - main [ref=e51]:
+    - generic [ref=e53]:
+      - generic [ref=e55]:
+        - generic [ref=e56]: 01 · Setup
+        - heading "Assemble the Crew" [level=1] [ref=e57]
+      - generic [ref=e58]:
+        - generic [ref=e59]: Personal best
+        - paragraph [ref=e60]: Complete your first run to see scores here.
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - generic [ref=e65]: Players at the table
+            - generic [ref=e66]:
+              - button "−" [ref=e67] [cursor=pointer]
+              - generic [ref=e68]: "3"
+              - button "+" [ref=e69] [cursor=pointer]
+          - generic [ref=e70]:
+            - generic [ref=e71]: Crew name
+            - textbox "Crew name" [ref=e72]:
+              - /placeholder: The Magpies
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]: "1"
+            - textbox "Player 1" [ref=e76]
+            - combobox [ref=e77]:
+              - option "Circuit Jockey — +2 TEC" [selected]
+              - option "Bruiser — +2 PHY"
+              - option "Grifter — +2 CHA"
+              - option "Shadow — +2 STE"
+              - option "Grease Monkey — +1 TEC / +1 PHY"
+              - option "Fixer — +1 TEC / +1 CHA"
+              - option "Cat Burglar — +1 TEC / +1 STE"
+              - option "Enforcer — +1 PHY / +1 CHA"
+              - option "Prowler — +1 PHY / +1 STE"
+              - option "Spy — +1 CHA / +1 STE"
+          - generic [ref=e78]:
+            - generic [ref=e79]: "2"
+            - textbox "Player 2" [ref=e80]
+            - combobox [ref=e81]:
+              - option "Circuit Jockey — +2 TEC" [selected]
+              - option "Bruiser — +2 PHY"
+              - option "Grifter — +2 CHA"
+              - option "Shadow — +2 STE"
+              - option "Grease Monkey — +1 TEC / +1 PHY"
+              - option "Fixer — +1 TEC / +1 CHA"
+              - option "Cat Burglar — +1 TEC / +1 STE"
+              - option "Enforcer — +1 PHY / +1 CHA"
+              - option "Prowler — +1 PHY / +1 STE"
+              - option "Spy — +1 CHA / +1 STE"
+          - generic [ref=e82]:
+            - generic [ref=e83]: "3"
+            - textbox "Player 3" [ref=e84]
+            - combobox [ref=e85]:
+              - option "Circuit Jockey — +2 TEC" [selected]
+              - option "Bruiser — +2 PHY"
+              - option "Grifter — +2 CHA"
+              - option "Shadow — +2 STE"
+              - option "Grease Monkey — +1 TEC / +1 PHY"
+              - option "Fixer — +1 TEC / +1 CHA"
+              - option "Cat Burglar — +1 TEC / +1 STE"
+              - option "Enforcer — +1 PHY / +1 CHA"
+              - option "Prowler — +1 PHY / +1 STE"
+              - option "Spy — +1 CHA / +1 STE"
+        - group [ref=e86]:
+          - generic "Advanced" [ref=e87] [cursor=pointer]
+  - complementary "Tools" [ref=e88]:
+    - generic [ref=e89]:
+      - button "Soundboard" [ref=e90] [cursor=pointer]:
+        - img [ref=e91]
+      - button "Settings" [ref=e95] [cursor=pointer]:
+        - img [ref=e96]
+      - button "Undo last action" [ref=e99] [cursor=pointer]:
+        - img [ref=e100]
+  - button "Start job" [ref=e105] [cursor=pointer]

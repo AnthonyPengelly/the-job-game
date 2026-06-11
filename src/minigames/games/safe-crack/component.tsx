@@ -46,10 +46,19 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
     setState(s => hook.apply(s, params));
   }
 
+  // A guess is only legal when every digit sits inside the announced pool —
+  // stops the GM burning a try on a digit the code can't contain.
+  function parseGuess(input: string): number[] | null {
+    const digits = input.replace(/\D/g, '').split('').map(Number);
+    if (digits.length !== params.code.length) return null;
+    if (digits.some(d => d < params.digitMin || d > params.digitMax)) return null;
+    return digits;
+  }
+
   function handleGuessSubmit() {
     if (gameOver) return;
-    const digits = currentInput.replace(/\D/g, '').split('').map(Number);
-    if (digits.length !== params.code.length) return;
+    const digits = parseGuess(currentInput);
+    if (digits === null) return;
 
     const feedback = computeFeedback(params.code, digits);
     const solved = feedback.rightPlace === params.code.length;
@@ -83,7 +92,9 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
           {badgeIcon}
           <span>{badgeLabel}</span>
         </span>
-        <span data-testid="code-length" className="mg-dial-inline">{params.code.length}-digit code · {params.guessBudget} tries</span>
+        <span data-testid="code-length" className="mg-dial-inline">
+          {params.code.length}-digit code · digits {params.digitMin}–{params.digitMax} · {params.guessBudget} tries
+        </span>
         <Timer
           seconds={params.timerSeconds}
           running={!gameOver}
@@ -161,14 +172,14 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
               maxLength={params.code.length}
               onChange={e => setCurrentInput(e.target.value)}
               onKeyDown={handleInputKeyDown}
-              placeholder={`${params.code.length}-digit guess`}
+              placeholder={`${params.code.length} digits, ${params.digitMin}–${params.digitMax} each`}
               style={{ fontFamily: 'var(--font-data)', fontSize: '1rem', padding: '0.4rem 0.6rem', borderRadius: 4 }}
             />
             <button
               data-testid="guess-submit"
               className="mg-call-outcome-btn"
               onClick={handleGuessSubmit}
-              disabled={currentInput.replace(/\D/g, '').length !== params.code.length}
+              disabled={parseGuess(currentInput) === null}
             >
               Submit
             </button>

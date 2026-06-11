@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyGear, profileFor, isResting, applyExhaustion } from './crew';
+import { applyGear, profileFor, isResting, applyExhaustion, restRoomsFor } from './crew';
 import type { Player, PlayerId } from './types';
 import type { GearDef, EngineConfig } from './config';
 
@@ -174,6 +174,19 @@ describe('profileFor', () => {
   it('intermediate headcount 3 returns tired', () => {
     const p = profileFor(3, cfg);
     expect(p.exhaustion).toBe('tired');
+  });
+});
+
+describe('restRoomsFor', () => {
+  it('is 0 at 2 and 3 players (tired class — nobody benches)', () => {
+    expect(restRoomsFor(2, cfg)).toBe(0);
+    expect(restRoomsFor(3, cfg)).toBe(0);
+  });
+
+  it('is > 0 from 4 players up (light/full classes bench)', () => {
+    for (const n of [4, 5, 6, 7]) {
+      expect(restRoomsFor(n, cfg)).toBeGreaterThan(0);
+    }
   });
 });
 

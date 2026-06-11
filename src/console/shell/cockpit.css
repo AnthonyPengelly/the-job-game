@@ -385,6 +385,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* Pad past the edge fade below: without this the first/last 14px of every
+     screen sit inside the transparent band and the tops look clipped. */
+  padding: 14px 0;
   /* Edge fade so over-full content scrolls under a soft vignette, not under the bar */
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
   mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);

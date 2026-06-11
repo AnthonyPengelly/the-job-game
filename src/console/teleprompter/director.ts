@@ -158,6 +158,7 @@ export function createNarrationDirector(
       if (ctx.outcome !== undefined) { whenCtx.outcome = ctx.outcome; hasFilterField = true; }
       if (ctx.greedy !== undefined) { whenCtx.greedy = ctx.greedy; hasFilterField = true; }
       if (ctx.heatBand !== undefined) { whenCtx.heatBand = ctx.heatBand; hasFilterField = true; }
+      if (ctx.restsApply !== undefined) { whenCtx.restsApply = ctx.restsApply; hasFilterField = true; }
       if (hasFilterField) candidates = filterByContext(allVariants, whenCtx);
     }
 

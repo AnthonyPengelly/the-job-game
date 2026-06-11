@@ -20,6 +20,7 @@ export function filterByContext(
     if (w.outcome !== undefined && w.outcome !== ctx.outcome) return false;
     if (w.greedy !== undefined && w.greedy !== ctx.greedy) return false;
     if (w.heatBand !== undefined && w.heatBand !== ctx.heatBand) return false;
+    if (w.restsApply !== undefined && w.restsApply !== ctx.restsApply) return false;
     return true;
   });
 }

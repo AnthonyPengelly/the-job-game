@@ -80,8 +80,8 @@ describe('generate — dial levers (higher dial = harder)', () => {
     expect(generate(mulberry32(1), dial(100)).code.length).toBe(4);
   });
 
-  it('clamps guess budget to maximum 10', () => {
-    expect(generate(mulberry32(1), dial(-100)).guessBudget).toBe(10);
+  it('clamps guess budget to maximum 8', () => {
+    expect(generate(mulberry32(1), dial(-100)).guessBudget).toBe(8);
   });
 
   it('clamps guess budget to minimum 6', () => {
@@ -92,6 +92,43 @@ describe('generate — dial levers (higher dial = harder)', () => {
     for (const level of [-3, -1, 0, 0.5, 1, 1.5, 2, 3, 5, 100]) {
       const p = generate(mulberry32(7), dial(level));
       expect(p.guessBudget).toBeGreaterThanOrEqual(p.code.length + 2);
+    }
+  });
+});
+
+// ── Digit pool (playtest wave 2: smaller pool than Mastermind) ────────────────
+
+describe('generate — digit pool', () => {
+  it('3-digit codes draw only from 1–4', () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const p = generate(mulberry32(seed), dial(-1));
+      expect(p.code.length).toBe(3);
+      expect(p.digitMin).toBe(1);
+      expect(p.digitMax).toBe(4);
+      for (const d of p.code) {
+        expect(d).toBeGreaterThanOrEqual(1);
+        expect(d).toBeLessThanOrEqual(4);
+      }
+    }
+  });
+
+  it('4-digit codes draw only from 1–5', () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const p = generate(mulberry32(seed), dial(3));
+      expect(p.code.length).toBe(4);
+      expect(p.digitMin).toBe(1);
+      expect(p.digitMax).toBe(5);
+      for (const d of p.code) {
+        expect(d).toBeGreaterThanOrEqual(1);
+        expect(d).toBeLessThanOrEqual(5);
+      }
+    }
+  });
+
+  it('never produces a zero digit (the pool starts at 1)', () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      const p = generate(mulberry32(seed), dial(seed % 4));
+      expect(p.code.every(d => d >= 1)).toBe(true);
     }
   });
 });
@@ -162,7 +199,7 @@ describe('techBoost (Stethoscope)', () => {
   });
 
   it('sets techBoostUsed and stethoscopeReveal on first use', () => {
-    const params = { code: [3, 7, 1], guessBudget: 5, timerSeconds: 120 };
+    const params = { code: [3, 4, 1], digitMin: 1, digitMax: 4, guessBudget: 5, timerSeconds: 120 };
     const state = makeState();
     const next = techBoost.apply(state, params);
     expect(next.techBoostUsed).toBe(true);
@@ -170,23 +207,23 @@ describe('techBoost (Stethoscope)', () => {
   });
 
   it('is idempotent — same reference returned when already used', () => {
-    const params = { code: [3, 7, 1], guessBudget: 5, timerSeconds: 120 };
+    const params = { code: [3, 4, 1], digitMin: 1, digitMax: 4, guessBudget: 5, timerSeconds: 120 };
     const state = makeState({ techBoostUsed: true, stethoscopeReveal: { position: 0, digit: 3 } });
     const next = techBoost.apply(state, params);
     expect(next).toBe(state);
   });
 
   it('reveals the first unconfirmed position, skipping already-confirmed ones', () => {
-    const params = { code: [3, 7, 1], guessBudget: 5, timerSeconds: 120 };
+    const params = { code: [3, 4, 1], digitMin: 1, digitMax: 4, guessBudget: 5, timerSeconds: 120 };
     const state = makeState({
-      guesses: [{ guess: [3, 5, 5], rightPlace: 1, rightDigit: 0 }],
+      guesses: [{ guess: [3, 2, 2], rightPlace: 1, rightDigit: 0 }],
     });
     const next = techBoost.apply(state, params);
-    expect(next.stethoscopeReveal).toEqual({ position: 1, digit: 7 });
+    expect(next.stethoscopeReveal).toEqual({ position: 1, digit: 4 });
   });
 
   it('does not mutate the input state', () => {
-    const params = { code: [3, 7, 1], guessBudget: 5, timerSeconds: 120 };
+    const params = { code: [3, 4, 1], digitMin: 1, digitMax: 4, guessBudget: 5, timerSeconds: 120 };
     const state = makeState();
     const before = { ...state };
     techBoost.apply(state, params);

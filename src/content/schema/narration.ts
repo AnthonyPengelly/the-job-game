@@ -15,6 +15,12 @@ export const narrationWhenSchema = z
     outcome: z.enum(['clean', 'complication', 'botched'] satisfies [Outcome, ...Outcome[]]).optional(),
     greedy: z.boolean().optional(),
     heatBand: z.enum(['cool', 'warm', 'hot']).optional(),
+    /**
+     * True ⇒ this line promises the rest/exhaustion rotation ("whoever plays
+     * rests next room"), which only applies at headcounts whose exhaustion
+     * class actually benches (4+ players). Screens pass the live value.
+     */
+    restsApply: z.boolean().optional(),
   })
   .strict();
 

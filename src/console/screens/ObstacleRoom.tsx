@@ -7,7 +7,7 @@ import { Teleprompter } from '@/console/teleprompter';
 import { useCrewRailMode } from '@/console/shell';
 import { formatLoot } from '@/content/format';
 import { buildRegistry } from '@/minigames';
-import { computeDial } from '@/engine';
+import { computeDial, restRoomsFor } from '@/engine';
 import type { ObstacleOption, Lane } from '@/engine';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -22,11 +22,17 @@ function laneName(lane: string): string {
   return lane.charAt(0).toUpperCase() + lane.slice(1);
 }
 
+/** "Physical + Stealth" for a combo, "Physical" for a single-lane game. */
+function lanesLabel(lanes: readonly string[]): string {
+  return lanes.map(laneName).join(' + ');
+}
+
 // ── Option card ───────────────────────────────────────────────────────────────
 
 interface OptionCardProps {
   option: ObstacleOption;
-  templateLane: string;
+  /** All lanes of the bound game (registry truth) — both lanes for a combo. */
+  gameLanes: readonly string[];
   gameName: string;
   selected: boolean;
   onSelect: () => void;
@@ -38,7 +44,7 @@ interface OptionCardProps {
 
 function OptionCard({
   option,
-  templateLane,
+  gameLanes,
   gameName,
   selected,
   onSelect,
@@ -93,7 +99,7 @@ function OptionCard({
         data-testid={`option-game-${option.id}`}
       >
         <span className="lanechip" data-testid={`option-lane-chip-${option.id}`}>
-          {laneName(templateLane)}
+          {lanesLabel(gameLanes)}
         </span>
         <span className="gn" data-testid={`option-game-name-${option.id}`}>
           {gameName}
@@ -204,6 +210,11 @@ export function ObstacleRoom() {
   const crewNames = crew.map(p => p.name).join(', ');
   const roomNum = String(roomIndex + 1).padStart(2, '0');
 
+  // Whether committing benches a player next room at this headcount. At 2–3
+  // players the exhaustion class is "tired" (restRooms=0) — promising "whoever
+  // plays rests next room" would be a lie the table catches immediately.
+  const restsApply = restRoomsFor(crew.length, cfg) > 0;
+
   // Build the minigame registry once (keyed by gameId) for name lookups.
   const registry = useMemo(() => buildRegistry(cfg), [cfg]);
 
@@ -221,6 +232,7 @@ export function ObstacleRoom() {
     const approachCtx = {
       roomNum,
       crew: crewNames,
+      restsApply,
       ...(laneCtx !== undefined ? { lane: laneCtx } : {}),
     };
     const clueCtx = {
@@ -287,7 +299,11 @@ export function ObstacleRoom() {
 
   const template = cfg.roomTemplates.obstacles.find(t => t.id === room.templateId);
   const templateLane = template?.lane ?? room.templateId;
-  const laneLabelFull = laneName(templateLane);
+  // Lane display follows the bound game's lanes (registry truth) — a combo game
+  // shows both lanes, not just the template's nominal single lane.
+  const roomGame = registry.find(g => g.id === room.options[0]?.gameId);
+  const gameLanes: readonly string[] = roomGame?.lanes ?? [templateLane];
+  const laneLabelFull = lanesLabel(gameLanes);
 
   const isFullTeam = selectedOption?.fullTeam === true;
 
@@ -335,7 +351,9 @@ export function ObstacleRoom() {
         eyebrow={`Room ${roomNum} A · Obstacle`}
         title={laneLabelFull}
         aside={
-          <span data-testid="obstacle-lane">Lane: {templateLane}</span>
+          <span data-testid="obstacle-lane">
+            {gameLanes.length > 1 ? 'Lanes' : 'Lane'}: {gameLanes.join(' + ')}
+          </span>
         }
       />
 
@@ -348,7 +366,7 @@ export function ObstacleRoom() {
             <OptionCard
               key={option.id}
               option={option}
-              templateLane={templateLane}
+              gameLanes={gameLanes}
               gameName={resolveGameName(option.gameId)}
               selected={false}
               onSelect={() => handleSelectOption(option)}
@@ -362,7 +380,7 @@ export function ObstacleRoom() {
           {/* Selected door card */}
           <OptionCard
             option={room.options.find(o => o.id === selectedOptionId)!}
-            templateLane={templateLane}
+            gameLanes={gameLanes}
             gameName={resolveGameName(room.options.find(o => o.id === selectedOptionId)!.gameId)}
             selected={true}
             onSelect={() => { /* no-op: already selected */ }}
@@ -386,8 +404,12 @@ export function ObstacleRoom() {
                 <p>
                   This is a <b>{laneLabelFull}</b> room — tap{' '}
                   {minCommit === maxCommit ? minCommit : `${minCommit}–${maxCommit}`} on
-                  the left rail to send them in. Whoever plays{' '}
-                  <b>rests next room</b>.
+                  the left rail to send them in.
+                  {restsApply ? (
+                    <> Whoever plays <b>rests next room</b>.</>
+                  ) : (
+                    <> Small crew — <b>no one rests</b>; everyone stays in play.</>
+                  )}
                 </p>
               )}
             </div>
@@ -436,7 +458,7 @@ export function ObstacleRoom() {
         note={
           selectedOptionId !== null && commitCount > 0 ? (
             <span data-testid="action-note">
-              {commitCount} committed · rest next room
+              {commitCount} committed{restsApply ? ' · rest next room' : ''}
             </span>
           ) : undefined
         }

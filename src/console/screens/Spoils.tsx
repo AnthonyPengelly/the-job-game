@@ -229,6 +229,7 @@ export function Spoils() {
   const earnedGear = useGameStore(s => s.session.present.earnedGear);
   const crew = useGameStore(s => s.session.present.crew);
   const loot = useGameStore(s => s.session.present.loot);
+  const heat = useGameStore(s => s.session.present.heat);
   const roomIndex = useGameStore(s => s.session.present.roomIndex);
   const gearCatalog = useGameStore(s => s.cfg.gear);
   const cfg = useGameStore(s => s.cfg);
@@ -240,6 +241,9 @@ export function Spoils() {
   const lastResult = history.at(-1);
   const outcome = deriveOutcome(lastResult);
   const lootGained = lastResult?.lootGained ?? 0;
+  // Engine history records the room's full heat delta (drip + greedy surcharge
+  // + outcome heat for obstacles; choice effect for scenarios).
+  const heatGained = lastResult?.heatGained ?? 0;
   const roomNum = lastResult ? String(lastResult.roomIndex + 1) : '';
 
   // Payoff narration: committed once at mount for the relevant beat.
@@ -311,6 +315,16 @@ export function Spoils() {
             </span>
             <span className="lr-s" data-testid="spoils-loot-total">
               Run total {formatLoot(loot)}
+            </span>
+          </div>
+
+          <div className="loot-readout heat" data-testid="spoils-heat">
+            <span className="lr-k">Heat drawn</span>
+            <span className="lr-v" data-testid="spoils-heat-value">
+              {heatGained > 0 ? `+${heatGained}` : String(heatGained)}
+            </span>
+            <span className="lr-s" data-testid="spoils-heat-total">
+              Now at {heat} / {cfg.heat.hMax}
             </span>
           </div>
         </div>
