@@ -1,12 +1,28 @@
 import { useMemo } from 'react';
 import { useGameStore } from '@/console/store';
+import { useAudio } from '@/console/audio';
 import { buildRegistry } from '@/minigames';
-import { rngFromState, resolveGameVariant, computeDial } from '@/engine';
+import {
+  rngFromState,
+  resolveGameVariant,
+  computeDial,
+  obstacleDrip,
+  greedySurcharge,
+  outcomeHeat,
+} from '@/engine';
 import type { CommittedPlayer, Difficulty } from '@/minigames';
 import type { Outcome } from '@/engine';
 import { MinigameShell } from '@/minigames/primitives/MinigameShell';
-import type { BoostPreviewEntry } from '@/minigames/primitives/MinigameShell';
+import type { BoostPreviewEntry, OutcomeConsequence } from '@/minigames/primitives';
+import { formatLoot } from '@/content/format';
 import { MinigameStub } from './MinigameStub';
+
+/** Manifest sting cue per confirmed outcome (auto-fired on GM confirm). */
+const OUTCOME_STING: Record<Outcome, string> = {
+  clean: 'sting-clean',
+  complication: 'sting-complication',
+  botched: 'sting-botch',
+};
 
 /**
  * Mini-game launcher with three-state lifecycle shell (ARMED → ACTIVE → RESOLVE).
@@ -28,6 +44,7 @@ export function MinigameHost() {
   const present = useGameStore(s => s.session.present);
   const cfg = useGameStore(s => s.cfg);
   const dispatch = useGameStore(s => s.dispatch);
+  const audio = useAudio();
 
   // Derive room/option/game resolution data
   const room = present.currentRoom;
@@ -80,7 +97,35 @@ export function MinigameHost() {
     });
   }, [game, committed]);
 
+  // What confirming each tier will do — mirrors the RESOLVE_MINIGAME maths in
+  // reduce.ts so the confirm moment shows honest numbers. Recompute is cheap.
+  const consequences = useMemo((): Partial<Record<Outcome, OutcomeConsequence>> | undefined => {
+    if (option === undefined) return undefined;
+    const drip = obstacleDrip(present.roomIndex, cfg);
+    const surcharge = option.greedy ? greedySurcharge(cfg) : 0;
+    const complicationLoot = Math.max(
+      cfg.outcomeLoot.complication,
+      Math.round(option.reward * cfg.outcomeLoot.complicationFraction),
+    );
+    const hasGear = option.gear !== undefined;
+    function tier(o: Outcome, loot: number, gearKept: boolean): OutcomeConsequence {
+      return {
+        heatDelta: drip + surcharge + outcomeHeat(o, cfg),
+        lootLabel: loot > 0 ? `+${formatLoot(loot)}` : formatLoot(loot),
+        ...(hasGear ? { gearNote: gearKept ? 'Drop kept' : 'Drop lost' } : {}),
+      };
+    }
+    return {
+      clean: tier('clean', option.reward, true),
+      complication: tier('complication', complicationLoot, true),
+      botched: tier('botched', cfg.outcomeLoot.botched, false),
+    };
+  }, [option, present.roomIndex, cfg]);
+
   function handleShellConfirm(outcome: Outcome) {
+    // The sting is the confirm's exclamation point — automatic, manual
+    // soundboard cues stay available as overrides.
+    audio?.engine.play(OUTCOME_STING[outcome]);
     dispatch({ t: 'RESOLVE_MINIGAME', outcome });
   }
 
@@ -100,6 +145,7 @@ export function MinigameHost() {
         dial={dial}
         boostPreviews={boostPreviews}
         onConfirm={handleShellConfirm}
+        {...(consequences !== undefined && { consequences })}
       >
         {(onResolve) => (
           <GameComponent

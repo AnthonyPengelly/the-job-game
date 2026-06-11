@@ -1444,3 +1444,66 @@
   text-transform: uppercase;
   color: var(--fg-muted, #a4b2ad);
 }
+
+/* ============================================================
+   OUTCOME JUDGE — the confirm moment (playtest wave 2)
+   ============================================================ */
+.oj { display: flex; flex-direction: column; gap: 18px; align-items: center; width: 100%; }
+.oj-head { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; }
+.oj-eyebrow {
+  font-family: var(--font-data); font-weight: 700; font-size: 12px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--accent, #1fd06e);
+}
+.oj-sub { font-family: var(--font-body); font-size: 14px; color: var(--fg-muted, #a4b2ad); }
+
+.oj-cards { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 14px; width: 100%; max-width: 880px; }
+.oj-card {
+  position: relative;
+  display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+  padding: 18px 16px 14px; border-radius: var(--radius-lg, 12px);
+  background: var(--bg-panel, #101a15); border: 2px solid var(--border, #233028);
+  cursor: pointer; text-align: left;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+.oj-card:hover { transform: translateY(-2px); }
+.oj-card--clean.selected { border-color: var(--accent, #1fd06e); box-shadow: 0 0 18px -6px var(--accent, #1fd06e); }
+.oj-card--complication.selected { border-color: var(--caution, #f7b84b); box-shadow: 0 0 18px -6px var(--caution, #f7b84b); }
+.oj-card--botched.selected { border-color: var(--danger, #e5484d); box-shadow: 0 0 18px -6px var(--danger, #e5484d); }
+
+.oj-suggested {
+  position: absolute; top: -10px; right: 10px;
+  font-family: var(--font-data); font-weight: 700; font-size: 10px;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: var(--radius-pill, 999px);
+  background: var(--c-surface-3, #1c2922); color: var(--fg-muted, #a4b2ad);
+  border: 1px solid var(--border-strong, #34453b);
+}
+.oj-card.selected .oj-suggested { color: var(--fg, #e8f0ec); }
+
+.oj-card-title {
+  font-family: var(--font-display); font-weight: 800; font-size: 26px;
+  text-transform: uppercase; letter-spacing: -.01em; color: var(--fg, #e8f0ec); line-height: 1;
+}
+.oj-card--clean .oj-card-title { color: var(--accent, #1fd06e); }
+.oj-card--complication .oj-card-title { color: var(--caution, #f7b84b); }
+.oj-card--botched .oj-card-title { color: var(--danger, #e5484d); }
+.oj-card-tag { font-family: var(--font-body); font-size: 12.5px; color: var(--fg-muted, #a4b2ad); }
+
+.oj-consq { display: flex; gap: 14px; margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--border, #233028); width: 100%; }
+.oj-c { display: flex; flex-direction: column; gap: 2px; }
+.oj-ck {
+  font-family: var(--font-data); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--fg-faint, #6d7a74);
+}
+.oj-cv { font-family: var(--font-data); font-weight: 800; font-size: 17px; color: var(--fg, #e8f0ec); font-variant-numeric: tabular-nums; }
+.oj-cv.heat { color: var(--danger, #e5484d); }
+.oj-cv.loot { color: var(--accent, #1fd06e); }
+
+.oj-confirm {
+  font-family: var(--font-display); font-weight: 700; font-size: 1.2rem;
+  text-transform: uppercase; letter-spacing: .03em;
+  padding: 0.9rem 3rem; border-radius: var(--radius-md, 8px);
+  background: var(--accent, #1fd06e); color: var(--fg-on-accent, #05140c);
+  border: none; cursor: pointer;
+}
+.oj-confirm:hover { filter: brightness(1.1); }

@@ -9,6 +9,7 @@ import type { MiniGame } from '@/minigames';
 import type { GameId } from '@/engine';
 import type { StorageLike } from '@/platform';
 import { MinigameHost } from './MinigameHost';
+import { AudioHandleContext } from '@/console/audio';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 
 afterEach(cleanup);
@@ -392,3 +393,91 @@ describe('MinigameHost', () => {
 // Outcome quip narration tests have moved to Spoils.test.tsx (E13.7).
 // MinigameHost now dispatches RESOLVE_MINIGAME directly on confirm;
 // the Spoils interstitial (shown by PhaseRouter) handles the quip.
+
+// ── Auto-sting + consequence preview (playtest wave 2) ────────────────────────
+
+describe('MinigameHost — confirm moment', () => {
+  function renderWithAudio(seed = 1) {
+    games.push(mockGame as MiniGame<unknown, unknown>);
+    const store = makeMinigameStore(seed);
+    const played: string[] = [];
+    const fakeEngine = {
+      play: (id: string) => { played.push(id); },
+      stop: () => {},
+      preload: async () => {},
+      resume: async () => {},
+      setChannelGain: () => {},
+      setMasterGain: () => {},
+      mute: () => {},
+      setAmbient: () => {},
+      scheduleBeep: () => {},
+      isCueAvailable: () => true,
+      clock: { start: () => {}, stop: () => {}, onTick: () => () => {}, now: () => 0 },
+      loaded: true,
+    } as unknown as import('@/platform').AudioEngine;
+    const handle = {
+      engine: fakeEngine,
+      manifest: { cues: [], ambientBed: { droneId: 'a', heartbeatId: 'b' } },
+    } as unknown as import('@/console/audio').AudioHandle;
+    render(
+      <AudioHandleContext.Provider value={handle}>
+        <StoreContext.Provider value={store}>
+          <MinigameHost />
+        </StoreContext.Provider>
+      </AudioHandleContext.Provider>,
+    );
+    return { store, played };
+  }
+
+  function startAndResolve(outcome: 'clean' | 'botched') {
+    fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId(`mock-resolve-${outcome}`));
+  }
+
+  it('plays the matching sting automatically when the GM confirms', () => {
+    const { store, played } = renderWithAudio();
+    startAndResolve('clean');
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    expect(played).toContain('sting-clean');
+    expect(store.getState().session.present.history.at(-1)?.kind).toBe('obstacle');
+  });
+
+  it('plays the botch sting when the GM overrides to botched', () => {
+    const { played } = renderWithAudio();
+    startAndResolve('clean');
+    fireEvent.click(screen.getByTestId('outcome-option-botched'));
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    expect(played).toContain('sting-botch');
+    expect(played).not.toContain('sting-clean');
+  });
+
+  it('shows honest per-tier consequence numbers on the confirm cards', () => {
+    const { store } = renderWithAudio();
+    startAndResolve('clean');
+    const present = store.getState().session.present;
+    const room = present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('expected obstacle');
+    const option = room.options.find(o => o.id === room.committedOptionId)!;
+
+    // Clean card shows the full reward; the engine applies the same number.
+    const cleanCard = screen.getByTestId('outcome-consq-clean').textContent ?? '';
+    expect(cleanCard).toContain('$');
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    const entry = store.getState().session.present.history.at(-1);
+    if (entry?.kind !== 'obstacle') throw new Error('expected obstacle history entry');
+    expect(entry.lootGained).toBe(option.reward);
+  });
+
+  it('confirm works without an AudioProvider (sting is optional, no dead-end)', () => {
+    games.push(mockGame as MiniGame<unknown, unknown>);
+    const store = makeMinigameStore(1);
+    render(
+      <StoreContext.Provider value={store}>
+        <MinigameHost />
+      </StoreContext.Provider>,
+    );
+    startAndResolve('clean');
+    fireEvent.click(screen.getByTestId('outcome-confirm'));
+    expect(store.getState().session.present.history.length).toBeGreaterThan(0);
+  });
+});

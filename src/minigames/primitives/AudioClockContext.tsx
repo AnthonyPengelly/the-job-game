@@ -12,6 +12,13 @@ export interface AudioClockHandle {
   clock: AudioClock;
   /** Schedule an audible tick beep at the given audio clock time (seconds). */
   scheduleBeep: (when: number) => void;
+  /**
+   * Optional: signal that a mini-game timer started/stopped running. The
+   * console's AudioProvider ref-counts these to drive the tense ambient layer
+   * (playtest wave 2). Dependency-inverted so the minigames layer never
+   * imports console audio.
+   */
+  setTimerSoundscape?: (active: boolean) => void;
 }
 
 export const AudioClockContext = createContext<AudioClockHandle | null>(null);
@@ -24,4 +31,9 @@ export function useAudioClock(): AudioClock | null {
 /** Returns the beep scheduler if provided by a parent AudioProvider, or null. */
 export function useScheduleBeep(): ((when: number) => void) | null {
   return useContext(AudioClockContext)?.scheduleBeep ?? null;
+}
+
+/** Returns the timer-soundscape signal if provided by a parent AudioProvider, or null. */
+export function useTimerSoundscape(): ((active: boolean) => void) | null {
+  return useContext(AudioClockContext)?.setTimerSoundscape ?? null;
 }

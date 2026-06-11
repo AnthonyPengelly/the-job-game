@@ -86,11 +86,22 @@ export function AudioProvider({ children }: AudioProviderProps) {
   );
 
   // Stable clock handle for AudioClockContext.
+  // setTimerSoundscape ref-counts running mini-game timers and lays the tense
+  // ambient loop over the bed while any clock is live (playtest wave 2).
+  const timerCountRef = useRef(0);
   const clockHandleRef = useRef<AudioClockHandle | null>(null);
   if (clockHandleRef.current === null) {
     clockHandleRef.current = {
       clock: engine.clock,
       scheduleBeep: (when: number) => engine.scheduleBeep(when),
+      setTimerSoundscape: (active: boolean) => {
+        timerCountRef.current = Math.max(0, timerCountRef.current + (active ? 1 : -1));
+        if (active && timerCountRef.current === 1) {
+          engine.play('ambient-tension');
+        } else if (!active && timerCountRef.current === 0) {
+          engine.stop('ambient-tension');
+        }
+      },
     };
   }
 

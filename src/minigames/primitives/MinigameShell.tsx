@@ -4,6 +4,7 @@ import type { Lane } from '@/engine';
 import type { Difficulty } from '@/minigames/contract';
 import { DialReadout } from './DialReadout';
 import { OutcomeJudge } from './OutcomeJudge';
+import type { OutcomeConsequence } from './OutcomeJudge';
 import './minigame.css';
 
 // ── Zone primitives (used by game components in E13.5/E13.6) ─────────────────
@@ -62,6 +63,8 @@ export interface MinigameShellProps {
    * MinigameHost handles narration quip / dispatch from here.
    */
   onConfirm: (outcome: Outcome) => void;
+  /** Per-tier consequence preview for the RESOLVE state (computed by the host). */
+  consequences?: Partial<Record<Outcome, OutcomeConsequence>>;
   /**
    * Render prop: receives the `onResolve` handler to pass to the game component.
    * The game component calls `onResolve(suggestedOutcome)` when the challenge is done,
@@ -91,6 +94,7 @@ export function MinigameShell({
   dial,
   boostPreviews,
   onConfirm,
+  consequences,
   children,
 }: MinigameShellProps) {
   const [shellState, setShellState] = useState<ShellState>('armed');
@@ -159,7 +163,11 @@ export function MinigameShell({
   if (shellState === 'resolve') {
     return (
       <div className="mg-shell mg-resolve" data-testid="mg-resolve">
-        <OutcomeJudge suggested={resolveOutcome} onConfirm={handleConfirm} />
+        <OutcomeJudge
+          suggested={resolveOutcome}
+          onConfirm={handleConfirm}
+          {...(consequences !== undefined && { consequences })}
+        />
         <button
           type="button"
           className="mg-resolve-back"

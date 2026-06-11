@@ -103,15 +103,16 @@ describe('Soundboard — correct cue groups per phase', () => {
     expect(screen.queryByTestId('soundboard-group-finale')).toBeNull();
   });
 
-  it('getaway phase: shows finale and heistSfx groups', () => {
-    // sfx-tick and sfx-chaching are phase-relevant in getaway
+  it('getaway phase: shows finale, heistSfx, and danger groups', () => {
+    // sfx-tick/sfx-chaching/sfx-radio-chatter are phase-relevant in getaway,
+    // and the wave-2 siren/helicopter danger cues belong to the chase.
     renderSoundboard('getaway', makeMockEngine());
 
     expect(screen.getByTestId('soundboard-group-finale')).toBeInTheDocument();
     expect(screen.getByTestId('soundboard-group-heistSfx')).toBeInTheDocument();
+    expect(screen.getByTestId('soundboard-group-danger')).toBeInTheDocument();
     expect(screen.queryByTestId('soundboard-group-ambient')).toBeNull();
     expect(screen.queryByTestId('soundboard-group-sting')).toBeNull();
-    expect(screen.queryByTestId('soundboard-group-danger')).toBeNull();
   });
 
   it('result phase: shows sting and finale groups', () => {

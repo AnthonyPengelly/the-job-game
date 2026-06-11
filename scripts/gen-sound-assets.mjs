@@ -399,4 +399,98 @@ console.log('\nGenerating The Job sound assets...\n');
   writeWav('finale-tyres.wav', out);
 }
 
+// ── 19. danger-siren (2.4 s loop) — two-tone police hi-lo ──────────────────
+{
+  const n = Math.round(SR * 2.4);
+  const out = buf(n);
+  for (let i = 0; i < n; i++) {
+    // Hi-lo alternation at 1.25 Hz: 0.4 s per tone, hard switch like a
+    // European siren; slight detuned second osc for body.
+    const phase = Math.floor((i / SR) / 0.4) % 2;
+    const freq = phase === 0 ? 660 : 880;
+    out[i] = 0.55 * Math.sin(2 * Math.PI * freq * i / SR) +
+             0.25 * Math.sin(2 * Math.PI * (freq * 1.01) * i / SR);
+  }
+  normalise(out, 0.8);
+  writeWav('danger-siren.wav', out);
+}
+
+// ── 20. danger-helicopter (1.6 s loop) — rotor chop ────────────────────────
+{
+  const n = Math.round(SR * 1.6);
+  const rng = makeLcg(0xBEEFCAFE);
+  const rawNoise = new Float32Array(n);
+  for (let i = 0; i < n; i++) rawNoise[i] = rng();
+  lowpass(rawNoise, 320);
+
+  const out = buf(n);
+  for (let i = 0; i < n; i++) {
+    // Rotor chop: noise amplitude-gated at 12.5 Hz (20 chops per loop —
+    // integer count keeps the loop seamless), plus a low body thrum.
+    const chop = Math.max(0, Math.sin(2 * Math.PI * 12.5 * i / SR));
+    const gate = Math.pow(chop, 3);
+    out[i] = 0.8 * rawNoise[i] * gate +
+             0.22 * Math.sin(2 * Math.PI * 55 * i / SR);
+  }
+  normalise(out, 0.8);
+  writeWav('danger-helicopter.wav', out);
+}
+
+// ── 21. sfx-radio-chatter (1.8 s) — squelch + voice-band bursts ────────────
+{
+  const n = Math.round(SR * 1.8);
+  const rng = makeLcg(0x5EC0FDE5);
+  const rawNoise = new Float32Array(n);
+  for (let i = 0; i < n; i++) rawNoise[i] = rng();
+  lowpass(rawNoise, 2200);
+
+  const out = buf(n);
+  // Squelch click on, three speech-like bursts, squelch click off.
+  function click(startSec) {
+    const s0 = Math.round(startSec * SR);
+    for (let i = 0; i < Math.round(SR * 0.015) && s0 + i < n; i++) {
+      out[s0 + i] += 0.8 * expDecay(i, 0.004) *
+        Math.sin(2 * Math.PI * 2400 * i / SR);
+    }
+  }
+  // Speech-like rhythm: amplitude follows syllable bumps (~7 Hz) inside bursts.
+  const bursts = [
+    { start: 0.08, dur: 0.45 },
+    { start: 0.65, dur: 0.30 },
+    { start: 1.08, dur: 0.50 },
+  ];
+  for (const { start, dur } of bursts) {
+    const s0 = Math.round(start * SR);
+    const len = Math.round(dur * SR);
+    for (let i = 0; i < len && s0 + i < n; i++) {
+      const syll = 0.45 + 0.55 * Math.max(0, Math.sin(2 * Math.PI * 7 * i / SR));
+      // Band shaping: ring the lowpassed noise at a voice-ish carrier.
+      out[s0 + i] += 0.6 * rawNoise[s0 + i] * syll *
+        (0.7 + 0.3 * Math.sin(2 * Math.PI * 300 * i / SR));
+    }
+  }
+  click(0.02);
+  click(1.72);
+  normalise(out, 0.8);
+  writeWav('sfx-radio-chatter.wav', out);
+}
+
+// ── 22. ambient-tension (2.4 s loop) — minigame-timer bed layer ────────────
+{
+  const n = Math.round(SR * 2.4);
+  const out = buf(n);
+  for (let i = 0; i < n; i++) {
+    // Minor-second drone (110 + 116.5 Hz beats at ~6.5 Hz) — unease without
+    // melody — plus a quiet eighth-note pulse at 2.5 Hz (integer cycles per
+    // loop for a seamless join).
+    const pulse = Math.pow(Math.max(0, Math.sin(2 * Math.PI * 2.5 * i / SR)), 8);
+    out[i] =
+      0.30 * Math.sin(2 * Math.PI * 110.0 * i / SR) +
+      0.30 * Math.sin(2 * Math.PI * 116.5 * i / SR) +
+      0.25 * pulse * Math.sin(2 * Math.PI * 440 * i / SR);
+  }
+  normalise(out, 0.65);
+  writeWav('ambient-tension.wav', out);
+}
+
 console.log('\nAll assets written.\n');

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTimerSoundscape } from './AudioClockContext';
 
 export interface TimerProps {
   seconds: number;
@@ -20,6 +21,16 @@ export function Timer({ seconds, running, onExpire, onTick, audible = true }: Ti
     setRemaining(seconds);
     expiredRef.current = false;
   }, [seconds]);
+
+  // Tense ambient layer while the clock runs (playtest wave 2). The console's
+  // AudioProvider ref-counts the signal; without a provider this is a no-op.
+  const setSoundscape = useTimerSoundscape();
+  const soundscapeActive = running && remaining > 0;
+  useEffect(() => {
+    if (!soundscapeActive || setSoundscape === null) return;
+    setSoundscape(true);
+    return () => { setSoundscape(false); };
+  }, [soundscapeActive, setSoundscape]);
 
   useEffect(() => {
     if (!running) return;
