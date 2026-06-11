@@ -122,8 +122,18 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
     if (template === undefined) throw new Error(`obstacle template ${templateId} not found in config`);
 
     const headcount = stateAfterPayoffs.crew.length;
+    // The room dictates the exact headcount (playtest wave 2): draw one count
+    // per option from the scaling-aware legal range. Full-team games skip the
+    // draw — the whole crew plays, no count applies. minCommit floors guarantee
+    // Assembly Line / Defuse the Alarm never demand 1.
     const range: [number, number] | undefined =
-      headcount >= 2 ? obstacleCommitRange(template.gameId, headcount, cfg) : undefined;
+      headcount >= 2 && template.fullTeam !== true
+        ? obstacleCommitRange(template.gameId, headcount, cfg)
+        : undefined;
+    const counts: [number | undefined, number | undefined] =
+      range !== undefined
+        ? [rng.int(range[0], range[1]), rng.int(range[0], range[1])]
+        : [undefined, undefined];
 
     // Reward multiplier: m = 1 + perHeat*heat + perRoom*roomIndex. Defaults to 1 (no-op at 0/0).
     const { perHeat, perRoom } = cfg.rewardScale;
@@ -137,7 +147,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         heatCost: template.options[0].heatCost,
         reward: Math.round(template.options[0].reward * m),
         ...(template.options[0].gear !== undefined && { gear: template.options[0].gear }),
-        ...(range !== undefined && { commitRange: range }),
+        ...(counts[0] !== undefined && { commitCount: counts[0] }),
         ...(template.fullTeam === true && { fullTeam: true }),
       },
       {
@@ -147,7 +157,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         heatCost: template.options[1].heatCost,
         reward: Math.round(template.options[1].reward * m),
         ...(template.options[1].gear !== undefined && { gear: template.options[1].gear }),
-        ...(range !== undefined && { commitRange: range }),
+        ...(counts[1] !== undefined && { commitCount: counts[1] }),
         ...(template.fullTeam === true && { fullTeam: true }),
       },
     ];

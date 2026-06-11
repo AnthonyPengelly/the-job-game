@@ -529,50 +529,47 @@ function makeCrewState(n: number, seed: number): RunState {
   return makeState(seed, { crew });
 }
 
-describe('generateRoom — commitRange annotation', () => {
-  it('obstacle options have no commitRange when crew is empty (pre-run)', () => {
-    // Find an obstacle room with empty crew — commitRange is not annotated.
+describe('generateRoom — commitCount annotation (the room dictates the headcount)', () => {
+  it('obstacle options have no commitCount when crew is empty (pre-run)', () => {
     for (let seed = 0; seed < 50; seed++) {
       const result = generateRoom(makeState(seed), cfgFull);
       if (result.currentRoom?.kind === 'obstacle') {
-        expect(result.currentRoom.options[0]?.commitRange).toBeUndefined();
-        expect(result.currentRoom.options[1]?.commitRange).toBeUndefined();
+        expect(result.currentRoom.options[0]?.commitCount).toBeUndefined();
+        expect(result.currentRoom.options[1]?.commitCount).toBeUndefined();
         return;
       }
     }
     throw new Error('No obstacle room found');
   });
 
-  it('obstacle options have commitRange when crew is set', () => {
+  it('obstacle options have an exact commitCount when crew is set', () => {
     for (let seed = 0; seed < 50; seed++) {
       const result = generateRoom(makeCrewState(4, seed), cfgFull);
       if (result.currentRoom?.kind === 'obstacle') {
-        expect(result.currentRoom.options[0]?.commitRange).toBeDefined();
-        expect(result.currentRoom.options[1]?.commitRange).toBeDefined();
+        expect(result.currentRoom.options[0]?.commitCount).toBeDefined();
+        expect(result.currentRoom.options[1]?.commitCount).toBeDefined();
         return;
       }
     }
     throw new Error('No obstacle room found');
   });
 
-  it('commitRange is feasible (1 ≤ minCrew ≤ maxCrew ≤ n) for all n=2..7', () => {
+  it('commitCount lies within the scaling-legal range (1 ≤ count ≤ n) for all n=2..7', () => {
     for (let n = 2; n <= 7; n++) {
       // Sample several seeds to cover different obstacle templates.
       for (let seed = 0; seed < 30; seed++) {
         const result = generateRoom(makeCrewState(n, seed), cfgFull);
         if (result.currentRoom?.kind !== 'obstacle') continue;
         for (const opt of result.currentRoom.options) {
-          if (opt.commitRange === undefined) continue;
-          const [minCrew, maxCrew] = opt.commitRange;
-          expect(minCrew).toBeGreaterThanOrEqual(1);
-          expect(minCrew).toBeLessThanOrEqual(maxCrew);
-          expect(maxCrew).toBeLessThanOrEqual(n);
+          if (opt.commitCount === undefined) continue;
+          expect(opt.commitCount).toBeGreaterThanOrEqual(1);
+          expect(opt.commitCount).toBeLessThanOrEqual(n);
         }
       }
     }
   });
 
-  it('minCrew ≥ minCommit[game] in every generated commitRange', () => {
+  it('commitCount ≥ minCommit[game] in every generated option', () => {
     for (let n = 2; n <= 7; n++) {
       for (let seed = 0; seed < 20; seed++) {
         const result = generateRoom(makeCrewState(n, seed), cfgFull);
@@ -580,15 +577,14 @@ describe('generateRoom — commitRange annotation', () => {
         const gameId = result.currentRoom.options[0]!.gameId as string;
         const gameMinCommit = cfgFull.scaling.minCommit[gameId] ?? 1;
         for (const opt of result.currentRoom.options) {
-          if (opt.commitRange === undefined) continue;
-          const [minCrew] = opt.commitRange;
-          expect(minCrew).toBeGreaterThanOrEqual(gameMinCommit);
+          if (opt.commitCount === undefined) continue;
+          expect(opt.commitCount).toBeGreaterThanOrEqual(gameMinCommit);
         }
       }
     }
   });
 
-  it('excludedFromSolo games never have commitRange.minCrew === 1', () => {
+  it('excludedFromSolo games never demand a single player', () => {
     for (let n = 2; n <= 7; n++) {
       for (let seed = 0; seed < 50; seed++) {
         const result = generateRoom(makeCrewState(n, seed), cfgFull);
@@ -596,46 +592,66 @@ describe('generateRoom — commitRange annotation', () => {
         const gameId = result.currentRoom.options[0]!.gameId as string;
         if (!cfgFull.scaling.excludedFromSolo.includes(gameId)) continue;
         for (const opt of result.currentRoom.options) {
-          if (opt.commitRange === undefined) continue;
-          expect(opt.commitRange[0]).toBeGreaterThan(1);
+          if (opt.commitCount === undefined) continue;
+          expect(opt.commitCount).toBeGreaterThan(1);
         }
       }
     }
   });
 
-  it('commitRange is the same for both options of the same obstacle (same gameId)', () => {
-    for (let seed = 0; seed < 50; seed++) {
-      const result = generateRoom(makeCrewState(4, seed), cfgFull);
+  it('the two doors may demand different counts (independent seeded draws)', () => {
+    // At 5+ players the legal range is [2,3] — sweep seeds until the two
+    // options differ, proving the draws are per-option.
+    for (let seed = 0; seed < 200; seed++) {
+      const result = generateRoom(makeCrewState(5, seed), cfgFull);
       if (result.currentRoom?.kind !== 'obstacle') continue;
       const opt0 = result.currentRoom.options[0]!;
       const opt1 = result.currentRoom.options[1]!;
-      if (opt0.commitRange !== undefined && opt1.commitRange !== undefined) {
-        expect(opt0.commitRange).toEqual(opt1.commitRange);
+      if (opt0.commitCount !== undefined && opt0.commitCount !== opt1.commitCount) {
         return;
       }
     }
-    throw new Error('No obstacle room with commitRange found');
+    throw new Error('Doors never differed in commitCount over 200 seeds at range [2,3]');
   });
 
-  it('commitRange annotation does not change rngState (pure metadata, no RNG draw)', () => {
-    // State without crew (no commitRange) vs with crew (commitRange added).
-    // The rngState after generation must be the same in both cases.
+  it('fullTeam templates get no commitCount (the whole crew plays)', () => {
+    const fullTeamCfg: EngineConfig = {
+      ...cfgFull,
+      roomTemplates: {
+        obstacles: [
+          {
+            id: 'obs-ft',
+            gameId: 'alpha',
+            lane: 'tech',
+            fullTeam: true,
+            options: [
+              { id: 'ft-safe', greedy: false, heatCost: 1, reward: 1 },
+              { id: 'ft-greedy', greedy: true, heatCost: 2, reward: 2 },
+            ],
+          },
+        ],
+        scenarios: cfgFull.roomTemplates.scenarios,
+      },
+    };
     for (let seed = 0; seed < 50; seed++) {
-      const withoutCrew = generateRoom(makeState(seed), cfgFull);
-      const withCrew    = generateRoom(makeCrewState(4, seed), cfgFull);
-      if (withoutCrew.currentRoom?.kind !== 'obstacle') continue;
-      expect(withCrew.rngState).toBe(withoutCrew.rngState);
+      const result = generateRoom(makeCrewState(4, seed), fullTeamCfg);
+      if (result.currentRoom?.kind !== 'obstacle') continue;
+      for (const opt of result.currentRoom.options) {
+        expect(opt.commitCount).toBeUndefined();
+        expect(opt.fullTeam).toBe(true);
+      }
       return;
     }
     throw new Error('No obstacle room found');
   });
 
-  it('results are deterministic: same seed + same crew size ⇒ same commitRange', () => {
+  it('results are deterministic: same seed + same crew size ⇒ same commitCount', () => {
     for (let seed = 0; seed < 50; seed++) {
       const r1 = generateRoom(makeCrewState(5, seed), cfgFull);
       const r2 = generateRoom(makeCrewState(5, seed), cfgFull);
       if (r1.currentRoom?.kind !== 'obstacle') continue;
       expect(r1.currentRoom).toEqual(r2.currentRoom);
+      expect(r1.rngState).toBe(r2.rngState);
       return;
     }
     throw new Error('No obstacle room found');

@@ -140,8 +140,13 @@ export interface ObstacleOption {
   reward: number;
   /** Gear grant awarded on a clean outcome. Mirrors the reward field: fires only on clean. */
   gear?: GearGrantDescriptor;
-  /** Scaling-aware [minCrew, maxCrew] commit range for the current headcount. Set by generateRoom when crew ≥ 2. */
-  commitRange?: [number, number];
+  /**
+   * Exact crew size this option demands, drawn at generation by the seeded RNG
+   * within the scaling-aware [minCrew, maxCrew] range (playtest wave 2: the
+   * room dictates the headcount — never a player choice). Set by generateRoom
+   * when crew ≥ 2 and the game is not fullTeam.
+   */
+  commitCount?: number;
   /** True for games where the whole crew plays and no exhaustion rotation applies afterward. */
   fullTeam?: boolean;
 }

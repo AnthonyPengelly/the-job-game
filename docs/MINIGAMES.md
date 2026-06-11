@@ -65,7 +65,7 @@ console.
 
 ## 2. The room loop: selecting and launching a game
 
-> **Two standing decisions (playtest wave, 2026-06):**
+> **Three standing decisions (playtest wave, 2026-06):**
 >
 > 1. **The game is pre-bound to the obstacle option at generation time.** The
 >    room template carries `gameId`; `CHOOSE_OPTION` never re-resolves the game
@@ -79,6 +79,18 @@ console.
 >    (what to deal from one shuffled pack — never "find these specific cards")
 >    and *recording controls* (✓/✗ taps); they never render information the
 >    crew is supposed to discover.
+> 3. **The room dictates the exact headcount** (playtest wave 2). Options no
+>    longer carry a `[min, max]` commit range for the GM to fill freely:
+>    `generateRoom` draws one exact `commitCount` per option (seeded RNG)
+>    within the scaling-legal range — `minCommit`/`fullTeam`/solo rules
+>    still bound the draw, so Assembly Line and Defuse can never demand 1.
+>    The commit panel reads "it takes exactly N" and Commit enables only at
+>    exactly N, so the dial preview always describes a concrete crew
+>    ("these N players, these stats"). `tightenPerExtraCrew` in the dial
+>    curve stays: with the count dictated it is no longer a lever players
+>    can pull, just normalisation that keeps bigger-crew rooms from reading
+>    harder than they are. The GM can still override the committed set via
+>    the standard overrides — no dead-ends.
 
 The loop:
 

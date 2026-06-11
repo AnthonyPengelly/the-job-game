@@ -155,6 +155,14 @@ function OptionCard({
             {option.heatCost}
           </span>
         </div>
+        {option.fullTeam !== true && option.commitCount !== undefined && (
+          <div className="c">
+            <span className="k">Crew</span>
+            <span className="v" data-testid={`option-crew-${option.id}`}>
+              {option.commitCount}
+            </span>
+          </div>
+        )}
       </div>
       {!selected && (
         <button
@@ -311,9 +319,12 @@ export function ObstacleRoom() {
     setSelectedOptionId(option.id);
     if (option.fullTeam === true) {
       activateFullTeam(crew.map(p => p.id));
+    } else if (option.commitCount !== undefined) {
+      // The room dictates the exact headcount — Commit enables only at exactly N.
+      activateCommit(option.commitCount, option.commitCount);
     } else {
-      const [min, max] = option.commitRange ?? [1, Math.max(1, crew.length)];
-      activateCommit(min, max);
+      // No dictated count (pre-run override edge case) — any legal size.
+      activateCommit(1, Math.max(1, crew.length));
     }
   }
 
@@ -402,9 +413,9 @@ export function ObstacleRoom() {
                 </p>
               ) : (
                 <p>
-                  This is a <b>{laneLabelFull}</b> room — tap{' '}
-                  {minCommit === maxCommit ? minCommit : `${minCommit}–${maxCommit}`} on
-                  the left rail to send them in.
+                  This is a <b>{laneLabelFull}</b> room — it takes{' '}
+                  <b>exactly {minCommit === maxCommit ? minCommit : `${minCommit}–${maxCommit}`}</b>.
+                  Tap them on the left rail to send them in.
                   {restsApply ? (
                     <> Whoever plays <b>rests next room</b>.</>
                   ) : (
