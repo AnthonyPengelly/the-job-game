@@ -39,7 +39,8 @@ export const testCfg: EngineConfig = {
   generation: { obstacleRatio: 0.7 },
   scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
   rewardScale: { perHeat: 0, perRoom: 0 },
-  gearSellValue: { base: 1000, perRoom: 500 },
+  gearSellValue: { perBonusPoint: 1000, powerUpPoints: 2, perRoom: 500 },
+  gearDrops: { bigScoreChance: 0.2 },
   gear: {},
   quirks: {
     'tech-ace': { id: 'tech-ace', name: 'Tech Ace', boosts: [{ lane: 'tech' as const, magnitude: 2 }] },

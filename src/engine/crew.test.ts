@@ -13,11 +13,11 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
   };
 }
 
-const techBoost1: GearDef = { id: 'stat-tech-1', kind: 'statBoost', lane: 'tech', magnitude: 1 };
-const techBoost2: GearDef = { id: 'stat-tech-2', kind: 'statBoost', lane: 'tech', magnitude: 2 };
-const charmBoost1: GearDef = { id: 'stat-charm-1', kind: 'statBoost', lane: 'charm', magnitude: 1 };
-const techPowerUp: GearDef = { id: 'powerup-tech', kind: 'powerUp', lane: 'tech' };
-const stealthPowerUp: GearDef = { id: 'powerup-stealth', kind: 'powerUp', lane: 'stealth' };
+const techBoost1: GearDef = { id: 'stat-tech-1', kind: 'statBoost', lane: 'tech', magnitude: 1, name: 'Burner Laptop', blurb: 'Test blurb.' };
+const techBoost2: GearDef = { id: 'stat-tech-2', kind: 'statBoost', lane: 'tech', magnitude: 2, name: 'Zero-Day Cache', blurb: 'Test blurb.' };
+const charmBoost1: GearDef = { id: 'stat-charm-1', kind: 'statBoost', lane: 'charm', magnitude: 1, name: 'Tailored Suit', blurb: 'Test blurb.' };
+const techPowerUp: GearDef = { id: 'powerup-tech', kind: 'powerUp', lane: 'tech', name: 'Hackers Rig', blurb: 'Test blurb.' };
+const stealthPowerUp: GearDef = { id: 'powerup-stealth', kind: 'powerUp', lane: 'stealth', name: 'Ghost Kit', blurb: 'Test blurb.' };
 
 describe('applyGear — statBoost', () => {
   it('+1 boost increases the lane stat by 1', () => {

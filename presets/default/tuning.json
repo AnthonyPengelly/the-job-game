@@ -19,7 +19,9 @@
       "getaway.ditchLootCost": "Loot forfeited per ditch (banked Loot is 5-figure; 3000 = roughly one small haul room)",
       "scoring.lowHeatStyleBonus": "Loot multiplier earned at Heat 0 on a win (scales to 0 at hMax)",
       "scoring.bustMultiplier": "fraction of Loot banked on a bust",
-      "generation.obstacleRatio": "probability [0,1] of drawing an obstacle room vs a scenario room (Python ref: 0.6; tuned to 0.65 because real roll-heavy scenarios perturb the RNG stream more than the 6 placeholder flat scenarios did, restoring sim run-length tightness ≥ 0.93)"
+      "generation.obstacleRatio": "probability [0,1] of drawing an obstacle room vs a scenario room (Python ref: 0.6; tuned to 0.65 because real roll-heavy scenarios perturb the RNG stream more than the 6 placeholder flat scenarios did, restoring sim run-length tightness ≥ 0.93)",
+      "gearSellValue.*": "visible sell rule: perBonusPoint x points + perRoom x roomIndex; points = statBoost magnitude, powerUpPoints for a power-up",
+      "gearDrops.bigScoreChance": "chance [0,1] an obstacle statBoost drop upgrades to the +2 (bigScore) tier at generation"
     }
   },
 
@@ -89,7 +91,12 @@
   "rewardScale": { "perHeat": 0.04, "perRoom": 0.05 },
 
   "gearSellValue": {
-    "base": 5000,
-    "perRoom": 3000
+    "perBonusPoint": 5000,
+    "powerUpPoints": 2,
+    "perRoom": 2000
+  },
+
+  "gearDrops": {
+    "bigScoreChance": 0.2
   }
 }

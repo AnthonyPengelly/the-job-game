@@ -17,7 +17,10 @@ const statBoostItemSchema = z
     kind: z.literal('statBoost'),
     lane: laneSchema,
     magnitude: z.number().int().positive(),
-    flavour: z.array(z.string()).optional(),
+    /** Thematic heist name shown on share-out cards and the gear panel. */
+    name: z.string().min(1),
+    /** One-line flavour read out by the GM. */
+    blurb: z.string().min(1),
   })
   .strict();
 
@@ -26,7 +29,8 @@ const powerUpItemSchema = z
     id: z.string(),
     kind: z.literal('powerUp'),
     lane: laneSchema,
-    flavour: z.array(z.string()).optional(),
+    name: z.string().min(1),
+    blurb: z.string().min(1),
   })
   .strict();
 

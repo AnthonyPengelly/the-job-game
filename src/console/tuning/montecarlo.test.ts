@@ -93,7 +93,9 @@ describe('runMonteCarlo', () => {
         heatDial: { perHeat: 0.1, perRoom: 0.05 },
       },
     };
-    const N = 1000;
+    // N=4000: the directional signal is real but marginal at N=1000 — RNG-stream
+    // shifts (e.g. new per-option generation draws) flipped it by noise alone.
+    const N = 4000;
     const opts = { n: N, baseSeed: 1312, skill: 'avg' as const, headcount: 4 };
 
     const levelled   = runMonteCarlo(hotCfg, { ...opts, levelled: true });
@@ -103,26 +105,28 @@ describe('runMonteCarlo', () => {
     expect(unlevelled.lateCleanRate).toBeLessThan(levelled.lateCleanRate);
   });
 
-  it('E15.3: non-zero heatDial — early-band clean-rate exceeds late-band (un-levelled)', () => {
+  it('E15.3: non-zero heatDial lowers the late-band clean-rate vs a zero-dial control', () => {
+    // NOTE: a raw early-vs-late comparison within one config is confounded —
+    // the model crew plays greedy early (flat −0.1 clean penalty) and safe
+    // late, which roughly cancels the heat penalty, leaving the sign to
+    // sampling noise. Compare the late band against a zero-heatDial control
+    // instead: that isolates exactly the mechanism E15.3 added.
     const cfg = loadDefaultConfig();
+    const zeroCfg = {
+      ...cfg,
+      scaling: { ...cfg.scaling, heatDial: { perHeat: 0, perRoom: 0 } },
+    };
     const hotCfg = {
       ...cfg,
-      scaling: {
-        ...cfg.scaling,
-        heatDial: { perHeat: 0.1, perRoom: 0.05 },
-      },
+      scaling: { ...cfg.scaling, heatDial: { perHeat: 0.1, perRoom: 0.05 } },
     };
-    const result = runMonteCarlo(hotCfg, {
-      n: 1000,
-      baseSeed: 1312,
-      skill: 'avg',
-      headcount: 4,
-      levelled: false,
-    });
+    const opts = { n: 2000, baseSeed: 1312, skill: 'avg' as const, headcount: 4, levelled: false };
 
-    // Early obstacles happen at low heat/room so the penalty is small;
-    // late obstacles happen at high heat/room so the penalty is larger.
-    expect(result.earlyCleanRate).toBeGreaterThan(result.lateCleanRate);
+    const hot = runMonteCarlo(hotCfg, opts);
+    const zero = runMonteCarlo(zeroCfg, opts);
+
+    // Late obstacles happen at high heat/room — the penalty must bite there.
+    expect(hot.lateCleanRate).toBeLessThan(zero.lateCleanRate);
   });
 
   it('E15.3: at heatDial=0 levelled vs un-levelled results are identical', () => {
@@ -134,7 +138,8 @@ describe('runMonteCarlo', () => {
       ...baseCfg,
       scaling: { ...baseCfg.scaling, heatDial: { perHeat: 0, perRoom: 0 } },
     };
-    const opts = { n: 200, baseSeed: 1312, skill: 'avg' as const, headcount: 4 };
+    // N=2000: at N=200 the levelled-vs-unlevelled gap sits inside sampling noise.
+    const opts = { n: 2000, baseSeed: 1312, skill: 'avg' as const, headcount: 4 };
 
     const levelled   = runMonteCarlo(cfg, { ...opts, levelled: true });
     const unlevelled = runMonteCarlo(cfg, { ...opts, levelled: false });

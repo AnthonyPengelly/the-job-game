@@ -1,11 +1,13 @@
 {
   "_meta": {
     "pack": "gear",
-    "version": 1,
-    "source": "docs/design/heist-content.md §GEAR",
+    "version": 2,
+    "source": "docs/design/heist-content.md §GEAR + playtest wave 2 (thematic names, visible sell rule)",
     "units": {
       "magnitude": "stat points added to the player's lane rating",
-      "kind": "statBoost stacks; powerUp is idempotent (one per lane per player)"
+      "kind": "statBoost stacks; powerUp is idempotent (one per lane per player)",
+      "name": "thematic heist name shown on share-out cards and the gear panel",
+      "blurb": "one-line flavour read out by the GM"
     }
   },
   "items": [
@@ -14,80 +16,92 @@
       "kind": "statBoost",
       "lane": "tech",
       "magnitude": 1,
-      "flavour": ["Better Tools", "Burner Laptop", "Lock Picks", "Wiring Diagram"]
+      "name": "Burner Laptop",
+      "blurb": "Pre-loaded exploits, zero serial numbers, smells faintly of solder."
     },
     {
       "id": "stat-physical-1",
       "kind": "statBoost",
       "lane": "physical",
       "magnitude": 1,
-      "flavour": ["Hit the Gym", "Energy Drink", "Grippy Gloves", "Warmed Up"]
+      "name": "Grippy Gloves",
+      "blurb": "Climber's chalk included. The ledge stops being a problem."
     },
     {
       "id": "stat-charm-1",
       "kind": "statBoost",
       "lane": "charm",
       "magnitude": 1,
-      "flavour": ["Did the Homework", "Tailored Suit", "Press Pass", "Knows a Guy"]
+      "name": "Tailored Suit",
+      "blurb": "Nobody questions a person whose trousers fit this well."
     },
     {
       "id": "stat-stealth-1",
       "kind": "statBoost",
       "lane": "stealth",
       "magnitude": 1,
-      "flavour": ["Soft Shoes", "Black Gloves", "Cased the Joint", "Dark Clothes"]
+      "name": "Magnetic Soles",
+      "blurb": "Walk the air vents like a corridor. Squeak-free, guaranteed."
     },
     {
       "id": "stat-tech-2",
       "kind": "statBoost",
       "lane": "tech",
       "magnitude": 2,
-      "flavour": ["Crash Course", "The Masterclass"]
+      "name": "Zero-Day Cache",
+      "blurb": "A USB stick worth more than the van. Every lock thinks you're staff."
     },
     {
       "id": "stat-physical-2",
       "kind": "statBoost",
       "lane": "physical",
       "magnitude": 2,
-      "flavour": ["Crash Course", "The Masterclass"]
+      "name": "Stunt Double's Rig",
+      "blurb": "Harness, grip tape, and the confidence of someone who's done the fall twice."
     },
     {
       "id": "stat-charm-2",
       "kind": "statBoost",
       "lane": "charm",
       "magnitude": 2,
-      "flavour": ["Crash Course", "The Masterclass"]
+      "name": "The Cover Story",
+      "blurb": "Business cards, a LinkedIn, and two people who'll vouch. You ARE the inspector."
     },
     {
       "id": "stat-stealth-2",
       "kind": "statBoost",
       "lane": "stealth",
       "magnitude": 2,
-      "flavour": ["Crash Course", "The Masterclass"]
+      "name": "Ghost Protocol",
+      "blurb": "Thermal-dampened, motion-mapped, and rude to cameras. You're a rumour now."
     },
     {
       "id": "powerup-tech",
       "kind": "powerUp",
       "lane": "tech",
-      "flavour": ["Hacker's Rig", "Burner Phone", "Skeleton Key"]
+      "name": "Hacker's Rig",
+      "blurb": "One shouted play per job — the Tech ace move, whenever you call it."
     },
     {
       "id": "powerup-physical",
       "kind": "powerUp",
       "lane": "physical",
-      "flavour": ["Iron Grip", "Second Wind", "Sure Footing"]
+      "name": "Iron Grip",
+      "blurb": "One shouted play per job — the Physical ace move, whenever you call it."
     },
     {
       "id": "powerup-charm",
       "kind": "powerUp",
       "lane": "charm",
-      "flavour": ["The Favor", "Press Badge", "Silver Tongue"]
+      "name": "The Favor",
+      "blurb": "One shouted play per job — the Charm ace move, whenever you call it."
     },
     {
       "id": "powerup-stealth",
       "kind": "powerUp",
       "lane": "stealth",
-      "flavour": ["Ghost Kit", "Dark Ops", "Soft Step"]
+      "name": "Ghost Kit",
+      "blurb": "One shouted play per job — the Stealth ace move, whenever you call it."
     }
   ]
 }

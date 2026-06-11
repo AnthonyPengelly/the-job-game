@@ -64,9 +64,9 @@ function buildGearCatalog(raw: ParsedGear): Record<string, GearDef> {
   const gear: Record<string, GearDef> = {};
   for (const item of raw.items) {
     if (item.kind === 'statBoost') {
-      gear[item.id] = { id: item.id, kind: 'statBoost', lane: item.lane, magnitude: item.magnitude };
+      gear[item.id] = { id: item.id, kind: 'statBoost', lane: item.lane, magnitude: item.magnitude, name: item.name, blurb: item.blurb };
     } else {
-      gear[item.id] = { id: item.id, kind: 'powerUp', lane: item.lane };
+      gear[item.id] = { id: item.id, kind: 'powerUp', lane: item.lane, name: item.name, blurb: item.blurb };
     }
   }
   return gear;
@@ -122,6 +122,7 @@ export function buildConfig(bundle: PresetBundle): EngineConfig {
     },
     rewardScale: tuning.rewardScale,
     gearSellValue: tuning.gearSellValue,
+    gearDrops: tuning.gearDrops,
     scaling: {
       profiles,
       exhaustionRest: scaling.exhaustionRest,

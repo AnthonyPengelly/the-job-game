@@ -8,16 +8,26 @@ Shorthand: Heat ↑/↓ = ±2 (small) · ⇈/⇊ = ±4 (big) · Loot +/− · **
 
 # GEAR
 
+> **Playtest wave 2 (2026-06) revisions, recorded as decisions:** each
+> catalogue item carries **one fixed thematic name + a one-line blurb**
+> (e.g. *Magnetic Soles — +1 Stealth*) instead of a pool of flavour names —
+> the card label must match the grant exactly. Obstacle gear drops are
+> **lane-decoupled** (the lane is a fresh seeded draw, not the lane of the
+> game just played) and a statBoost drop has a preset chance
+> (`gearDrops.bigScoreChance`) to upgrade to the +2 tier. Sell values follow
+> a **visible rule**: `perBonusPoint × points + perRoom × roomIndex`, where
+> points = magnitude (+1/+2) and a power-up is worth `powerUpPoints`.
+
 ## Stat boosts — common, stack, +1 to a lane
 
-Mechanically all "+1 to one lane." Several flavour names per lane so they read fresh; the crew assigns each to a player and picks the lane where relevant.
+Mechanically all "+1 to one lane." One thematic name per item so the card always reads as what it grants; the crew assigns each to a player and picks the lane where relevant.
 
-- **Tech +1** — *Better Tools · Burner Laptop · Lock Picks · Wiring Diagram*
-- **Physical +1** — *Hit the Gym · Energy Drink · Grippy Gloves · Warmed Up*
-- **Charm +1** — *Did the Homework · Tailored Suit · Press Pass · Knows a Guy*
-- **Stealth +1** — *Soft Shoes · Black Gloves · Cased the Joint · Dark Clothes*
+- **Tech +1** — *Burner Laptop*
+- **Physical +1** — *Grippy Gloves*
+- **Charm +1** — *Tailored Suit*
+- **Stealth +1** — *Magnetic Soles*
 
-**Big Score (+2 to a lane)** — rare; a windfall training. *Crash Course · The Masterclass.*
+**Big Score (+2 to a lane)** — rare; a windfall. *Zero-Day Cache (Tech) · Stunt Double's Rig (Physical) · The Cover Story (Charm) · Ghost Protocol (Stealth).*
 
 ## Power-ups — the four lane abilities
 

@@ -337,7 +337,7 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
           `SELL_GEAR: index ${event.index} out of range (earnedGear has ${state.earnedGear.length} item(s))`,
         );
       }
-      const sellValue = computeGearSellValue(state.roomIndex, cfg);
+      const sellValue = computeGearSellValue(state.earnedGear[event.index]!, state.roomIndex, cfg);
       return {
         ...state,
         earnedGear: [

@@ -27,8 +27,8 @@ export interface TriviaItemConfig {
 // ── Gear catalog types ────────────────────────────────────────────────────────
 
 export type GearDef =
-  | { id: string; kind: 'statBoost'; lane: Lane; magnitude: number }
-  | { id: string; kind: 'powerUp'; lane: Lane };
+  | { id: string; kind: 'statBoost'; lane: Lane; magnitude: number; name: string; blurb: string }
+  | { id: string; kind: 'powerUp'; lane: Lane; name: string; blurb: string };
 
 // ── Room template config types ────────────────────────────────────────────────
 
@@ -154,10 +154,19 @@ export interface EngineConfig {
     perHeat: number;
     perRoom: number;
   };
-  /** Preset curve for computing gear sell value: base + perRoom * roomIndex. */
+  /**
+   * Visible gear sell rule: perBonusPoint × bonus points + perRoom × roomIndex.
+   * Bonus points = statBoost magnitude (1 or 2); a power-up is worth powerUpPoints.
+   * Selling deeper in the heist still pays more via the perRoom term.
+   */
   gearSellValue: {
-    base: number;
+    perBonusPoint: number;
+    powerUpPoints: number;
     perRoom: number;
+  };
+  /** Obstacle gear-drop variety: chance a statBoost drop upgrades to the +2 (bigScore) tier. */
+  gearDrops: {
+    bigScoreChance: number;
   };
   /** Gear catalog keyed by gear id. Loaded from content/gear.json. */
   gear: Record<string, GearDef>;

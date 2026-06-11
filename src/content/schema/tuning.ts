@@ -72,8 +72,12 @@ export const tuningSchema = z.object({
   }).strict(),
   rewardScale: z.object({ perHeat: z.number(), perRoom: z.number() }).strict(),
   gearSellValue: z.object({
-    base: z.number().nonnegative(),
+    perBonusPoint: z.number().nonnegative(),
+    powerUpPoints: z.number().nonnegative(),
     perRoom: z.number().nonnegative(),
+  }).strict(),
+  gearDrops: z.object({
+    bigScoreChance: z.number().min(0).max(1),
   }).strict(),
 }).strict();
 

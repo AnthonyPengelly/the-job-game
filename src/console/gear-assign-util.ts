@@ -31,9 +31,12 @@ export function gearItemLabel(
   if (!isGrantDescriptor(item)) {
     const def = gearCatalog[item as string];
     if (def === undefined) return String(item);
-    if (def.kind === 'powerUp') return `${def.lane} power-up`;
-    return `${def.lane} +${def.magnitude}`;
+    if (def.kind === 'powerUp') return `${def.name} (${def.lane} power-up)`;
+    return `${def.name} (${def.lane} +${def.magnitude})`;
   }
   const lanes = item.lanes ?? (item.lane ? [item.lane] : []);
-  return `${item.kind === 'powerUp' ? 'power-up' : 'gear'} (${lanes.join('/')})`;
+  // Kind first — a power-up grant must never read as a stat boost.
+  const kindLabel =
+    item.kind === 'powerUp' ? 'power-up' : item.kind === 'bigScore' ? '+2 stat' : '+1 stat';
+  return `${kindLabel} (${lanes.join('/')})`;
 }

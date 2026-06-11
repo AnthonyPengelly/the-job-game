@@ -44,8 +44,8 @@ const obstacleOnlyCfg: EngineConfig = {
 const obstacleWithGearCfg: EngineConfig = {
   ...obstacleOnlyCfg,
   gear: {
-    'stat-tech-1': { id: 'stat-tech-1', kind: 'statBoost' as const, lane: 'tech' as const, magnitude: 1 },
-    'powerup-tech': { id: 'powerup-tech', kind: 'powerUp' as const, lane: 'tech' as const },
+    'stat-tech-1': { id: 'stat-tech-1', kind: 'statBoost' as const, lane: 'tech' as const, magnitude: 1, name: 'Burner Laptop', blurb: 'Test blurb.' },
+    'powerup-tech': { id: 'powerup-tech', kind: 'powerUp' as const, lane: 'tech' as const, name: 'Hackers Rig', blurb: 'Test blurb.' },
   },
 };
 
@@ -310,6 +310,75 @@ function makeGearSpoilsStore() {
   }));
   return store;
 }
+
+describe('Spoils — gear label matches the grant (regression: playtest wave 2)', () => {
+  function makeDescriptorStore(item: import('@/engine/types').GearGrantDescriptor) {
+    const store = makeGearSpoilsStore();
+    store.setState(prev => ({
+      session: {
+        ...prev.session,
+        present: { ...prev.session.present, earnedGear: [item] },
+      },
+    }));
+    return store;
+  }
+
+  function renderStore(store: ReturnType<typeof makeGearSpoilsStore>) {
+    render(
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
+    );
+  }
+
+  it('a multi-lane POWER-UP grant reads as a power-up, never "+1 stat"', () => {
+    // 8 scenarios grant {kind:'powerUp', lanes:[...]}; the old lanes-first
+    // labelling rendered them "Stat boost · pick lane" / "+1 Any Lane" while
+    // ASSIGN_GEAR applied a power-up — the table saw the wrong card.
+    const store = makeDescriptorStore({
+      kind: 'powerUp',
+      lanes: ['tech', 'physical', 'charm', 'stealth'],
+    });
+    renderStore(store);
+    const card = screen.getByTestId('spoils-gear-card-grant-0');
+    expect(card.textContent).toContain('Power-up');
+    expect(card.textContent).not.toContain('+1');
+    expect(card.textContent).not.toContain('Stat boost');
+  });
+
+  it('a multi-lane stat boost still reads as a stat boost', () => {
+    const store = makeDescriptorStore({ kind: 'statBoost', lanes: ['charm', 'stealth'] });
+    renderStore(store);
+    const card = screen.getByTestId('spoils-gear-card-grant-0');
+    expect(card.textContent).toContain('Stat boost');
+    expect(card.textContent).toContain('+1');
+  });
+
+  it('a resolved gear id shows its thematic name with the mechanic', () => {
+    const store = makeGearSpoilsStore(); // earnedGear: ['stat-tech-1']
+    renderStore(store);
+    const label = screen.getByTestId('spoils-gear-label-stat-tech-1');
+    expect(label.textContent).toContain('Burner Laptop');
+    expect(label.textContent).toContain('+1 Tech');
+  });
+
+  it('picking a lane on a power-up grant resolves to that lane\'s thematic card name', () => {
+    const store = makeDescriptorStore({
+      kind: 'powerUp',
+      lanes: ['tech', 'physical', 'charm', 'stealth'],
+    });
+    renderStore(store);
+    const lanePick = screen.getByTestId('spoils-gear-lane-grant-0');
+    const techChip = lanePick.querySelector('[role="button"]');
+    expect(techChip).not.toBeNull();
+    fireEvent.click(techChip!);
+    const label = screen.getByTestId('spoils-gear-label-grant-0');
+    expect(label.textContent).toContain('Hackers Rig');
+  });
+});
 
 describe('Spoils — gear assignment', () => {
   it('shows gear section when earnedGear is non-empty', () => {
