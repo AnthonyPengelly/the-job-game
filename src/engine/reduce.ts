@@ -84,9 +84,12 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
         event.outcome === 'complication' ? complicationLoot :
         cfg.outcomeLoot.botched;
 
-      // Gear grant: fires only on clean, mirroring the reward behavior.
+      // Gear grant: fires on clean AND complication. A complication is the
+      // comedic middle, not a failure — and gear is the run's only character
+      // progression, so gating it behind clean-only left crews finishing the
+      // night with one card. Only a botch loses the gear.
       let newEarnedGear = state.earnedGear;
-      if (event.outcome === 'clean' && option.gear !== undefined) {
+      if (event.outcome !== 'botched' && option.gear !== undefined) {
         if (option.gear.lane !== undefined) {
           const gearId = resolveGearGrant(option.gear, cfg);
           newEarnedGear = [...state.earnedGear, gearId];

@@ -1202,9 +1202,10 @@ describe('RESOLVE_MINIGAME — single-lane gear grant', () => {
     expect(next.earnedGear[0]).toBe('stat-tech-1' as GearId);
   });
 
-  it('awards no gear on complication', () => {
+  it('awards gear on complication too (the comedic middle keeps its loot)', () => {
     const next = reduce(gearOptionState(), { t: 'RESOLVE_MINIGAME', outcome: 'complication' }, cfg);
-    expect(next.earnedGear).toHaveLength(0);
+    expect(next.earnedGear).toHaveLength(1);
+    expect(next.earnedGear[0]).toBe('stat-tech-1' as GearId);
   });
 
   it('awards no gear on botched', () => {
@@ -1274,9 +1275,9 @@ describe('RESOLVE_MINIGAME — multi-lane gear grant', () => {
     expect(typeof next.earnedGear[0]).not.toBe('string');
   });
 
-  it('grants nothing on complication', () => {
+  it('grants the gear on complication as well', () => {
     const next = reduce(multiGearOptionState(), { t: 'RESOLVE_MINIGAME', outcome: 'complication' }, cfg);
-    expect(next.earnedGear).toHaveLength(0);
+    expect(next.earnedGear).toHaveLength(1);
   });
 });
 
