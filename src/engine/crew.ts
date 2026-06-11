@@ -33,6 +33,16 @@ export function isResting(player: Player, roomIndex: number): boolean {
 }
 
 /**
+ * How many rooms a committed player rests at this headcount.
+ * 0 at the "tired" class (2–3 players) — nobody benches; UI copy promising
+ * "whoever plays rests next room" must check this before saying it.
+ */
+export function restRoomsFor(headcount: number, cfg: EngineConfig): number {
+  const profile = profileFor(headcount, cfg);
+  return cfg.scaling.exhaustionRest[profile.exhaustion];
+}
+
+/**
  * Apply exhaustion rotation after a minigame commitment.
  * Sets `restingUntilRoom = roomIndex + exhaustionRest[class]` on committed players
  * when that rest count is > 0 (so full/light bench; tired does not bench).

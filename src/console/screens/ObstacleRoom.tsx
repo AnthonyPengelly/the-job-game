@@ -7,7 +7,7 @@ import { Teleprompter } from '@/console/teleprompter';
 import { useCrewRailMode } from '@/console/shell';
 import { formatLoot } from '@/content/format';
 import { buildRegistry } from '@/minigames';
-import { computeDial } from '@/engine';
+import { computeDial, restRoomsFor } from '@/engine';
 import type { ObstacleOption, Lane } from '@/engine';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -210,6 +210,11 @@ export function ObstacleRoom() {
   const crewNames = crew.map(p => p.name).join(', ');
   const roomNum = String(roomIndex + 1).padStart(2, '0');
 
+  // Whether committing benches a player next room at this headcount. At 2–3
+  // players the exhaustion class is "tired" (restRooms=0) — promising "whoever
+  // plays rests next room" would be a lie the table catches immediately.
+  const restsApply = restRoomsFor(crew.length, cfg) > 0;
+
   // Build the minigame registry once (keyed by gameId) for name lookups.
   const registry = useMemo(() => buildRegistry(cfg), [cfg]);
 
@@ -227,6 +232,7 @@ export function ObstacleRoom() {
     const approachCtx = {
       roomNum,
       crew: crewNames,
+      restsApply,
       ...(laneCtx !== undefined ? { lane: laneCtx } : {}),
     };
     const clueCtx = {
@@ -398,8 +404,12 @@ export function ObstacleRoom() {
                 <p>
                   This is a <b>{laneLabelFull}</b> room — tap{' '}
                   {minCommit === maxCommit ? minCommit : `${minCommit}–${maxCommit}`} on
-                  the left rail to send them in. Whoever plays{' '}
-                  <b>rests next room</b>.
+                  the left rail to send them in.
+                  {restsApply ? (
+                    <> Whoever plays <b>rests next room</b>.</>
+                  ) : (
+                    <> Small crew — <b>no one rests</b>; everyone stays in play.</>
+                  )}
                 </p>
               )}
             </div>
@@ -448,7 +458,7 @@ export function ObstacleRoom() {
         note={
           selectedOptionId !== null && commitCount > 0 ? (
             <span data-testid="action-note">
-              {commitCount} committed · rest next room
+              {commitCount} committed{restsApply ? ' · rest next room' : ''}
             </span>
           ) : undefined
         }

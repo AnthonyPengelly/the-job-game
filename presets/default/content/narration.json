@@ -120,7 +120,10 @@
       "text": [
         "Moving to room {roomNum}. The bag's getting heavier — keep your heads.",
         "Look at the two options, weigh the heat, and commit a crew. Whoever plays this room sits the next one out, so spend your specialists wisely."
-      ]
+      ],
+      "when": {
+        "restsApply": true
+      }
     },
     {
       "id": "room-approach-4",
@@ -155,7 +158,10 @@
       "text": [
         "Okay — room {roomNum}. Smells like furniture polish and poor decisions in there.",
         "Read both doors to the table. Whoever's freshest takes point; the played-out ones rest. Commit when ready."
-      ]
+      ],
+      "when": {
+        "restsApply": true
+      }
     },
     {
       "id": "room-approach-9",
@@ -169,7 +175,10 @@
       "text": [
         "One more door, one more payday. Room {roomNum}.",
         "Options are on screen. Quiet or greedy — and before you choose, look at who's rested. The next room won't wait for tired hands."
-      ]
+      ],
+      "when": {
+        "restsApply": true
+      }
     },
     {
       "id": "room-approach-11",

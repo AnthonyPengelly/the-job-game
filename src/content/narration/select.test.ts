@@ -85,6 +85,16 @@ describe('filterByContext', () => {
     expect(filterByContext(pool, { lane: 'charm' })).not.toContainEqual(techLane);
   });
 
+  it('filters by restsApply correctly', () => {
+    const restPromise = v('rest', { restsApply: true });
+    const pool = [unconditional, restPromise];
+    // Big crew: rest rotation applies — rest-promising lines eligible.
+    expect(filterByContext(pool, { restsApply: true })).toContainEqual(restPromise);
+    // 2–3 players: nobody rests — rest-promising lines must not surface.
+    expect(filterByContext(pool, { restsApply: false })).not.toContainEqual(restPromise);
+    expect(filterByContext(pool, { restsApply: false })).toContainEqual(unconditional);
+  });
+
   it('returns empty array when no variants match', () => {
     const result = filterByContext([villaOnly], { mansionType: 'estate' });
     expect(result).toHaveLength(0);

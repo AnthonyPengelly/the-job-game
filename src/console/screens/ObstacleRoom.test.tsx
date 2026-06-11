@@ -245,6 +245,20 @@ describe('ObstacleRoom screen', () => {
     expect(side.textContent).toContain('Physical + Stealth');
   });
 
+  it('commit copy never promises rest at 2 players (tired class, restRooms=0)', () => {
+    const store = renderObstacleRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+    const side = screen.getByTestId('commit-side');
+    expect(side.textContent).not.toContain('rests next room');
+    expect(side.textContent).toContain('no one rests');
+    // Commit someone — the action-bar note must not promise a rest either.
+    const alice = store.getState().session.present.crew[0]!;
+    fireEvent.click(screen.getByTestId(`rail-toggle-${alice.id}`));
+    expect(screen.getByTestId('action-note').textContent).not.toContain('rest next room');
+  });
+
   it('reward cost label says "Reward" not "Loot"', () => {
     renderObstacleRoom();
     // Check that the cost label shows "Reward" text (the .k span)
