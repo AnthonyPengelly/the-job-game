@@ -1,20 +1,30 @@
 import { useState } from 'react';
+import { Eye, EyeOff, Hand, Search } from 'lucide-react';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
-import type { CardId } from '@/minigames/primitives/CardSpread';
-import type { OnceOverParams } from './generate';
+import type { OnceOverParams, PositionChange } from './generate';
 import { judge, hunchBoost } from './judge';
 import type { OnceOverState } from './judge';
 
+type Phase = 'setup' | 'study' | 'change' | 'identify';
+
 function initState(): OnceOverState {
   return {
-    flaggedCardIds: [],
+    hits: 0,
+    misses: 0,
     studyTimerExpired: false,
     stealthBoostUsed: false,
     hunchActive: false,
   };
+}
+
+function changeText(change: PositionChange): string {
+  if (change.type === 'swap') {
+    return `Swap the cards at positions ${change.positions[0]} and ${change.positions[1]}.`;
+  }
+  return `Replace the card at position ${change.positions[0]} with the top card of the deck.`;
 }
 
 export function TheOnceOverComponent({
@@ -23,28 +33,21 @@ export function TheOnceOverComponent({
   onResolve,
 }: MiniGameProps<OnceOverParams>): JSX.Element {
   const [state, setState] = useState<OnceOverState>(initState);
-  const [studyElapsedPct, setStudyElapsedPct] = useState(0);
-
-  const isIdentifyPhase = state.studyTimerExpired;
+  const [phase, setPhase] = useState<Phase>('setup');
 
   function handleStudyExpire() {
     setState(s => ({ ...s, studyTimerExpired: true }));
+    setPhase('change');
   }
 
-  function handleStudyTick(remaining: number) {
-    const elapsed = params.studySeconds - remaining;
-    setStudyElapsedPct(Math.min((elapsed / params.studySeconds) * 100, 100));
+  function handleHit() {
+    setState(s =>
+      s.hits >= params.changeCount ? s : { ...s, hits: s.hits + 1 },
+    );
   }
 
-  function handleCardTap(id: CardId) {
-    if (!isIdentifyPhase) return;
-    setState(s => {
-      const already = s.flaggedCardIds.includes(id);
-      const newFlags = already
-        ? s.flaggedCardIds.filter(f => f !== id)
-        : [...s.flaggedCardIds, id];
-      return { ...s, flaggedCardIds: newFlags };
-    });
+  function handleMiss() {
+    setState(s => ({ ...s, misses: s.misses + 1 }));
   }
 
   function handleBoost(hook: BoostHook<OnceOverState, OnceOverParams>) {
@@ -55,115 +58,137 @@ export function TheOnceOverComponent({
     onResolve(judge(state, params));
   }
 
-  const displayCards = isIdentifyPhase ? params.modifiedCards : params.originalCards;
-  const flaggedSet = new Set(state.flaggedCardIds);
-  const changedSet = new Set(params.changedCardIds);
-
-  const progressPct = isIdentifyPhase
-    ? (flaggedSet.size / Math.max(params.changeCount, 1)) * 100
-    : studyElapsedPct;
+  const phaseBadge: Record<Phase, { icon: JSX.Element; label: string }> = {
+    setup: { icon: <Hand size={14} />, label: 'Setup' },
+    study: { icon: <Eye size={14} />, label: 'Study' },
+    change: { icon: <EyeOff size={14} />, label: 'Make the changes' },
+    identify: { icon: <Search size={14} />, label: 'Identify' },
+  };
 
   return (
     <div data-testid="the-once-over">
       <StatusZone>
-        <span
-          className={`mg-status-badge ${isIdentifyPhase
-            ? (state.hunchActive ? 'mg-status-badge--complication' : 'mg-status-badge--active')
-            : 'mg-status-badge--active'}`}
-          data-testid="onceover-phase"
-        >
-          {isIdentifyPhase ? 'Identify' : 'Study'}
+        <span className="mg-status-badge mg-status-badge--active" data-testid="oo-phase">
+          {phaseBadge[phase].icon}
+          {phaseBadge[phase].label}
         </span>
-
-        <div className="mg-progress-bar" aria-label={isIdentifyPhase ? 'Flagged' : 'Study window'}>
-          <div className="mg-progress-bar__label">
-            {isIdentifyPhase
-              ? <span>Flagged · {flaggedSet.size} of {params.changeCount}</span>
-              : <span>Study window · {params.studySeconds}s</span>}
-          </div>
-          <div className="mg-progress-bar__track">
-            <div
-              className="mg-progress-bar__fill mg-progress-bar__fill--data"
-              style={{ width: `${Math.min(progressPct, 100)}%` }}
-            />
-          </div>
-        </div>
-
-        {!isIdentifyPhase && (
-          <span data-testid="onceover-change-count" className="mg-status-badge mg-status-badge--active">
-            {params.changeCount} change{params.changeCount !== 1 ? 's' : ''}
+        <span className="mg-dial-inline" data-testid="oo-change-count">
+          {params.changeCount} change{params.changeCount !== 1 ? 's' : ''}
+        </span>
+        {phase === 'identify' && (
+          <span className="mg-dial-inline" data-testid="oo-score">
+            Spotted · {state.hits} / {params.changeCount}
+            {state.misses > 0 ? ` · ${state.misses} wrong` : ''}
           </span>
         )}
       </StatusZone>
 
       <ChallengeZone>
-        {/* Study timer (hidden in identify phase) */}
-        {!isIdentifyPhase && (
-          <Timer
-            seconds={params.studySeconds}
-            running={!isIdentifyPhase}
-            onExpire={handleStudyExpire}
-            onTick={handleStudyTick}
-            audible
-          />
+        {phase === 'setup' && (
+          <div className="mg-setup-panel" data-testid="oo-setup">
+            <div className="mg-setup-panel__title">
+              <Hand size={16} />
+              Set up the table
+            </div>
+            <ol className="mg-setup-panel__steps">
+              <li>Shuffle the pack.</li>
+              <li>Deal <strong>{params.cardCount} cards face-up in a row</strong> where the crew can see them.</li>
+              <li>Keep the rest of the deck as a face-down draw pile — you may need it.</li>
+            </ol>
+            <p className="mg-setup-panel__rule">
+              The crew studies the row while the clock runs. Then they look away while you make
+              the changes — only you will see the instructions.
+            </p>
+            <button
+              type="button"
+              className="mg-call-outcome-btn"
+              data-testid="oo-start-study"
+              onClick={() => setPhase('study')}
+            >
+              Row dealt — start the study clock
+            </button>
+          </div>
         )}
 
-        {/* Card spread — face-up in study, tappable in identify */}
-        <div className="onceover-spread" data-testid="onceover-spread">
-          {displayCards.map(card => {
-            const isFlagged = flaggedSet.has(card.id);
-            const isChanged = isIdentifyPhase && changedSet.has(card.id);
+        {phase === 'study' && (
+          <div data-testid="study-phase">
+            <Timer
+              seconds={params.studySeconds}
+              running
+              onExpire={handleStudyExpire}
+              audible
+            />
+            <div className="ctb-subtext">
+              The crew studies the row — order, values, suits. Changes come when the clock ends.
+            </div>
+          </div>
+        )}
 
-            const classes = [
-              'onceover-card',
-              isFlagged ? 'onceover-card--flagged' : '',
-              isChanged ? 'onceover-card--changed' : '',
-              isIdentifyPhase ? 'onceover-card--interactive' : '',
-            ].filter(Boolean).join(' ');
+        {phase === 'change' && (
+          <div className="mg-setup-panel" data-testid="oo-change-instructions">
+            <div className="mg-setup-panel__title">
+              <EyeOff size={16} />
+              Crew looks away — GM only
+            </div>
+            <p className="mg-setup-panel__rule">
+              Hide the row (box lid, menu, or eyes shut) and apply, in order — positions count
+              from <strong>your left</strong>:
+            </p>
+            <ol className="mg-setup-panel__steps" data-testid="oo-change-list">
+              {params.changes.map((change, i) => (
+                <li key={i} data-testid={`oo-change-${i}`}>{changeText(change)}</li>
+              ))}
+            </ol>
+            <button
+              type="button"
+              className="mg-call-outcome-btn"
+              data-testid="oo-reveal"
+              onClick={() => setPhase('identify')}
+            >
+              Changes made — reveal the row
+            </button>
+          </div>
+        )}
 
-            return (
+        {phase === 'identify' && (
+          <div data-testid="identify-phase">
+            <div className="ctb-subtext">
+              The crew calls out what changed. Mark each callout against your list:
+            </div>
+            <ul className="mg-setup-panel__steps" style={{ listStyle: 'none', paddingLeft: 0, marginTop: '0.5rem' }}>
+              {params.changes.map((change, i) => (
+                <li key={i} className="mg-dial-inline" data-testid={`oo-answer-${i}`}>
+                  {changeText(change)}
+                </li>
+              ))}
+            </ul>
+            <div className="mg-record-controls" data-testid="oo-record-controls">
               <button
-                key={card.id}
                 type="button"
-                className={classes}
-                data-testid={`onceover-card-${card.id}`}
-                data-flagged={isFlagged ? 'true' : 'false'}
-                data-changed={isChanged ? 'true' : 'false'}
-                onClick={() => handleCardTap(card.id)}
-                disabled={!isIdentifyPhase}
+                className="mg-tbtn"
+                data-testid="oo-hit"
+                onClick={handleHit}
+                disabled={state.hits >= params.changeCount}
               >
-                {card.label}
+                <span className="mg-tl">✓</span>
+                <span className="mg-ts">Spotted</span>
               </button>
-            );
-          })}
-        </div>
-
-        {/* Sub-text */}
-        {!isIdentifyPhase && (
-          <div className="onceover-subtext">
-            When the timer ends the spread changes — identify what moved or swapped.
-          </div>
-        )}
-        {state.hunchActive && (
-          <div className="onceover-subtext onceover-subtext--gm" data-testid="hunch-active">
-            GM: give a verbal clue now
-          </div>
-        )}
-        {isIdentifyPhase && (
-          <div className="onceover-subtext onceover-subtext--gm" data-testid="onceover-gm-hint">
-            GM only · changed card{params.changedCardIds.length !== 1 ? 's' : ''} have amber edge
+              <button
+                type="button"
+                className="mg-tbtn mg-tbtn--danger"
+                data-testid="oo-miss"
+                onClick={handleMiss}
+              >
+                <span className="mg-tl">✗</span>
+                <span className="mg-ts">Wrong call</span>
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Flagged summary */}
-        {isIdentifyPhase && (
-          <div data-testid="onceover-flagged" className="onceover-subtext" style={{ marginTop: '0.75rem' }}>
-            Flagged: {state.flaggedCardIds.length === 0
-              ? 'none — tap a card to flag it'
-              : state.flaggedCardIds.map(id => {
-                  const card = params.modifiedCards.find(c => c.id === id);
-                  return card?.label ?? id;
-                }).join(', ')}
+        {state.hunchActive && phase === 'identify' && (
+          <div className="ctb-subtext" data-testid="oo-hunch" style={{ marginTop: '0.75rem' }}>
+            Hunch fired — give the crew one live verbal clue.
           </div>
         )}
       </ChallengeZone>
@@ -177,14 +202,16 @@ export function TheOnceOverComponent({
             onFire={handleBoost}
           />
         </div>
-        <button
-          type="button"
-          className="mg-call-outcome-btn"
-          data-testid="btn-call-outcome"
-          onClick={handleCallOutcome}
-        >
-          Call Outcome
-        </button>
+        {phase === 'identify' && (
+          <button
+            type="button"
+            className="mg-call-outcome-btn"
+            data-testid="btn-call-outcome"
+            onClick={handleCallOutcome}
+          >
+            Call Outcome
+          </button>
+        )}
       </RefereeZone>
     </div>
   );

@@ -33,12 +33,12 @@ export function Timer({ seconds, running, onExpire, onTick, audible = true }: Ti
     }
 
     const id = setTimeout(() => {
-      setRemaining((r) => {
-        const next = r - 1;
-        if (audible && next > 0) playBeep(440, 0.05);
-        onTick?.(next);
-        return next;
-      });
+      // Side effects stay out of the setState updater: updaters can run during
+      // render, and calling a parent's setState there is a React error.
+      const next = remaining - 1;
+      if (audible && next > 0) playBeep(440, 0.05);
+      onTick?.(next);
+      setRemaining(next);
     }, 1000);
     return () => clearTimeout(id);
   }, [running, remaining, audible]);

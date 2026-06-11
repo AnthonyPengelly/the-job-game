@@ -5,7 +5,7 @@ import type { OnceOverState } from './judge';
 import { judge, hunchBoost } from './judge';
 import { TheOnceOverComponent } from './component';
 
-export type { OnceOverParams, AppliedChange, ChangeType } from './generate';
+export type { OnceOverParams, PositionChange, ChangeType } from './generate';
 export type { OnceOverState } from './judge';
 
 export const theOnceOver: MiniGame<OnceOverParams, OnceOverState> = {
@@ -18,6 +18,7 @@ export const theOnceOver: MiniGame<OnceOverParams, OnceOverState> = {
   judge,
   boosts: [hunchBoost],
   armedInstructions:
-    'Study the spread carefully — the order, the values, every card. ' +
-    'When the timer ends the spread changes. Identify which card changed. Hunch gives a GM clue.',
+    'Deal a row of random cards face-up. The crew studies it under the clock, then looks away ' +
+    'while you secretly make the changes the screen gives you (by position). Reveal — they call ' +
+    'out what changed and you score each callout. Hunch gives a GM clue.',
 };
