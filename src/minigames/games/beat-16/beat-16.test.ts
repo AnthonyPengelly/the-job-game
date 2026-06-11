@@ -58,6 +58,12 @@ describe('generate — reproducibility', () => {
     expect(p.cleanWindowMs).toBeLessThan(p.complicationWindowMs);
   });
 
+  it('carries a positive GM reaction-time compensation (player slaps, GM taps)', () => {
+    const p = generate(mulberry32(7), dial(0));
+    expect(p.reactionCompensationMs).toBeGreaterThan(0);
+    expect(p.reactionCompensationMs).toBeLessThan(p.complicationWindowMs);
+  });
+
   it('audibleBeats is at least 1', () => {
     for (const level of [-5, -1, 0, 1, 5]) {
       const p = generate(mulberry32(1), dial(level));

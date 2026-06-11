@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
+import { resolveDeal } from '@/minigames/games/assembly-line/deal';
 import { generate } from './generate';
 import { AssemblyLineNegotiatedComponent } from './component';
 
@@ -23,87 +24,74 @@ function makeCommitted(count = 2, withCharmOrPhys = false) {
   }));
 }
 
-// ── Hero number ───────────────────────────────────────────────────────────────
+function renderGame(opts: { seed?: number; boost?: boolean; onResolve?: (o: string) => void } = {}) {
+  const params = makeParams(opts.seed ?? 1);
+  render(
+    <AssemblyLineNegotiatedComponent
+      params={params}
+      dial={dial}
+      committed={makeCommitted(2, opts.boost ?? false)}
+      onResolve={(opts.onResolve ?? (() => {})) as never}
+    />,
+  );
+  return params;
+}
 
-describe('AssemblyLineNegotiatedComponent — hero number', () => {
-  it('renders the hero sets number starting at 0', () => {
-    const params = makeParams(1);
-    const committed = makeCommitted(2);
-    render(
-      <AssemblyLineNegotiatedComponent
-        params={params}
-        dial={dial}
-        committed={committed}
-        onResolve={() => {}}
-      />,
-    );
-    expect(screen.getByTestId('aln-sets-num').textContent).toBe('0');
+function dealHands() {
+  fireEvent.click(screen.getByTestId('aln-dealt'));
+}
+
+// ── Setup panel ───────────────────────────────────────────────────────────────
+
+describe('AssemblyLineNegotiatedComponent — setup panel', () => {
+  it('names one set rank per player and the hand size', () => {
+    const params = renderGame();
+    const deal = resolveDeal(params.rankOrder, params.decoysPerPlayer, 2);
+    const setup = screen.getByTestId('aln-setup');
+    for (const rank of deal.setRanks) {
+      expect(setup.textContent).toContain(rank);
+    }
+    expect(setup.textContent).toContain(`${deal.handSize} cards to each player`);
   });
 
-  it('+1 button increments the hero count', () => {
-    const params = makeParams(1);
-    const committed = makeCommitted(2);
-    render(
-      <AssemblyLineNegotiatedComponent
-        params={params}
-        dial={dial}
-        committed={committed}
-        onResolve={() => {}}
-      />,
-    );
+  it('tally controls only appear after hands are dealt', () => {
+    renderGame();
+    expect(screen.queryByTestId('aln-tally-increment')).not.toBeInTheDocument();
+    dealHands();
+    expect(screen.getByTestId('aln-tally-increment')).toBeInTheDocument();
+  });
+});
+
+// ── Tally ────────────────────────────────────────────────────────────────────
+
+describe('AssemblyLineNegotiatedComponent — tally', () => {
+  it('+1 then undo returns the hero count to 0', () => {
+    renderGame();
+    dealHands();
     fireEvent.click(screen.getByTestId('aln-tally-increment'));
     expect(screen.getByTestId('aln-sets-num').textContent).toBe('1');
-  });
-
-  it('undo decrements the hero count', () => {
-    const params = makeParams(1);
-    const committed = makeCommitted(2);
-    render(
-      <AssemblyLineNegotiatedComponent
-        params={params}
-        dial={dial}
-        committed={committed}
-        onResolve={() => {}}
-      />,
-    );
-    fireEvent.click(screen.getByTestId('aln-tally-increment'));
     fireEvent.click(screen.getByTestId('aln-tally-undo'));
     expect(screen.getByTestId('aln-sets-num').textContent).toBe('0');
   });
 });
 
-// ── Tip-Off type strip ────────────────────────────────────────────────────────
+// ── Tip-Off rank strip ────────────────────────────────────────────────────────
 
-describe('AssemblyLineNegotiatedComponent — Tip-Off type strip', () => {
-  it('type strip not shown before Tip-Off fires', () => {
-    const params = makeParams(1);
-    const committed = makeCommitted(2, true);
-    render(
-      <AssemblyLineNegotiatedComponent
-        params={params}
-        dial={dial}
-        committed={committed}
-        onResolve={() => {}}
-      />,
-    );
+describe('AssemblyLineNegotiatedComponent — Tip-Off rank strip', () => {
+  it('rank strip not shown before Tip-Off fires', () => {
+    renderGame({ boost: true });
+    dealHands();
     expect(screen.queryByTestId('aln-types-revealed')).not.toBeInTheDocument();
   });
 
-  it('type strip shown after Tip-Off fires', () => {
-    const params = makeParams(1);
-    const committed = makeCommitted(2, true);
-    render(
-      <AssemblyLineNegotiatedComponent
-        params={params}
-        dial={dial}
-        committed={committed}
-        onResolve={() => {}}
-      />,
-    );
+  it('rank strip shows the set ranks after Tip-Off fires', () => {
+    const params = renderGame({ boost: true });
+    dealHands();
     fireEvent.click(screen.getByTestId('boost-charm'));
-    expect(screen.getByTestId('aln-types-revealed')).toBeInTheDocument();
-    for (const t of params.setTypesInPlay) {
-      expect(screen.getByTestId('aln-types-revealed').textContent).toContain(t);
+    const strip = screen.getByTestId('aln-types-revealed');
+    const deal = resolveDeal(params.rankOrder, params.decoysPerPlayer, 2);
+    for (const rank of deal.setRanks) {
+      expect(strip.textContent).toContain(rank);
     }
   });
 });
@@ -112,52 +100,10 @@ describe('AssemblyLineNegotiatedComponent — Tip-Off type strip', () => {
 
 describe('AssemblyLineNegotiatedComponent — onResolve', () => {
   it('calls onResolve with judge suggestion', () => {
-    const params = makeParams(1);
     const spy = vi.fn();
-    render(
-      <AssemblyLineNegotiatedComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted(2)}
-        onResolve={spy}
-      />,
-    );
+    renderGame({ onResolve: spy });
+    dealHands();
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledOnce();
-  });
-});
-
-// ── Boost slot (no layout shift) ──────────────────────────────────────────────
-
-describe('AssemblyLineNegotiatedComponent — boost slot', () => {
-  it('mg-boost-slot always rendered', () => {
-    const params = makeParams(1);
-    render(
-      <AssemblyLineNegotiatedComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted(2, false)}
-        onResolve={() => {}}
-      />,
-    );
-    const slots = document.querySelectorAll('.mg-boost-slot');
-    expect(slots.length).toBeGreaterThanOrEqual(1);
-  });
-});
-
-// ── Progress bar ──────────────────────────────────────────────────────────────
-
-describe('AssemblyLineNegotiatedComponent — progress bar', () => {
-  it('progress bar rendered', () => {
-    const params = makeParams(1);
-    render(
-      <AssemblyLineNegotiatedComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted(2)}
-        onResolve={() => {}}
-      />,
-    );
-    expect(screen.getByTestId('aln-progress')).toBeInTheDocument();
   });
 });

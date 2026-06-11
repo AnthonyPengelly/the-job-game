@@ -3,6 +3,7 @@ import { CheckCircle, XCircle, Lock, Eye } from 'lucide-react';
 import type { MiniGameProps } from '@/minigames/contract';
 import type { BoostHook } from '@/minigames/contract';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
+import { Timer } from '@/minigames/primitives/Timer';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import type { SafeCrackParams } from './generate';
 import { computeFeedback, judge, techBoost } from './judge';
@@ -20,8 +21,9 @@ function initState(guessBudget: number): SafeCrackState {
 export function SafeCrackComponent({ params, committed, onResolve }: MiniGameProps<SafeCrackParams>): JSX.Element {
   const [state, setState] = useState<SafeCrackState>(() => initState(params.guessBudget));
   const [currentInput, setCurrentInput] = useState('');
+  const [timerExpired, setTimerExpired] = useState(false);
 
-  const gameOver = state.solved || state.guessesRemaining === 0;
+  const gameOver = state.solved || state.guessesRemaining === 0 || timerExpired;
   const guessesUsed = params.guessBudget - state.guessesRemaining;
   const fillPct = state.solved
     ? 100
@@ -82,6 +84,12 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
           <span>{badgeLabel}</span>
         </span>
         <span data-testid="code-length" className="mg-dial-inline">{params.code.length}-digit code · {params.guessBudget} tries</span>
+        <Timer
+          seconds={params.timerSeconds}
+          running={!gameOver}
+          onExpire={() => setTimerExpired(true)}
+          audible
+        />
         <div className="mg-progress-bar" data-testid="sc-progress">
           <div className="mg-progress-bar__track">
             <div

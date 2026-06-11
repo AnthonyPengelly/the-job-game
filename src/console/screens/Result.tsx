@@ -109,7 +109,9 @@ export function Result() {
   const hasNext = lineIndex < stingLines.length - 1;
 
   const reasonText = win
-    ? `Heat ${state.heat} / ${cfg.heat.hMax} — stayed cool`
+    ? state.heat >= cfg.heat.hMax
+      ? `Heat ${state.heat} / ${cfg.heat.hMax} — a hot exit`
+      : `Heat ${state.heat} / ${cfg.heat.hMax} — stayed cool`
     : `Heat ${state.heat} / ${cfg.heat.hMax} — maxed out`;
 
   return (

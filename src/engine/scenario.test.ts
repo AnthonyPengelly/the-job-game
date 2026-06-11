@@ -15,7 +15,7 @@ const cfg: EngineConfig = {
   escalation: { onsetRoom: 5, rampPerObstacle: 0.2 },
   obstacleHeat: { safe: 1, greedy: 2, greedyBelowFraction: 0.5 },
   outcomeHeat: { clean: 0, complication: 1, botched: 2 },
-  outcomeLoot: { complication: 1, botched: 0 },
+  outcomeLoot: { complication: 1, complicationFraction: 0.5, botched: 0 },
   scenarioSwing: { small: 2, big: 4 },
   getaway: {
     exponent: 1.3, skillTerm: 0.5, skillPivot: 0.65, headcountTerm: 0.8,

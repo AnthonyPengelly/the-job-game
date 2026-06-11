@@ -9,6 +9,12 @@ const REGISTER_TYPE = 'the-job:player-ready';
 // postMessage to these windows is the file://-safe fallback transport.
 const playerWindows = new Set<Window>();
 
+// Replay-on-connect: the last published slice, kept so a player view opened
+// AFTER the game started still receives the current state. Without this the
+// reader's screen sits at "Waiting for game…" until the next publish — and at
+// a real table the GM hits START before the second screen is ready.
+let lastPayload: string | null = null;
+
 // Set up the console-side registration listener at module load time.
 // Both the console and player-view windows import this module; only the
 // console window will ever receive REGISTER_TYPE messages (from its opened
@@ -24,11 +30,41 @@ try {
       typeof event.source === 'object' &&
       typeof (event.source as unknown as Record<string, unknown>).postMessage === 'function'
     ) {
-      playerWindows.add(event.source as unknown as Window);
+      const win = event.source as unknown as Window;
+      playerWindows.add(win);
+      // Late join (file:// path): replay the current slice immediately.
+      if (lastPayload !== null) {
+        try {
+          win.postMessage({ type: MESSAGE_TYPE, payload: lastPayload }, '*');
+        } catch {
+          playerWindows.delete(win);
+        }
+      }
     }
   });
 } catch {
   // Not in a browser context (node test environment) — no-op
+}
+
+// Late join (BroadcastChannel path): the player view broadcasts REGISTER_TYPE
+// on the channel when it subscribes; whichever window has published a slice
+// (the console) re-broadcasts it. Player-view windows have no lastPayload, so
+// this listener is a no-op there.
+try {
+  const registerChannel = new BroadcastChannel(CHANNEL_NAME);
+  registerChannel.onmessage = (event: MessageEvent) => {
+    if (event.data === REGISTER_TYPE && lastPayload !== null) {
+      try {
+        const channel = new BroadcastChannel(CHANNEL_NAME);
+        channel.postMessage(lastPayload);
+        channel.close();
+      } catch {
+        // BroadcastChannel unavailable — no-op
+      }
+    }
+  };
+} catch {
+  // BroadcastChannel unavailable (test/SSR environment) — no-op
 }
 
 /**
@@ -42,6 +78,7 @@ try {
 export function publishSlice(slice: PlayerViewSlice): void {
   const validated = playerViewSliceSchema.parse(slice);
   const payload = JSON.stringify(validated);
+  lastPayload = payload;
 
   // BroadcastChannel (served/dev)
   try {
@@ -88,10 +125,16 @@ export function subscribeToSlice(cb: (slice: PlayerViewSlice) => void): () => vo
         const parsed = playerViewSliceSchema.parse(JSON.parse(event.data as string));
         cb(parsed);
       } catch {
-        // Malformed or invalid slice — discard silently
+        // Malformed or invalid slice (including REGISTER pings) — discard silently
       }
     };
     cleanups.push(() => channel.close());
+
+    // Announce on the channel too, so a console that already published can
+    // replay the current slice to this late-joining view.
+    const hello = new BroadcastChannel(CHANNEL_NAME);
+    hello.postMessage(REGISTER_TYPE);
+    hello.close();
   } catch {
     // BroadcastChannel unavailable — no-op
   }
@@ -124,7 +167,8 @@ export function subscribeToSlice(cb: (slice: PlayerViewSlice) => void): () => vo
   return () => cleanups.forEach(fn => fn());
 }
 
-/** @internal — for test isolation only; clears the player-window registry. */
+/** @internal — for test isolation only; clears the player-window registry and replay cache. */
 export function _clearPlayerWindowsForTesting(): void {
   playerWindows.clear();
+  lastPayload = null;
 }

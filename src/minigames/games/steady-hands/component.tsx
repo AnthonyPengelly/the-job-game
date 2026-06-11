@@ -61,7 +61,7 @@ export function SteadyHandsComponent({
   }
 
   function handleCallOutcome() {
-    onResolve(judge(state));
+    onResolve(judge(state, params));
   }
 
   // Build tower: solid bricks up to currentHeight, dashed bricks for remaining

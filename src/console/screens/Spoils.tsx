@@ -276,7 +276,9 @@ export function Spoils() {
     dispatch({ t: 'SELL_GEAR', index });
   }
 
-  const restingCrew = crew.filter(p => isResting(p, roomIndex));
+  // Who sits out the NEXT room — not whoever is resting now (their rest is
+  // about to end and listing them here misled the table in playtests).
+  const restingCrew = crew.filter(p => isResting(p, roomIndex + 1));
   const unassignedCount = earnedGear.length;
 
   const OutcomeIcon = outcome !== undefined ? outcomeIcon(outcome) : null;

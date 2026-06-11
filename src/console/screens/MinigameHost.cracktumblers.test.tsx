@@ -160,9 +160,9 @@ describe('MinigameHost — crackTheTumblersSolo (commit 1)', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    // Move to recall phase so btn-call-outcome is available
-    fireEvent.click(screen.getByTestId('start-recall'));
-    // Call outcome (nothing recalled → botched suggested)
+    // Leave setup so btn-call-outcome is available
+    fireEvent.click(screen.getByTestId('solo-start-study'));
+    // Call outcome (nothing flipped → botched suggested)
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     // Shell RESOLVE: pre-selected to botched — confirm to dispatch
     fireEvent.click(screen.getByTestId('outcome-confirm'));

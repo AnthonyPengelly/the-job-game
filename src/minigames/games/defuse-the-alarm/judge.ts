@@ -1,11 +1,14 @@
 import type { Outcome } from '@/engine';
 import type { BoostHook } from '@/minigames/contract';
-import type { CardId } from '@/minigames/primitives/CardSpread';
 import type { DefuseParams } from './generate';
 
 export interface DefuseState {
-  /** Ids of wires that have been cut so far (entered by the GM as the crew makes cuts). */
-  cutIds: CardId[];
+  /** Cuts the GM has recorded as matching a rule. */
+  safeCuts: number;
+  /** True when the GM recorded a cut that matched no rule — the alarm. */
+  wrongCut: boolean;
+  /** True when the GM declared every matching wire cut (verified against the row). */
+  allClear: boolean;
   /** True once the countdown timer expires. */
   timerExpired: boolean;
   /** Charm boost (Clear Channel) used flag — one full sentence allowed. */
@@ -13,27 +16,18 @@ export interface DefuseState {
 }
 
 /**
- * Suggest an outcome for Defuse the Alarm (app fully judges — MINIGAMES.md §5):
- *   clean        — all safe cuts made, no wrong cut (regardless of whether timer also expired)
- *   complication — game still in progress (no wrong cut yet, not all safe cuts done)
- *   botched      — a wrong cut trips the alarm, or timer expired before all safe cuts done
+ * Suggest an outcome for Defuse the Alarm (GM-recorded — MINIGAMES.md §5).
+ * The cards are physical and random, so the GM is the sensor: they can see
+ * both the dealt row and the rules, and record each cut.
+ *
+ *   clean        — GM declared all-clear with no wrong cut (regardless of timer)
+ *   complication — still defusing (no wrong cut, not yet all-clear)
+ *   botched      — a wrong cut tripped the alarm, or time ran out first
  */
-export function judge(state: DefuseState, params: DefuseParams): Outcome {
-  const hasWrongCut = state.cutIds.some(id => !params.safeWireIds.includes(id));
-  const allSafeCut =
-    params.safeWireIds.length > 0 &&
-    params.safeWireIds.every(id => state.cutIds.includes(id));
-
-  // Any wrong cut trips the alarm
-  if (hasWrongCut) return 'botched';
-
-  // All safe cuts done — clean regardless of timer
-  if (allSafeCut) return 'clean';
-
-  // Timer expired without completing all safe cuts
+export function judge(state: DefuseState): Outcome {
+  if (state.wrongCut) return 'botched';
+  if (state.allClear) return 'clean';
   if (state.timerExpired) return 'botched';
-
-  // Game still in progress — middle-ground suggestion
   return 'complication';
 }
 

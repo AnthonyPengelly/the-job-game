@@ -48,30 +48,19 @@ describe('generate — reproducibility', () => {
     expect(p1).toEqual(p2);
   });
 
-  it('handSize and timerSeconds are dial-driven (same for same dial)', () => {
+  it('decoys and timer are dial-driven; rank order varies with seed', () => {
     const d = dial(1);
     const p1 = generate(mulberry32(1), d);
     const p2 = generate(mulberry32(9999), d);
-    expect(p1.handSize).toBe(p2.handSize);
+    expect(p1.decoysPerPlayer).toBe(p2.decoysPerPlayer);
     expect(p1.timerSeconds).toBe(p2.timerSeconds);
+    expect(p1.rankOrder.join()).not.toBe(p2.rankOrder.join());
   });
 
-  it('handSize is a positive integer', () => {
+  it('rankOrder is a permutation of all 13 ranks', () => {
     const p = generate(mulberry32(42), dial(0));
-    expect(p.handSize).toBeGreaterThan(0);
-    expect(Number.isInteger(p.handSize)).toBe(true);
-  });
-
-  it('setTypesInPlay is a non-empty array of strings', () => {
-    const p = generate(mulberry32(42), dial(0));
-    expect(p.setTypesInPlay.length).toBeGreaterThan(0);
-    p.setTypesInPlay.forEach(t => expect(typeof t).toBe('string'));
-  });
-
-  it('setTypesInPlay contains no duplicates', () => {
-    const p = generate(mulberry32(42), dial(0));
-    const unique = new Set(p.setTypesInPlay);
-    expect(unique.size).toBe(p.setTypesInPlay.length);
+    expect(p.rankOrder).toHaveLength(13);
+    expect(new Set(p.rankOrder).size).toBe(13);
   });
 
   it('timerSeconds is a positive integer', () => {
@@ -84,16 +73,11 @@ describe('generate — reproducibility', () => {
 // ── Dial lever direction ──────────────────────────────────────────────────────
 
 describe('generate — dial levers (higher dial = harder)', () => {
-  it('higher dial ⇒ more or equal types in play', () => {
+  it('higher dial ⇒ decoys enter the deal', () => {
     const easy = generate(mulberry32(1), dial(-2));
     const hard = generate(mulberry32(1), dial(2));
-    expect(hard.setTypesInPlay.length).toBeGreaterThanOrEqual(easy.setTypesInPlay.length);
-  });
-
-  it('higher dial ⇒ larger or equal hand size', () => {
-    const easy = generate(mulberry32(1), dial(-2));
-    const hard = generate(mulberry32(1), dial(2));
-    expect(hard.handSize).toBeGreaterThanOrEqual(easy.handSize);
+    expect(easy.decoysPerPlayer).toBe(0);
+    expect(hard.decoysPerPlayer).toBe(1);
   });
 
   it('higher dial ⇒ less or equal time', () => {
@@ -105,12 +89,9 @@ describe('generate — dial levers (higher dial = harder)', () => {
   it('all values within clamped bounds', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect(p.handSize).toBeGreaterThanOrEqual(3);
-      expect(p.handSize).toBeLessThanOrEqual(7);
+      expect([0, 1]).toContain(p.decoysPerPlayer);
       expect(p.timerSeconds).toBeGreaterThanOrEqual(60);
-      expect(p.timerSeconds).toBeLessThanOrEqual(180);
-      expect(p.setTypesInPlay.length).toBeGreaterThanOrEqual(2);
-      expect(p.setTypesInPlay.length).toBeLessThanOrEqual(5);
+      expect(p.timerSeconds).toBeLessThanOrEqual(140);
     }
   });
 });

@@ -18,6 +18,7 @@ export const crackTheTumblersSolo: MiniGame<CrackTheTumblersSoloParams, CrackThe
   judge,
   boosts: [resetPinBoost],
   armedInstructions:
-    'Study the ascending sequence, then recall it from memory. ' +
-    'Tap pins in the correct order — one wrong tap trips the alarm. Reset Pin undoes one mistake.',
+    'Deal a row of random cards face-up; the player studies it under the clock, then it is ' +
+    'flipped face-down in place. They flip cards back one at a time in ascending order — a ' +
+    'lower reveal trips the alarm. Reset Pin turns one wrong flip back over.',
 };

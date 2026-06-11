@@ -1,93 +1,22 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, AlertTriangle, BookOpen, MessageSquare } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, BookOpen, Hand, MessageSquare } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
-import type { CardId } from '@/minigames/primitives/CardSpread';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import { publishSlice } from '@/platform/channel';
-import type { DefuseParams, WireCard } from './generate';
+import type { DefuseParams } from './generate';
 import { judge, clearChannelBoost } from './judge';
 import type { DefuseState } from './judge';
 
-// Symbol emoji map for readable display
-const SYMBOL_GLYPH: Record<string, string> = {
-  circle: '●',
-  square: '■',
-  triangle: '▲',
-  star: '★',
-};
-
-// Color shorthand for card display
-const COLOR_ABBR: Record<string, string> = {
-  red: 'RED',
-  blue: 'BLU',
-  green: 'GRN',
-  yellow: 'YLW',
-  orange: 'ORG',
-  white: 'WHT',
-};
-
-const COLOR_STYLE: Record<string, React.CSSProperties> = {
-  red: { color: 'var(--c-red-400, #f87171)' },
-  blue: { color: 'var(--data, #00bcd4)' },
-  green: { color: 'var(--accent, #1fd06e)' },
-  yellow: { color: 'var(--caution, #f7b84b)' },
-  orange: { color: 'var(--c-amber-300, #fde68a)' },
-  white: { color: 'var(--fg, #eef4f1)' },
-};
-
 function initState(): DefuseState {
   return {
-    cutIds: [],
+    safeCuts: 0,
+    wrongCut: false,
+    allClear: false,
     timerExpired: false,
     clearChannelUsed: false,
   };
-}
-
-function WireCardView({
-  wire,
-  position,
-  isCut,
-  isBadCut,
-  onClick,
-}: {
-  wire: WireCard;
-  position: number;
-  isCut: boolean;
-  isBadCut: boolean;
-  onClick: () => void;
-}): JSX.Element {
-  const stateClass = isBadCut
-    ? ' dfz-card--badcut'
-    : isCut
-    ? ' dfz-card--cut'
-    : '';
-
-  return (
-    <div
-      className={`dfz-card${stateClass}`}
-      data-testid={`wire-card-${wire.id}`}
-      onClick={isCut || isBadCut ? undefined : onClick}
-      role={isCut || isBadCut ? undefined : 'button'}
-      aria-label={`Wire ${position}: ${wire.color} ${wire.symbol}`}
-    >
-      <div className="dfz-card-face">
-        <span
-          className="dfz-card-color"
-          style={COLOR_STYLE[wire.color]}
-        >
-          {COLOR_ABBR[wire.color] ?? wire.color.toUpperCase().slice(0, 3)}
-        </span>
-        <span className="dfz-card-symbol" style={COLOR_STYLE[wire.color]}>
-          {SYMBOL_GLYPH[wire.symbol] ?? wire.symbol}
-        </span>
-      </div>
-      <span className="dfz-card-pos" data-testid={`wire-pos-${wire.id}`}>
-        {position}{isBadCut ? ' · cut!' : isCut ? ' · cut' : ''}
-      </span>
-    </div>
-  );
 }
 
 export function DefuseComponent({
@@ -96,8 +25,9 @@ export function DefuseComponent({
   onResolve,
 }: MiniGameProps<DefuseParams>): JSX.Element {
   const [state, setState] = useState<DefuseState>(initState);
+  const [dealt, setDealt] = useState(false);
 
-  // Publish only the rulebook slice to the player-view — never the wire layout or safe/unsafe mapping.
+  // Publish only the rulebook slice to the player-view — never anything GM-only.
   useEffect(() => {
     publishSlice({
       kind: 'defuse-rulebook',
@@ -109,38 +39,39 @@ export function DefuseComponent({
     };
   }, [params]);
 
-  const wrongCutIds = state.cutIds.filter(id => !params.safeWireIds.includes(id));
-  const safeCutsDone = state.cutIds.filter(id => params.safeWireIds.includes(id)).length;
-  const allSafeDone = safeCutsDone >= params.safeWireIds.length;
-  const alarmTripped = wrongCutIds.length > 0;
-
-  const fillPct = params.safeWireIds.length > 0
-    ? Math.min((safeCutsDone / params.safeWireIds.length) * 100, 100)
-    : 0;
+  const gameOver = state.wrongCut || state.allClear || state.timerExpired;
 
   let badgeClass = 'mg-status-badge mg-status-badge--active';
   let badgeIcon: React.ReactNode = null;
-  let badgeLabel = 'Defusing';
+  let badgeLabel = dealt ? 'Defusing' : 'Setup';
 
-  if (alarmTripped) {
+  if (state.wrongCut) {
     badgeClass = 'mg-status-badge mg-status-badge--botched';
     badgeIcon = <AlertTriangle size={14} />;
     badgeLabel = 'ALARM TRIPPED';
-  } else if (state.timerExpired && !allSafeDone) {
-    badgeClass = 'mg-status-badge mg-status-badge--botched';
-    badgeIcon = <XCircle size={14} />;
-    badgeLabel = 'TIME';
-  } else if (allSafeDone) {
+  } else if (state.allClear) {
     badgeClass = 'mg-status-badge mg-status-badge--clean';
     badgeIcon = <CheckCircle size={14} />;
     badgeLabel = 'DEFUSED';
+  } else if (state.timerExpired) {
+    badgeClass = 'mg-status-badge mg-status-badge--botched';
+    badgeIcon = <XCircle size={14} />;
+    badgeLabel = 'TIME';
   }
 
-  function handleCut(wireId: CardId) {
-    setState(s => {
-      if (s.cutIds.includes(wireId)) return s;
-      return { ...s, cutIds: [...s.cutIds, wireId] };
-    });
+  function handleSafeCut() {
+    if (gameOver) return;
+    setState(s => ({ ...s, safeCuts: s.safeCuts + 1 }));
+  }
+
+  function handleWrongCut() {
+    if (gameOver) return;
+    setState(s => ({ ...s, wrongCut: true }));
+  }
+
+  function handleAllClear() {
+    if (gameOver) return;
+    setState(s => ({ ...s, allClear: true }));
   }
 
   function handleTimerExpire() {
@@ -152,82 +83,120 @@ export function DefuseComponent({
   }
 
   function handleCallOutcome() {
-    onResolve(judge(state, params));
+    onResolve(judge(state));
   }
 
   return (
     <div data-testid="defuse-the-alarm">
       <StatusZone>
-        <span className={badgeClass}>
+        <span className={badgeClass} data-testid="defuse-badge">
           {badgeIcon}
           <span>{badgeLabel}</span>
         </span>
-        <div className="mg-progress-bar" data-testid="defuse-progress-bar">
-          <div className="mg-progress-bar__track">
-            <div
-              className={`mg-progress-bar__fill mg-progress-bar__fill--data${alarmTripped ? ' mg-progress-bar__fill--danger' : ''}`}
-              style={{ width: `${fillPct}%` }}
-              data-testid="defuse-progress-fill"
-            />
-          </div>
-          <span className="mg-progress-bar__label" data-testid="defuse-progress">
-            Safe cuts · {safeCutsDone} / {params.safeWireIds.length}
-          </span>
-        </div>
-        <Timer
-          seconds={params.timerSeconds}
-          running={!state.timerExpired && !alarmTripped}
-          onExpire={handleTimerExpire}
-          audible
-        />
+        <span className="mg-dial-inline" data-testid="defuse-progress">
+          Safe cuts · {state.safeCuts}
+        </span>
+        {dealt && (
+          <Timer
+            seconds={params.timerSeconds}
+            running={!gameOver}
+            onExpire={handleTimerExpire}
+            audible
+          />
+        )}
       </StatusZone>
 
       <ChallengeZone>
-        <div className="dfz-device" data-testid="defuse-wires">
-          {params.wires.map((wire, i) => {
-            const isCut = state.cutIds.includes(wire.id) && params.safeWireIds.includes(wire.id);
-            const isBadCut = state.cutIds.includes(wire.id) && !params.safeWireIds.includes(wire.id);
-            return (
-              <WireCardView
-                key={wire.id}
-                wire={wire}
-                position={i + 1}
-                isCut={isCut}
-                isBadCut={isBadCut}
-                onClick={() => handleCut(wire.id)}
-              />
-            );
-          })}
-        </div>
-
-        {state.clearChannelUsed && (
-          <div data-testid="defuse-clear-channel-active" className="dfz-manual-ref" style={{ color: 'var(--caution, #f7b84b)' }}>
-            <MessageSquare size={14} />
-            Clear Channel active — one full sentence allowed
+        {!dealt ? (
+          <div className="mg-setup-panel" data-testid="defuse-setup">
+            <div className="mg-setup-panel__title">
+              <Hand size={16} />
+              Set up the table
+            </div>
+            <ol className="mg-setup-panel__steps">
+              <li>Shuffle the pack and deal <strong>{params.wireCount} cards face-up in a row</strong> — these are the wires.</li>
+              <li>Hand the player-view screen to the reader. <strong>They must not see the cards.</strong></li>
+              <li>The crew must not see the reader's rules — they describe the row, the reader names the cuts.</li>
+            </ol>
+            <p className="mg-setup-panel__rule">
+              A named wire is cut by flipping it face-down. You can see both the row and the rules
+              below — record each cut, and declare all clear when every matching wire is face-down.
+              Only yes/no answers between crew and reader; Clear Channel buys one full sentence.
+            </p>
+            <button
+              type="button"
+              className="mg-call-outcome-btn"
+              data-testid="defuse-dealt"
+              onClick={() => setDealt(true)}
+            >
+              Wires dealt — start the clock
+            </button>
           </div>
+        ) : (
+          <>
+            <div className={`ctb-subtext${state.wrongCut ? ' ctb-subtext--danger' : ''}`} data-testid="defuse-status-line">
+              {state.wrongCut
+                ? 'A cut matched no rule — the alarm is ringing.'
+                : state.allClear
+                  ? 'Every matching wire cut. Defused.'
+                  : 'Check each named cut against the rules. Flip the card; record it below.'}
+            </div>
+
+            {!gameOver && (
+              <div className="mg-record-controls" data-testid="defuse-record-controls">
+                <button
+                  type="button"
+                  className="mg-tbtn"
+                  data-testid="defuse-safe-cut"
+                  onClick={handleSafeCut}
+                >
+                  <span className="mg-tl">✓</span>
+                  <span className="mg-ts">Safe cut</span>
+                </button>
+                <button
+                  type="button"
+                  className="mg-tbtn mg-tbtn--danger"
+                  data-testid="defuse-wrong-cut"
+                  onClick={handleWrongCut}
+                >
+                  <span className="mg-tl">✗</span>
+                  <span className="mg-ts">Wrong cut</span>
+                </button>
+                <button
+                  type="button"
+                  className="mg-tbtn mg-tbtn--ghost"
+                  data-testid="defuse-all-clear"
+                  onClick={handleAllClear}
+                >
+                  All clear
+                </button>
+              </div>
+            )}
+
+            {state.clearChannelUsed && (
+              <div data-testid="defuse-clear-channel-active" className="dfz-manual-ref" style={{ color: 'var(--caution, #f7b84b)' }}>
+                <MessageSquare size={14} />
+                Clear Channel active — one full sentence allowed
+              </div>
+            )}
+
+            {/* GM-only rulebook (glanceable reference) */}
+            <details style={{ marginTop: '0.75rem' }} open>
+              <summary data-testid="defuse-rulebook-toggle" style={{ cursor: 'pointer', color: 'var(--fg-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <BookOpen size={14} /> Rules (GM only — the crew can't see this screen)
+              </summary>
+              <div data-testid="defuse-rulebook-gm" style={{ marginTop: '0.5rem' }}>
+                <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                  {params.cutRules.map((rule, i) => (
+                    <li key={i} data-testid={`defuse-gm-rule-${i}`} style={{ fontSize: '0.9rem', color: 'var(--fg)' }}>
+                      {rule.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </details>
+          </>
         )}
-
-        {/* Player-view note */}
-        <div className="dfz-manual-ref" data-testid="defuse-manual-ref">
-          <BookOpen size={14} />
-          Player-view holds the manual · crew describes this row, reader names the cut
-        </div>
-
-        {/* GM-only rulebook (glanceable reference) */}
-        <details style={{ marginTop: '0.5rem' }}>
-          <summary data-testid="defuse-rulebook-toggle" style={{ cursor: 'pointer', color: 'var(--fg-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <BookOpen size={14} /> Rules (GM only)
-          </summary>
-          <div data-testid="defuse-rulebook-gm" style={{ marginTop: '0.5rem' }}>
-            <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
-              {params.cutRules.map((rule, i) => (
-                <li key={i} data-testid={`defuse-gm-rule-${i}`} style={{ fontSize: '0.9rem', color: 'var(--fg)' }}>
-                  {rule.text}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </details>
       </ChallengeZone>
 
       <RefereeZone>

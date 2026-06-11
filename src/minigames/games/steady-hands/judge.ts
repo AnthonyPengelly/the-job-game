@@ -15,17 +15,17 @@ export interface SteadyHandsState {
 
 /**
  * Suggest an outcome for Steady Hands (GM-judged — MINIGAMES.md §5).
- * The app tracks the timer and boost events; the tower is physical.
+ * The app tracks the timer and the GM-tapped height; the tower is physical,
+ * so a topple is the GM's call (override via OutcomeJudge).
  *
- *   clean        — GM confirms tower reached target and is standing
- *   complication — a wobble survived / just short but standing
- *   botched      — toppled / well short / timed out
- *
- * Timer expiry suggests botched. All cases are GM-overridable via OutcomeJudge.
+ *   clean        — height tally reached the target
+ *   complication — one tier short at the buzzer, or still building
+ *   botched      — timed out two or more tiers short
  */
-export function judge(state: SteadyHandsState): Outcome {
-  if (state.timerExpired) return 'botched';
-  return 'complication';
+export function judge(state: SteadyHandsState, params: SteadyHandsParams): Outcome {
+  if (state.currentHeight >= params.targetHeight) return 'clean';
+  if (!state.timerExpired) return 'complication';
+  return state.currentHeight === params.targetHeight - 1 ? 'complication' : 'botched';
 }
 
 /** Physical boost: Extra Hands — 10s where everyone (benched included) can help build. */

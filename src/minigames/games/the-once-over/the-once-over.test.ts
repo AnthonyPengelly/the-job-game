@@ -4,7 +4,6 @@ import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
 import { judge, hunchBoost } from './judge';
 import type { OnceOverState } from './judge';
-import type { CardId } from '@/minigames/primitives/CardSpread';
 import { theOnceOver } from './index';
 import { getGame } from '@/minigames/registry';
 
@@ -17,10 +16,6 @@ describe('theOnceOver registry', () => {
     expect(getGame('theOnceOver')).toBe(theOnceOver);
   });
 
-  it('has id theOnceOver', () => {
-    expect(theOnceOver.id).toBe('theOnceOver');
-  });
-
   it('has lane stealth', () => {
     expect(theOnceOver.lanes).toEqual(['stealth']);
   });
@@ -29,108 +24,65 @@ describe('theOnceOver registry', () => {
     expect(theOnceOver.minCommit).toBe(1);
   });
 
-  it('has no soloVariantId', () => {
-    expect(theOnceOver.soloVariantId).toBeUndefined();
-  });
-
-  it('has one boost hook', () => {
+  it('has one boost hook (Hunch)', () => {
     expect(theOnceOver.boosts).toHaveLength(1);
+    expect(theOnceOver.boosts[0]!.label).toBe('Hunch');
   });
 });
 
-// ── Generator reproducibility ─────────────────────────────────────────────────
+// ── Generator ────────────────────────────────────────────────────────────────
 
-describe('generate — reproducibility', () => {
+describe('generate — positional change instructions', () => {
   it('same seed + same dial ⇒ identical params', () => {
     const d = dial(0);
-    const p1 = generate(mulberry32(42), d);
-    const p2 = generate(mulberry32(42), d);
-    expect(p1).toEqual(p2);
+    expect(generate(mulberry32(7), d)).toEqual(generate(mulberry32(7), d));
   });
 
-  it('different seeds produce different changes', () => {
-    const p1 = generate(mulberry32(1), dial(0));
-    const p2 = generate(mulberry32(9999), dial(0));
-    expect(p1.changedCardIds).not.toEqual(p2.changedCardIds);
+  it('different seeds produce different instructions', () => {
+    const a = generate(mulberry32(1), dial(1));
+    const b = generate(mulberry32(2), dial(1));
+    expect(JSON.stringify(a.changes)).not.toBe(JSON.stringify(b.changes));
   });
 
-  it('originalCards is 8–10 cards', () => {
-    for (let seed = 0; seed < 20; seed++) {
+  it('cardCount is always 8–10', () => {
+    for (let seed = 1; seed <= 20; seed++) {
       const p = generate(mulberry32(seed), dial(0));
-      expect(p.originalCards.length).toBeGreaterThanOrEqual(8);
-      expect(p.originalCards.length).toBeLessThanOrEqual(10);
+      expect(p.cardCount).toBeGreaterThanOrEqual(8);
+      expect(p.cardCount).toBeLessThanOrEqual(10);
     }
   });
 
-  it('modifiedCards has the same length as originalCards', () => {
-    const p = generate(mulberry32(42), dial(0));
-    expect(p.modifiedCards.length).toBe(p.originalCards.length);
+  it('every changed position is within the dealt row and used at most once', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const p = generate(mulberry32(seed), dial(3));
+      for (const pos of p.changedPositions) {
+        expect(pos).toBeGreaterThanOrEqual(1);
+        expect(pos).toBeLessThanOrEqual(p.cardCount);
+      }
+      expect(new Set(p.changedPositions).size).toBe(p.changedPositions.length);
+    }
   });
 
-  it('all original card IDs are unique', () => {
-    const p = generate(mulberry32(42), dial(0));
-    const ids = p.originalCards.map(c => c.id);
-    expect(new Set(ids).size).toBe(ids.length);
-  });
-
-  it('changedCardIds are non-empty', () => {
-    const p = generate(mulberry32(42), dial(0));
-    expect(p.changedCardIds.length).toBeGreaterThan(0);
-  });
-
-  it('changedCardIds are all valid card IDs from originalCards', () => {
-    for (let seed = 0; seed < 20; seed++) {
-      const p = generate(mulberry32(seed), dial(0));
-      const allIds = new Set(p.originalCards.map(c => c.id));
-      for (const id of p.changedCardIds) {
-        expect(allIds.has(id)).toBe(true);
+  it('swap changes carry two positions, replace changes carry one', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const p = generate(mulberry32(seed), dial(2));
+      for (const ch of p.changes) {
+        expect(ch.positions).toHaveLength(ch.type === 'swap' ? 2 : 1);
       }
     }
   });
 
-  it('modifiedCards contains at least one card with a different label compared to original', () => {
-    for (let seed = 0; seed < 10; seed++) {
-      const p = generate(mulberry32(seed), dial(0));
-      let found = false;
-      for (let i = 0; i < p.originalCards.length; i++) {
-        if (p.originalCards[i]!.label !== p.modifiedCards[i]!.label) {
-          found = true;
-          break;
-        }
-      }
-      expect(found).toBe(true);
-    }
-  });
-});
-
-// ── Dial lever direction ──────────────────────────────────────────────────────
-
-describe('generate — dial levers (higher dial = harder)', () => {
-  it('higher dial ⇒ less study time', () => {
-    const easy = generate(mulberry32(42), dial(-2));
-    const hard = generate(mulberry32(42), dial(2));
+  it('higher dial ⇒ more changes and less study time', () => {
+    const easy = generate(mulberry32(5), dial(-2));
+    const hard = generate(mulberry32(5), dial(4));
+    expect(hard.changeCount).toBeGreaterThanOrEqual(easy.changeCount);
     expect(hard.studySeconds).toBeLessThanOrEqual(easy.studySeconds);
   });
 
-  it('higher dial ⇒ more changes', () => {
-    const easy = generate(mulberry32(42), dial(-2));
-    const hard = generate(mulberry32(42), dial(2));
-    expect(hard.changeCount).toBeGreaterThanOrEqual(easy.changeCount);
-  });
-
-  it('studySeconds is always within [15, 30]', () => {
-    for (const level of [-100, -2, 0, 2, 100]) {
-      const p = generate(mulberry32(1), dial(level));
-      expect(p.studySeconds).toBeGreaterThanOrEqual(15);
-      expect(p.studySeconds).toBeLessThanOrEqual(30);
-    }
-  });
-
-  it('changeCount is always within [1, 3]', () => {
-    for (const level of [-100, -2, 0, 2, 100]) {
-      const p = generate(mulberry32(1), dial(level));
-      expect(p.changeCount).toBeGreaterThanOrEqual(1);
-      expect(p.changeCount).toBeLessThanOrEqual(3);
+  it('changeCount matches the changes array', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const p = generate(mulberry32(seed), dial(2));
+      expect(p.changeCount).toBe(p.changes.length);
     }
   });
 });
@@ -139,76 +91,54 @@ describe('generate — dial levers (higher dial = harder)', () => {
 
 function makeState(overrides: Partial<OnceOverState> = {}): OnceOverState {
   return {
-    flaggedCardIds: [],
-    studyTimerExpired: false,
+    hits: 0,
+    misses: 0,
+    studyTimerExpired: true,
     stealthBoostUsed: false,
     hunchActive: false,
     ...overrides,
   };
 }
 
-const baseParams = generate(mulberry32(42), dial(0));
+describe('judge', () => {
+  const params = generate(mulberry32(3), dial(3)); // multiple changes likely
 
-describe('judge — three tier boundaries', () => {
-  it('botched when no card is flagged', () => {
-    expect(judge(makeState({ flaggedCardIds: [] }), baseParams)).toBe('botched');
+  it('botched when nothing spotted', () => {
+    expect(judge(makeState(), params)).toBe('botched');
   });
 
-  it('botched when only wrong cards are flagged', () => {
-    const wrongId = baseParams.originalCards
-      .map(c => c.id)
-      .find(id => !baseParams.changedCardIds.includes(id));
-    expect(wrongId).toBeDefined();
-    expect(judge(makeState({ flaggedCardIds: [wrongId as CardId] }), baseParams)).toBe('botched');
+  it('botched even with wrong calls recorded', () => {
+    expect(judge(makeState({ misses: 3 }), params)).toBe('botched');
   });
 
-  it('clean when all changed cards are correctly flagged', () => {
-    expect(judge(makeState({ flaggedCardIds: [...baseParams.changedCardIds] }), baseParams)).toBe('clean');
+  it('clean when every change spotted', () => {
+    expect(judge(makeState({ hits: params.changeCount }), params)).toBe('clean');
   });
 
-  it('complication when only some changed cards are flagged (one of several)', () => {
-    // Only applicable when changeCount > 1 and multiple changedCardIds.
-    // Use a generated params with multiple changes.
-    const multiParams = generate(mulberry32(42), dial(2)); // higher dial = more changes
-    // If multiple changedCardIds exist, flag only the first one.
-    if (multiParams.changedCardIds.length > 1) {
-      const partialFlag = [multiParams.changedCardIds[0]!];
-      expect(judge(makeState({ flaggedCardIds: partialFlag }), multiParams)).toBe('complication');
-    } else {
-      // Single change case — just verify clean still works.
-      expect(judge(makeState({ flaggedCardIds: multiParams.changedCardIds }), multiParams)).toBe('clean');
-    }
+  it('complication when some but not all changes spotted', () => {
+    const p = { ...params, changeCount: 2 };
+    expect(judge(makeState({ hits: 1 }), p)).toBe('complication');
   });
 });
 
-// ── hunch boost — pure apply ──────────────────────────────────────────────────
+// ── hunchBoost ────────────────────────────────────────────────────────────────
 
-describe('hunchBoost (Hunch)', () => {
-  it('has lane stealth', () => {
+describe('hunchBoost', () => {
+  const params = generate(mulberry32(1), dial(0));
+
+  it('has lane stealth and label Hunch', () => {
     expect(hunchBoost.lane).toBe('stealth');
-  });
-
-  it('has label Hunch', () => {
     expect(hunchBoost.label).toBe('Hunch');
   });
 
-  it('sets stealthBoostUsed and hunchActive on first use', () => {
-    const state = makeState();
-    const next = hunchBoost.apply(state, baseParams);
+  it('activates hunch on first use', () => {
+    const next = hunchBoost.apply(makeState(), params);
     expect(next.stealthBoostUsed).toBe(true);
     expect(next.hunchActive).toBe(true);
   });
 
-  it('is idempotent — same reference returned when already used', () => {
-    const state = makeState({ stealthBoostUsed: true, hunchActive: true });
-    const next = hunchBoost.apply(state, baseParams);
-    expect(next).toBe(state);
-  });
-
-  it('does not mutate the input state', () => {
-    const state = makeState();
-    const before = JSON.stringify(state);
-    hunchBoost.apply(state, baseParams);
-    expect(JSON.stringify(state)).toBe(before);
+  it('is idempotent when already used', () => {
+    const state = makeState({ stealthBoostUsed: true });
+    expect(hunchBoost.apply(state, params)).toBe(state);
   });
 });

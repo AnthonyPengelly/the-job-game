@@ -1,32 +1,37 @@
 import type { Outcome } from '@/engine';
 import type { BoostHook } from '@/minigames/contract';
-import type { CardId } from '@/minigames/primitives/CardSpread';
 import type { CrackTheTumblersSoloParams } from './generate';
 
 export interface CrackTheTumblersSoloState {
-  /** 'study' — sequence shown face-up; 'recall' — player taps from memory. */
-  phase: 'study' | 'recall';
-  /** Cards tapped during the recall phase in the order tapped. */
-  recallSequence: CardId[];
-  /** True when the player tapped a wrong card during recall (alarm = sequence broken). */
+  /** 'setup' — GM dealing; 'study' — row face-up under the clock; 'recall' — flipping from memory. */
+  phase: 'setup' | 'study' | 'recall';
+  /** Flips the GM has recorded as in ascending order. */
+  flipsRecorded: number;
+  /** True when a revealed card came up lower than the previous one (alarm) and was not forgiven. */
   alarmTripped: boolean;
-  /** Tech boost flag — Reset Pin used (undoes one wrong tap). */
+  /** Tech boost flag — Reset Pin used (one wrong flip turned back over). */
   resetPinUsed: boolean;
 }
 
 /**
- * Crack the Tumblers Solo is App-assist judged (MINIGAMES.md §5):
- *   clean        — recalled full sequence correctly, no alarm
- *   complication — Reset Pin used (one wrong tap recovered)
- *   botched      — alarm tripped (wrong tap not undone) or sequence incomplete
+ * Crack the Tumblers Solo is GM-recorded (MINIGAMES.md §5): the cards are
+ * physical; each reveal is public and the GM taps in-order / clash.
+ *
+ *   clean        — full row flipped in ascending order, no alarm
+ *   complication — Reset Pin used (one wrong flip turned back over)
+ *   botched      — alarm tripped (wrong flip not undone) or row incomplete
  */
 export function judge(state: CrackTheTumblersSoloState, params: CrackTheTumblersSoloParams): Outcome {
   if (state.alarmTripped) return 'botched';
-  if (state.recallSequence.length < params.correctOrder.length) return 'botched';
+  if (state.flipsRecorded < params.cardCount) return 'botched';
   return state.resetPinUsed ? 'complication' : 'clean';
 }
 
-/** Tech boost: Reset Pin — undo one wrong tap during recall without tripping the alarm. */
+/**
+ * Tech boost: Reset Pin — forgive one wrong flip. The card is turned back
+ * face-down where it lies; the recorded count is unchanged because the wrong
+ * flip was never counted.
+ */
 export const resetPinBoost: BoostHook<CrackTheTumblersSoloState, CrackTheTumblersSoloParams> = {
   lane: 'tech',
   label: 'Reset Pin',
@@ -34,7 +39,6 @@ export const resetPinBoost: BoostHook<CrackTheTumblersSoloState, CrackTheTumbler
     if (state.resetPinUsed) return state;
     return {
       ...state,
-      recallSequence: state.recallSequence.slice(0, -1),
       alarmTripped: false,
       resetPinUsed: true,
     };

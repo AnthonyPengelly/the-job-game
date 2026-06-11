@@ -38,6 +38,38 @@ export function isBeatAudible(beat: number, muted: boolean, audibleBeats: number
 const LOOKAHEAD_SEC = 0.1;
 /** Polling interval for the scheduler tick in milliseconds. */
 const TICK_MS = 25;
+/** Stalled ticks tolerated before the time source falls back to the wall clock. */
+const STALL_PROBE_TICKS = 8;
+
+/**
+ * Wrap an audio-time source so beats survive a suspended/uninitialised
+ * AudioContext. `audioCtx.currentTime` does not advance while a context is
+ * `suspended` (autoplay policy before the first user gesture, headless
+ * browsers) — without this guard the scheduler waits forever and the game
+ * soft-locks. If the source has not advanced after ~200ms of ticks, the
+ * returned function permanently switches to `performance.now()`-derived time
+ * anchored at the same origin; beeps are skipped in that mode but beats fire.
+ */
+export function createResilientNow(getAudioNow: () => number): {
+  now(): number;
+  usingWallClock(): boolean;
+} {
+  const audioAnchorSec = getAudioNow();
+  const wallAnchorMs = performance.now();
+  let stalledTicks = 0;
+  let wallMode = false;
+
+  return {
+    now(): number {
+      if (wallMode) return audioAnchorSec + (performance.now() - wallAnchorMs) / 1000;
+      const audioNow = getAudioNow();
+      if (audioNow > audioAnchorSec) return audioNow;
+      if (++stalledTicks >= STALL_PROBE_TICKS) wallMode = true;
+      return audioAnchorSec;
+    },
+    usingWallClock: () => wallMode,
+  };
+}
 
 /**
  * Precise Web Audio clock-based metronome.
@@ -68,15 +100,18 @@ export function useMetronome({ bpm, audibleBeats, clock, scheduleBeep }: Metrono
       // by the shared AudioEngine handle). Without scheduleBeep, the clock path
       // produces no sound — pass both from AudioClockContext (E9.4+).
       let beatCount = 0;
-      let nextBeatTime = clock.now() + LOOKAHEAD_SEC;
+      const time = createResilientNow(() => clock.now());
+      let nextBeatTime = time.now() + LOOKAHEAD_SEC;
       let running = true;
 
       const tick = () => {
         if (!running) return;
-        const now = clock.now();
+        const now = time.now();
         while (nextBeatTime < now + LOOKAHEAD_SEC) {
           const beat = beatCount + 1;
-          if (scheduleBeep && isBeatAudible(beat, mutedRef.current, audibleBeats)) {
+          // In wall-clock mode the beep timestamps no longer map to the audio
+          // clock, so skip them — beats keep firing, sound resumes next mount.
+          if (scheduleBeep && !time.usingWallClock() && isBeatAudible(beat, mutedRef.current, audibleBeats)) {
             scheduleBeep(nextBeatTime);
           }
           beatCallbackRef.current?.(beat);
@@ -102,6 +137,7 @@ export function useMetronome({ bpm, audibleBeats, clock, scheduleBeep }: Metrono
 
       try {
         audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') void audioCtx.resume();
       } catch {
         // AudioContext unavailable — beats fire via setInterval but no sound
       }
@@ -119,15 +155,17 @@ export function useMetronome({ bpm, audibleBeats, clock, scheduleBeep }: Metrono
         osc.stop(when + 0.06);
       };
 
-      let nextBeatTime = audioCtx ? audioCtx.currentTime + LOOKAHEAD_SEC : 0;
+      const ctxForTime = audioCtx;
+      const time = ctxForTime ? createResilientNow(() => ctxForTime.currentTime) : null;
+      let nextBeatTime = time ? time.now() + LOOKAHEAD_SEC : 0;
       let running = true;
 
       const tick = () => {
-        if (!running) return;
-        const now = audioCtx ? audioCtx.currentTime : 0;
+        if (!running || !time) return;
+        const now = time.now();
         while (nextBeatTime < now + LOOKAHEAD_SEC) {
           const beat = beatCount + 1;
-          if (isBeatAudible(beat, mutedRef.current, audibleBeats) && audioCtx) {
+          if (isBeatAudible(beat, mutedRef.current, audibleBeats) && audioCtx && !time.usingWallClock()) {
             scheduleBeep(nextBeatTime);
           }
           beatCallbackRef.current?.(beat);

@@ -129,7 +129,7 @@ describe('MinigameHost — the-once-over game mounting', () => {
     expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
   });
 
-  it('starts in Study phase showing card spread', () => {
+  it('starts in Setup with deal instructions, then Study once the row is dealt', () => {
     const store = makeOnceOverStore();
     render(
       <StoreContext.Provider value={store}>
@@ -137,8 +137,10 @@ describe('MinigameHost — the-once-over game mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('onceover-phase')).toHaveTextContent('Study');
-    expect(screen.getByTestId('onceover-spread')).toBeInTheDocument();
+    expect(screen.getByTestId('oo-phase')).toHaveTextContent('Setup');
+    expect(screen.getByTestId('oo-setup')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('oo-start-study'));
+    expect(screen.getByTestId('oo-phase')).toHaveTextContent('Study');
   });
 
   it('shows change count', () => {
@@ -149,7 +151,7 @@ describe('MinigameHost — the-once-over game mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('onceover-change-count')).toBeInTheDocument();
+    expect(screen.getByTestId('oo-change-count')).toBeInTheDocument();
   });
 });
 
@@ -164,7 +166,7 @@ describe('MinigameHost — the-once-over seeded params stable', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const countA = screen.getByTestId('onceover-change-count').textContent;
+    const countA = screen.getByTestId('oo-change-count').textContent;
     unmountA();
 
     const storeB = makeOnceOverStore(42);
@@ -174,7 +176,7 @@ describe('MinigameHost — the-once-over seeded params stable', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const countB = screen.getByTestId('onceover-change-count').textContent;
+    const countB = screen.getByTestId('oo-change-count').textContent;
 
     expect(countA).toBe(countB);
   });
@@ -192,7 +194,7 @@ async function drainStudyTimer(ticks: number): Promise<void> {
 }
 
 describe('MinigameHost — the-once-over study → identify phase', () => {
-  it('transitions to Identify phase when study timer expires (after START)', async () => {
+  it('study expiry reveals the GM change instructions; reveal enters Identify', async () => {
     const store = makeOnceOverStore();
     render(
       <StoreContext.Provider value={store}>
@@ -200,13 +202,16 @@ describe('MinigameHost — the-once-over study → identify phase', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('onceover-phase')).toHaveTextContent('Study');
+    fireEvent.click(screen.getByTestId('oo-start-study'));
+    expect(screen.getByTestId('oo-phase')).toHaveTextContent('Study');
     // Max study time is 30s; advance 31 ticks to ensure expiry regardless of seed.
     await drainStudyTimer(31);
-    expect(screen.getByTestId('onceover-phase')).toHaveTextContent('Identify');
+    expect(screen.getByTestId('oo-change-instructions')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('oo-reveal'));
+    expect(screen.getByTestId('oo-phase')).toHaveTextContent('Identify');
   });
 
-  it('shows flagged indicator section in Identify phase', async () => {
+  it('shows GM record controls in Identify phase', async () => {
     const store = makeOnceOverStore();
     render(
       <StoreContext.Provider value={store}>
@@ -214,8 +219,10 @@ describe('MinigameHost — the-once-over study → identify phase', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId('oo-start-study'));
     await drainStudyTimer(31);
-    expect(screen.getByTestId('onceover-flagged')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('oo-reveal'));
+    expect(screen.getByTestId('oo-record-controls')).toBeInTheDocument();
   });
 });
 
@@ -258,7 +265,7 @@ describe('MinigameHost — the-once-over boost (Hunch)', () => {
     expect(btn).toBeDisabled();
   });
 
-  it('Hunch shows the clue prompt after firing', () => {
+  it('Hunch shows the clue prompt in the Identify phase after firing', async () => {
     const store = makeOnceOverStore(1, { stealthPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
@@ -267,14 +274,17 @@ describe('MinigameHost — the-once-over boost (Hunch)', () => {
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('boost-stealth'));
-    expect(screen.getByTestId('hunch-active')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('oo-start-study'));
+    await drainStudyTimer(31);
+    fireEvent.click(screen.getByTestId('oo-reveal'));
+    expect(screen.getByTestId('oo-hunch')).toBeInTheDocument();
   });
 });
 
 // ── Outcome flow ──────────────────────────────────────────────────────────────
 
 describe('MinigameHost — the-once-over outcome flow', () => {
-  it('GM confirms botched → RESOLVE_MINIGAME → phase is offer', () => {
+  it('GM confirms botched → RESOLVE_MINIGAME → phase is offer', async () => {
     const store = makeOnceOverStore();
     render(
       <StoreContext.Provider value={store}>
@@ -283,8 +293,11 @@ describe('MinigameHost — the-once-over outcome flow', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId('oo-start-study'));
+    await drainStudyTimer(31);
+    fireEvent.click(screen.getByTestId('oo-reveal'));
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
-    // Shell RESOLVE: botched pre-selected (no flags = botched)
+    // Shell RESOLVE: botched pre-selected (nothing spotted = botched)
     fireEvent.click(screen.getByTestId('outcome-confirm'));
 
     expect(store.getState().session.present.phase).toBe('offer');
@@ -296,7 +309,7 @@ describe('MinigameHost — the-once-over outcome flow', () => {
     }
   });
 
-  it('GM overrides to clean → recorded as clean', () => {
+  it('GM overrides to clean → recorded as clean', async () => {
     const store = makeOnceOverStore();
     render(
       <StoreContext.Provider value={store}>
@@ -305,6 +318,9 @@ describe('MinigameHost — the-once-over outcome flow', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId('oo-start-study'));
+    await drainStudyTimer(31);
+    fireEvent.click(screen.getByTestId('oo-reveal'));
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     fireEvent.click(screen.getByTestId('outcome-option-clean'));
     fireEvent.click(screen.getByTestId('outcome-confirm'));

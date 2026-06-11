@@ -1,30 +1,37 @@
 import type { Outcome } from '@/engine';
 import type { BoostHook } from '@/minigames/contract';
-import type { CardId } from '@/minigames/primitives/CardSpread';
 import type { CrackTheTumblersParams } from './generate';
 
 export interface CrackTheTumblersState {
-  /** Cards tapped (recorded by GM) in the order they were played. */
-  playedSequence: CardId[];
-  /** True when a clash (out-of-order play) was detected and not undone by Reset Pin. */
+  /** Total cards dealt (committed players × cardsPerPlayer) — set by the component at start. */
+  totalCards: number;
+  /** Cards the GM has recorded as played in order. */
+  playsRecorded: number;
+  /** True when the GM recorded a clash (a card played out of ascending order) not yet forgiven. */
   alarmTripped: boolean;
   /** Tech boost has been fired. */
   resetPinUsed: boolean;
 }
 
 /**
- * Crack the Tumblers is App-assist judged (MINIGAMES.md §5):
- *   clean        — all cards played in ascending order, no clash
+ * Crack the Tumblers is GM-recorded (MINIGAMES.md §5): the cards are physical
+ * and the GM taps in-order / clash as the crew plays.
+ *
+ *   clean        — every card recorded in order, no clash
  *   complication — completed but Reset Pin was used (one clash recovered)
- *   botched      — a clash tripped the alarm (or sequence incomplete)
+ *   botched      — a clash tripped the alarm, or the sequence was incomplete
  */
-export function judge(state: CrackTheTumblersState, params: CrackTheTumblersParams): Outcome {
+export function judge(state: CrackTheTumblersState): Outcome {
   if (state.alarmTripped) return 'botched';
-  if (state.playedSequence.length < params.cards.length) return 'botched';
+  if (state.playsRecorded < state.totalCards) return 'botched';
   return state.resetPinUsed ? 'complication' : 'clean';
 }
 
-/** Tech boost: Reset Pin — undo one misplay without tripping the alarm. */
+/**
+ * Tech boost: Reset Pin — forgive one clash. The misplayed card goes back to
+ * its holder's hand at the table; the recorded count is unchanged because the
+ * clash was never counted as an in-order play.
+ */
 export const resetPinBoost: BoostHook<CrackTheTumblersState, CrackTheTumblersParams> = {
   lane: 'tech',
   label: 'Reset Pin',
@@ -32,7 +39,6 @@ export const resetPinBoost: BoostHook<CrackTheTumblersState, CrackTheTumblersPar
     if (state.resetPinUsed) return state;
     return {
       ...state,
-      playedSequence: state.playedSequence.slice(0, -1),
       alarmTripped: false,
       resetPinUsed: true,
     };

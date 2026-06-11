@@ -18,7 +18,8 @@ export const defuseTheAlarm: MiniGame<DefuseParams, DefuseState> = {
   judge,
   boosts: [clearChannelBoost],
   armedInstructions:
-    'A row of cards is the alarm wiring. One player sees the rulebook (not the cards); ' +
-    'the others see the cards (not the rules). Call out what you see and follow the rules to cut the right wires. ' +
+    'Deal a row of random cards face-up — the alarm wiring. One player (the reader) holds ' +
+    'the rulebook on the player-view and cannot see the cards; the crew sees the cards but not ' +
+    'the rules. They describe, the reader names the cuts, you referee. ' +
     'Clear Channel allows one full spoken sentence through; shout it once.',
 };

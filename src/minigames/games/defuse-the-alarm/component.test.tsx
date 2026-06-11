@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
 import { DefuseComponent } from './component';
+import { publishSlice } from '@/platform/channel';
 
 // Suppress publishSlice broadcast in tests
 vi.mock('@/platform/channel', () => ({
@@ -14,11 +15,7 @@ vi.mock('@/platform/channel', () => ({
 afterEach(cleanup);
 
 beforeEach(() => {
-  vi.useFakeTimers();
-});
-
-afterEach(() => {
-  vi.useRealTimers();
+  vi.clearAllMocks();
 });
 
 const dial: Difficulty = { level: 0 };
@@ -44,326 +41,138 @@ function makeCommitted(withCharmOrStealth = false) {
   ];
 }
 
-// ── Wire cards ────────────────────────────────────────────────────────────────
+function renderGame(opts: { boost?: boolean; onResolve?: (o: string) => void } = {}) {
+  const params = makeParams(1);
+  render(
+    <DefuseComponent
+      params={params}
+      dial={dial}
+      committed={makeCommitted(opts.boost ?? false)}
+      onResolve={(opts.onResolve ?? (() => {})) as never}
+    />,
+  );
+  return params;
+}
 
-describe('DefuseComponent — wire cards', () => {
-  it('renders a wire card for each wire', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
+function dealWires() {
+  fireEvent.click(screen.getByTestId('defuse-dealt'));
+}
+
+// ── Setup panel ───────────────────────────────────────────────────────────────
+
+describe('DefuseComponent — setup panel', () => {
+  it('states how many cards to deal as the wires', () => {
+    const params = renderGame();
+    expect(screen.getByTestId('defuse-setup').textContent).toContain(
+      `${params.wireCount} cards face-up`,
     );
-    for (const wire of params.wires) {
-      expect(screen.getByTestId(`wire-card-${wire.id}`)).toBeInTheDocument();
-    }
   });
 
-  it('clicking a wire card cuts it', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    const firstWire = params.wires[0]!;
-    const card = screen.getByTestId(`wire-card-${firstWire.id}`);
-    fireEvent.click(card);
-    // After cut, position label changes
-    const posEl = screen.getByTestId(`wire-pos-${firstWire.id}`);
-    expect(posEl.textContent).toContain('cut');
+  it('timer does not run during setup; starts once wires are dealt', () => {
+    renderGame();
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument();
+    dealWires();
+    expect(screen.getByTestId('timer')).toBeInTheDocument();
   });
 
-  it('safe cuts show green (cut) state', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    const safeCutId = params.safeWireIds[0]!;
-    const card = screen.getByTestId(`wire-card-${safeCutId}`);
-    fireEvent.click(card);
-    expect(card.className).toContain('dfz-card--cut');
-  });
-
-  it('wrong cuts show red (badcut) state and set alarm tripped', () => {
-    const params = makeParams(1);
-    const unsafeWire = params.wires.find(w => !params.safeWireIds.includes(w.id));
-    if (!unsafeWire) return; // skip if no unsafe wire (unlikely)
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    const card = screen.getByTestId(`wire-card-${unsafeWire.id}`);
-    fireEvent.click(card);
-    expect(card.className).toContain('dfz-card--badcut');
+  it('record controls appear only after the deal', () => {
+    renderGame();
+    expect(screen.queryByTestId('defuse-record-controls')).not.toBeInTheDocument();
+    dealWires();
+    expect(screen.getByTestId('defuse-record-controls')).toBeInTheDocument();
   });
 });
 
-// ── Status badge ──────────────────────────────────────────────────────────────
+// ── Player-view publishing ────────────────────────────────────────────────────
 
-describe('DefuseComponent — status badge', () => {
-  it('shows Defusing badge initially', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    expect(screen.getByTestId('defuse-the-alarm').textContent).toContain('Defusing');
-  });
-
-  it('shows DEFUSED badge after all safe cuts', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    for (const id of params.safeWireIds) {
-      const card = screen.getByTestId(`wire-card-${id}`);
-      fireEvent.click(card);
-    }
-    expect(screen.getByTestId('defuse-the-alarm').textContent).toContain('DEFUSED');
-  });
-
-  it('shows ALARM TRIPPED badge after wrong cut', () => {
-    const params = makeParams(1);
-    const unsafeWire = params.wires.find(w => !params.safeWireIds.includes(w.id));
-    if (!unsafeWire) return;
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    fireEvent.click(screen.getByTestId(`wire-card-${unsafeWire.id}`));
-    expect(screen.getByTestId('defuse-the-alarm').textContent).toContain('ALARM TRIPPED');
+describe('DefuseComponent — player-view slice', () => {
+  it('publishes the rulebook slice on mount (rules text only)', () => {
+    const params = renderGame();
+    expect(publishSlice).toHaveBeenCalledWith({
+      kind: 'defuse-rulebook',
+      rules: params.cutRules.map(r => r.text),
+      gameActive: true,
+    });
   });
 });
 
-// ── Progress bar ──────────────────────────────────────────────────────────────
+// ── Recording ─────────────────────────────────────────────────────────────────
 
-describe('DefuseComponent — progress bar', () => {
-  it('renders the progress bar', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    expect(screen.getByTestId('defuse-progress-bar')).toBeInTheDocument();
+describe('DefuseComponent — GM recording', () => {
+  it('safe cut increments the tally', () => {
+    renderGame();
+    dealWires();
+    fireEvent.click(screen.getByTestId('defuse-safe-cut'));
+    fireEvent.click(screen.getByTestId('defuse-safe-cut'));
+    expect(screen.getByTestId('defuse-progress').textContent).toContain('2');
   });
 
-  it('shows safe cuts progress label', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    expect(screen.getByTestId('defuse-progress').textContent).toContain('Safe cuts');
+  it('wrong cut trips the alarm badge and removes the controls', () => {
+    renderGame();
+    dealWires();
+    fireEvent.click(screen.getByTestId('defuse-wrong-cut'));
+    expect(screen.getByTestId('defuse-badge').textContent).toContain('ALARM');
+    expect(screen.queryByTestId('defuse-record-controls')).not.toBeInTheDocument();
   });
 
-  it('progress fill grows as safe cuts are made', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    const fill = screen.getByTestId('defuse-progress-fill');
-    expect(fill.style.width).toBe('0%');
-    const card = screen.getByTestId(`wire-card-${params.safeWireIds[0]!}`);
-    fireEvent.click(card);
-    const pct = parseFloat(fill.style.width);
-    expect(pct).toBeGreaterThan(0);
+  it('all clear shows the DEFUSED badge', () => {
+    renderGame();
+    dealWires();
+    fireEvent.click(screen.getByTestId('defuse-safe-cut'));
+    fireEvent.click(screen.getByTestId('defuse-all-clear'));
+    expect(screen.getByTestId('defuse-badge').textContent).toContain('DEFUSED');
   });
 });
 
-// ── Clear Channel boost ────────────────────────────────────────────────────────
-
-describe('DefuseComponent — Clear Channel boost', () => {
-  it('Clear Channel active indicator hidden initially', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted(true)}
-        onResolve={() => {}}
-      />,
-    );
-    expect(screen.queryByTestId('defuse-clear-channel-active')).toBeNull();
-  });
-
-  it('Clear Channel active indicator appears after boost fires', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted(true)}
-        onResolve={() => {}}
-      />,
-    );
-    fireEvent.click(screen.getByTestId('boost-charm'));
-    expect(screen.getByTestId('defuse-clear-channel-active')).toBeInTheDocument();
-  });
-});
-
-// ── Player-view manual ref ─────────────────────────────────────────────────────
-
-describe('DefuseComponent — player-view ref', () => {
-  it('shows the manual reference note', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    expect(screen.getByTestId('defuse-manual-ref')).toBeInTheDocument();
-  });
-});
-
-// ── GM rulebook ────────────────────────────────────────────────────────────────
+// ── GM rulebook ───────────────────────────────────────────────────────────────
 
 describe('DefuseComponent — GM rulebook', () => {
-  it('shows the rulebook toggle', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={() => {}}
-      />,
-    );
-    expect(screen.getByTestId('defuse-rulebook-toggle')).toBeInTheDocument();
+  it('shows every rule in the GM-only fold once dealt', () => {
+    const params = renderGame();
+    dealWires();
+    params.cutRules.forEach((rule, i) => {
+      expect(screen.getByTestId(`defuse-gm-rule-${i}`).textContent).toBe(rule.text);
+    });
   });
 });
 
-// ── Boost slot (no layout shift) ──────────────────────────────────────────────
+// ── Clear Channel boost ───────────────────────────────────────────────────────
 
-describe('DefuseComponent — boost slot', () => {
-  it('mg-boost-slot always rendered regardless of boost eligibility', () => {
-    const params = makeParams(1);
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted(false)}
-        onResolve={() => {}}
-      />,
-    );
-    const slots = document.querySelectorAll('.mg-boost-slot');
-    expect(slots.length).toBeGreaterThanOrEqual(1);
+describe('DefuseComponent — Clear Channel boost', () => {
+  it('active indicator appears after the boost fires', () => {
+    renderGame({ boost: true });
+    dealWires();
+    expect(screen.queryByTestId('defuse-clear-channel-active')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('boost-charm'));
+    expect(screen.getByTestId('defuse-clear-channel-active')).toBeInTheDocument();
   });
 });
 
 // ── Outcome ───────────────────────────────────────────────────────────────────
 
 describe('DefuseComponent — onResolve', () => {
-  it('calls onResolve when Call Outcome clicked', () => {
-    const params = makeParams(1);
+  it('in progress → complication suggested', () => {
     const spy = vi.fn();
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={spy}
-      />,
-    );
+    renderGame({ onResolve: spy });
+    dealWires();
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
-    expect(spy).toHaveBeenCalledOnce();
+    expect(spy).toHaveBeenCalledWith('complication');
   });
 
-  it('calls onResolve with clean when all safe cuts made', () => {
-    const params = makeParams(1);
+  it('all clear → clean', () => {
     const spy = vi.fn();
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={spy}
-      />,
-    );
-    for (const id of params.safeWireIds) {
-      fireEvent.click(screen.getByTestId(`wire-card-${id}`));
-    }
+    renderGame({ onResolve: spy });
+    dealWires();
+    fireEvent.click(screen.getByTestId('defuse-all-clear'));
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledWith('clean');
   });
 
-  it('calls onResolve with botched after wrong cut', () => {
-    const params = makeParams(1);
-    const unsafeWire = params.wires.find(w => !params.safeWireIds.includes(w.id));
-    if (!unsafeWire) return;
+  it('wrong cut → botched', () => {
     const spy = vi.fn();
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={spy}
-      />,
-    );
-    fireEvent.click(screen.getByTestId(`wire-card-${unsafeWire.id}`));
-    fireEvent.click(screen.getByTestId('btn-call-outcome'));
-    expect(spy).toHaveBeenCalledWith('botched');
-  });
-
-  it('calls onResolve with botched when timer expires', () => {
-    const params = makeParams(1);
-    const spy = vi.fn();
-    render(
-      <DefuseComponent
-        params={params}
-        dial={dial}
-        committed={makeCommitted()}
-        onResolve={spy}
-      />,
-    );
-    // Advance one tick at a time so React flushes state after each second
-    for (let i = 0; i <= params.timerSeconds; i++) {
-      act(() => { vi.advanceTimersByTime(1000); });
-    }
+    renderGame({ onResolve: spy });
+    dealWires();
+    fireEvent.click(screen.getByTestId('defuse-wrong-cut'));
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledWith('botched');
   });

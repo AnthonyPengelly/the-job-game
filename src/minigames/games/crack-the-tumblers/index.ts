@@ -19,6 +19,7 @@ export const crackTheTumblers: MiniGame<CrackTheTumblersParams, CrackTheTumblers
   judge,
   boosts: [resetPinBoost],
   armedInstructions:
-    'Play your number cards in ascending order — one per turn, lowest to highest. ' +
-    'One card out of sequence trips the alarm. Reset Pin undoes one clash.',
+    'Deal each committed player a hand from the shuffled pack. No talking: the crew plays ' +
+    'every card to the table in ascending rank order, Ace low, equals allowed back-to-back. ' +
+    'A card out of order is a clash — the alarm. Reset Pin hands one clash back.',
 };

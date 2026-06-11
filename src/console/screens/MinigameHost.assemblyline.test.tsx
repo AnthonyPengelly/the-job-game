@@ -188,7 +188,7 @@ describe('MinigameHost — assemblyLineNegotiated (commit 2)', () => {
     expect(screen.queryByTestId('assembly-line')).not.toBeInTheDocument();
   });
 
-  it('shows hand size and type count in ACTIVE', () => {
+  it('shows hand size and the GM setup panel in ACTIVE', () => {
     const store = makeAssemblyLineStore(1, { players: [{ name: 'Alice' }, { name: 'Bob' }] });
     render(
       <StoreContext.Provider value={store}>
@@ -197,10 +197,10 @@ describe('MinigameHost — assemblyLineNegotiated (commit 2)', () => {
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
     expect(screen.getByTestId('aln-hand-size')).toBeInTheDocument();
-    expect(screen.getByTestId('aln-type-count')).toBeInTheDocument();
+    expect(screen.getByTestId('aln-setup')).toBeInTheDocument();
   });
 
-  it('shows a timer in ACTIVE', () => {
+  it('shows a timer once hands are dealt', () => {
     const store = makeAssemblyLineStore(1, { players: [{ name: 'Alice' }, { name: 'Bob' }] });
     render(
       <StoreContext.Provider value={store}>
@@ -208,6 +208,8 @@ describe('MinigameHost — assemblyLineNegotiated (commit 2)', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('aln-dealt'));
     expect(screen.getByTestId('timer')).toBeInTheDocument();
   });
 
@@ -351,6 +353,7 @@ describe('MinigameHost — assemblyLineNegotiated boost surfacing', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId('aln-dealt'));
     expect(screen.queryByTestId('aln-types-revealed')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-charm'));
     expect(screen.getByTestId('aln-types-revealed')).toBeInTheDocument();

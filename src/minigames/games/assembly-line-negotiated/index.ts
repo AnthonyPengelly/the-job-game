@@ -19,7 +19,7 @@ export const assemblyLineNegotiated: MiniGame<AssemblyLineNegotiatedParams, Asse
   judge,
   boosts: [tipOffBoost],
   armedInstructions:
-    'The whole table plays — take turns offering one card at a time (negotiated swap). ' +
-    'Accept, counter-offer, or pass. Each player tries to collect a complete set. ' +
-    'Tell me every time one is complete. Tip-Off reveals which types are actually in play.',
+    'Two-player variant — the screen tells you exactly which ranks to pull and deal. ' +
+    'Take turns offering one card at a time: accept, counter-offer, or pass, collecting ' +
+    'four of a kind. Tell me when a set is complete. Tip-Off names the ranks in play.',
 };

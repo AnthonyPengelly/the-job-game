@@ -76,16 +76,23 @@ describe('generate — dial levers (higher dial = harder)', () => {
     expect(generate(mulberry32(1), dial(-100)).code.length).toBe(3);
   });
 
-  it('clamps digit count to maximum 6', () => {
-    expect(generate(mulberry32(1), dial(100)).code.length).toBe(6);
+  it('clamps digit count to maximum 4 — bigger codes are unwinnable in budget', () => {
+    expect(generate(mulberry32(1), dial(100)).code.length).toBe(4);
   });
 
   it('clamps guess budget to maximum 10', () => {
     expect(generate(mulberry32(1), dial(-100)).guessBudget).toBe(10);
   });
 
-  it('clamps guess budget to minimum 3', () => {
-    expect(generate(mulberry32(1), dial(100)).guessBudget).toBe(3);
+  it('clamps guess budget to minimum 6', () => {
+    expect(generate(mulberry32(1), dial(100)).guessBudget).toBe(6);
+  });
+
+  it('never produces a 4-digit code with fewer than 6 guesses (winnability floor)', () => {
+    for (const level of [-3, -1, 0, 0.5, 1, 1.5, 2, 3, 5, 100]) {
+      const p = generate(mulberry32(7), dial(level));
+      expect(p.guessBudget).toBeGreaterThanOrEqual(p.code.length + 2);
+    }
   });
 });
 

@@ -66,9 +66,10 @@ export function Beat16Component({
     if (beat1Time !== null) {
       const beatIntervalMs = 60000 / params.bpm;
       const expectedTargetBeatTime = beat1Time + (params.targetBeat - 1) * beatIntervalMs;
-      delta = now - expectedTargetBeatTime;
+      // The GM taps on hearing the player's slap — credit back that reaction chain.
+      delta = now - params.reactionCompensationMs - expectedTargetBeatTime;
     }
-    setState({ ...state, tapTimestampMs: now, measuredDeltaMs: delta });
+    setState(s => ({ ...s, tapTimestampMs: now, measuredDeltaMs: delta }));
   }
 
   function handleBoost(hook: BoostHook<Beat16State, Beat16Params>) {
@@ -149,13 +150,20 @@ export function Beat16Component({
                 disabled={hasTapped}
               >
                 TAP
-                <span className="b16-tap-sub">On beat {params.targetBeat}</span>
+                <span className="b16-tap-sub">the instant they hit the table</span>
               </button>
             </>
           ) : (
             <div className="b16-feedback-area" data-testid="tap-result">
+              {state.measuredDeltaMs !== null && (
+                <div className="b16-reveal-delta" data-testid="reveal-delta">
+                  {state.measuredDeltaMs > 0 ? '+' : ''}
+                  {state.measuredDeltaMs.toFixed(0)}
+                  <span className="b16-reveal-unit">ms</span>
+                </div>
+              )}
               {feedback === 'on-the-beat' && (
-                <div className="b16-feedback b16-feedback--hit">On the beat</div>
+                <div className="b16-feedback b16-feedback--hit">Dead on</div>
               )}
               {feedback === 'early' && (
                 <div className="b16-feedback b16-feedback--early">Early</div>
@@ -168,7 +176,7 @@ export function Beat16Component({
               )}
               <div className="b16-feedback-sub">
                 {state.measuredDeltaMs !== null
-                  ? `${state.measuredDeltaMs > 0 ? '+' : ''}${state.measuredDeltaMs.toFixed(0)} ms · suggest ${judge(state, params)}`
+                  ? `reaction-adjusted · reveal it to the table · suggest ${judge(state, params)}`
                   : 'Timing unavailable'}
               </div>
             </div>
