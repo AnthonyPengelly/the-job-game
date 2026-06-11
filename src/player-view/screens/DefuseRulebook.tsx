@@ -31,7 +31,8 @@ export function DefuseRulebook({ slice }: Props): JSX.Element {
           <p className="pv-lede">
             You can&rsquo;t see the cards.
             The crew reads you the row, <b>left to right</b>.
-            Find the <b>first rule that fits</b> &mdash; name that card.
+            Name <b>every card that matches any rule</b> below &mdash;
+            cutting anything else trips the alarm.
           </p>
           <div data-testid="defuse-rules-list" className="pv-steps">
             {slice.rules.map((rule, i) => (

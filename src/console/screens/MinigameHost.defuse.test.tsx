@@ -166,7 +166,7 @@ describe('MinigameHost — defuseTheAlarm mounting', () => {
     expect(screen.queryByTestId('minigame-stub')).not.toBeInTheDocument();
   });
 
-  it('renders wire cards in ACTIVE', () => {
+  it('renders the deal setup panel in ACTIVE', () => {
     const store = makeDefuseStore();
     render(
       <StoreContext.Provider value={store}>
@@ -174,10 +174,10 @@ describe('MinigameHost — defuseTheAlarm mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    expect(screen.getByTestId('defuse-wires')).toBeInTheDocument();
+    expect(screen.getByTestId('defuse-setup')).toBeInTheDocument();
   });
 
-  it('renders a timer in ACTIVE', () => {
+  it('renders a timer once the wires are dealt', () => {
     const store = makeDefuseStore();
     render(
       <StoreContext.Provider value={store}>
@@ -185,10 +185,12 @@ describe('MinigameHost — defuseTheAlarm mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    expect(screen.queryByTestId('timer')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('defuse-dealt'));
     expect(screen.getByTestId('timer')).toBeInTheDocument();
   });
 
-  it('renders the GM rulebook reference in ACTIVE', () => {
+  it('renders the GM rulebook reference once the wires are dealt', () => {
     const store = makeDefuseStore();
     render(
       <StoreContext.Provider value={store}>
@@ -196,6 +198,7 @@ describe('MinigameHost — defuseTheAlarm mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId('defuse-dealt'));
     expect(screen.getByTestId('defuse-rulebook-gm')).toBeInTheDocument();
   });
 
@@ -227,7 +230,7 @@ describe('MinigameHost — defuseTheAlarm mounting', () => {
 // ── Seeded params reproducibility ─────────────────────────────────────────────
 
 describe('MinigameHost — defuseTheAlarm seeded params stable', () => {
-  it('same seed → same number of wires across two independent stores', () => {
+  it('same seed → same deal instructions across two independent stores', () => {
     const storeA = makeDefuseStore(42);
     const { unmount: unmountA } = render(
       <StoreContext.Provider value={storeA}>
@@ -235,7 +238,7 @@ describe('MinigameHost — defuseTheAlarm seeded params stable', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const countA = screen.getByTestId('defuse-wires').children.length;
+    const setupA = screen.getByTestId('defuse-setup').textContent;
     unmountA();
 
     const storeB = makeDefuseStore(42);
@@ -245,9 +248,9 @@ describe('MinigameHost — defuseTheAlarm seeded params stable', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const countB = screen.getByTestId('defuse-wires').children.length;
+    const setupB = screen.getByTestId('defuse-setup').textContent;
 
-    expect(countA).toBe(countB);
+    expect(setupA).toBe(setupB);
   });
 });
 
@@ -309,6 +312,7 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    fireEvent.click(screen.getByTestId('defuse-dealt'));
     expect(screen.queryByTestId('defuse-clear-channel-active')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-charm'));
     expect(screen.getByTestId('defuse-clear-channel-active')).toBeInTheDocument();
@@ -317,8 +321,8 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
 
 // ── Wire cutting ──────────────────────────────────────────────────────────────
 
-describe('MinigameHost — defuseTheAlarm wire cutting', () => {
-  it('tapping a wire marks it as cut', () => {
+describe('MinigameHost — defuseTheAlarm GM recording', () => {
+  it('recording a safe cut updates the tally', () => {
     const store = makeDefuseStore(1);
     render(
       <StoreContext.Provider value={store}>
@@ -326,34 +330,9 @@ describe('MinigameHost — defuseTheAlarm wire cutting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const wireContainer = screen.getByTestId('defuse-wires');
-    // Find and click the first wire card
-    const firstCard = wireContainer.firstElementChild as HTMLElement;
-    expect(firstCard).toBeTruthy();
-    const beforeClass = firstCard.className;
-    fireEvent.click(firstCard);
-    // After click, the card should have a cut or badcut class
-    const afterClass = firstCard.className;
-    expect(afterClass).not.toBe(beforeClass);
-    expect(afterClass).toMatch(/dfz-card--(cut|badcut)/);
-  });
-
-  it('progress counter updates after a safe cut', () => {
-    const store = makeDefuseStore(1);
-    render(
-      <StoreContext.Provider value={store}>
-        <MinigameHost />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-minigame-start'));
-    const progressBefore = screen.getByTestId('defuse-progress').textContent;
-    // Click the first safe wire
-    const wireContainer = screen.getByTestId('defuse-wires');
-    const firstCard = wireContainer.firstElementChild as HTMLElement;
-    fireEvent.click(firstCard);
-    expect(screen.getByTestId('defuse-progress')).toBeInTheDocument();
-    expect(screen.getByTestId('defuse-progress').textContent).toBeTruthy();
-    void progressBefore;
+    fireEvent.click(screen.getByTestId('defuse-dealt'));
+    fireEvent.click(screen.getByTestId('defuse-safe-cut'));
+    expect(screen.getByTestId('defuse-progress').textContent).toContain('1');
   });
 });
 
