@@ -172,11 +172,22 @@ describe('Briefing screen', () => {
     renderBriefing(1);
     expect(screen.getByTestId('dossier')).toBeInTheDocument();
     // The dossier stats must be present.
-    expect(screen.getByTestId('dossier-target-haul')).toBeInTheDocument();
     expect(screen.getByTestId('dossier-security')).toBeInTheDocument();
-    expect(screen.getByTestId('dossier-vault')).toBeInTheDocument();
-    // Spine values are non-placeholder (no literal '—' from a null spine).
-    expect(screen.getByTestId('dossier-target-haul').textContent).not.toBe('Target haul—');
+    expect(screen.getByTestId('dossier-the-night')).toBeInTheDocument();
+    expect(screen.getByTestId('dossier-the-exit')).toBeInTheDocument();
+    // Spine security is non-placeholder (no literal '—' from a null spine).
+    expect(screen.getByTestId('dossier-security').textContent).not.toBe('Security—');
+  });
+
+  it('does not show fake numbers — no target haul, no vault stat', () => {
+    renderBriefing(1);
+    // Playtest decision: the haul number is meaningless at briefing time and no
+    // "vault" is ever reached — the dossier foreshadows the night instead.
+    expect(screen.queryByTestId('dossier-target-haul')).toBeNull();
+    expect(screen.queryByTestId('dossier-vault')).toBeNull();
+    const dossier = screen.getByTestId('dossier');
+    expect(dossier.textContent).not.toContain('Target haul');
+    expect(dossier.textContent).not.toContain('The vault');
   });
 
   it('renders the dossier drop-caption image strip', () => {

@@ -9,6 +9,7 @@ export function Briefing() {
   const crew = useGameStore(s => s.session.present.crew);
   const director = useGameStore(s => s.director);
   const dispatch = useGameStore(s => s.dispatch);
+  const hMax = useGameStore(s => s.cfg.heat.hMax);
 
   const crewNames = crew.map(p => p.name).join(', ');
 
@@ -55,19 +56,19 @@ export function Briefing() {
             </span>
           </div>
 
-          {/* Dossier stat grid */}
+          {/* Dossier stat grid — foreshadows how the night plays, no fake numbers */}
           <div className="dossier-stats" data-testid="dossier-stats">
-            <div className="dstat" data-testid="dossier-target-haul">
-              <span className="k">Target haul</span>
-              <span className="v" style={{ color: 'var(--accent)' }}>{spine?.targetHaul ?? '—'}</span>
-            </div>
             <div className="dstat" data-testid="dossier-security">
               <span className="k">Security</span>
               <span className="v" style={{ color: 'var(--caution)' }}>{spine?.security ?? '—'}</span>
             </div>
-            <div className="dstat" data-testid="dossier-vault">
-              <span className="k">The vault</span>
-              <span className="v">{spine?.vault ?? '—'}</span>
+            <div className="dstat" data-testid="dossier-the-night">
+              <span className="k">The night</span>
+              <span className="v">Room by room — two doors each</span>
+            </div>
+            <div className="dstat" data-testid="dossier-the-exit">
+              <span className="k">The exit</span>
+              <span className="v" style={{ color: 'var(--accent)' }}>We run at Heat {hMax}</span>
             </div>
           </div>
         </div>
