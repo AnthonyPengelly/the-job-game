@@ -18,6 +18,7 @@ export const steadyHands: MiniGame<SteadyHandsParams, SteadyHandsState> = {
   judge,
   boosts: [extraHandsBoost],
   armedInstructions:
-    'Build a card tower to the target height before the timer runs out — without it toppling. ' +
+    'Build a card house to the target height before the timer runs out — without it toppling. ' +
+    'A tier is a storey: two leaning cards capped with a flat card. Tap +1 as each tier stands. ' +
     'Extra Hands: shout it once for 10 seconds where everyone (including benched crew) can help build.',
 };

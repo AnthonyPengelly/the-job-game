@@ -77,19 +77,19 @@ describe('generate — dial levers (higher dial = harder)', () => {
     expect(hard.timerSeconds).toBeLessThanOrEqual(easy.timerSeconds);
   });
 
-  it('targetHeight is always within [3, 9]', () => {
+  it('targetHeight stays within the humanly buildable range [2, 4]', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect(p.targetHeight).toBeGreaterThanOrEqual(3);
-      expect(p.targetHeight).toBeLessThanOrEqual(9);
+      expect(p.targetHeight).toBeGreaterThanOrEqual(2);
+      expect(p.targetHeight).toBeLessThanOrEqual(4);
     }
   });
 
-  it('timerSeconds is always within [45, 120]', () => {
+  it('timerSeconds is always within [60, 150]', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect(p.timerSeconds).toBeGreaterThanOrEqual(45);
-      expect(p.timerSeconds).toBeLessThanOrEqual(120);
+      expect(p.timerSeconds).toBeGreaterThanOrEqual(60);
+      expect(p.timerSeconds).toBeLessThanOrEqual(150);
     }
   });
 });
@@ -107,12 +107,32 @@ function makeState(overrides: Partial<SteadyHandsState> = {}): SteadyHandsState 
 }
 
 describe('judge — three tier boundaries', () => {
-  it('complication when game is in progress (default suggestion)', () => {
-    expect(judge(makeState())).toBe('complication');
+  const params = generate(mulberry32(1), dial(0));
+
+  it('complication when game is in progress below target (default suggestion)', () => {
+    expect(judge(makeState(), params)).toBe('complication');
   });
 
-  it('botched when timer expires', () => {
-    expect(judge(makeState({ timerExpired: true }))).toBe('botched');
+  it('clean when the height tally reaches the target', () => {
+    expect(judge(makeState({ currentHeight: params.targetHeight }), params)).toBe('clean');
+  });
+
+  it('clean when target was reached even if the timer has since expired', () => {
+    expect(
+      judge(makeState({ currentHeight: params.targetHeight, timerExpired: true }), params),
+    ).toBe('clean');
+  });
+
+  it('complication when timer expires one tier short (just short, standing)', () => {
+    expect(
+      judge(makeState({ currentHeight: params.targetHeight - 1, timerExpired: true }), params),
+    ).toBe('complication');
+  });
+
+  it('botched when timer expires two or more tiers short', () => {
+    expect(
+      judge(makeState({ currentHeight: params.targetHeight - 2, timerExpired: true }), params),
+    ).toBe('botched');
   });
 });
 
