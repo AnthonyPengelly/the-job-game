@@ -18,7 +18,8 @@ export const safeCrack: MiniGame<SafeCrackParams, SafeCrackState> = {
   judge,
   boosts: [techBoost],
   armedInstructions:
-    'Guess the hidden combination — the app feeds back how many digits are correct ' +
-    'and how many are in the right position. Reason it out in limited attempts. ' +
-    'Stethoscope reveals one digit\'s exact position; shout it once.',
+    'The crew cracks a hidden combination by deduction: they call out a guess, you type it ' +
+    'in, and you read back the feedback — how many digits are right, and how many sit in the ' +
+    'right position. Limited attempts, ticking clock. Stethoscope reveals one digit\'s exact ' +
+    'position; shout it once.',
 };

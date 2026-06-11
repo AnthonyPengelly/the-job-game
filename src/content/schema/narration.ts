@@ -25,20 +25,28 @@ export type NarrationWhen = z.infer<typeof narrationWhenSchema>;
 export const narrationVariantSchema = z
   .object({
     id: z.string().min(1),
-    text: z.string().min(1),
+    /**
+     * One teleprompter line, or a sequence the GM steps through with "Next".
+     * Sequences let a single beat walk the table through a whole moment
+     * (vibe line → what happens → what to do) instead of one bitty quip.
+     */
+    text: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
     when: narrationWhenSchema.optional(),
   })
   .strict()
   .superRefine((v, ctx) => {
+    const lines = typeof v.text === 'string' ? [v.text] : v.text;
     const re = /\{(\w+)\}/g;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(v.text)) !== null) {
-      const token = m[1]!;
-      if (!(ALLOWED_TOKENS as readonly string[]).includes(token)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Unknown template token "{${token}}" in variant "${v.id}"`,
-        });
+    for (const line of lines) {
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(line)) !== null) {
+        const token = m[1]!;
+        if (!(ALLOWED_TOKENS as readonly string[]).includes(token)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Unknown template token "{${token}}" in variant "${v.id}"`,
+          });
+        }
       }
     }
   });

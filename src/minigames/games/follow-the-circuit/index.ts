@@ -18,6 +18,7 @@ export const followTheCircuit: MiniGame<FollowTheCircuitParams, FollowTheCircuit
   judge,
   boosts: [photographicBoost],
   armedInstructions:
-    'Watch the sequence of lit nodes on the grid, then tap them back in the same order. ' +
-    'A wrong tap ends the run. Photographic replays the sequence once.',
+    'The one screen-share game: turn this screen to face the committed crew before you hit ' +
+    'START. They watch the pads light up in sequence, then tap the same sequence back on the ' +
+    'screen. A wrong tap breaks the circuit. Photographic replays the sequence once.',
 };

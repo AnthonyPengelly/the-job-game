@@ -24,8 +24,9 @@ export function makeCategories(items: string[]): MiniGame<CategoriesParams, Cate
     judge,
     boosts: [skipBoost],
     armedInstructions:
-      'The whole table plays — read the category loud and fast, then start the clock. ' +
-      'Every answer that fits, tap the tally. Hit the count before the buzzer for a clean pass. ' +
-      'Skip swaps a dud category before you start.',
+      'The whole table plays. The category appears the moment you hit START and the clock ' +
+      'starts with it — read it out instantly, loud and fast. The crew shouts answers round ' +
+      'the table; tap +1 for every answer that fits (no repeats). Hit the count before the ' +
+      'buzzer for a clean pass. Skip swaps a dud category — once, if someone holds the power-up.',
   };
 }

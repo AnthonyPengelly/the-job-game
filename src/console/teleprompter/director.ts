@@ -170,7 +170,8 @@ export function createNarrationDirector(
     recordPick(beat, chosen.id);
 
     const tplCtx = buildTemplateContext(ctx);
-    return [fillTemplate(chosen.text, tplCtx)];
+    const lines = typeof chosen.text === 'string' ? [chosen.text] : chosen.text;
+    return lines.map(line => fillTemplate(line, tplCtx));
   }
 
   function next(beat: NarrationBeat, ctx?: Partial<NarrationWhen>): string {
