@@ -318,16 +318,22 @@ describe('ObstacleRoom screen', () => {
     expect(screen.getByTestId('btn-commit')).toBeDisabled();
   });
 
-  it('commit button enabled when exactly the minimum crew are selected via rail', () => {
+  it('commit button enables only at exactly the dictated commitCount', () => {
     const store = renderObstacleRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
     const crew = store.getState().session.present.crew;
+    const option = room.options[0]!;
+    expect(option.commitCount).toBeDefined();
+    const count = option.commitCount!;
 
-    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+    fireEvent.click(screen.getByTestId(`option-select-${option.id}`));
 
-    // Toggle one crew member via the rail (minimum is 1 for 2-player game in testCfg).
-    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
+    // Tap crew up to the dictated count — Commit must enable exactly there.
+    for (let i = 0; i < count; i++) {
+      expect(screen.getByTestId('btn-commit')).toBeDisabled();
+      fireEvent.click(screen.getByTestId(`rail-toggle-${crew[i]!.id}`));
+    }
     expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
   });
 
@@ -347,26 +353,24 @@ describe('ObstacleRoom screen', () => {
     expect(screen.getByTestId(`commchip-${crew[0]!.id}`)).toBeInTheDocument();
   });
 
-  it('max commit honoured: rail toggleCommit silently refuses excess crew', () => {
+  it('dictated count honoured: tapping exactly N selects all N and enables commit', () => {
     const store = renderObstacleRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
     const crew = store.getState().session.present.crew;
+    const option = room.options[0]!;
+    const count = option.commitCount ?? 1;
 
-    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+    fireEvent.click(screen.getByTestId(`option-select-${option.id}`));
 
-    // Toggle both crew (max=2 for 2-player game in testCfg).
-    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
-    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[1]!.id}`));
-
-    // Both selected and button enabled.
-    expect(screen.getByTestId(`commchip-${crew[0]!.id}`)).toBeInTheDocument();
-    expect(screen.getByTestId(`commchip-${crew[1]!.id}`)).toBeInTheDocument();
+    for (let i = 0; i < count; i++) {
+      fireEvent.click(screen.getByTestId(`rail-toggle-${crew[i]!.id}`));
+      expect(screen.getByTestId(`commchip-${crew[i]!.id}`)).toBeInTheDocument();
+    }
     expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
   });
 
-  it('max commit honoured with 3 players (max=2): third rail press is ignored', () => {
-    // 3 players with profile '3': crewPerOption=[1,2] → maxCrew = min(2, 3) = 2 < crew.length=3
+  it('dictated count honoured with 3 players: an excess rail press is ignored', () => {
     const store = makeObstacleStore3();
     render(
       <ActionBarSlotProvider>
@@ -382,21 +386,28 @@ describe('ObstacleRoom screen', () => {
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
     const crew = store.getState().session.present.crew;
+    const option = room.options[0]!;
+    expect(option.commitCount).toBeDefined();
+    const count = option.commitCount!;
+    // 3-player profile caps crewPerOption at [1,2] — the count is always < crew.length,
+    // so there is always one player left over to attempt the excess press with.
+    expect(count).toBeLessThan(crew.length);
 
-    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+    fireEvent.click(screen.getByTestId(`option-select-${option.id}`));
 
-    // Toggle the first two crew members (reaches the max of 2).
-    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
-    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[1]!.id}`));
+    for (let i = 0; i < count; i++) {
+      fireEvent.click(screen.getByTestId(`rail-toggle-${crew[i]!.id}`));
+    }
 
-    // Third rail press — max already reached, toggleCommit ignores it.
-    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[2]!.id}`));
+    // Excess rail press — the dictated count is already reached, toggleCommit ignores it.
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[count]!.id}`));
 
-    // Third player has NO chip (was silently rejected by crewRailMode).
-    expect(screen.queryByTestId(`commchip-${crew[2]!.id}`)).not.toBeInTheDocument();
-    // First two remain and commit is valid.
-    expect(screen.getByTestId(`commchip-${crew[0]!.id}`)).toBeInTheDocument();
-    expect(screen.getByTestId(`commchip-${crew[1]!.id}`)).toBeInTheDocument();
+    // Excess player has NO chip (was silently rejected by crewRailMode).
+    expect(screen.queryByTestId(`commchip-${crew[count]!.id}`)).not.toBeInTheDocument();
+    // The dictated crew remain and commit is valid.
+    for (let i = 0; i < count; i++) {
+      expect(screen.getByTestId(`commchip-${crew[i]!.id}`)).toBeInTheDocument();
+    }
     expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
   });
 
@@ -407,9 +418,12 @@ describe('ObstacleRoom screen', () => {
     const crew = store.getState().session.present.crew;
     const safeOption = room.options[0]!;
 
-    // Select option, toggle one crew member via rail, then commit.
+    // Select option, toggle exactly the dictated count via rail, then commit.
     fireEvent.click(screen.getByTestId(`option-select-${safeOption.id}`));
-    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
+    const count = safeOption.commitCount ?? 1;
+    for (let i = 0; i < count; i++) {
+      fireEvent.click(screen.getByTestId(`rail-toggle-${crew[i]!.id}`));
+    }
     fireEvent.click(screen.getByTestId('btn-commit'));
 
     // Engine should now be in minigame phase.
@@ -474,8 +488,12 @@ describe('ObstacleRoom narration', () => {
 
     // Advance narration and verify commit still works with a crew selection.
     fireEvent.click(screen.getByTestId('teleprompter-advance'));
-    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
-    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
+    const option = room.options[0]!;
+    fireEvent.click(screen.getByTestId(`option-select-${option.id}`));
+    const count = option.commitCount ?? 1;
+    for (let i = 0; i < count; i++) {
+      fireEvent.click(screen.getByTestId(`rail-toggle-${crew[i]!.id}`));
+    }
     expect(screen.getByTestId('btn-commit')).not.toBeDisabled();
   });
 });
