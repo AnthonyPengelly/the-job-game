@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle, XCircle, AlertTriangle, BookOpen, Hand, MessageSquare, Laptop, Undo2 } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { Timer } from '@/minigames/primitives/Timer';
@@ -108,7 +109,10 @@ export function DefuseComponent({
   // becomes the rulebook. No GM state, no recording controls, nothing the
   // reader shouldn't see. The crew still must not look — the reader holds it.
   if (mode === 'handoff') {
-    return (
+    // Portal to <body>: the cockpit work area's mask/stacking context would
+    // otherwise trap position:fixed and leave the HUD/crew rail visible —
+    // the handed-over laptop must show the rulebook and nothing else.
+    return createPortal(
       <div className="dfz-reader-overlay" data-testid="defuse-reader-overlay">
         <div className="dfz-reader-head">
           <BookOpen size={20} aria-hidden />
@@ -138,7 +142,8 @@ export function DefuseComponent({
             <Undo2 size={16} aria-hidden /> Done — hand the laptop back
           </button>
         </div>
-      </div>
+      </div>,
+      document.body,
     );
   }
 
