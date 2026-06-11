@@ -8,3 +8,5 @@ plans/archive/
 *.local
 .env
 .DS_Store
+.playwright-mcp/
+qa-screens/
