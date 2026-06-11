@@ -96,7 +96,8 @@ describe('SafeCrackComponent — guess submission', () => {
       />,
     );
     const input = screen.getByTestId('guess-input');
-    const wrongGuess = params.code.map(() => 0).join('');
+    // Legal in-pool guess that can never solve: rotate the first digit within the pool.
+    const wrongGuess = params.code.map((d, i) => (i === 0 ? (d % params.digitMax) + 1 : d)).join('');
     fireEvent.change(input, { target: { value: wrongGuess } });
     fireEvent.click(screen.getByTestId('guess-submit'));
     expect(screen.getByTestId('guess-row-0')).toBeInTheDocument();
@@ -113,11 +114,12 @@ describe('SafeCrackComponent — guess submission', () => {
       />,
     );
     const input = screen.getByTestId('guess-input');
-    const wrongGuess = params.code.map(() => 0).join('');
+    // Legal in-pool guess that can never solve: rotate the first digit within the pool.
+    const wrongGuess = params.code.map((d, i) => (i === 0 ? (d % params.digitMax) + 1 : d)).join('');
     fireEvent.change(input, { target: { value: wrongGuess } });
     fireEvent.click(screen.getByTestId('guess-submit'));
     const digits = screen.getByTestId('guess-digits-0').textContent ?? '';
-    expect(digits).toContain('0');
+    expect(digits.replace(/\s/g, '')).toBe(wrongGuess);
   });
 
   it('last guess row gets current highlight class', () => {
@@ -132,7 +134,8 @@ describe('SafeCrackComponent — guess submission', () => {
     );
     const input = screen.getByTestId('guess-input');
     // Submit two guesses
-    const wrongGuess = params.code.map(() => 0).join('');
+    // Legal in-pool guess that can never solve: rotate the first digit within the pool.
+    const wrongGuess = params.code.map((d, i) => (i === 0 ? (d % params.digitMax) + 1 : d)).join('');
     fireEvent.change(input, { target: { value: wrongGuess } });
     fireEvent.click(screen.getByTestId('guess-submit'));
     fireEvent.change(input, { target: { value: wrongGuess } });
@@ -153,7 +156,8 @@ describe('SafeCrackComponent — guess submission', () => {
     );
     expect(screen.queryByTestId('peg-legend')).toBeNull();
     const input = screen.getByTestId('guess-input');
-    const wrongGuess = params.code.map(() => 0).join('');
+    // Legal in-pool guess that can never solve: rotate the first digit within the pool.
+    const wrongGuess = params.code.map((d, i) => (i === 0 ? (d % params.digitMax) + 1 : d)).join('');
     fireEvent.change(input, { target: { value: wrongGuess } });
     fireEvent.click(screen.getByTestId('guess-submit'));
     expect(screen.getByTestId('peg-legend')).toBeInTheDocument();
@@ -170,7 +174,8 @@ describe('SafeCrackComponent — guess submission', () => {
       />,
     );
     const input = screen.getByTestId('guess-input') as HTMLInputElement;
-    const wrongGuess = params.code.map(() => 0).join('');
+    // Legal in-pool guess that can never solve: rotate the first digit within the pool.
+    const wrongGuess = params.code.map((d, i) => (i === 0 ? (d % params.digitMax) + 1 : d)).join('');
     fireEvent.change(input, { target: { value: wrongGuess } });
     fireEvent.click(screen.getByTestId('guess-submit'));
     expect(input.value).toBe('');
@@ -219,7 +224,8 @@ describe('SafeCrackComponent — progress bar', () => {
     const fill = screen.getByTestId('sc-progress-fill');
     expect(fill.style.width).toBe('0%');
     const input = screen.getByTestId('guess-input');
-    const wrongGuess = params.code.map(() => 0).join('');
+    // Legal in-pool guess that can never solve: rotate the first digit within the pool.
+    const wrongGuess = params.code.map((d, i) => (i === 0 ? (d % params.digitMax) + 1 : d)).join('');
     fireEvent.change(input, { target: { value: wrongGuess } });
     fireEvent.click(screen.getByTestId('guess-submit'));
     const pct = parseFloat(fill.style.width);

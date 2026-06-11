@@ -20,6 +20,7 @@ export const safeCrack: MiniGame<SafeCrackParams, SafeCrackState> = {
   armedInstructions:
     'The crew cracks a hidden combination by deduction: they call out a guess, you type it ' +
     'in, and you read back the feedback — how many digits are right, and how many sit in the ' +
-    'right position. Limited attempts, ticking clock. Stethoscope reveals one digit\'s exact ' +
-    'position; shout it once.',
+    'right position. The code uses a SMALL digit pool — announce it out loud before they start ' +
+    '("digits 1 to 4 only", as shown on screen; duplicates allowed). Limited attempts, ticking ' +
+    'clock. Stethoscope reveals one digit\'s exact position; shout it once.',
 };
