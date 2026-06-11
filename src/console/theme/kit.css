@@ -202,6 +202,8 @@ body {
 .dialbar .dtrack { flex:1; height:8px; border-radius:var(--radius-pill); background:var(--c-surface-3); overflow:hidden; }
 .dialbar .dfill { height:100%; background:var(--data); border-radius:var(--radius-pill); transition:width .3s var(--ease-out); }
 .dialbar .dval { font-family:var(--font-data); font-weight:800; font-size:14px; color:var(--data); white-space:nowrap; }
+.dialbar .ddelta { font-family:var(--font-data); font-size:11px; letter-spacing:.04em; white-space:nowrap; }
+.dialbar .ddelta--ease { color:var(--accent); }
 /* two-column commit layout (selected door + commit side-panel) */
 .commit { display:grid; grid-template-columns:1.3fr 1fr; gap:16px; }
 .commit-side { display:flex; flex-direction:column; gap:14px; }

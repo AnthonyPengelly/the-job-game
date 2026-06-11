@@ -32,6 +32,8 @@ interface OptionCardProps {
   onSelect: () => void;
   narrationLine?: string | undefined;
   dialLevel?: number | undefined;
+  /** Dial level with nobody committed — the live preview shows the stats delta against this. */
+  dialBaseline?: number | undefined;
 }
 
 function OptionCard({
@@ -42,6 +44,7 @@ function OptionCard({
   onSelect,
   narrationLine,
   dialLevel,
+  dialBaseline,
 }: OptionCardProps) {
   const tagContent = selected ? (
     <>
@@ -63,6 +66,18 @@ function OptionCard({
   const fillPct = dialLevel !== undefined
     ? Math.min(100, Math.max(0, (dialLevel / 2.0) * 100))
     : 50;
+
+  // How the committed crew's stats move the dial vs an empty commit. Negative
+  // = the specialists are easing the game; this is the "send your strongest"
+  // feedback moment, so it gets called out explicitly.
+  const statDelta =
+    dialLevel !== undefined && dialBaseline !== undefined ? dialLevel - dialBaseline : undefined;
+
+  const dialWord =
+    dialLevel === undefined ? '' :
+    dialLevel <= 0 ? 'cruisy' :
+    dialLevel <= 0.75 ? 'steady' :
+    dialLevel <= 1.5 ? 'tense' : 'brutal';
 
   return (
     <div
@@ -91,11 +106,18 @@ function OptionCard({
       )}
       {selected && dialLevel !== undefined && (
         <div className="dialbar" data-testid="option-dial" aria-label="GM-only difficulty dial">
-          <span className="dlabel">Difficulty dial</span>
+          <span className="dlabel">Difficulty dial · GM only</span>
           <div className="dtrack">
             <div className="dfill" style={{ width: `${fillPct}%` }} />
           </div>
-          <span className="dval">GM only</span>
+          <span className="dval" data-testid="option-dial-value">
+            {dialLevel.toFixed(1)} · {dialWord}
+          </span>
+          {statDelta !== undefined && statDelta < -0.05 && (
+            <span className="ddelta ddelta--ease" data-testid="option-dial-delta">
+              crew stats ease it {statDelta.toFixed(1)}
+            </span>
+          )}
         </div>
       )}
       <div className="opt-cost">
@@ -243,7 +265,7 @@ export function ObstacleRoom() {
 
   // Compute the GM-only difficulty dial for the selected option.
   // Updates live as crew are tapped on the rail. Must be called before any early return.
-  const dialLevel = useMemo((): number | undefined => {
+  const dialPreview = useMemo((): { level: number; baseline: number } | undefined => {
     if (selectedOptionId === null || selectedOption === undefined) return undefined;
     const game = registry.find(g => g.id === selectedOption.gameId);
     if (game === undefined) return undefined;
@@ -251,11 +273,15 @@ export function ObstacleRoom() {
     const laneRatings = committedPlayers.flatMap(p =>
       game.lanes.map(lane => p.stats[lane]),
     );
-    return computeDial(laneRatings, selectedOption.gameId, crew.length, cfg, {
-      heat,
-      roomIndex,
-    });
+    const ctx = { heat, roomIndex };
+    return {
+      level: computeDial(laneRatings, selectedOption.gameId, crew.length, cfg, ctx),
+      // Baseline: same option, nobody committed — the delta is what the
+      // committed crew's stats are worth, shown live as players are tapped.
+      baseline: computeDial([], selectedOption.gameId, crew.length, cfg, ctx),
+    };
   }, [selectedOptionId, selectedOption, registry, committed, crew, cfg, heat, roomIndex]);
+  const dialLevel = dialPreview?.level;
 
   if (room === null || room.kind !== 'obstacle') return null;
 
@@ -342,6 +368,7 @@ export function ObstacleRoom() {
             onSelect={() => { /* no-op: already selected */ }}
             narrationLine={optionLines[selectedOptionId]}
             dialLevel={dialLevel}
+            dialBaseline={dialPreview?.baseline}
           />
 
           {/* Commit side-panel */}

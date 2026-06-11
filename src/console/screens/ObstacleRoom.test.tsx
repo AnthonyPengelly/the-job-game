@@ -555,7 +555,7 @@ describe('ObstacleRoom — GM difficulty dial (registered game)', () => {
     fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
 
     expect(screen.getByTestId('option-dial')).toBeInTheDocument();
-    expect(screen.getByText('Difficulty dial')).toBeInTheDocument();
+    expect(screen.getByText('Difficulty dial · GM only')).toBeInTheDocument();
   });
 
   it('dial fill width decreases as crew are committed (more crew → lower difficulty)', () => {
@@ -574,6 +574,24 @@ describe('ObstacleRoom — GM difficulty dial (registered game)', () => {
     fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
     const fillAfter = parseFloat(fill.style.width);
     expect(fillAfter).toBeLessThan(fillBefore);
+  });
+
+  it('shows the numeric dial value and a stats-ease delta once crew commit', () => {
+    const store = renderDialRoom();
+    const room = store.getState().session.present.currentRoom;
+    if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    const crew = store.getState().session.present.crew;
+
+    fireEvent.click(screen.getByTestId(`option-select-${room.options[0]!.id}`));
+
+    // Numeric readout always present once a door is selected.
+    expect(screen.getByTestId('option-dial-value').textContent).toMatch(/-?\d+\.\d/);
+    // No delta chip with nobody committed.
+    expect(screen.queryByTestId('option-dial-delta')).not.toBeInTheDocument();
+
+    // Tapping a player onto the commit eases the dial → the delta chip appears.
+    fireEvent.click(screen.getByTestId(`rail-toggle-${crew[0]!.id}`));
+    expect(screen.getByTestId('option-dial-delta').textContent).toMatch(/ease it -\d+\.\d/);
   });
 });
 
