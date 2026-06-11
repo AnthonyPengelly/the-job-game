@@ -71,10 +71,17 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
       const heatDelta = drip + surcharge + outHeat;
       const newHeat = Math.max(0, state.heat + heatDelta);
 
-      // Loot per reference: clean → option reward; complication/botched → tuning.outcomeLoot.
+      // Loot per outcome: clean → full option reward; complication → the larger
+      // of the flat floor and a fraction of the reward (a near-miss on a big
+      // room should still sting less than a botch, not pay like one);
+      // botched → flat.
+      const complicationLoot = Math.max(
+        cfg.outcomeLoot.complication,
+        Math.round(option.reward * cfg.outcomeLoot.complicationFraction),
+      );
       const lootGained =
         event.outcome === 'clean' ? option.reward :
-        event.outcome === 'complication' ? cfg.outcomeLoot.complication :
+        event.outcome === 'complication' ? complicationLoot :
         cfg.outcomeLoot.botched;
 
       // Gear grant: fires only on clean, mirroring the reward behavior.

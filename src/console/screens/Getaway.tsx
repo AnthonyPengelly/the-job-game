@@ -52,6 +52,7 @@ export function Getaway() {
   const hasNextCountdown = countdownIndex < countdownLines.length - 1;
 
   const [cardsCleared, setCardsCleared] = useState(0);
+  const clearedRef = useRef(0);
   const [secondsLeft, setSecondsLeft] = useState(brief.timerSeconds);
   const [timerActive, setTimerActive] = useState(false);
   const [clueGiverIndex, setClueGiverIndex] = useState(0);
@@ -165,7 +166,9 @@ export function Getaway() {
 
   function handleCleared() {
     if (resolvedRef.current) return;
-    const next = cardsCleared + 1;
+    // Synchronous ref count so rapid GM taps all land (state updates batch).
+    clearedRef.current += 1;
+    const next = clearedRef.current;
     setCardsCleared(next);
     setClueGiverIndex(i => i + 1);
     if (next >= brief.targetCards) {

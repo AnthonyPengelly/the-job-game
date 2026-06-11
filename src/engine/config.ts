@@ -83,7 +83,10 @@ export interface EngineConfig {
     botched: number;
   };
   outcomeLoot: {
+    /** Floor payout for a complication (raw loot units). */
     complication: number;
+    /** Fraction of the option reward paid on a complication (the larger of floor/fraction wins). */
+    complicationFraction: number;
     botched: number;
   };
   scenarioSwing: {

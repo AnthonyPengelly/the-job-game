@@ -29,6 +29,7 @@ export const tuningSchema = z.object({
   }).strict(),
   outcomeLoot: z.object({
     complication: z.number().nonnegative(),
+    complicationFraction: z.number().min(0).max(1),
     botched: z.number().nonnegative(),
   }).strict(),
   scenarioSwing: z.object({

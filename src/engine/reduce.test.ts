@@ -12,7 +12,7 @@ const cfg: EngineConfig = {
   escalation: { onsetRoom: 5, rampPerObstacle: 0.2 },
   obstacleHeat: { safe: 1, greedy: 2, greedyBelowFraction: 0.5 },
   outcomeHeat: { clean: 0, complication: 1, botched: 2 },
-  outcomeLoot: { complication: 1, botched: 0 },
+  outcomeLoot: { complication: 1, complicationFraction: 0.5, botched: 0 },
   scenarioSwing: { small: 2, big: 4 },
   getaway: {
     exponent: 1.3, skillTerm: 0.5, skillPivot: 0.65, headcountTerm: 0.8, clamp: [0.04, 0.97] as [number, number],
@@ -384,8 +384,24 @@ describe('RESOLVE_MINIGAME — complication safe (roomIndex 0)', () => {
     expect(next.heat).toBe(2); // drip(1) + outHeat(1)
   });
 
-  it('awards outcomeLoot.complication on complication outcome', () => {
+  it('awards the complication floor on a small-reward room', () => {
+    // reward 1 × fraction 0.5 rounds to 1 — equal to the floor here.
     expect(next.loot).toBe(cfg.outcomeLoot.complication);
+  });
+});
+
+describe('RESOLVE_MINIGAME — complication pays a reward fraction on big rooms', () => {
+  // Floor zeroed so the fraction path is observable: reward 2 × 0.5 = 1.
+  const cfgFraction = {
+    ...cfg,
+    outcomeLoot: { complication: 0, complicationFraction: 0.5, botched: 0 },
+  };
+  const s = obstacleMinigameState({ roomIndex: 0, heat: 0 });
+  (s.currentRoom as Extract<RunState['currentRoom'], { kind: 'obstacle' }>).committedOptionId = 'alpha-greedy';
+  const next = reduce(s, { t: 'RESOLVE_MINIGAME', outcome: 'complication' }, cfgFraction);
+
+  it('awards round(reward × complicationFraction) when it beats the floor', () => {
+    expect(next.loot).toBe(1); // round(2 × 0.5), floor is 0
   });
 });
 
