@@ -142,6 +142,18 @@ describe('Spoils — rendering', () => {
     expect(total).toContain('$');
   });
 
+  it('shows the room heat delta and the new heat total', () => {
+    const { store } = renderSpoils();
+    const present = store.getState().session.present;
+    const lastResult = present.history.at(-1);
+    expect(lastResult).toBeDefined();
+    const expectedDelta = lastResult!.heatGained;
+    const value = screen.getByTestId('spoils-heat-value').textContent ?? '';
+    expect(value).toBe(expectedDelta > 0 ? `+${expectedDelta}` : String(expectedDelta));
+    const total = screen.getByTestId('spoils-heat-total').textContent ?? '';
+    expect(total).toContain(`Now at ${present.heat}`);
+  });
+
   it('renders the Continue button (in action bar)', () => {
     renderSpoils();
     expect(screen.getByTestId('btn-spoils-continue')).toBeInTheDocument();

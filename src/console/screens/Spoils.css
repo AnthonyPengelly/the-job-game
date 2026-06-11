@@ -5,7 +5,7 @@
 
 /* ---- Layout ---- */
 .spoils { display: flex; flex-direction: column; gap: 13px; }
-.spoils-top { display: grid; grid-template-columns: 1.4fr 1fr; gap: 13px; flex: none; }
+.spoils-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 13px; flex: none; }
 
 /* ---- Outcome banner ---- */
 .outcome-banner {
@@ -43,6 +43,10 @@
 .loot-readout .lr-s {
   font-family: var(--font-body); font-size: 13px; color: var(--fg-muted);
 }
+
+/* Heat variant of the readout — same shape, danger palette */
+.loot-readout.heat { border-color: var(--c-red-700, var(--danger)); }
+.loot-readout.heat .lr-v { color: var(--danger); }
 
 /* ---- Gear share panel ---- */
 .gear-share {
