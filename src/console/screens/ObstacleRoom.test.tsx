@@ -9,6 +9,7 @@ import type { ParsedNarration } from '@/content/schema';
 import { CrewRailModeProvider, useCrewRailMode } from '@/console/shell';
 import type { PlayerId } from '@/engine';
 import { ActionBarSlotProvider, ActionBarSlotOutlet } from '@/console/shell/actionBarSlot';
+import { buildRegistry } from '@/minigames';
 import { ObstacleRoom } from './ObstacleRoom';
 import { MinigameStub } from './MinigameStub';
 
@@ -166,10 +167,11 @@ describe('ObstacleRoom screen', () => {
     }
   });
 
-  it('option-game span shows the template lane', () => {
+  it('lane chip falls back to the template lane when the game is unregistered', () => {
     const store = renderObstacleRoom();
     const room = store.getState().session.present.currentRoom;
     if (room === null || room.kind !== 'obstacle') throw new Error('Expected obstacle room');
+    // testCfg gameIds ('alpha'…) are not in the registry — the template lane is the fallback.
     const template = obstacleOnlyCfg.roomTemplates.obstacles.find(
       t => t.id === room.templateId,
     );
@@ -178,6 +180,69 @@ describe('ObstacleRoom screen', () => {
     expect(screen.getByTestId(`option-lane-chip-${room.options[0]!.id}`)).toHaveTextContent(
       laneText,
     );
+  });
+
+  it('a combo game surfaces BOTH lanes — chip, header aside, commit copy', () => {
+    // Bind the only obstacle template to a real two-lane game (Steady Hands:
+    // physical + stealth) so the registry lookup drives the lane display.
+    const comboCfg = {
+      ...testCfg,
+      generation: { obstacleRatio: 1.0 },
+      roomTemplates: {
+        ...testCfg.roomTemplates,
+        obstacles: [
+          {
+            id: 'obs-combo',
+            gameId: 'steadyHands',
+            lane: 'physical',
+            options: [
+              { id: 'combo-safe', greedy: false, heatCost: 1, reward: 1 },
+              { id: 'combo-greedy', greedy: true, heatCost: 2, reward: 2 },
+            ] as [
+              { id: string; greedy: boolean; heatCost: number; reward: number },
+              { id: string; greedy: boolean; heatCost: number; reward: number },
+            ],
+          },
+        ],
+      },
+    };
+    const narration = makeNarrationFixture();
+    const store = createGameStore({ cfg: comboCfg, storage: makeStorage(), narration });
+    store.getState().startRun([{ name: 'Alice' }, { name: 'Bob' }], 1);
+    render(
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <CrewRailModeProvider>
+            <RailButtons />
+            <ObstacleRoom />
+          </CrewRailModeProvider>
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
+    );
+
+    const game = buildRegistry(comboCfg).find(g => g.id === 'steadyHands');
+    expect(game).toBeDefined();
+    expect(game!.lanes).toEqual(['physical', 'stealth']);
+
+    // Header aside names both lanes.
+    const aside = screen.getByTestId('obstacle-lane');
+    expect(aside.textContent).toContain('Lanes:');
+    expect(aside.textContent).toContain('physical');
+    expect(aside.textContent).toContain('stealth');
+
+    // Both option cards' lane chips show the combo.
+    expect(screen.getByTestId('option-lane-chip-combo-safe')).toHaveTextContent(
+      'Physical + Stealth',
+    );
+    expect(screen.getByTestId('option-lane-chip-combo-greedy')).toHaveTextContent(
+      'Physical + Stealth',
+    );
+
+    // Commit-panel copy names the combo too.
+    fireEvent.click(screen.getByTestId('option-select-combo-safe'));
+    const side = screen.getByTestId('commit-side');
+    expect(side.textContent).toContain('Physical + Stealth');
   });
 
   it('reward cost label says "Reward" not "Loot"', () => {
