@@ -1345,14 +1345,102 @@
 }
 
 .mg-tbtn--danger {
-  border-color: var(--danger, #f0463a);
+  background: var(--danger, #f0463a);
 }
 
 .mg-tbtn--danger .mg-tl,
 .mg-tbtn--danger .mg-ts {
-  color: var(--danger, #f0463a);
+  color: var(--fg-on-accent, #05140c);
 }
 
-.mg-tbtn--danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--danger, #f0463a) 12%, transparent);
+/* ── Referee-screen polish (E20+ playtest): the GM reads this at arm's length
+   across a table — centre the stage, constrain line lengths, scale up the
+   primary controls. Pure overrides; structure untouched. ─────────────────── */
+
+.mg-active > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.mg-challenge-zone {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+}
+
+.mg-challenge-zone > * {
+  width: 100%;
+  max-width: 780px;
+  margin-inline: auto;
+}
+
+.mg-setup-panel {
+  margin-inline: auto;
+}
+
+.mg-status-zone {
+  font-size: 0.95rem;
+}
+
+.ctb-subtext {
+  font-size: 1rem;
+}
+
+.mg-tbtn {
+  padding: 0.9rem 2rem;
+  min-width: 9rem;
+}
+
+.mg-tl {
+  font-size: 1.5rem;
+}
+
+.mg-ts {
+  font-size: 0.75rem;
+}
+
+/* ── ARMED briefing: a stage card, not a top-left whisper ──────────────────── */
+
+.mg-armed {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  gap: 1.25rem;
+}
+
+.mg-armed-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 2.4rem;
+  line-height: 1.05;
+}
+
+.mg-armed-instructions {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 56ch;
+  color: var(--fg, #e8f0ec);
+}
+
+.mg-armed .mg-start-btn {
+  align-self: center;
+  font-size: 1.35rem;
+  padding: 1rem 3.5rem;
+  background: var(--accent, #1fd06e);
+  color: var(--fg-on-accent, #05140c);
+}
+
+.mg-armed [data-testid='dial-readout'] {
+  font-family: var(--font-data);
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-muted, #a4b2ad);
 }
