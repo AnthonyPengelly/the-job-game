@@ -19,7 +19,7 @@ export const assemblyLine: MiniGame<AssemblyLineParams, AssemblyLineState> = {
   judge,
   boosts: [tipOffBoost],
   armedInstructions:
-    'The whole table plays — everyone starts with a hand of cards and trades simultaneously ' +
-    '(shout what you want, take what you need). Each player tries to collect a complete set. ' +
-    'Tell me every time one is complete. Tip-Off reveals which types are actually in play.',
+    'The whole table plays — the screen tells you exactly which ranks to pull from the pack ' +
+    'and deal. Everyone trades simultaneously (shout what you want, take what you need) to ' +
+    'collect four of a kind. Tell me every time a set is complete. Tip-Off names the ranks in play.',
 };

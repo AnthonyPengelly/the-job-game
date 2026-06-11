@@ -1,13 +1,16 @@
 import type { Rng } from '@/engine';
 import type { Difficulty } from '@/minigames/contract';
-
-const SET_TYPE_POOL = ['Diamonds', 'Clubs', 'Hearts', 'Spades', 'Stars', 'Moons'] as const;
+import { RANK_NAMES } from '@/minigames/games/assembly-line/deal';
 
 export interface AssemblyLineNegotiatedParams {
-  /** Cards each player holds at the start. */
-  handSize: number;
-  /** Which set-types are active in this challenge (drawn from the pool). */
-  setTypesInPlay: string[];
+  /**
+   * All thirteen rank names in seeded-shuffled order. The component takes the
+   * first `committed.length` as set ranks and (at higher dials) the next
+   * `committed.length` as decoy ranks — generate cannot know the headcount.
+   */
+  rankOrder: string[];
+  /** Junk cards per player shuffled into the deal (0 easy, 1 hard). */
+  decoysPerPlayer: number;
   /** Challenge timer in seconds. */
   timerSeconds: number;
 }
@@ -17,27 +20,29 @@ function clamp(n: number, lo: number, hi: number): number {
 }
 
 /**
- * Generate Assembly Line (negotiated-swap variant) parameters.
+ * Generate Assembly Line (negotiated-swap variant, 2 players) parameters.
+ *
+ * Same real-pack deal as the parent: ranks are the set types, decoys are junk.
+ * Turn-based negotiation is slower than the free-for-all, so the clock is a
+ * touch more generous than the parent's.
  *
  * Dial levers (higher dial.level = harder):
- *   - handSize: more cards per player
- *   - setTypesInPlay.length: more types in play
- *   - timerSeconds: less time
+ *   - decoysPerPlayer: junk cards muddying the trade at high dial (0..1)
+ *   - timerSeconds: less time (60..140)
  *
- * RNG draws which specific set-types are active; same seed+dial = same params.
+ * RNG shuffles which ranks are in play; same seed+dial = same params.
  */
 export function generate(rng: Rng, dial: Difficulty): AssemblyLineNegotiatedParams {
-  const numTypes = clamp(Math.round(3 + dial.level * 0.5), 2, 5);
-  const handSize = clamp(Math.round(4 + dial.level), 3, 7);
-  const timerSeconds = clamp(Math.round(120 - dial.level * 20), 60, 180);
+  const decoysPerPlayer = dial.level >= 1 ? 1 : 0;
+  const timerSeconds = clamp(Math.round(100 - dial.level * 15), 60, 140);
 
-  const pool: string[] = [...SET_TYPE_POOL];
-  const setTypesInPlay: string[] = [];
-  for (let i = 0; i < numTypes; i++) {
-    const picked = rng.pick(pool);
-    setTypesInPlay.push(picked);
-    pool.splice(pool.indexOf(picked), 1);
+  const rankOrder: string[] = [...RANK_NAMES];
+  for (let i = rankOrder.length - 1; i > 0; i--) {
+    const j = rng.int(0, i);
+    const tmp = rankOrder[i]!;
+    rankOrder[i] = rankOrder[j]!;
+    rankOrder[j] = tmp;
   }
 
-  return { handSize, setTypesInPlay, timerSeconds };
+  return { rankOrder, decoysPerPlayer, timerSeconds };
 }
