@@ -65,26 +65,32 @@ console.
 
 ## 2. The room loop: selecting and launching a game
 
-The *room* dictates which games are possible; the crew chooses an option; the
-**committed crew select the exact game** off the grid. The loop:
+> **Two standing decisions (playtest wave, 2026-06):**
+>
+> 1. **The game is pre-bound to the obstacle option at generation time.** The
+>    room template carries `gameId`; `CHOOSE_OPTION` never re-resolves the game
+>    from the committed lanes. "Pick your specialists, get your game" was never
+>    the intent — the room poses the game, and it is up to the *players* to
+>    send the right people. Stats reward the right pick through the dial
+>    (visible live on the commit panel), not by changing the game.
+> 2. **The GM screen is GM-only.** The crew never looks at the console.
+>    Anything the crew must see lives on the table (physical cards) or on the
+>    isolated player-view. Referee screens give the GM *setup instructions*
+>    (what to deal from one shuffled pack — never "find these specific cards")
+>    and *recording controls* (✓/✗ taps); they never render information the
+>    crew is supposed to discover.
 
-1. **Option chosen.** The obstacle's option names a lane requirement (one lane,
-   or a combo). `CHOOSE_OPTION` carries the committed `PlayerId[]`.
-2. **Resolve lanes → game.** Map committed lanes onto the grid in
-   `heist-game-design.md`:
-   - **One committed lane** (or all committed crew share a lane) → that lane's
-     **single** game (the diagonal: Crack the Tumblers / Beat 16 / Categories /
-     The Once-Over).
-   - **Two *different* committed lanes** → the **combo** game at that
-     intersection (Follow the Circuit, Inside Knowledge, Safe-Crack, Assembly
-     Line, Steady Hands, Defuse the Alarm).
-3. **Resolve variant.** Apply the `minCommit`/`soloVariant` rule (§7) for the
+The loop:
+
+1. **Option chosen.** The obstacle's option carries its pre-bound `gameId`.
+   `CHOOSE_OPTION` carries the committed `PlayerId[]`.
+2. **Resolve variant.** Apply the `minCommit`/`soloVariant` rule (§7) for the
    committed headcount **before** the dial.
-4. **Compute the dial** from the committed crew's lane rating(s) (§3).
-5. **`generate(rng, dial)`** fresh params from the run's RNG stream.
-6. **Mount `Component`.** The GM referees; `BoostButton`s surface for any
-   committed power-up holder.
-7. **`judge` suggests, GM confirms** via `OutcomeJudge`; `onResolve` feeds the
+3. **Compute the dial** from the committed crew's lane rating(s) (§3).
+4. **`generate(rng, dial)`** fresh params from the run's RNG stream.
+5. **Mount `Component`.** The GM deals per the setup panel, then referees;
+   `BoostButton`s surface for any committed power-up holder.
+6. **`judge` suggests, GM confirms** via `OutcomeJudge`; `onResolve` feeds the
    engine (`RESOLVE_MINIGAME`).
 
 The generator (in the engine, E1/E2) decides *which game a slot can offer* using
@@ -207,16 +213,16 @@ Three sensing classes:
 
 | Game | App senses | GM confirms | Class |
 |------|-----------|-------------|-------|
-| Crack the Tumblers | the played sequence (cards tapped into the app, or GM enters plays); detects the first clash | confirms the clash/clean read; calls tier | **App-assist** |
-| Beat 16 | tap timing **if** tapped on the sensed control; measures delta from target beat | if the crew tapped the table not the app, GM judges the tap; else confirms | **App-assist** |
+| Crack the Tumblers | the GM's ✓ in-order / ✗ clash taps as physical cards hit the table; the count vs the dealt total | the table judges ascending order live; GM records and calls tier | **GM judges** |
+| Beat 16 | the metronome and target beat; the GM's tap (reaction-compensated) when the player slaps the table; the ms delta | GM taps on hearing the slap, reveals the delta, confirms | **App-assist** |
 | Categories | the timer; a tally counter the GM taps per valid answer | GM counts answers, rules repeats/hesitations, calls tier | **GM judges** |
-| The Once-Over | which changed card(s) the crew picked (tapped on the spread); knows the true change | confirms the pick; calls tier | **App-assist** |
+| The Once-Over | the positional change instructions it generated; the GM's ✓ spotted / ✗ wrong-call taps | GM applies the changes to the physical row, scores callouts, calls tier | **GM judges** |
 | Follow the Circuit | the taps on the grid (sensed); knows the target sequence and the break point | confirms the chain length reached; calls tier | **App-assist** |
 | Inside Knowledge | the timer; right/wrong as the GM marks each answer | GM judges spoken answers, marks each, calls tier | **App-assist** |
-| Safe-Crack | the full guess/feedback loop (guesses typed in); knows the code; computes solved/attempts-left | **fully judged** — GM confirms | **App fully judges** |
-| Assembly Line | the timer; optionally a "sets complete" tally | GM watches the physical trading, judges whose sets are complete, calls tier | **GM judges** |
-| Steady Hands | the timer; target height | GM judges the tower (height reached / toppled), calls tier | **GM judges** |
-| Defuse the Alarm | the wiring + rulebook (it generated both); each "cut" (a card flipped) is entered → knows safe vs wrong cut; the timer | confirms; can override (e.g. a misread the GM forgives) | **App fully judges** |
+| Safe-Crack | the full guess/feedback loop (guesses typed in); knows the code; computes solved/attempts-left; the timer | **fully judged** — GM confirms | **App fully judges** |
+| Assembly Line | the timer; the "sets complete" tally; the deck-build it prescribed | GM watches the physical trading, judges whose sets are complete, calls tier | **GM judges** |
+| Steady Hands | the timer; target height; the GM's tier tally | GM taps tiers as they stand, judges topples, calls tier | **GM judges** |
+| Defuse the Alarm | the property rules it generated; the GM's ✓ safe / ✗ wrong / all-clear taps; the timer | GM sees both the dealt row and the rules; records each cut; can forgive a misread | **GM judges** |
 
 Default tiering shape (each game refines it in §6):
 
@@ -237,33 +243,41 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 
 ### 1. Crack the Tumblers — `crack-the-tumblers`
 
-- **Lane:** Tech. **Facing:** GM.
-- **generate:** a multiset of number-cards dealt across the crew; the *correct
-  ascending order*; gap profile between values.
-- **ChallengeState:** the played sequence so far; whether the alarm tripped
-  (a clash = a card played out of ascending order); boost-used flags.
-- **judge:** **clean** = full ascending sequence completed, no clash;
-  **complication** = completed but with one clash recovered (via Reset Pin) or a
-  near-miss the GM forgives; **botched** = clash trips the alarm.
-- **Boosts (Tech):** **Reset Pin** — undo one misplay without tripping the
-  alarm. (Single-lane game: only the Tech power-up applies.)
-- **Dial levers:** fewer cards; wider gaps between values (more tolerance).
+- **Lane:** Tech. **Facing:** GM (the cards face the table).
+- **generate:** `cardsPerPlayer` (1–3 by dial). The deal is physical: shuffle,
+  deal that many face-down to each committed player; players peek at their own
+  only; no talking. The app never knows the values — the shuffle is the RNG.
+- **Play:** the crew plays every card to the table one at a time in ascending
+  rank order (Ace low, **equal ranks may follow each other**). The GM records
+  each play with ✓ in-order / ✗ clash.
+- **ChallengeState:** total cards; plays recorded; alarm tripped; boost flag.
+- **judge:** **clean** = every card recorded in order, no clash;
+  **complication** = completed but one clash recovered via Reset Pin;
+  **botched** = a clash tripped the alarm, or incomplete when called.
+- **Boosts (Tech):** **Reset Pin** — forgive one clash; the misplayed card goes
+  back to its holder's hand and was never counted.
+- **Dial lever:** cards per player (longer silent sequence = harder).
 - **minCommit:** **1 via `soloVariantId`**, true game at **2**. Silent
   coordination has no meaning solo, so solo loads a **separate memory variant**.
-- **soloVariantId:** `crack-the-tumblers-solo` — a memory test (recall and
-  replay a shown ascending sequence). Same lane, dial, boost; different
-  `Component`/`judge`. minCommit 1.
+- **soloVariantId:** `crack-the-tumblers-solo` — physical memory test: deal
+  `cardCount` random cards face-up in a row, study under the clock, flip
+  face-down in place, then flip back one at a time in ascending order. Every
+  reveal is public, so the whole table verifies each flip; the GM records.
 
 ### 2. Beat 16 — `beat-16`
 
 - **Lane:** Physical. **Facing:** GM.
 - **generate:** the target beat number to count to; the metronome tempo (BPM);
-  how many audible beats precede the mute.
-- **ChallengeState:** the tap timestamp(s); the measured delta from the target
-  beat; boost-used flag.
-- **judge:** **clean** = tap within the tight window; **complication** = within
-  the wider window (off but close); **botched** = outside the window / no tap.
-  (Pure-skill game — repeats with the dial, per the design doc.)
+  how many audible beats precede the mute; `reactionCompensationMs`.
+- **Play:** the player **slaps the table** on the target beat; the GM taps the
+  console the instant they hear it. The app credits back the hear-and-tap
+  reaction chain (`reactionCompensationMs`) and scores the player's slap,
+  then shows a big signed ms delta for the GM to reveal with drama.
+- **ChallengeState:** the tap timestamp; the reaction-adjusted delta from the
+  target beat; boost-used flag.
+- **judge:** **clean** = adjusted delta within the tight window;
+  **complication** = within the wider window (off but close); **botched** =
+  outside the window / no tap. (Pure-skill game — repeats with the dial.)
 - **Boosts (Physical):** **In the Bones** — two extra audible beats before the
   mute.
 - **Dial levers:** number of beats to count (more = harder); tempo.
@@ -284,13 +298,19 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 
 ### 4. The Once-Over — `the-once-over`
 
-- **Lane:** Stealth. **Facing:** GM.
-- **generate:** the card spread (~8–10 cards); the change applied after
-  screening (swap / flip / remove / rotate); how many changes.
-- **ChallengeState:** which card(s) the crew flagged as changed; the study
-  timer; boost-used flag.
-- **judge:** **clean** = correct change(s) spotted comfortably; **complication**
-  = spotted at the buzzer / one of several found; **botched** = wrong or none.
+- **Lane:** Stealth. **Facing:** GM (the cards face the table).
+- **generate:** the deal size (8–10) and **positional** change instructions —
+  "swap positions 2 and 7", "replace position 4 with the top card of the deck".
+  Positions, not card names: any random deal works, zero setup hunting. Swap
+  and replace are the two change types that leave no visual tell in a random
+  row (removals left holes that answered the puzzle themselves).
+- **Play:** deal any cards face-up in a row; crew studies under the clock; the
+  crew looks away while the GM applies the instructions (only the GM screen
+  shows them); reveal; the crew calls out what changed and the GM scores each
+  callout ✓ spotted / ✗ wrong call.
+- **ChallengeState:** hits; misses; study-expired; boost-used flag.
+- **judge:** **clean** = every change spotted; **complication** = some but not
+  all; **botched** = none.
 - **Boosts (Stealth):** **Hunch** — the GM gives a clue (pitched live).
 - **Dial levers:** longer study time; fewer changes (fewer items).
 - **minCommit:** **1.** Dial-only solo and 2–3.
@@ -332,23 +352,31 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
   **complication** = solved on the last guess; **botched** = guesses exhausted
   unsolved.
 - **Boost:** **Stethoscope** (reveal a digit's position). Fires for holder of Tech or Stealth power-up.
-- **Dial levers:** fewer digits in play (fewer items); more guesses (tolerance);
-  more time. Both lanes aggregate into one scalar — see §3 for the accepted
-  approximation note on per-lane differentiation.
+- **Dial levers:** more guesses (tolerance); more time. The code stays small —
+  3 digits, 4 only at high dial — and the guess budget never drops below
+  digits + 2: digit count and guesses must never scale against the player
+  simultaneously (a 6-digit/3-guess code is information-theoretically
+  unwinnable). Both lanes aggregate into one scalar — see §3.
 - **minCommit:** **1.** Dial-only solo and 2–3.
 
 ### 8. Assembly Line — `assembly-line`
 
 - **Lanes:** Physical + Charm. **Facing:** GM.
-- **generate:** the always-solvable deal (hand size; which set-types are
-  actually in play — *not necessarily one of each*); the timer.
-- **ChallengeState:** the timer; optional sets-complete tally; boost-used flags
-  (per lane).
-- **judge (GM-watched):** **clean** = everyone holds a complete set (regardless
+- **generate:** a shuffled 13-rank order + `decoysPerPlayer` (0 easy / 1 hard);
+  the timer. Set types are **ranks**: the setup panel tells the GM exactly what
+  to pull — all four of one rank per committed player, plus one decoy card per
+  player at high dial — shuffle, deal evenly. Always solvable (every set rank
+  fully present); decoys are junk that makes Tip-Off matter.
+- **Play:** open table talk allowed — co-op removes any reason to hide hands,
+  so this is a **communication-speed game** and the clock is deliberately
+  tight (45–120s; the negotiated variant gets 60–140s).
+- **ChallengeState:** the timer; sets-complete tally; boost-used flag.
+- **judge (GM-watched):** **clean** = everyone holds four of a kind (regardless
   of timer); **complication** = all-but-one / game in progress; **botched** =
   timer expired unsolved.
-- **Boost:** **Tip-Off** (reveal which set-types are in play). Fires for holder of Physical or Charm power-up.
-- **Dial levers:** hand size; number of types in play (fewer items); time.
+- **Boost:** **Tip-Off** (names the ranks in play — "no others, don't chase
+  them"). Fires for holder of Physical or Charm power-up.
+- **Dial levers:** decoys in the deal; time.
 - **minCommit:** **2.** **Excluded from solo** (no one to trade with). At **2**:
   the **negotiated-swap variant**. At **3+**: full Pit-style. True game at 3.
 - **soloVariantId:** none — solo is *ineligible*, not variant-served (§7).
@@ -356,8 +384,9 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 ### 9. Steady Hands — `steady-hands`
 
 - **Lanes:** Physical + Stealth. **Facing:** GM.
-- **generate:** the target tower height; the timer. (Pure-skill — repeats with
-  the dial.)
+- **generate:** the target tower height (2–4 — a "tier" is a real card-house
+  storey: two leaning cards capped flat; six tiers under a clock was fantasy);
+  the timer (60–150s). (Pure-skill — repeats with the dial.)
 - **ChallengeState:** the timer; boost-used flags (per lane). The tower itself
   is physical — the app does not sense it.
 - **judge (GM-judged):** **clean** = reached target height standing;
@@ -371,15 +400,21 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 - **Lanes:** Charm + Stealth. **Facing:** **Player** — one player privately sees
   the **rulebook** via the isolated `player-view` surface; the rest see the
   cards (the wires) on the table, not the rules. All other games are GM-facing.
-- **generate:** the wiring (a row of cards with properties); the rulebook (cut
-  rules read off card properties); the timer. Both regenerate each play.
-- **ChallengeState:** each "cut" entered (a card flipped face-down); safe vs
-  wrong-cut record; the timer; boost-used flags (per lane).
-- **judge (app fully judges):** the app generated both wiring and rules, so it
-  knows every correct cut. **clean** = all safe cuts, no wrong cut (regardless
-  of timer); **complication** = in progress (no wrong cut, not all safe cuts done
-  yet, timer still running); **botched** = a wrong cut trips the alarm / timer
-  expired before all safe cuts done.
+- **generate:** the deal size (4–8 wires) and the rulebook — cut rules over
+  **standard-pack properties** (colour, suit, face cards, value bands), so the
+  rules are decidable for ANY random deal; the timer. Exclusion groups prevent
+  degenerate rulebooks (never both colours, one value band max). Rules are
+  additive: cut every wire matching any rule; anything else trips the alarm.
+- **Play:** the GM deals random cards face-up as the wires; the reader holds
+  the rules on the player-view (and must not see the cards); the crew describes
+  the row (and must not see the rules); a named wire is cut by flipping it
+  face-down. The GM — the only one who can see both row and rules — records
+  ✓ safe cut / ✗ wrong cut and declares **all clear**.
+- **ChallengeState:** safe-cut count; wrong-cut flag; all-clear flag; the
+  timer; boost-used flag.
+- **judge (GM-recorded):** **clean** = all clear declared, no wrong cut
+  (regardless of timer); **complication** = still defusing; **botched** = a
+  wrong cut trips the alarm / timer expired first.
 - **Boost:** **Clear Channel** (one full sentence allowed). Fires for holder of Charm or Stealth power-up.
 - **Dial levers:** simpler rulebook; fewer wires (fewer items); more time.
 - **minCommit:** **2.** **Excluded from solo** — asymmetric info collapses with
