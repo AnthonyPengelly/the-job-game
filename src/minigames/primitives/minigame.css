@@ -1507,3 +1507,37 @@
   border: none; cursor: pointer;
 }
 .oj-confirm:hover { filter: brightness(1.1); }
+
+/* ============================================================
+   DEFUSE — one-laptop reader handoff (playtest wave 2)
+   ============================================================ */
+.dfz-setup-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+
+/* Fullscreen reader view: covers the whole console incl. HUD — the laptop is
+   in the reader's hands and must show nothing GM-only. */
+.dfz-reader-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--bg, #0a120d);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 28px; padding: 48px 6vw;
+}
+.dfz-reader-head { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.dfz-reader-head svg { color: var(--caution, #f7b84b); width: 28px; height: 28px; }
+.dfz-reader-title {
+  font-family: var(--font-display); font-weight: 800; font-size: 34px;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--caution, #f7b84b);
+}
+.dfz-reader-sub { font-family: var(--font-body); font-size: 16px; color: var(--fg-muted, #a4b2ad); max-width: 60ch; }
+
+.dfz-reader-rules {
+  margin: 0; padding-left: 1.5em; max-width: 70ch;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.dfz-reader-rules li {
+  font-family: var(--font-body); font-size: 24px; line-height: 1.45; color: var(--fg, #e8f0ec);
+}
+.dfz-reader-rules li:nth-last-child(-n+2) {
+  font-size: 17px; color: var(--fg-muted, #a4b2ad); list-style: none; margin-left: -1.5em;
+}
+
+.dfz-reader-foot { display: flex; flex-direction: column; align-items: center; gap: 18px; font-size: 22px; }

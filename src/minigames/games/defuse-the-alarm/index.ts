@@ -5,7 +5,8 @@ import type { DefuseState } from './judge';
 import { judge, clearChannelBoost } from './judge';
 import { DefuseComponent } from './component';
 
-export type { DefuseParams } from './generate';
+export type { DefuseParams, RuleClause, WireCard, WirePredicate, WireSuit } from './generate';
+export { classifyWires, matchesPredicate, renderRuleLines, clauseText } from './generate';
 export type { DefuseState } from './judge';
 
 export const defuseTheAlarm: MiniGame<DefuseParams, DefuseState> = {
@@ -18,8 +19,10 @@ export const defuseTheAlarm: MiniGame<DefuseParams, DefuseState> = {
   judge,
   boosts: [clearChannelBoost],
   armedInstructions:
-    'Deal a row of random cards face-up — the alarm wiring. One player (the reader) holds ' +
-    'the rulebook on the player-view and cannot see the cards; the crew sees the cards but not ' +
-    'the rules. They describe, the reader names the cuts, you referee. ' +
+    'Deal a row of random cards face-up — the alarm wiring. One player (the reader) gets the ' +
+    'rulebook and cannot see the cards; the crew sees the cards but not the rules. They ' +
+    'describe, the reader names the cuts. With a second screen the reader uses the ' +
+    'player-view and you referee live; with one laptop you hand THIS machine to the reader ' +
+    '(it shows only the rules and the clock) and check the row when it comes back. ' +
     'Clear Channel allows one full spoken sentence through; shout it once.',
 };

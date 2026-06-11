@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
@@ -90,7 +90,7 @@ describe('DefuseComponent — player-view slice', () => {
     const params = renderGame();
     expect(publishSlice).toHaveBeenCalledWith({
       kind: 'defuse-rulebook',
-      rules: params.cutRules.map(r => r.text),
+      rules: params.ruleLines,
       gameActive: true,
     });
   });
@@ -130,8 +130,8 @@ describe('DefuseComponent — GM rulebook', () => {
   it('shows every rule in the GM-only fold once dealt', () => {
     const params = renderGame();
     dealWires();
-    params.cutRules.forEach((rule, i) => {
-      expect(screen.getByTestId(`defuse-gm-rule-${i}`).textContent).toBe(rule.text);
+    params.ruleLines.forEach((line, i) => {
+      expect(screen.getByTestId(`defuse-gm-rule-${i}`).textContent).toBe(line);
     });
   });
 });
@@ -175,5 +175,80 @@ describe('DefuseComponent — onResolve', () => {
     fireEvent.click(screen.getByTestId('defuse-wrong-cut'));
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledWith('botched');
+  });
+});
+
+// ── One-laptop handoff (playtest wave 2) ──────────────────────────────────────
+
+describe('DefuseComponent — laptop handoff flow', () => {
+  it('setup offers both paths: second screen and one-laptop handoff', () => {
+    renderGame();
+    expect(screen.getByTestId('defuse-dealt')).toBeInTheDocument();
+    expect(screen.getByTestId('defuse-handoff')).toBeInTheDocument();
+  });
+
+  it('handoff shows ONLY the fullscreen reader view — no GM controls', () => {
+    const params = renderGame();
+    fireEvent.click(screen.getByTestId('defuse-handoff'));
+    expect(screen.getByTestId('defuse-reader-overlay')).toBeInTheDocument();
+    // The rulebook is fully visible to the reader...
+    params.ruleLines.forEach((line, i) => {
+      expect(screen.getByTestId(`defuse-reader-rule-${i}`).textContent).toBe(line);
+    });
+    // ...and the timer runs...
+    expect(screen.getByTestId('timer')).toBeInTheDocument();
+    // ...but nothing GM-only leaks onto the handed-over screen.
+    expect(screen.queryByTestId('defuse-record-controls')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('defuse-rulebook-gm')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('btn-call-outcome')).not.toBeInTheDocument();
+  });
+
+  it('handing back moves to adjudication: record controls + rules return', () => {
+    renderGame();
+    fireEvent.click(screen.getByTestId('defuse-handoff'));
+    fireEvent.click(screen.getByTestId('defuse-handback'));
+    expect(screen.queryByTestId('defuse-reader-overlay')).not.toBeInTheDocument();
+    expect(screen.getByTestId('defuse-record-controls')).toBeInTheDocument();
+    expect(screen.getByTestId('defuse-rulebook-gm')).toBeInTheDocument();
+    expect(screen.getByTestId('defuse-badge').textContent).toContain('Checking');
+  });
+
+  it('retrospective adjudication feeds the same judge: all clear → clean', () => {
+    const spy = vi.fn();
+    renderGame({ onResolve: spy });
+    fireEvent.click(screen.getByTestId('defuse-handoff'));
+    fireEvent.click(screen.getByTestId('defuse-handback'));
+    fireEvent.click(screen.getByTestId('defuse-safe-cut'));
+    fireEvent.click(screen.getByTestId('defuse-all-clear'));
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    expect(spy).toHaveBeenCalledWith('clean');
+  });
+
+  it('a wrong cut found while checking the work → botched', () => {
+    const spy = vi.fn();
+    renderGame({ onResolve: spy });
+    fireEvent.click(screen.getByTestId('defuse-handoff'));
+    fireEvent.click(screen.getByTestId('defuse-handback'));
+    fireEvent.click(screen.getByTestId('defuse-wrong-cut'));
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    expect(spy).toHaveBeenCalledWith('botched');
+  });
+
+  it('timer expiry during handoff returns the laptop to adjudication with a TIME note', () => {
+    vi.useFakeTimers();
+    try {
+      const params = renderGame();
+      fireEvent.click(screen.getByTestId('defuse-handoff'));
+      // Walk the whole clock down one second per act (Timer chains setTimeout).
+      for (let i = 0; i < params.timerSeconds; i++) {
+        act(() => { vi.advanceTimersByTime(1000); });
+      }
+      expect(screen.queryByTestId('defuse-reader-overlay')).not.toBeInTheDocument();
+      expect(screen.getByTestId('defuse-time-ran-out')).toBeInTheDocument();
+      // The GM can still record what the row shows — no dead-end.
+      expect(screen.getByTestId('defuse-record-controls')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

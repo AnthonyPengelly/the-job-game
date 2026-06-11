@@ -1,13 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
-import { generate } from './generate';
+import { generate, classifyWires, renderRuleLines } from './generate';
+import type { WireCard, WireSuit } from './generate';
 import { judge, clearChannelBoost } from './judge';
 import type { DefuseState } from './judge';
 import { defuseTheAlarm } from './index';
 import { getGame } from '@/minigames/registry';
 
 const dial = (level: number): Difficulty => ({ level });
+
+const SUITS: readonly WireSuit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
+
+/** Deal `n` unique cards from a 52-card pack via the seeded RNG. */
+function randomDeal(rng: ReturnType<typeof mulberry32>, n: number): WireCard[] {
+  const pack: WireCard[] = [];
+  for (const suit of SUITS) {
+    for (let rank = 1; rank <= 13; rank++) pack.push({ rank, suit });
+  }
+  const deal: WireCard[] = [];
+  for (let i = 0; i < n; i++) {
+    const idx = Math.floor(rng.next() * pack.length);
+    deal.push(pack.splice(idx, 1)[0]!);
+  }
+  return deal;
+}
 
 // ── Registry ──────────────────────────────────────────────────────────────────
 
@@ -40,49 +57,77 @@ describe('defuseTheAlarm registry', () => {
 
 // ── Generator ────────────────────────────────────────────────────────────────
 
-describe('generate — property rules over a physical deal', () => {
+describe('generate — first-match rulebooks over a physical deal', () => {
   it('same seed + same dial ⇒ identical params', () => {
     const d = dial(0);
     expect(generate(mulberry32(7), d)).toEqual(generate(mulberry32(7), d));
   });
 
-  it('different seed + same dial ⇒ rules may differ (RNG draws the rulebook)', () => {
-    const d = dial(2);
-    const a = generate(mulberry32(1), d);
-    const b = generate(mulberry32(987), d);
-    expect(a.wireCount).toBe(b.wireCount);
-    expect(a.timerSeconds).toBe(b.timerSeconds);
-    // rule draw is seed-dependent; ids must always be unique within a rulebook
-    expect(new Set(a.cutRules.map(r => r.id)).size).toBe(a.cutRules.length);
+  it('always contains at least one cutting clause (something to do)', () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      const p = generate(mulberry32(seed), dial((seed % 5) - 1));
+      const cutting = p.clauses.filter(c => c.type === 'cut' || c.type === 'cutTop');
+      expect(cutting.length).toBeGreaterThan(0);
+    }
   });
 
-  it('cutRules is non-empty and every rule has display text', () => {
-    const p = generate(mulberry32(42), dial(0));
-    expect(p.cutRules.length).toBeGreaterThan(0);
-    p.cutRules.forEach(r => expect(r.text.length).toBeGreaterThan(0));
+  it('every clause renders to a non-empty rulebook line', () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const p = generate(mulberry32(seed), dial(2));
+      expect(p.ruleLines.length).toBeGreaterThanOrEqual(p.clauses.length + 1);
+      p.ruleLines.forEach(line => expect(line.length).toBeGreaterThan(0));
+      expect(p.ruleLines).toEqual(renderRuleLines(p.clauses));
+    }
   });
 
-  it('never draws both colour rules (everything-safe rulebooks are degenerate)', () => {
-    for (let seed = 1; seed <= 60; seed++) {
-      const p = generate(mulberry32(seed), dial(4)); // max rules
-      const colours = p.cutRules.filter(r => r.kind === 'color');
+  it('never draws both colour cuts (everything-cut rulebooks are degenerate)', () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      const p = generate(mulberry32(seed), dial(4)); // max complexity
+      const colours = p.clauses.filter(c => c.type === 'cut' && c.pred.kind === 'color');
       expect(colours.length).toBeLessThanOrEqual(1);
     }
   });
 
-  it('never draws both value-band rules', () => {
-    for (let seed = 1; seed <= 60; seed++) {
+  it('never draws both value bands across cuts and unless riders', () => {
+    for (let seed = 1; seed <= 100; seed++) {
       const p = generate(mulberry32(seed), dial(4));
-      const bands = p.cutRules.filter(r => r.kind === 'low' || r.kind === 'high');
-      expect(bands.length).toBeLessThanOrEqual(1);
+      let bands = 0;
+      for (const c of p.clauses) {
+        if (c.type === 'cut') {
+          if (c.pred.kind === 'low' || c.pred.kind === 'high') bands++;
+          if (c.unless?.kind === 'low' || c.unless?.kind === 'high') bands++;
+        }
+      }
+      expect(bands).toBeLessThanOrEqual(1);
     }
   });
 
-  it('higher dial ⇒ more or equal wires, rules; less or equal time', () => {
+  it('a face protection never coexists with a face cut or face unless (dead rules)', () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      const p = generate(mulberry32(seed), dial(4));
+      const keepFace = p.clauses.some(c => c.type === 'keep' && c.pred.kind === 'face');
+      if (!keepFace) continue;
+      for (const c of p.clauses) {
+        if (c.type === 'cut') {
+          expect(c.pred.kind).not.toBe('face');
+          expect(c.unless?.kind).not.toBe('face');
+        }
+      }
+    }
+  });
+
+  it('at most one positional ban per rulebook', () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      const p = generate(mulberry32(seed), dial(4));
+      const positions = p.clauses.filter(c => c.type === 'keepPosition');
+      expect(positions.length).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('higher dial ⇒ more or equal wires; less or equal time', () => {
     const easy = generate(mulberry32(1), dial(-2));
     const hard = generate(mulberry32(1), dial(3));
     expect(hard.wireCount).toBeGreaterThanOrEqual(easy.wireCount);
-    expect(hard.cutRules.length).toBeGreaterThanOrEqual(easy.cutRules.length);
     expect(hard.timerSeconds).toBeLessThanOrEqual(easy.timerSeconds);
   });
 
@@ -100,6 +145,125 @@ describe('generate — property rules over a physical deal', () => {
       expect(p.timerSeconds).toBeGreaterThanOrEqual(60);
       expect(p.timerSeconds).toBeLessThanOrEqual(180);
     }
+  });
+
+  it('the richer shapes all occur across seeds (unless, positional, protection, count-based)', () => {
+    const seen = { unless: false, position: false, keep: false, cutTop: false };
+    for (let seed = 1; seed <= 400; seed++) {
+      const p = generate(mulberry32(seed), dial(4));
+      for (const c of p.clauses) {
+        if (c.type === 'cut' && c.unless !== undefined) seen.unless = true;
+        if (c.type === 'keepPosition') seen.position = true;
+        if (c.type === 'keep') seen.keep = true;
+        if (c.type === 'cutTop') seen.cutTop = true;
+      }
+    }
+    expect(seen).toEqual({ unless: true, position: true, keep: true, cutTop: true });
+  });
+});
+
+// ── Decidability property test (playtest wave 2 acceptance) ───────────────────
+
+describe('classifyWires — every card classifies unambiguously for any deal', () => {
+  it('1000 seeds × random 8-card deals: total, deterministic, never throws', () => {
+    for (let seed = 1; seed <= 1000; seed++) {
+      const rng = mulberry32(seed);
+      const level = (seed % 6) - 1; // sweep dial −1..4
+      const params = generate(rng, dial(level));
+      const deal = randomDeal(rng, 8);
+
+      const verdicts = classifyWires(params.clauses, deal);
+      expect(verdicts).toHaveLength(deal.length);
+      for (const v of verdicts) {
+        expect(v === 'cut' || v === 'keep').toBe(true);
+      }
+      // Deterministic: same rulebook + same deal ⇒ same verdicts.
+      expect(classifyWires(params.clauses, deal)).toEqual(verdicts);
+    }
+  });
+
+  it('rulebooks never cut the entire pack (degenerate everything-cut) across 500 seeds', () => {
+    // A specific 8-card deal may legitimately be all-covered; degeneracy means
+    // the RULEBOOK cuts every card that exists. Classify the full 52-card pack.
+    const pack: WireCard[] = [];
+    for (const suit of SUITS) {
+      for (let rank = 1; rank <= 13; rank++) pack.push({ rank, suit });
+    }
+    for (let seed = 1; seed <= 500; seed++) {
+      const rng = mulberry32(seed);
+      const params = generate(rng, dial(4));
+      const verdicts = classifyWires(params.clauses, pack);
+      expect(verdicts).toContain('keep');
+      // And never everything-keep either — there is always something to cut.
+      expect(verdicts).toContain('cut');
+    }
+  });
+
+  it('first-match-wins: a protection placed before a cut shields matching wires', () => {
+    const verdicts = classifyWires(
+      [
+        { type: 'keep', pred: { kind: 'face' } },
+        { type: 'cut', pred: { kind: 'color', color: 'black' } },
+      ],
+      [
+        { rank: 12, suit: 'spades' }, // black face → kept by rule 1
+        { rank: 4, suit: 'clubs' }, // black non-face → cut by rule 2
+        { rank: 12, suit: 'hearts' }, // red face → kept by rule 1
+        { rank: 4, suit: 'diamonds' }, // uncovered → default keep
+      ],
+    );
+    expect(verdicts).toEqual(['keep', 'cut', 'keep', 'keep']);
+  });
+
+  it('unless exempts from one clause but later clauses may still cut', () => {
+    const verdicts = classifyWires(
+      [
+        { type: 'cut', pred: { kind: 'color', color: 'black' }, unless: { kind: 'face' } },
+        { type: 'cut', pred: { kind: 'high' } },
+      ],
+      [
+        { rank: 11, suit: 'spades' }, // black face → exempt from 1, high? no (faces don't count) → keep
+        { rank: 9, suit: 'clubs' }, // black 9 → cut by rule 1
+        { rank: 10, suit: 'hearts' }, // red 10 → rule 1 no, rule 2 cut
+      ],
+    );
+    expect(verdicts).toEqual(['keep', 'cut', 'cut']);
+  });
+
+  it('positional ban protects only the named end', () => {
+    const deal: WireCard[] = [
+      { rank: 2, suit: 'clubs' },
+      { rank: 3, suit: 'spades' },
+      { rank: 4, suit: 'clubs' },
+    ];
+    const verdicts = classifyWires(
+      [
+        { type: 'keepPosition', pos: 'leftmost' },
+        { type: 'cut', pred: { kind: 'color', color: 'black' } },
+      ],
+      deal,
+    );
+    expect(verdicts).toEqual(['keep', 'cut', 'cut']);
+  });
+
+  it('count-based cut takes the N highest of the suit and keeps the rest of it', () => {
+    const deal: WireCard[] = [
+      { rank: 12, suit: 'hearts' },
+      { rank: 7, suit: 'hearts' },
+      { rank: 2, suit: 'hearts' },
+      { rank: 13, suit: 'spades' },
+    ];
+    const verdicts = classifyWires([{ type: 'cutTop', count: 2, suit: 'hearts' }], deal);
+    expect(verdicts).toEqual(['cut', 'cut', 'keep', 'keep']);
+  });
+
+  it('count-based cut with fewer suit cards than the count cuts what exists', () => {
+    const deal: WireCard[] = [
+      { rank: 7, suit: 'hearts' },
+      { rank: 13, suit: 'spades' },
+    ];
+    const verdicts = classifyWires([{ type: 'cutTop', count: 2, suit: 'hearts' }], deal);
+    expect(verdicts).toEqual(['cut', 'keep']);
   });
 });
 
