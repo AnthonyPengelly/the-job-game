@@ -44,6 +44,9 @@ const validBank = {
   roomApproach: [
     { id: 'ra-1', text: 'Stack up — room {roomNum}.' },
   ],
+  scenarioApproach: [
+    { id: 'sa-1', text: 'Hold up — room {roomNum} is a situation, not a job.' },
+  ],
   scenarioReveal: [
     { id: 'sr-1', text: 'The call is made. {outcome}.' },
   ],

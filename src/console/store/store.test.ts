@@ -25,6 +25,7 @@ const makeNarrationFixture = (): ParsedNarration => {
     winSting: variants('ws', 6),
     bustSting: variants('bs', 6),
     roomApproach: variants('ra', 4),
+    scenarioApproach: variants('sap', 4),
     scenarioReveal: variants('sr', 4),
   };
 };

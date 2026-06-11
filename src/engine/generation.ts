@@ -221,11 +221,13 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
       {
         id: template.choices[0].id,
         label: template.choices[0].label,
+        ...(template.choices[0].flavour !== undefined && { flavour: template.choices[0].flavour }),
         isRoll: 'roll' in template.choices[0],
       },
       {
         id: template.choices[1].id,
         label: template.choices[1].label,
+        ...(template.choices[1].flavour !== undefined && { flavour: template.choices[1].flavour }),
         isRoll: 'roll' in template.choices[1],
       },
     ];

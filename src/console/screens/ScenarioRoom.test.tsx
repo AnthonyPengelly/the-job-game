@@ -39,6 +39,7 @@ function makeNarrationFixture(): ParsedNarration {
     winSting: variants('ws', 6),
     bustSting: variants('bs', 6),
     roomApproach: variants('ra', 4),
+    scenarioApproach: variants('sap', 4),
     scenarioReveal: variants('sr', 4),
   };
 }
@@ -90,17 +91,22 @@ const rollScenarioCfg = {
           {
             id: 'sr-roll',
             label: 'Talk your way out',
+            flavour: 'Words are free. Mostly.',
             roll: {
               lane: 'charm' as const,
               baseDifficulty: 13,
               success: { heatDelta: -1, lootDelta: 1 },
               failure: { heatDelta: 2, lootDelta: 0 },
+              aftermathSuccess: 'The guard laughs at your joke and waves you through.',
+              aftermathFailure: 'The guard reaches for the radio. Walk faster.',
             },
           },
           {
             id: 'sr-effect',
             label: 'Hide quietly',
+            flavour: 'Patience is a tool too.',
             effect: { heatDelta: 0, lootDelta: 0 },
+            aftermath: 'You count dust motes until the footsteps fade.',
           },
         ] as [ScenarioChoiceDef, ScenarioChoiceDef],
       },
@@ -367,6 +373,57 @@ describe('ScenarioRoom stage one (opaque) — roll scenario', () => {
     renderRollRoom();
     expect(screen.getByTestId('choice-foot-sr-roll')).toHaveTextContent('Outcome hidden · may need a roll');
     expect(screen.getByTestId('choice-foot-sr-effect')).toHaveTextContent('Outcome hidden · no roll');
+  });
+
+  it('shows the choice flavour line on the blind card (playtest wave 2)', () => {
+    renderRollRoom();
+    expect(screen.getByTestId('choice-flavour-sr-roll')).toHaveTextContent('Words are free. Mostly.');
+    expect(screen.getByTestId('choice-flavour-sr-effect')).toHaveTextContent('Patience is a tool too.');
+  });
+
+  it('flavour does not leak the hidden effect (no numbers, no heat/loot words)', () => {
+    renderRollRoom();
+    for (const id of ['sr-roll', 'sr-effect']) {
+      const flavour = screen.getByTestId(`choice-flavour-${id}`).textContent ?? '';
+      expect(flavour).not.toMatch(/[+-]\d/);
+    }
+  });
+});
+
+// ── Aftermath story closure (playtest wave 2) ─────────────────────────────────
+
+describe('ScenarioRoom aftermath lines', () => {
+  it('no-roll reveal shows the aftermath line with the effect', () => {
+    const { store } = renderRollRoom();
+    fireEvent.click(screen.getByTestId('btn-choice-sr-effect'));
+    fireEvent.click(screen.getByTestId('btn-confirm'));
+    expect(store.getState().session.present.currentRoom?.kind).toBe('scenario');
+    expect(screen.getByTestId('effect-aftermath')).toHaveTextContent(
+      'You count dust motes until the footsteps fade.',
+    );
+  });
+
+  it('roll result shows the success aftermath when the roll passes', () => {
+    const { store } = renderRollRoom();
+    advanceToRollReveal(store);
+    // Force a pass with an external (physical) roll of 20.
+    act(() => {
+      store.getState().dispatch({ t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 20 });
+    });
+    expect(screen.getByTestId('result-aftermath')).toHaveTextContent(
+      'The guard laughs at your joke and waves you through.',
+    );
+  });
+
+  it('roll result shows the failure aftermath when the roll misses', () => {
+    const { store } = renderRollRoom();
+    advanceToRollReveal(store);
+    act(() => {
+      store.getState().dispatch({ t: 'RESOLVE_SCENARIO_ROLL', externalRoll: 1 });
+    });
+    expect(screen.getByTestId('result-aftermath')).toHaveTextContent(
+      'The guard reaches for the radio. Walk faster.',
+    );
   });
 });
 

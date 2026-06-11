@@ -191,6 +191,7 @@ function makeResultNarrationFixture(): ParsedNarration {
       { id: 'bs-3', text: 'Bust sting line D' },
     ],
     roomApproach: variants('ra', 4),
+    scenarioApproach: variants('sap', 4),
     scenarioReveal: variants('sr', 4),
   };
 }

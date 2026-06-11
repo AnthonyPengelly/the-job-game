@@ -80,6 +80,8 @@ export const narrationSchema = z
   .object({
     briefing: beatSchema,
     roomApproach: beatSchema,
+    /** Scene-set for scenario rooms — a judgement call, not a two-door job. */
+    scenarioApproach: beatSchema,
     obstacleClue: beatSchema,
     optionDescription: beatSchema,
     pushRun: beatSchema,

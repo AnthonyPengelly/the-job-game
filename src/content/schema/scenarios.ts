@@ -38,17 +38,26 @@ const scenarioRollSpecSchema = z.object({
   baseDifficulty: z.number().int().min(1).max(20),
   success: scenarioEffectSchema,
   failure: scenarioEffectSchema,
+  /** Van-narrator closure line read with the success reveal (playtest wave 2). */
+  aftermathSuccess: z.string().min(1),
+  /** Van-narrator closure line read with the failure reveal. */
+  aftermathFailure: z.string().min(1),
 }).strict();
 
 const scenarioChoiceDefSchema = z.union([
   z.object({
     id: z.string().min(1),
     label: z.string().min(1),
+    /** One-line hook shown on the blind choice card. */
+    flavour: z.string().min(1),
     effect: scenarioEffectSchema,
+    /** Van-narrator closure line read with the revealed effect. */
+    aftermath: z.string().min(1),
   }).strict(),
   z.object({
     id: z.string().min(1),
     label: z.string().min(1),
+    flavour: z.string().min(1),
     roll: scenarioRollSpecSchema,
   }).strict(),
 ]);

@@ -34,6 +34,11 @@ function ChoiceCard({ choice, index, onSelect }: ChoiceCardProps) {
     >
       <span className="ltr">{choiceLetter(index)}</span>
       <h4>{choice.label}</h4>
+      {choice.flavour !== undefined && choice.flavour !== '' && (
+        <p className="prose muted" data-testid={`choice-flavour-${choice.id}`} style={{ fontSize: 14 }}>
+          {choice.flavour}
+        </p>
+      )}
       <div className="hidden-foot" data-testid={`choice-foot-${choice.id}`}>
         {choice.isRoll ? 'Outcome hidden · may need a roll' : 'Outcome hidden · no roll'}
       </div>
@@ -288,6 +293,7 @@ function RollReveal() {
 
 function RollResult() {
   const room = useGameStore(s => s.session.present.currentRoom);
+  const cfg = useGameStore(s => s.cfg);
   const dispatch = useGameStore(s => s.dispatch);
 
   if (room === null || room.kind !== 'scenario' || room.resolvedRoll === undefined) return null;
@@ -295,6 +301,15 @@ function RollResult() {
   const { resolvedRoll } = room;
   const { roll, dc, result, lootDelta, heatDelta, gear } = resolvedRoll;
   const pass = roll >= dc;
+
+  // Story closure: the aftermath line for the rolled choice (playtest wave 2 —
+  // bare numbers with no narrative "why" left the table cold).
+  const scenarioDef = cfg.roomTemplates.scenarios.find(t => t.id === room.templateId);
+  const choiceDef = scenarioDef?.choices.find(c => c.id === resolvedRoll.choiceId);
+  const aftermath =
+    choiceDef !== undefined && 'roll' in choiceDef
+      ? (pass ? choiceDef.roll.aftermathSuccess : choiceDef.roll.aftermathFailure)
+      : undefined;
 
   const resultColour =
     result === 'clean'
@@ -310,6 +325,12 @@ function RollResult() {
     <div data-testid="roll-result" className="scwrap">
       <div className="reveal" style={{ borderColor: resultColour }}>
         <span className="rk" style={{ color: resultColour }}>Roll resolved</span>
+
+        {aftermath !== undefined && aftermath !== '' && (
+          <p className="prose" data-testid="result-aftermath" style={{ fontSize: 17 }}>
+            {aftermath}
+          </p>
+        )}
 
         {/* d20 result vs DC */}
         <div className="equation">
@@ -411,6 +432,11 @@ function NoRollReveal({ choiceDef }: NoRollRevealProps) {
       <div className="effect">
         <span className="eyebrow">Hidden effect revealed</span>
         <h3>{choiceDef.label}</h3>
+        {choiceDef.aftermath !== undefined && choiceDef.aftermath !== '' && (
+          <p className="prose" data-testid="effect-aftermath" style={{ fontSize: 17 }}>
+            {choiceDef.aftermath}
+          </p>
+        )}
         <div className="consq">
           <div className="c">
             <span className="k">Loot</span>
@@ -501,8 +527,10 @@ export function ScenarioRoom() {
 
   const [lines] = useState<string[]>(() => {
     if (!director || room?.kind !== 'scenario') return [];
+    // scenarioApproach, not roomApproach — this is a judgement call, not a
+    // two-door job, and the obstacle approach lines say "two doors" out loud.
     return [
-      ...director.script('roomApproach', { roomNum, crew: crewNames }),
+      ...director.script('scenarioApproach', { roomNum, crew: crewNames }),
       ...director.script('scenarioSetup', { roomNum, crew: crewNames }),
     ];
   });
