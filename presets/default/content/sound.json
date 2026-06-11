@@ -6,7 +6,12 @@
       "channel": "ambient",
       "loop": true,
       "gain": 0.6,
-      "phases": ["briefing", "room", "minigame", "offer"]
+      "phases": [
+        "briefing",
+        "room",
+        "minigame",
+        "offer"
+      ]
     },
     {
       "id": "ambient-heartbeat",
@@ -14,21 +19,33 @@
       "channel": "ambient",
       "loop": true,
       "gain": 0.8,
-      "phases": ["briefing", "room", "minigame", "offer"]
+      "phases": [
+        "briefing",
+        "room",
+        "minigame",
+        "offer"
+      ]
     },
     {
       "id": "sfx-lock",
       "src": "sound/sfx-lock.wav",
       "channel": "heistSfx",
       "gain": 1.0,
-      "phases": ["room", "minigame"]
+      "phases": [
+        "room",
+        "minigame"
+      ]
     },
     {
       "id": "sfx-footstep",
       "src": "sound/sfx-footstep.wav",
       "channel": "heistSfx",
       "gain": 0.9,
-      "phases": ["room", "minigame", "offer"]
+      "phases": [
+        "room",
+        "minigame",
+        "offer"
+      ]
     },
     {
       "id": "sfx-tick",
@@ -36,63 +53,96 @@
       "channel": "heistSfx",
       "loop": true,
       "gain": 0.85,
-      "phases": ["room", "minigame", "getaway"]
+      "phases": [
+        "room",
+        "minigame",
+        "getaway"
+      ]
     },
     {
       "id": "sfx-wiresnip",
       "src": "sound/sfx-wiresnip.wav",
       "channel": "heistSfx",
       "gain": 1.0,
-      "phases": ["room", "minigame"]
+      "phases": [
+        "room",
+        "minigame"
+      ]
     },
     {
       "id": "sfx-chaching",
       "src": "sound/sfx-chaching.wav",
       "channel": "heistSfx",
       "gain": 1.0,
-      "phases": ["room", "minigame", "offer", "getaway", "result"]
+      "phases": [
+        "room",
+        "minigame",
+        "offer",
+        "getaway",
+        "result"
+      ]
     },
     {
       "id": "sfx-gear",
       "src": "sound/sfx-gear.wav",
       "channel": "heistSfx",
       "gain": 0.9,
-      "phases": ["briefing", "room", "offer"]
+      "phases": [
+        "briefing",
+        "room",
+        "offer"
+      ]
     },
     {
       "id": "sting-win",
       "src": "sound/sting-win.wav",
       "channel": "sting",
       "gain": 1.0,
-      "phases": ["result"]
+      "phases": [
+        "result"
+      ]
     },
     {
       "id": "sting-bust",
       "src": "sound/sting-bust.wav",
       "channel": "sting",
       "gain": 1.0,
-      "phases": ["result"]
+      "phases": [
+        "result"
+      ]
     },
     {
       "id": "sting-clean",
       "src": "sound/sting-clean.wav",
       "channel": "sting",
       "gain": 0.9,
-      "phases": ["room", "minigame", "offer"]
+      "phases": [
+        "room",
+        "minigame",
+        "offer"
+      ]
     },
     {
       "id": "sting-complication",
       "src": "sound/sting-complication.wav",
       "channel": "sting",
       "gain": 0.9,
-      "phases": ["room", "minigame", "offer"]
+      "phases": [
+        "room",
+        "minigame",
+        "offer"
+      ]
     },
     {
       "id": "sting-botch",
       "src": "sound/sting-botch.wav",
       "channel": "sting",
       "gain": 1.0,
-      "phases": ["room", "minigame", "offer"]
+      "phases": [
+        "room",
+        "minigame",
+        "offer"
+      ]
     },
     {
       "id": "danger-alarm",
@@ -100,14 +150,20 @@
       "channel": "danger",
       "loop": true,
       "gain": 1.0,
-      "phases": ["room", "minigame", "offer"]
+      "phases": [
+        "room",
+        "minigame",
+        "offer"
+      ]
     },
     {
       "id": "finale-escape",
       "src": "sound/finale-escape.wav",
       "channel": "finale",
       "gain": 1.0,
-      "phases": ["getaway"]
+      "phases": [
+        "getaway"
+      ]
     },
     {
       "id": "finale-engine",
@@ -115,21 +171,78 @@
       "channel": "finale",
       "loop": true,
       "gain": 0.8,
-      "phases": ["getaway"]
+      "phases": [
+        "getaway"
+      ]
     },
     {
       "id": "finale-tyres",
       "src": "sound/finale-tyres.wav",
       "channel": "finale",
       "gain": 1.0,
-      "phases": ["getaway"]
+      "phases": [
+        "getaway"
+      ]
     },
     {
       "id": "finale-credits",
       "src": "sound/finale-credits.wav",
       "channel": "finale",
       "gain": 0.8,
-      "phases": ["getaway", "result"]
+      "phases": [
+        "getaway",
+        "result"
+      ]
+    },
+    {
+      "id": "danger-siren",
+      "src": "sound/danger-siren.wav",
+      "channel": "danger",
+      "loop": true,
+      "gain": 0.8,
+      "phases": [
+        "room",
+        "minigame",
+        "offer",
+        "getaway"
+      ]
+    },
+    {
+      "id": "danger-helicopter",
+      "src": "sound/danger-helicopter.wav",
+      "channel": "danger",
+      "loop": true,
+      "gain": 0.85,
+      "phases": [
+        "room",
+        "minigame",
+        "offer",
+        "getaway"
+      ]
+    },
+    {
+      "id": "sfx-radio-chatter",
+      "src": "sound/sfx-radio-chatter.wav",
+      "channel": "heistSfx",
+      "gain": 0.9,
+      "phases": [
+        "briefing",
+        "room",
+        "minigame",
+        "offer",
+        "getaway"
+      ]
+    },
+    {
+      "id": "ambient-tension",
+      "src": "sound/ambient-tension.wav",
+      "channel": "ambient",
+      "loop": true,
+      "gain": 0.7,
+      "phases": [
+        "room",
+        "minigame"
+      ]
     }
   ],
   "ambientBed": {
