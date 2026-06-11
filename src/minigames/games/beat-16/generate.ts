@@ -12,6 +12,12 @@ export interface Beat16Params {
   cleanWindowMs: number;
   /** Half-width of the complication window in milliseconds. */
   complicationWindowMs: number;
+  /**
+   * Subtracted from the GM's tap time before scoring. The player slaps the
+   * table and the GM taps the moment they hear it — this compensates for that
+   * hear-and-tap reaction chain so the player is scored on their slap.
+   */
+  reactionCompensationMs: number;
 }
 
 function clamp(n: number, lo: number, hi: number): number {
@@ -43,7 +49,9 @@ export function generate(rng: Rng, dial: Difficulty): Beat16Params {
     targetBeat,
     bpm,
     audibleBeats,
-    cleanWindowMs: 200,
-    complicationWindowMs: 500,
+    // Windows allow for the player-slap → GM-tap judging chain (two humans).
+    cleanWindowMs: 250,
+    complicationWindowMs: 600,
+    reactionCompensationMs: 200,
   };
 }

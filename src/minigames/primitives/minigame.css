@@ -432,6 +432,21 @@
   gap: 0.5rem;
 }
 
+.b16-reveal-delta {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 5rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--fg, #e8f0ec);
+}
+
+.b16-reveal-unit {
+  font-size: 1.5rem;
+  margin-left: 0.35rem;
+  color: var(--fg-muted, #a4b2ad);
+}
+
 .b16-feedback {
   font-family: var(--font-display);
   font-weight: 800;

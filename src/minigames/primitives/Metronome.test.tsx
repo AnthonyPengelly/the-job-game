@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import type { AudioClock } from '@/platform/audio';
-import { useMetronome, isBeatAudible } from './Metronome';
+import { useMetronome, isBeatAudible, createResilientNow } from './Metronome';
 
 /** Mirrors the TICK_MS constant in Metronome.tsx — the scheduler polling interval. */
 const TICK_MS = 25;
@@ -97,9 +97,13 @@ describe('useMetronome — clock-based timing (audio clock, not setTimeout)', ()
     };
   }
 
-  it('beats do NOT fire when wall time advances but audio clock stays at 0', () => {
+  it('beats are time-anchored: no advancing time source ⇒ no beats, however many ticks', () => {
     const audioNow = 0;
     const clock = makeMockClock(() => audioNow);
+    // Freeze the wall clock too — with a stalled audio clock the metronome falls
+    // back to wall time after the probe window; freezing both proves beats are
+    // driven by a time source, never by tick counts.
+    const perfSpy = vi.spyOn(performance, 'now').mockImplementation(() => 0);
 
     const { result } = renderHook(() =>
       useMetronome({ bpm: 60, audibleBeats: 0, clock }),
@@ -108,12 +112,9 @@ describe('useMetronome — clock-based timing (audio clock, not setTimeout)', ()
     const beats: number[] = [];
     act(() => { result.current.onBeat((n) => beats.push(n)); });
 
-    // Advance wall time / setInterval a full minute — audio clock stays at 0
     act(() => { vi.advanceTimersByTime(60_000); });
-    // nextBeatTime starts at clock.now() + 0.1 = 0.1.
-    // tick checks: nextBeatTime(0.1) < now(0) + 0.1(0.1) → 0.1 < 0.1 → false.
-    // No beats should have fired.
     expect(beats.length).toBe(0);
+    perfSpy.mockRestore();
   });
 
   it('beats fire once audio clock advances past the lookahead threshold', () => {
@@ -127,8 +128,8 @@ describe('useMetronome — clock-based timing (audio clock, not setTimeout)', ()
     const beats: number[] = [];
     act(() => { result.current.onBeat((n) => beats.push(n)); });
 
-    // Wall time only — no beats
-    act(() => { vi.advanceTimersByTime(60_000); });
+    // A couple of ticks with the clock still at 0 (inside the stall-probe window)
+    act(() => { vi.advanceTimersByTime(TICK_MS * 2); });
     expect(beats.length).toBe(0);
 
     // Advance audio clock just past the lookahead: nextBeatTime=0.1, need now > 0
@@ -302,3 +303,63 @@ describe('useMetronome — clock-based timing (audio clock, not setTimeout)', ()
   });
 });
 
+
+describe('createResilientNow (stalled audio clock fallback)', () => {
+  it('passes through audio time while the source advances', () => {
+    let audioNow = 1.0;
+    const time = createResilientNow(() => audioNow);
+    audioNow = 1.5;
+    expect(time.now()).toBe(1.5);
+    expect(time.usingWallClock()).toBe(false);
+  });
+
+  it('falls back to wall-clock time when the source never advances (suspended context)', () => {
+    const perfSpy = vi.spyOn(performance, 'now');
+    let wallMs = 10_000;
+    perfSpy.mockImplementation(() => wallMs);
+
+    const time = createResilientNow(() => 2.0); // frozen audio clock
+    // Probe phase: stalled reads hold the anchor
+    for (let i = 0; i < 8; i++) {
+      expect(time.now()).toBe(2.0);
+    }
+    expect(time.usingWallClock()).toBe(true);
+    // Wall mode: time now advances with performance.now(), anchored at 2.0s
+    wallMs = 10_500;
+    expect(time.now()).toBeCloseTo(2.5, 5);
+    perfSpy.mockRestore();
+  });
+
+  it('beats fire on a clock whose audio source is frozen (suspended-context stall)', () => {
+    // Wall clock is mocked to advance in lockstep with the fake timers so the
+    // post-probe wall-clock fallback has time to flow from.
+    let wallMs = 0;
+    const perfSpy = vi.spyOn(performance, 'now').mockImplementation(() => wallMs);
+
+    let calls = 0;
+    const clock = makeFrozenClock();
+    const { result } = renderHook(() =>
+      useMetronome({ bpm: 600, audibleBeats: 0, clock, scheduleBeep: null }),
+    );
+    act(() => { result.current.onBeat(() => { calls++; }); });
+
+    // 600 BPM → 0.1 s/beat. Tick past the probe window (8 ticks · 25 ms) and on.
+    act(() => {
+      for (let i = 0; i < 40; i++) {
+        wallMs += TICK_MS;
+        vi.advanceTimersByTime(TICK_MS);
+      }
+    });
+    expect(calls).toBeGreaterThan(0);
+    perfSpy.mockRestore();
+  });
+});
+
+function makeFrozenClock(): AudioClock {
+  return {
+    now: () => 3.0,
+    scheduleAt: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+  };
+}

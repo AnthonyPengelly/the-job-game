@@ -18,6 +18,8 @@ export const beat16: MiniGame<Beat16Params, Beat16State> = {
   judge,
   boosts: [inTheBonesBoost],
   armedInstructions:
-    'The metronome plays then mutes. Keep counting silently to the target beat, ' +
-    'then TAP on the dot. In the Bones adds two more audible beats before the mute.',
+    'The metronome plays then mutes — the crew keeps counting silently and the player ' +
+    'SLAPS THE TABLE on the target beat. GM: tap the button the instant you hear the slap; ' +
+    'the app credits your reaction time and shows how close they were — reveal it with drama. ' +
+    'In the Bones adds two more audible beats before the mute.',
 };
