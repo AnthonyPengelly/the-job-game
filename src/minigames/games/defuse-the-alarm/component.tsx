@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, AlertTriangle, BookOpen, Hand, MessageSquare } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, BookOpen, Hand, MessageSquare, Laptop, Undo2 } from 'lucide-react';
 import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
@@ -19,19 +19,33 @@ function initState(): DefuseState {
   };
 }
 
+/**
+ * Table modes (playtest wave 2 — one-laptop redesign):
+ *   setup      — deal instructions; GM picks the path below.
+ *   live       — two-device path: reader holds the player-view, GM keeps the
+ *                console and records cuts live (the original flow).
+ *   handoff    — one-laptop path: the console becomes a fullscreen READER view
+ *                (rulebook + countdown only — no GM state). The crew plays the
+ *                row physically; nobody adjudicates yet.
+ *   adjudicate — the laptop is back with the GM, who checks the crew's flipped
+ *                wires against the rules retrospectively (the bomb-squad
+ *                "checking your work" moment) and records the result.
+ */
+type TableMode = 'setup' | 'live' | 'handoff' | 'adjudicate';
+
 export function DefuseComponent({
   params,
   committed,
   onResolve,
 }: MiniGameProps<DefuseParams>): JSX.Element {
   const [state, setState] = useState<DefuseState>(initState);
-  const [dealt, setDealt] = useState(false);
+  const [mode, setMode] = useState<TableMode>('setup');
 
   // Publish only the rulebook slice to the player-view — never anything GM-only.
   useEffect(() => {
     publishSlice({
       kind: 'defuse-rulebook',
-      rules: params.cutRules.map(r => r.text),
+      rules: params.ruleLines,
       gameActive: true,
     });
     return () => {
@@ -43,7 +57,8 @@ export function DefuseComponent({
 
   let badgeClass = 'mg-status-badge mg-status-badge--active';
   let badgeIcon: React.ReactNode = null;
-  let badgeLabel = dealt ? 'Defusing' : 'Setup';
+  let badgeLabel =
+    mode === 'setup' ? 'Setup' : mode === 'adjudicate' ? 'Checking the work' : 'Defusing';
 
   if (state.wrongCut) {
     badgeClass = 'mg-status-badge mg-status-badge--botched';
@@ -60,22 +75,24 @@ export function DefuseComponent({
   }
 
   function handleSafeCut() {
-    if (gameOver) return;
+    if (state.wrongCut || state.allClear) return;
     setState(s => ({ ...s, safeCuts: s.safeCuts + 1 }));
   }
 
   function handleWrongCut() {
-    if (gameOver) return;
+    if (state.wrongCut || state.allClear) return;
     setState(s => ({ ...s, wrongCut: true }));
   }
 
   function handleAllClear() {
-    if (gameOver) return;
+    if (state.wrongCut || state.allClear) return;
     setState(s => ({ ...s, allClear: true }));
   }
 
   function handleTimerExpire() {
     setState(s => ({ ...s, timerExpired: true }));
+    // One-laptop path: the clock ran out in the reader's hands — bring it back.
+    setMode(m => (m === 'handoff' ? 'adjudicate' : m));
   }
 
   function handleBoost(hook: BoostHook<DefuseState, DefuseParams>) {
@@ -84,6 +101,45 @@ export function DefuseComponent({
 
   function handleCallOutcome() {
     onResolve(judge(state));
+  }
+
+  // ── HANDOFF: fullscreen reader view — rulebook + countdown ONLY ────────────
+  // Sanctioned reader exception (MINIGAMES.md §6.10): the console temporarily
+  // becomes the rulebook. No GM state, no recording controls, nothing the
+  // reader shouldn't see. The crew still must not look — the reader holds it.
+  if (mode === 'handoff') {
+    return (
+      <div className="dfz-reader-overlay" data-testid="defuse-reader-overlay">
+        <div className="dfz-reader-head">
+          <BookOpen size={20} aria-hidden />
+          <span className="dfz-reader-title">READER ONLY</span>
+          <span className="dfz-reader-sub">
+            Crew — eyes on the wires. Describe the row out loud; the reader names the cuts.
+          </span>
+        </div>
+        <ol className="dfz-reader-rules" data-testid="defuse-reader-rules">
+          {params.ruleLines.map((line, i) => (
+            <li key={i} data-testid={`defuse-reader-rule-${i}`}>{line}</li>
+          ))}
+        </ol>
+        <div className="dfz-reader-foot">
+          <Timer
+            seconds={params.timerSeconds}
+            running={!gameOver}
+            onExpire={handleTimerExpire}
+            audible
+          />
+          <button
+            type="button"
+            className="mg-call-outcome-btn"
+            data-testid="defuse-handback"
+            onClick={() => setMode('adjudicate')}
+          >
+            <Undo2 size={16} aria-hidden /> Done — hand the laptop back
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -96,7 +152,7 @@ export function DefuseComponent({
         <span className="mg-dial-inline" data-testid="defuse-progress">
           Safe cuts · {state.safeCuts}
         </span>
-        {dealt && (
+        {mode === 'live' && (
           <Timer
             seconds={params.timerSeconds}
             running={!gameOver}
@@ -104,10 +160,15 @@ export function DefuseComponent({
             audible
           />
         )}
+        {mode === 'adjudicate' && state.timerExpired && (
+          <span className="mg-dial-inline" data-testid="defuse-time-ran-out" style={{ color: 'var(--danger, #e5484d)' }}>
+            The clock hit zero before they finished
+          </span>
+        )}
       </StatusZone>
 
       <ChallengeZone>
-        {!dealt ? (
+        {mode === 'setup' && (
           <div className="mg-setup-panel" data-testid="defuse-setup">
             <div className="mg-setup-panel__title">
               <Hand size={16} />
@@ -115,34 +176,49 @@ export function DefuseComponent({
             </div>
             <ol className="mg-setup-panel__steps">
               <li>Shuffle the pack and deal <strong>{params.wireCount} cards face-up in a row</strong> — these are the wires.</li>
-              <li>Hand the player-view screen to the reader. <strong>They must not see the cards.</strong></li>
-              <li>The crew must not see the reader's rules — they describe the row, the reader names the cuts.</li>
+              <li>Pick a <strong>reader</strong>. They get the rules; they must not see the cards. The crew describes the row; the reader names the cuts. A named wire is cut by flipping it face-down.</li>
+              <li>Only yes/no answers between crew and reader; Clear Channel buys one full sentence.</li>
             </ol>
             <p className="mg-setup-panel__rule">
-              A named wire is cut by flipping it face-down. You can see both the row and the rules
-              below — record each cut, and declare all clear when every matching wire is face-down.
-              Only yes/no answers between crew and reader; Clear Channel buys one full sentence.
+              <strong>Two ways to run it:</strong> if a second screen is connected, the reader
+              uses the player-view and you referee live. With <strong>one laptop</strong>, hand
+              this machine to the reader — it shows only the rulebook and the clock; when the
+              row is done it comes back to you and you check their work.
             </p>
-            <button
-              type="button"
-              className="mg-call-outcome-btn"
-              data-testid="defuse-dealt"
-              onClick={() => setDealt(true)}
-            >
-              Wires dealt — start the clock
-            </button>
+            <div className="dfz-setup-actions">
+              <button
+                type="button"
+                className="mg-call-outcome-btn"
+                data-testid="defuse-dealt"
+                onClick={() => setMode('live')}
+              >
+                Reader has a second screen — start the clock
+              </button>
+              <button
+                type="button"
+                className="mg-call-outcome-btn"
+                data-testid="defuse-handoff"
+                onClick={() => setMode('handoff')}
+              >
+                <Laptop size={16} aria-hidden /> One laptop — hand it to the reader
+              </button>
+            </div>
           </div>
-        ) : (
+        )}
+
+        {(mode === 'live' || mode === 'adjudicate') && (
           <>
             <div className={`ctb-subtext${state.wrongCut ? ' ctb-subtext--danger' : ''}`} data-testid="defuse-status-line">
               {state.wrongCut
-                ? 'A cut matched no rule — the alarm is ringing.'
+                ? 'A cut no rule allows — the alarm is ringing.'
                 : state.allClear
-                  ? 'Every matching wire cut. Defused.'
-                  : 'Check each named cut against the rules. Flip the card; record it below.'}
+                  ? 'Every wire the rules demand is cut, and nothing else. Defused.'
+                  : mode === 'adjudicate'
+                    ? 'Walk the row against the rules: ✓ each correctly cut wire, ✗ the moment a flipped wire breaks the rules, all clear if the row is perfect.'
+                    : 'Check each named cut against the rules. Flip the card; record it below.'}
             </div>
 
-            {!gameOver && (
+            {!state.wrongCut && !state.allClear && (
               <div className="mg-record-controls" data-testid="defuse-record-controls">
                 <button
                   type="button"
@@ -187,9 +263,9 @@ export function DefuseComponent({
               </summary>
               <div data-testid="defuse-rulebook-gm" style={{ marginTop: '0.5rem' }}>
                 <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
-                  {params.cutRules.map((rule, i) => (
+                  {params.ruleLines.map((line, i) => (
                     <li key={i} data-testid={`defuse-gm-rule-${i}`} style={{ fontSize: '0.9rem', color: 'var(--fg)' }}>
-                      {rule.text}
+                      {line}
                     </li>
                   ))}
                 </ul>

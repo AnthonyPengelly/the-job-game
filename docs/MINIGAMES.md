@@ -409,32 +409,61 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 
 ### 10. Defuse the Alarm — `defuse-the-alarm` *(player-facing)*
 
-- **Lanes:** Charm + Stealth. **Facing:** **Player** — one player privately sees
-  the **rulebook** via the isolated `player-view` surface; the rest see the
-  cards (the wires) on the table, not the rules. All other games are GM-facing.
-- **generate:** the deal size (4–8 wires) and the rulebook — cut rules over
-  **standard-pack properties** (colour, suit, face cards, value bands), so the
-  rules are decidable for ANY random deal; the timer. Exclusion groups prevent
-  degenerate rulebooks (never both colours, one value band max). Rules are
-  additive: cut every wire matching any rule; anything else trips the alarm.
-- **Play:** the GM deals random cards face-up as the wires; the reader holds
-  the rules on the player-view (and must not see the cards); the crew describes
-  the row (and must not see the rules); a named wire is cut by flipping it
-  face-down. The GM — the only one who can see both row and rules — records
-  ✓ safe cut / ✗ wrong cut and declares **all clear**.
+> **Playtest wave 2 redesign (2026-06):** one-laptop handoff flow + a
+> first-match-wins rulebook engine. Details below.
+
+- **Lanes:** Charm + Stealth. **Facing:** **Player** — one player (the
+  **reader**) privately sees the **rulebook**; the rest see the cards (the
+  wires) on the table, not the rules. All other games are GM-facing.
+- **generate:** the deal size (4–8 wires), the rulebook (an **ordered clause
+  list**, see below) and the timer. All clauses reference **standard-pack
+  properties** (colour, suit, face cards, value bands, position in the row),
+  so any random deal is decidable — the app never needs to know the cards.
+- **The rulebook engine (wave 2).** Four clause shapes compose under one
+  reading rule — *"top to bottom: the FIRST rule that covers a wire decides
+  it; anything no rule covers stays uncut"*:
+  - **protections** — "Never cut FACE-CARD wires."
+  - **positional bans** — "Never cut the LEFTMOST wire in the row."
+  - **count-based cuts** — "Cut exactly the TWO highest HEART wires — no
+    other HEARTS."
+  - **exceptions** — "Cut BLACK wires — UNLESS it's a face card."
+  First-match-wins makes every rulebook decidable by construction; a pure
+  `classifyWires(clauses, deal)` proves it, **property-tested over 1000 seeds
+  × random 8-card deals** (every card classifies, deterministically, no
+  throws). Exclusion groups prevent degenerate rulebooks: never both colours,
+  one value band, a protection never erases its own cut clause, face rules
+  never starve a count-based cut, at most one positional ban, and the full
+  52-card pack always has both cuttable and keepable cards.
+- **Play — two table modes** (chosen on the setup panel):
+  - **Two devices:** the reader holds the rulebook on the isolated
+    player-view; the GM keeps the console and records cuts live (the
+    original flow; the channel replays the slice on connect).
+  - **One laptop (the handoff):** the GM hands the console to the reader —
+    it becomes a **fullscreen reader view** showing ONLY the rulebook and
+    the countdown (a sanctioned reader exception like the player-view:
+    nothing GM-only renders). The crew plays the row physically, flipping
+    named wires face-down. When the reader declares done (or the clock
+    expires), the laptop comes back and the GM **adjudicates
+    retrospectively** — walks the row against the rules, records ✓ safe
+    cuts / ✗ a wrong cut, and declares all clear. The bomb squad checks
+    your work.
 - **ChallengeState:** safe-cut count; wrong-cut flag; all-clear flag; the
-  timer; boost-used flag.
+  timer; boost-used flag. (Same state for both modes — live recording and
+  retrospective adjudication feed the same judge.)
 - **judge (GM-recorded):** **clean** = all clear declared, no wrong cut
   (regardless of timer); **complication** = still defusing; **botched** = a
-  wrong cut trips the alarm / timer expired first.
+  wrong cut trips the alarm / timer expired first (GM's call after a handoff
+  — the clock coming back at zero with an unfinished row reads botched).
 - **Boost:** **Clear Channel** (one full sentence allowed). Fires for holder of Charm or Stealth power-up.
-- **Dial levers:** simpler rulebook; fewer wires (fewer items); more time.
+- **Dial levers:** simpler rulebook (clause complexity); fewer wires (fewer
+  items); more time.
 - **minCommit:** **2.** **Excluded from solo** — asymmetric info collapses with
   one player (the defuser sees wires, the expert reads rules; one person can't be
   both). No dial papers over this.
 - **soloVariantId:** none — solo is *ineligible* (§7).
 - **player-view note:** the rulebook view must never leak GM-only state
-  (CLAUDE.md rule 6). It mirrors only the rulebook slice over the local channel.
+  (CLAUDE.md rule 6). It mirrors only the rendered rule lines over the local
+  channel — same strings the fullscreen handoff view shows.
 
 ---
 
