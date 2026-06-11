@@ -14,7 +14,31 @@ import type {
   ObstacleOption,
   ScenarioChoice,
   GameId,
+  GearGrantDescriptor,
+  Lane,
 } from './types';
+
+const ALL_LANES: readonly Lane[] = ['tech', 'physical', 'charm', 'stealth'];
+
+/**
+ * Roll the concrete gear drop for an option at generation time (playtest wave 2):
+ * the lane is drawn fresh from all four lanes — drops no longer mirror the lane
+ * of the game just played — and a statBoost has cfg.gearDrops.bigScoreChance to
+ * upgrade to the +2 (bigScore) tier. Power-ups keep their kind.
+ */
+function rollGearDrop(
+  rng: ReturnType<typeof rngFromState>,
+  templateGear: GearGrantDescriptor | undefined,
+  cfg: EngineConfig,
+): GearGrantDescriptor | undefined {
+  if (templateGear === undefined) return undefined;
+  const lane = rng.pick([...ALL_LANES]);
+  const kind =
+    templateGear.kind === 'statBoost' && rng.next() < cfg.gearDrops.bigScoreChance
+      ? 'bigScore'
+      : templateGear.kind;
+  return { kind, lane };
+}
 
 // ── Carried-effect tick ───────────────────────────────────────────────────────
 
@@ -135,6 +159,12 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         ? [rng.int(range[0], range[1]), rng.int(range[0], range[1])]
         : [undefined, undefined];
 
+    // Concrete gear drops, decoupled from the template's lane (seeded draws).
+    const gearDrops: [GearGrantDescriptor | undefined, GearGrantDescriptor | undefined] = [
+      rollGearDrop(rng, template.options[0].gear, cfg),
+      rollGearDrop(rng, template.options[1].gear, cfg),
+    ];
+
     // Reward multiplier: m = 1 + perHeat*heat + perRoom*roomIndex. Defaults to 1 (no-op at 0/0).
     const { perHeat, perRoom } = cfg.rewardScale;
     const m = 1 + perHeat * stateAfterPayoffs.heat + perRoom * stateAfterPayoffs.roomIndex;
@@ -146,7 +176,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         greedy: template.options[0].greedy,
         heatCost: template.options[0].heatCost,
         reward: Math.round(template.options[0].reward * m),
-        ...(template.options[0].gear !== undefined && { gear: template.options[0].gear }),
+        ...(gearDrops[0] !== undefined && { gear: gearDrops[0] }),
         ...(counts[0] !== undefined && { commitCount: counts[0] }),
         ...(template.fullTeam === true && { fullTeam: true }),
       },
@@ -156,7 +186,7 @@ export function generateRoom(state: RunState, cfg: EngineConfig): RunState {
         greedy: template.options[1].greedy,
         heatCost: template.options[1].heatCost,
         reward: Math.round(template.options[1].reward * m),
-        ...(template.options[1].gear !== undefined && { gear: template.options[1].gear }),
+        ...(gearDrops[1] !== undefined && { gear: gearDrops[1] }),
         ...(counts[1] !== undefined && { commitCount: counts[1] }),
         ...(template.fullTeam === true && { fullTeam: true }),
       },

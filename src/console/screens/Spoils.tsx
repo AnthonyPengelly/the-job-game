@@ -60,11 +60,18 @@ function getGearMeta(
 ): GearMeta {
   if (isGrantDescriptor(item)) {
     const lanes = item.lanes ?? (item.lane ? [item.lane] : []);
+    // Kind decides the card identity FIRST — a multi-lane power-up is a
+    // power-up the crew picks a lane for, never a "stat boost" (the old
+    // lanes-first check mislabelled 8 scenario grants).
+    if (item.kind === 'powerUp') {
+      return {
+        cls: 'power',
+        typeLabel: lanes.length > 1 ? 'Power-up · pick lane' : `Power-up · ${lanes[0] ?? 'lane'}`,
+        Icon: lanes.length > 1 ? Shuffle : Zap,
+      };
+    }
     if (lanes.length > 1) {
       return { cls: 'choice', typeLabel: 'Stat boost · pick lane', Icon: Shuffle };
-    }
-    if (item.kind === 'powerUp') {
-      return { cls: 'power', typeLabel: `Power-up · ${lanes[0] ?? 'lane'}`, Icon: Zap };
     }
     return { cls: 'boost', typeLabel: `Stat boost · ${lanes[0] ?? 'lane'}`, Icon: Plus };
   }
@@ -80,42 +87,60 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+/** Mechanical summary ("+1 Stealth" / "Charm Power-up") for a resolved def. */
+function gearMechanic(def: GearDef): string {
+  if (def.kind === 'powerUp') return `${capitalize(def.lane)} Power-up`;
+  return `+${def.magnitude} ${capitalize(def.lane)}`;
+}
+
 function getGearName(
   item: GearId | GearGrantDescriptor,
   laneChoice: Lane | '',
   gearCatalog: Record<string, GearDef>,
 ): string {
   if (isGrantDescriptor(item)) {
-    const magnitude = item.kind === 'bigScore' ? 2 : 1;
+    // Once a lane is chosen the descriptor resolves to a real catalog card —
+    // show its thematic name ("Magnetic Soles — +1 Stealth").
     const lanes = item.lanes ?? (item.lane ? [item.lane] : []);
-    if (lanes.length > 1) return `+${magnitude} Any Lane`;
-    if (item.kind === 'powerUp') return `${capitalize(lanes[0] ?? 'Lane')} Power-up`;
-    const lane = laneChoice || lanes[0] || 'lane';
-    return `+${magnitude} ${capitalize(lane)}`;
+    const lane = (laneChoice || lanes[0] || '') as Lane | '';
+    if (lane !== '' && (lanes.length === 1 || laneChoice !== '')) {
+      const resolved = resolveGearDescriptor(item, lane as Lane, gearCatalog);
+      const def = resolved !== undefined ? gearCatalog[String(resolved)] : undefined;
+      if (def) return `${def.name} — ${gearMechanic(def)}`;
+    }
+    // Unresolved multi-lane grant: kind first, never "+1" for a power-up.
+    const magnitude = item.kind === 'bigScore' ? 2 : 1;
+    if (item.kind === 'powerUp') return 'Power-up — pick a lane';
+    return `+${magnitude} stat — pick a lane`;
   }
   const def = gearCatalog[String(item)];
   if (!def) return String(item);
-  if (def.kind === 'powerUp') return `${capitalize(def.lane)} Power-up`;
-  return `+${def.magnitude} ${capitalize(def.lane)}`;
+  return `${def.name} — ${gearMechanic(def)}`;
 }
 
 function getGearDesc(
   item: GearId | GearGrantDescriptor,
+  laneChoice: Lane | '',
   gearCatalog: Record<string, GearDef>,
 ): string {
   if (isGrantDescriptor(item)) {
-    const magnitude = item.kind === 'bigScore' ? 2 : 1;
     const lanes = item.lanes ?? (item.lane ? [item.lane] : []);
+    const lane = (laneChoice || lanes[0] || '') as Lane | '';
+    if (lane !== '' && (lanes.length === 1 || laneChoice !== '')) {
+      const resolved = resolveGearDescriptor(item, lane as Lane, gearCatalog);
+      const def = resolved !== undefined ? gearCatalog[String(resolved)] : undefined;
+      if (def) return def.blurb;
+    }
+    const magnitude = item.kind === 'bigScore' ? 2 : 1;
     if (item.kind === 'powerUp') {
-      return `Activates the ${lanes[0] ?? 'lane'} shout for the holder.`;
+      return 'Activates the chosen lane\'s shout for the holder.';
     }
     const laneStr = lanes.length > 1 ? 'chosen lane' : (lanes[0] ?? 'lane');
     return `A flat +${magnitude} to the holder's ${laneStr}.`;
   }
   const def = gearCatalog[String(item)];
   if (!def) return '';
-  if (def.kind === 'powerUp') return `Activates the ${def.lane} shout for the holder.`;
-  return `A flat +${def.magnitude} to the holder's ${def.lane}.`;
+  return def.blurb;
 }
 
 // ── GearCard ──────────────────────────────────────────────────────────────────
@@ -150,7 +175,7 @@ function GearCard({ item, index, gearCatalog, onAssign, onSell, sellValueLabel, 
 
   const { cls, typeLabel, Icon } = getGearMeta(item, gearCatalog);
   const gearName = getGearName(item, laneChoice, gearCatalog);
-  const gearDesc = getGearDesc(item, gearCatalog);
+  const gearDesc = getGearDesc(item, laneChoice, gearCatalog);
 
   function handleAssignChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const playerId = e.target.value as PlayerId;
@@ -237,7 +262,10 @@ export function Spoils() {
   const dispatch = useGameStore(s => s.dispatch);
   const clearPendingSpoils = useGameStore(s => s.clearPendingSpoils);
 
-  const sellValueLabel = formatLoot(computeGearSellValue(roomIndex, cfg));
+  // Per-item sell values: the visible rule prices a +2 at twice a +1.
+  function sellLabelFor(item: GearId | GearGrantDescriptor): string {
+    return formatLoot(computeGearSellValue(item, roomIndex, cfg));
+  }
   const lastResult = history.at(-1);
   const outcome = deriveOutcome(lastResult);
   const lootGained = lastResult?.lootGained ?? 0;
@@ -356,7 +384,7 @@ export function Spoils() {
                   gearCatalog={gearCatalog}
                   onAssign={handleAssign}
                   onSell={handleSell}
-                  sellValueLabel={sellValueLabel}
+                  sellValueLabel={sellLabelFor(item)}
                   crew={crew.map(p => ({ id: p.id, name: p.name }))}
                 />
               ))}

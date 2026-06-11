@@ -36,7 +36,8 @@ const cfg: EngineConfig = {
   generation: { obstacleRatio: 0.6 },
   scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
   rewardScale: { perHeat: 0, perRoom: 0 },
-  gearSellValue: { base: 1000, perRoom: 500 },
+  gearSellValue: { perBonusPoint: 1000, powerUpPoints: 2, perRoom: 500 },
+  gearDrops: { bigScoreChance: 0.2 },
   gear: {},
   quirks: {},
   banks: { categories: [], trivia: [] },
@@ -753,11 +754,67 @@ describe('generateRoom — gear propagated onto obstacle options', () => {
     throw new Error(`No obstacle room with id "${id}" found in 200 seeds`);
   }
 
-  it('gear from template option is carried onto the generated ObstacleOption', () => {
+  it('a gear-bearing template option yields a concrete single-lane drop (lane decoupled, seeded)', () => {
     const { currentRoom } = findObstacleById('obs-with-gear');
     if (currentRoom?.kind === 'obstacle') {
-      expect(currentRoom.options[0]!.gear).toEqual(gearDescriptor);
+      const drop = currentRoom.options[0]!.gear;
+      expect(drop).toBeDefined();
+      // The kind survives (or upgrades statBoost→bigScore); the lane is drawn fresh.
+      expect(['statBoost', 'bigScore']).toContain(drop!.kind);
+      expect(['tech', 'physical', 'charm', 'stealth']).toContain(drop!.lane);
+      expect(drop!.lanes).toBeUndefined();
     }
+  });
+
+  it('drop lanes vary across seeds — no longer pinned to the template lane', () => {
+    const lanes = new Set<string>();
+    for (let seed = 0; seed < 300 && lanes.size < 3; seed++) {
+      const result = generateRoom(makeState(seed), cfgWithGear);
+      if (result.currentRoom?.kind === 'obstacle' && result.currentRoom.templateId === 'obs-with-gear') {
+        lanes.add(result.currentRoom.options[0]!.gear!.lane!);
+      }
+    }
+    expect(lanes.size).toBeGreaterThanOrEqual(3);
+  });
+
+  it('statBoost drops sometimes upgrade to the bigScore (+2) tier', () => {
+    const kinds = new Set<string>();
+    for (let seed = 0; seed < 400 && kinds.size < 2; seed++) {
+      const result = generateRoom(makeState(seed), cfgWithGear);
+      if (result.currentRoom?.kind === 'obstacle' && result.currentRoom.templateId === 'obs-with-gear') {
+        kinds.add(result.currentRoom.options[0]!.gear!.kind);
+      }
+    }
+    expect(kinds).toContain('statBoost');
+    expect(kinds).toContain('bigScore');
+  });
+
+  it('powerUp drops never change kind', () => {
+    const powerUpCfg: EngineConfig = {
+      ...cfgWithGear,
+      gearDrops: { bigScoreChance: 1.0 }, // would upgrade every statBoost
+      roomTemplates: {
+        ...cfgWithGear.roomTemplates,
+        obstacles: [
+          {
+            id: 'obs-pu',
+            gameId: 'alpha',
+            lane: 'tech',
+            options: [
+              { id: 'pu-safe', greedy: false, heatCost: 1, reward: 1, gear: { kind: 'powerUp', lane: 'tech' } },
+              { id: 'pu-greedy', greedy: true, heatCost: 2, reward: 2 },
+            ],
+          },
+        ],
+      },
+    };
+    for (let seed = 0; seed < 50; seed++) {
+      const result = generateRoom(makeState(seed), powerUpCfg);
+      if (result.currentRoom?.kind !== 'obstacle') continue;
+      expect(result.currentRoom.options[0]!.gear!.kind).toBe('powerUp');
+      return;
+    }
+    throw new Error('No obstacle room found');
   });
 
   it('option without gear has no gear field on generated ObstacleOption', () => {
@@ -767,13 +824,11 @@ describe('generateRoom — gear propagated onto obstacle options', () => {
     }
   });
 
-  it('gear does not affect rngState (pure metadata, no extra draw)', () => {
-    const withGear = generateRoom(makeState(42), cfgWithGear);
-    const withoutGear = generateRoom(makeState(42), cfg);
-    // If the same seed draws the same room type (obstacle or scenario), rngState must match.
-    if (withGear.currentRoom?.kind === withoutGear.currentRoom?.kind) {
-      expect(withGear.rngState).toBe(withoutGear.rngState);
-    }
+  it('gear drops are deterministic: same seed ⇒ same drop', () => {
+    const r1 = generateRoom(makeState(42), cfgWithGear);
+    const r2 = generateRoom(makeState(42), cfgWithGear);
+    expect(r1.currentRoom).toEqual(r2.currentRoom);
+    expect(r1.rngState).toBe(r2.rngState);
   });
 
   it('template with no gear on either option yields no gear on generated options', () => {
@@ -920,8 +975,9 @@ describe('generateRoom — rewardScale', () => {
       const templateReward = bigScoreOpts.options[0]!.reward; // 1000
       const expectedM = 1 + 0.1 * 10; // 2.0
       expect(result.currentRoom.options[0]!.reward).toBe(Math.round(templateReward * expectedM)); // 2000
-      // Gear descriptor is unchanged (still bigScore, same lane).
-      expect(result.currentRoom.options[0]!.gear).toEqual({ kind: 'bigScore', lane: 'tech' });
+      // Gear keeps its bigScore kind; the lane is a fresh seeded draw (wave-2 decoupling).
+      expect(result.currentRoom.options[0]!.gear!.kind).toBe('bigScore');
+      expect(['tech', 'physical', 'charm', 'stealth']).toContain(result.currentRoom.options[0]!.gear!.lane);
       return;
     }
     throw new Error('obs-bigscore not found in 200 seeds');
@@ -932,18 +988,19 @@ describe('generateRoom — rewardScale', () => {
     for (let seed = 0; seed < 200; seed++) {
       const result = generateRoom({ ...makeState(seed), heat: 10 }, cfgScale);
       if (result.currentRoom?.kind !== 'obstacle' || result.currentRoom.templateId !== 'obs-powerup') continue;
-      expect(result.currentRoom.options[0]!.gear).toEqual({ kind: 'powerUp', lane: 'physical' });
+      expect(result.currentRoom.options[0]!.gear!.kind).toBe('powerUp');
+      expect(['tech', 'physical', 'charm', 'stealth']).toContain(result.currentRoom.options[0]!.gear!.lane);
       return;
     }
     throw new Error('obs-powerup not found');
   });
 
-  it('statBoost gear descriptor is not modified by rewardScale', () => {
+  it('statBoost gear drop stays a stat boost tier (statBoost or bigScore upgrade)', () => {
     const cfgScale = cfgWithScale(0.1, 0);
     for (let seed = 0; seed < 200; seed++) {
       const result = generateRoom({ ...makeState(seed), heat: 10 }, cfgScale);
       if (result.currentRoom?.kind !== 'obstacle' || result.currentRoom.templateId !== 'obs-statboost') continue;
-      expect(result.currentRoom.options[0]!.gear).toEqual({ kind: 'statBoost', lane: 'stealth' });
+      expect(['statBoost', 'bigScore']).toContain(result.currentRoom.options[0]!.gear!.kind);
       return;
     }
     throw new Error('obs-statboost not found');

@@ -451,7 +451,7 @@ describe('ToolRail — Gear dialog', () => {
     const gearCfg = {
       ...testCfg,
       gear: {
-        'stat-tech-1': { id: 'stat-tech-1', kind: 'statBoost' as const, lane: 'tech' as const, magnitude: 1 },
+        'stat-tech-1': { id: 'stat-tech-1', kind: 'statBoost' as const, lane: 'tech' as const, magnitude: 1, name: 'Burner Laptop', blurb: 'Test blurb.' },
       },
     };
     const store = createGameStore({ cfg: gearCfg, storage });

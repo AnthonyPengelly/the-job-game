@@ -6,14 +6,16 @@ const validItem_statBoost = {
   kind: 'statBoost' as const,
   lane: 'tech' as const,
   magnitude: 1,
-  flavour: ['Better Tools'],
+  name: 'Burner Laptop',
+  blurb: 'Pre-loaded exploits, zero serial numbers.',
 };
 
 const validItem_powerUp = {
   id: 'powerup-tech',
   kind: 'powerUp' as const,
   lane: 'tech' as const,
-  flavour: ['Hacker\'s Rig'],
+  name: 'Hacker\'s Rig',
+  blurb: 'One shouted play per job.',
 };
 
 const minimalValidPack = {
@@ -27,26 +29,32 @@ describe('gearSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts statBoost without optional flavour', () => {
-    const pack = {
-      ...minimalValidPack,
-      items: [{ id: 'x', kind: 'statBoost', lane: 'physical', magnitude: 2 }],
-    };
-    expect(gearSchema.safeParse(pack).success).toBe(true);
+  it('rejects a statBoost without a thematic name', () => {
+    const nameless: Record<string, unknown> = { ...validItem_statBoost };
+    delete nameless['name'];
+    const pack = { ...minimalValidPack, items: [nameless] };
+    expect(gearSchema.safeParse(pack).success).toBe(false);
   });
 
-  it('accepts powerUp without optional flavour', () => {
+  it('rejects a powerUp without a blurb', () => {
+    const blurbless: Record<string, unknown> = { ...validItem_powerUp };
+    delete blurbless['blurb'];
+    const pack = { ...minimalValidPack, items: [blurbless] };
+    expect(gearSchema.safeParse(pack).success).toBe(false);
+  });
+
+  it('rejects an empty name', () => {
     const pack = {
       ...minimalValidPack,
-      items: [{ id: 'x', kind: 'powerUp', lane: 'charm' }],
+      items: [{ ...validItem_statBoost, name: '' }],
     };
-    expect(gearSchema.safeParse(pack).success).toBe(true);
+    expect(gearSchema.safeParse(pack).success).toBe(false);
   });
 
   it('rejects statBoost missing magnitude', () => {
     const pack = {
       ...minimalValidPack,
-      items: [{ id: 'x', kind: 'statBoost', lane: 'tech' }],
+      items: [{ id: 'x', kind: 'statBoost', lane: 'tech', name: 'X', blurb: 'Y.' }],
     };
     expect(gearSchema.safeParse(pack).success).toBe(false);
   });
@@ -54,7 +62,7 @@ describe('gearSchema', () => {
   it('rejects invalid lane value', () => {
     const pack = {
       ...minimalValidPack,
-      items: [{ id: 'x', kind: 'statBoost', lane: 'agility', magnitude: 1 }],
+      items: [{ ...validItem_statBoost, lane: 'agility' }],
     };
     expect(gearSchema.safeParse(pack).success).toBe(false);
   });
@@ -62,7 +70,7 @@ describe('gearSchema', () => {
   it('rejects unknown kind', () => {
     const pack = {
       ...minimalValidPack,
-      items: [{ id: 'x', kind: 'gear', lane: 'tech' }],
+      items: [{ id: 'x', kind: 'gear', lane: 'tech', name: 'X', blurb: 'Y.' }],
     };
     expect(gearSchema.safeParse(pack).success).toBe(false);
   });
@@ -80,6 +88,14 @@ describe('gearSchema', () => {
     expect(gearSchema.safeParse(pack).success).toBe(false);
   });
 
+  it('rejects the retired flavour array (strict)', () => {
+    const pack = {
+      ...minimalValidPack,
+      items: [{ ...validItem_statBoost, flavour: ['Better Tools'] }],
+    };
+    expect(gearSchema.safeParse(pack).success).toBe(false);
+  });
+
   it('rejects wrong _meta.pack value', () => {
     const pack = {
       ...minimalValidPack,
@@ -91,7 +107,7 @@ describe('gearSchema', () => {
   it('rejects magnitude of 0 (must be positive)', () => {
     const pack = {
       ...minimalValidPack,
-      items: [{ id: 'x', kind: 'statBoost', lane: 'tech', magnitude: 0 }],
+      items: [{ ...validItem_statBoost, magnitude: 0 }],
     };
     expect(gearSchema.safeParse(pack).success).toBe(false);
   });
