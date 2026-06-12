@@ -9,6 +9,12 @@ import { InsideKnowledgeComponent } from './component';
 
 afterEach(cleanup);
 
+function startClockIfGated() {
+  const gate = screen.queryByTestId('mg-start-clock');
+  if (gate) fireEvent.click(gate);
+}
+
+
 const dial: Difficulty = { level: 0 };
 
 const TEST_ITEMS: TriviaItemConfig[] = [
@@ -45,6 +51,7 @@ describe('InsideKnowledgeComponent — Q&A display', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('ik-question')).toBeInTheDocument();
     expect(screen.getByTestId('ik-question').textContent).toBe(params.questions[0]!.question);
   });
@@ -59,6 +66,7 @@ describe('InsideKnowledgeComponent — Q&A display', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('ik-answer-value').textContent).toBe(params.questions[0]!.answer);
   });
 });
@@ -76,6 +84,7 @@ describe('InsideKnowledgeComponent — mark buttons', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const q0 = params.questions[0]!.question;
     fireEvent.click(screen.getByTestId('ik-mark-correct'));
     if (params.questions.length > 1) {
@@ -95,6 +104,7 @@ describe('InsideKnowledgeComponent — mark buttons', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const q0 = params.questions[0]!.question;
     fireEvent.click(screen.getByTestId('ik-mark-wrong'));
     if (params.questions.length > 1) {
@@ -114,6 +124,7 @@ describe('InsideKnowledgeComponent — mark buttons', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     for (let i = 0; i < params.questions.length; i++) {
       fireEvent.click(screen.getByTestId('ik-mark-correct'));
     }
@@ -134,6 +145,7 @@ describe('InsideKnowledgeComponent — Narrow It Down', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.queryByTestId('ik-options')).not.toBeInTheDocument();
   });
 
@@ -147,6 +159,7 @@ describe('InsideKnowledgeComponent — Narrow It Down', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     // narrowItDownBoost.lane = 'charm', so testid is boost-charm
     fireEvent.click(screen.getByTestId('boost-charm'));
     if (params.questions[0]?.options !== undefined) {
@@ -164,6 +177,7 @@ describe('InsideKnowledgeComponent — Narrow It Down', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     // narrowItDownBoost.lane = 'charm', so testid is boost-charm
     fireEvent.click(screen.getByTestId('boost-charm'));
     if (params.questions[0]?.options !== undefined) {
@@ -190,6 +204,7 @@ describe('InsideKnowledgeComponent — onResolve', () => {
         onResolve={spy}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledOnce();
   });
@@ -208,6 +223,7 @@ describe('InsideKnowledgeComponent — boost slot', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const slots = document.querySelectorAll('.mg-boost-slot');
     expect(slots.length).toBeGreaterThanOrEqual(1);
   });
@@ -226,6 +242,7 @@ describe('InsideKnowledgeComponent — progress bar', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('ik-progress-bar')).toBeInTheDocument();
   });
 });

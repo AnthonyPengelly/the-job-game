@@ -1,4 +1,7 @@
 export { Timer } from './Timer';
+
+export { ClockGate } from './ClockGate';
+export type { ClockGateProps } from './ClockGate';
 export type { TimerProps } from './Timer';
 
 export { CardSpread } from './CardSpread';

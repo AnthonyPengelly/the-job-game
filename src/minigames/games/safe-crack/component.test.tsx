@@ -8,6 +8,12 @@ import { SafeCrackComponent } from './component';
 
 afterEach(cleanup);
 
+function startClockIfGated() {
+  const gate = screen.queryByTestId('mg-start-clock');
+  if (gate) fireEvent.click(gate);
+}
+
+
 const dial: Difficulty = { level: 0 };
 
 function makeParams(seed = 1) {
@@ -38,6 +44,7 @@ describe('SafeCrackComponent — initial state', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('safe-crack')).toBeInTheDocument();
   });
 
@@ -51,6 +58,7 @@ describe('SafeCrackComponent — initial state', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('code-length').textContent).toContain(`${params.code.length}-digit`);
     expect(screen.getByTestId('code-length').textContent).toContain(`${params.guessBudget} tries`);
   });
@@ -65,6 +73,7 @@ describe('SafeCrackComponent — initial state', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('guess-input')).toBeInTheDocument();
   });
 
@@ -78,6 +87,7 @@ describe('SafeCrackComponent — initial state', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.queryByTestId('guess-row-0')).toBeNull();
   });
 });
@@ -95,6 +105,7 @@ describe('SafeCrackComponent — guess submission', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const input = screen.getByTestId('guess-input');
     // Legal in-pool guess that can never solve: rotate the first digit within the pool.
     const wrongGuess = params.code.map((d, i) => (i === 0 ? (d % params.digitMax) + 1 : d)).join('');
@@ -113,6 +124,7 @@ describe('SafeCrackComponent — guess submission', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const input = screen.getByTestId('guess-input');
     // Legal in-pool guess that can never solve: rotate the first digit within the pool.
     const wrongGuess = params.code.map((d, i) => (i === 0 ? (d % params.digitMax) + 1 : d)).join('');
@@ -132,6 +144,7 @@ describe('SafeCrackComponent — guess submission', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const input = screen.getByTestId('guess-input');
     // Submit two guesses
     // Legal in-pool guess that can never solve: rotate the first digit within the pool.
@@ -154,6 +167,7 @@ describe('SafeCrackComponent — guess submission', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.queryByTestId('peg-legend')).toBeNull();
     const input = screen.getByTestId('guess-input');
     // Legal in-pool guess that can never solve: rotate the first digit within the pool.
@@ -173,6 +187,7 @@ describe('SafeCrackComponent — guess submission', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const input = screen.getByTestId('guess-input') as HTMLInputElement;
     // Legal in-pool guess that can never solve: rotate the first digit within the pool.
     const wrongGuess = params.code.map((d, i) => (i === 0 ? (d % params.digitMax) + 1 : d)).join('');
@@ -195,6 +210,7 @@ describe('SafeCrackComponent — progress bar', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('sc-progress')).toBeInTheDocument();
   });
 
@@ -208,6 +224,7 @@ describe('SafeCrackComponent — progress bar', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('sc-progress-fill').className).toContain('mg-progress-bar__fill--data');
   });
 
@@ -221,6 +238,7 @@ describe('SafeCrackComponent — progress bar', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const fill = screen.getByTestId('sc-progress-fill');
     expect(fill.style.width).toBe('0%');
     const input = screen.getByTestId('guess-input');
@@ -242,6 +260,7 @@ describe('SafeCrackComponent — progress bar', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('guesses-remaining').textContent).toContain('Guesses used');
   });
 });
@@ -259,6 +278,7 @@ describe('SafeCrackComponent — Stethoscope boost', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.queryByTestId('stethoscope-hint')).toBeNull();
   });
 
@@ -272,6 +292,7 @@ describe('SafeCrackComponent — Stethoscope boost', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('boost-tech'));
     expect(screen.getByTestId('stethoscope-hint')).toBeInTheDocument();
   });
@@ -286,6 +307,7 @@ describe('SafeCrackComponent — Stethoscope boost', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('boost-tech'));
     const hint = screen.getByTestId('stethoscope-hint');
     // Should contain the revealed digit and underscores
@@ -306,6 +328,7 @@ describe('SafeCrackComponent — boost slot', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const slots = document.querySelectorAll('.mg-boost-slot');
     expect(slots.length).toBeGreaterThanOrEqual(1);
   });
@@ -325,6 +348,7 @@ describe('SafeCrackComponent — onResolve', () => {
         onResolve={spy}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledOnce();
   });
@@ -340,6 +364,7 @@ describe('SafeCrackComponent — onResolve', () => {
         onResolve={spy}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledWith('botched');
   });
@@ -355,6 +380,7 @@ describe('SafeCrackComponent — onResolve', () => {
         onResolve={spy}
       />,
     );
+    startClockIfGated();
     const input = screen.getByTestId('guess-input');
     fireEvent.change(input, { target: { value: '123' } });
     fireEvent.click(screen.getByTestId('guess-submit'));

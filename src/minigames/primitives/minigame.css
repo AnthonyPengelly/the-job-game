@@ -1583,3 +1583,22 @@
 }
 
 .dfz-reader-foot { display: flex; flex-direction: column; align-items: center; gap: 18px; font-size: 22px; }
+
+/* ── Clock gate (wave 3: the GM starts every clock) ─────────────────────────── */
+.mg-clock-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border-strong, rgba(170, 200, 195, 0.2));
+  border-radius: var(--radius-md, 8px);
+  background: var(--c-surface-1, #121d23);
+}
+.mg-clock-gate__hint {
+  margin: 0;
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--fg-muted, #a4b2ad);
+  max-width: 56ch;
+  line-height: 1.5;
+}

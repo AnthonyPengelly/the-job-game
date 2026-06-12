@@ -5,6 +5,7 @@ import type { BoostHook } from '@/minigames/contract';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { Timer } from '@/minigames/primitives/Timer';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
+import { ClockGate } from '@/minigames/primitives/ClockGate';
 import type { SafeCrackParams } from './generate';
 import { computeFeedback, judge, techBoost } from './judge';
 import type { SafeCrackState } from './judge';
@@ -22,6 +23,8 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
   const [state, setState] = useState<SafeCrackState>(() => initState(params.guessBudget));
   const [currentInput, setCurrentInput] = useState('');
   const [timerExpired, setTimerExpired] = useState(false);
+  // Wave 3: the GM starts the clock — no auto-start while they explain.
+  const [clockStarted, setClockStarted] = useState(false);
 
   const gameOver = state.solved || state.guessesRemaining === 0 || timerExpired;
   const guessesUsed = params.guessBudget - state.guessesRemaining;
@@ -97,7 +100,7 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
         </span>
         <Timer
           seconds={params.timerSeconds}
-          running={!gameOver}
+          running={clockStarted && !gameOver}
           onExpire={() => setTimerExpired(true)}
           audible
         />
@@ -116,6 +119,12 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
       </StatusZone>
 
       <ChallengeZone>
+        {!clockStarted && !gameOver && (
+          <ClockGate
+            hint={`Announce the pool out loud — "${params.code.length} digits, ${params.digitMin} to ${params.digitMax} only, duplicates allowed" — and how the feedback works. Start when the crew is ready.`}
+            onStart={() => setClockStarted(true)}
+          />
+        )}
         {maskedCode && (
           <div data-testid="stethoscope-hint" className="sc-gm-code" style={{ marginBottom: '0.75rem' }}>
             <Eye size={16} style={{ color: 'var(--data, #00bcd4)', flexShrink: 0 }} />
@@ -163,7 +172,7 @@ export function SafeCrackComponent({ params, committed, onResolve }: MiniGamePro
           </div>
         )}
 
-        {!gameOver && (
+        {clockStarted && !gameOver && (
           <div data-testid="guess-input-area" style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
             <input
               data-testid="guess-input"

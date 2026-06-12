@@ -4,6 +4,7 @@ import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
+import { ClockGate } from '@/minigames/primitives/ClockGate';
 import type { InsideKnowledgeParams } from './generate';
 import { judge, narrowItDownBoost } from './judge';
 import type { InsideKnowledgeState, AnswerStatus } from './judge';
@@ -26,6 +27,8 @@ export function InsideKnowledgeComponent({
   onResolve,
 }: MiniGameProps<InsideKnowledgeParams>): JSX.Element {
   const [state, setState] = useState<InsideKnowledgeState>(() => initState(params.questions.length));
+  // Wave 3: the GM starts the clock — questions stay hidden until then.
+  const [clockStarted, setClockStarted] = useState(false);
 
   const currentIndex = state.answers.findIndex(a => a === 'unanswered');
   const allAnswered = currentIndex === -1;
@@ -74,7 +77,7 @@ export function InsideKnowledgeComponent({
         </span>
         <Timer
           seconds={params.timerSeconds}
-          running={!state.timerExpired && !allAnswered}
+          running={clockStarted && !state.timerExpired && !allAnswered}
           onExpire={handleTimerExpire}
           audible
         />
@@ -100,7 +103,13 @@ export function InsideKnowledgeComponent({
       </StatusZone>
 
       <ChallengeZone>
-        {!allAnswered && currentQuestion !== undefined && (
+        {!clockStarted && !allAnswered && (
+          <ClockGate
+            hint={`Explain the drill: ${params.questions.length} questions, the table confers, you mark each spoken answer. They need ${params.threshold} right. The first question appears when you start.`}
+            onStart={() => setClockStarted(true)}
+          />
+        )}
+        {clockStarted && !allAnswered && currentQuestion !== undefined && (
           <div className="ik-qa" data-testid="ik-question-area">
             <div className="ik-question" data-testid="ik-question">
               {currentQuestion.question}

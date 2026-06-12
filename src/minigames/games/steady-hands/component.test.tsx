@@ -8,6 +8,12 @@ import { SteadyHandsComponent } from './component';
 
 afterEach(cleanup);
 
+function startClockIfGated() {
+  const gate = screen.queryByTestId('mg-start-clock');
+  if (gate) fireEvent.click(gate);
+}
+
+
 beforeEach(() => {
   vi.useFakeTimers();
 });
@@ -46,6 +52,7 @@ describe('SteadyHandsComponent — tower visual', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('sh-tower')).toBeInTheDocument();
   });
 
@@ -59,6 +66,7 @@ describe('SteadyHandsComponent — tower visual', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const tower = screen.getByTestId('sh-tower');
     const targetBricks = tower.querySelectorAll('.sh-brick--target');
     expect(targetBricks.length).toBe(params.targetHeight);
@@ -74,6 +82,7 @@ describe('SteadyHandsComponent — tower visual', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('sh-height-up'));
     const tower = screen.getByTestId('sh-tower');
     const solidBricks = tower.querySelectorAll('.sh-brick:not(.sh-brick--target)');
@@ -96,6 +105,7 @@ describe('SteadyHandsComponent — height counter', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('sh-height-hero').textContent).toContain('0');
   });
 
@@ -109,6 +119,7 @@ describe('SteadyHandsComponent — height counter', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('sh-height-up'));
     expect(screen.getByTestId('sh-height-hero').textContent).toContain('1');
   });
@@ -123,6 +134,7 @@ describe('SteadyHandsComponent — height counter', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('sh-height-up'));
     fireEvent.click(screen.getByTestId('sh-height-down'));
     expect(screen.getByTestId('sh-height-hero').textContent).toContain('0');
@@ -138,6 +150,7 @@ describe('SteadyHandsComponent — height counter', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('sh-height-up'));
     expect(screen.getByTestId('sh-height-up')).toBeDisabled();
   });
@@ -152,6 +165,7 @@ describe('SteadyHandsComponent — height counter', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('sh-height-down')).toBeDisabled();
   });
 });
@@ -169,6 +183,7 @@ describe('SteadyHandsComponent — progress bar', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.getByTestId('sh-progress')).toBeInTheDocument();
   });
 
@@ -182,6 +197,7 @@ describe('SteadyHandsComponent — progress bar', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const fill = screen.getByTestId('sh-progress-fill');
     expect(fill.style.width).toBe('0%');
     fireEvent.click(screen.getByTestId('sh-height-up'));
@@ -203,6 +219,7 @@ describe('SteadyHandsComponent — Extra Hands burst', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     expect(screen.queryByTestId('sh-extra-hands')).toBeNull();
   });
 
@@ -216,6 +233,7 @@ describe('SteadyHandsComponent — Extra Hands burst', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('boost-physical'));
     expect(screen.getByTestId('sh-extra-hands')).toBeInTheDocument();
   });
@@ -230,6 +248,7 @@ describe('SteadyHandsComponent — Extra Hands burst', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('boost-physical'));
     // Advance 11 seconds one tick at a time so React flushes state each second
     for (let i = 0; i <= 10; i++) {
@@ -252,6 +271,7 @@ describe('SteadyHandsComponent — boost slot', () => {
         onResolve={() => {}}
       />,
     );
+    startClockIfGated();
     const slots = document.querySelectorAll('.mg-boost-slot');
     expect(slots.length).toBeGreaterThanOrEqual(1);
   });
@@ -271,6 +291,7 @@ describe('SteadyHandsComponent — onResolve', () => {
         onResolve={spy}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledOnce();
   });
@@ -286,6 +307,7 @@ describe('SteadyHandsComponent — onResolve', () => {
         onResolve={spy}
       />,
     );
+    startClockIfGated();
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledWith('complication');
   });
@@ -301,6 +323,7 @@ describe('SteadyHandsComponent — onResolve', () => {
         onResolve={spy}
       />,
     );
+    startClockIfGated();
     // Advance one tick at a time so React flushes state after each second
     for (let i = 0; i <= params.timerSeconds; i++) {
       act(() => { vi.advanceTimersByTime(1000); });

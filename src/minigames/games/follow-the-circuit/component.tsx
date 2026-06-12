@@ -4,11 +4,12 @@ import type { CardId } from '@/minigames/primitives/CardSpread';
 import { useMetronome, useAudioClock, useScheduleBeep } from '@/minigames/primitives';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
+import { ClockGate } from '@/minigames/primitives/ClockGate';
 import type { FollowTheCircuitParams } from './generate';
 import type { FollowTheCircuitState } from './judge';
 import { judge, photographicBoost } from './judge';
 
-type Phase = 'watching' | 'inputting' | 'done';
+type Phase = 'ready' | 'watching' | 'inputting' | 'done';
 
 function initState(): FollowTheCircuitState {
   return {
@@ -28,7 +29,8 @@ export function FollowTheCircuitComponent({
   onResolve,
 }: MiniGameProps<FollowTheCircuitParams>): JSX.Element {
   const [state, setState] = useState<FollowTheCircuitState>(initState);
-  const [phase, setPhase] = useState<Phase>('watching');
+  // Wave 3: playback must not auto-start — the GM begins it after the brief.
+  const [phase, setPhase] = useState<Phase>('ready');
   const [highlightIndex, setHighlightIndex] = useState<number | null>(null);
   const [currentRoundLength, setCurrentRoundLength] = useState(() =>
     Math.min(START_ROUND_LENGTH, params.targetLength),
@@ -155,7 +157,7 @@ export function FollowTheCircuitComponent({
     : 0;
 
   // Phase label for status
-  let phaseLabel = 'Watch';
+  let phaseLabel = phase === 'ready' ? 'Briefing' : 'Watch';
   let phaseBadgeClass = 'mg-status-badge mg-status-badge--active';
   if (phase === 'inputting') {
     phaseLabel = 'Your turn';
@@ -233,6 +235,14 @@ export function FollowTheCircuitComponent({
             );
           })}
         </div>
+
+        {phase === 'ready' && (
+          <ClockGate
+            hint={`Explain the drill: the pads flash a sequence, the crew repeats it by tapping; each round adds a step up to ${params.targetLength}. Begin playback when they're watching.`}
+            label="Begin playback"
+            onStart={() => setPhase('watching')}
+          />
+        )}
 
         {/* Sub-text describing current state */}
         <div

@@ -3,6 +3,7 @@ import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
+import { ClockGate } from '@/minigames/primitives/ClockGate';
 import type { CategoriesParams } from './generate';
 import { judge, skipBoost } from './judge';
 import type { CategoriesState } from './judge';
@@ -18,6 +19,8 @@ export function CategoriesComponent({
   onResolve,
 }: MiniGameProps<CategoriesParams>): JSX.Element {
   const [state, setState] = useState<CategoriesState>(initState);
+  // Wave 3: the GM starts the clock — no auto-start while they explain.
+  const [clockStarted, setClockStarted] = useState(false);
 
   const activeCategory = state.skipped ? params.skipCategory : params.category;
   const targetMet = state.tally >= params.targetCount;
@@ -59,7 +62,7 @@ export function CategoriesComponent({
         </span>
         <Timer
           seconds={params.timerSeconds}
-          running={!state.timerExpired && !targetMet}
+          running={clockStarted && !state.timerExpired && !targetMet}
           onExpire={handleTimerExpire}
           audible
         />
@@ -115,6 +118,13 @@ export function CategoriesComponent({
         <div className="mg-hero-sub" data-testid="categories-hint">
           {hintText}
         </div>
+
+        {!clockStarted && !state.timerExpired && !targetMet && (
+          <ClockGate
+            hint={`Read the category aloud and explain the target (${params.targetCount} valid answers). Start when the table is ready to shout.`}
+            onStart={() => setClockStarted(true)}
+          />
+        )}
       </ChallengeZone>
 
       <RefereeZone>

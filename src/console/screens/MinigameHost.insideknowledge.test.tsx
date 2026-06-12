@@ -129,6 +129,7 @@ describe('MinigameHost — inside-knowledge game mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     expect(screen.getByTestId('inside-knowledge')).toBeInTheDocument();
     expect(screen.queryByTestId('btn-outcome-clean')).not.toBeInTheDocument();
   });
@@ -141,6 +142,7 @@ describe('MinigameHost — inside-knowledge game mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     expect(screen.getByTestId('ik-question')).toBeInTheDocument();
     expect(screen.getByTestId('ik-answer')).toBeInTheDocument();
   });
@@ -153,6 +155,7 @@ describe('MinigameHost — inside-knowledge game mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     expect(screen.getByTestId('ik-progress')).toBeInTheDocument();
     expect(screen.getByTestId('ik-score')).toBeInTheDocument();
   });
@@ -165,6 +168,7 @@ describe('MinigameHost — inside-knowledge game mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     expect(screen.getByTestId('mg-status-zone')).toBeInTheDocument();
     expect(screen.getByTestId('mg-challenge-zone')).toBeInTheDocument();
     expect(screen.getByTestId('mg-referee-zone')).toBeInTheDocument();
@@ -178,6 +182,7 @@ describe('MinigameHost — inside-knowledge game mounting', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     expect(screen.getByTestId('btn-call-outcome')).toBeInTheDocument();
   });
 });
@@ -193,6 +198,7 @@ describe('MinigameHost — inside-knowledge seeded params stable', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     const questionA = screen.getByTestId('ik-question').textContent;
     unmountA();
 
@@ -203,6 +209,7 @@ describe('MinigameHost — inside-knowledge seeded params stable', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     const questionB = screen.getByTestId('ik-question').textContent;
 
     expect(questionA).toBe(questionB);
@@ -220,6 +227,7 @@ describe('MinigameHost — inside-knowledge question marking', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     const progressBefore = screen.getByTestId('ik-progress').textContent;
     fireEvent.click(screen.getByTestId('ik-mark-correct'));
     const progressAfter = screen.getByTestId('ik-progress').textContent;
@@ -234,6 +242,7 @@ describe('MinigameHost — inside-knowledge question marking', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     const progressBefore = screen.getByTestId('ik-progress').textContent;
     fireEvent.click(screen.getByTestId('ik-mark-wrong'));
     const progressAfter = screen.getByTestId('ik-progress').textContent;
@@ -252,6 +261,7 @@ describe('MinigameHost — inside-knowledge boosts', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 
@@ -263,6 +273,7 @@ describe('MinigameHost — inside-knowledge boosts', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 
@@ -274,6 +285,7 @@ describe('MinigameHost — inside-knowledge boosts', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     expect(screen.queryByTestId('boost-charm')).not.toBeInTheDocument();
   });
 
@@ -285,6 +297,7 @@ describe('MinigameHost — inside-knowledge boosts', () => {
       </StoreContext.Provider>,
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     const btn = screen.getByTestId('boost-charm');
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -304,6 +317,7 @@ describe('MinigameHost — inside-knowledge outcome flow', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     // judge yields botched (0 correct < threshold) — call outcome
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     // Shell RESOLVE pre-selected to botched — confirm
@@ -327,6 +341,7 @@ describe('MinigameHost — inside-knowledge outcome flow', () => {
     );
 
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
+    if (screen.queryByTestId('mg-start-clock')) fireEvent.click(screen.getByTestId('mg-start-clock'));
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     // Override to clean in Shell RESOLVE
     fireEvent.click(screen.getByTestId('outcome-option-clean'));

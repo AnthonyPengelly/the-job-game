@@ -4,6 +4,7 @@ import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
+import { ClockGate } from '@/minigames/primitives/ClockGate';
 import type { SteadyHandsParams } from './generate';
 import type { SteadyHandsState } from './judge';
 import { judge, extraHandsBoost } from './judge';
@@ -25,6 +26,8 @@ export function SteadyHandsComponent({
   onResolve,
 }: MiniGameProps<SteadyHandsParams>): JSX.Element {
   const [state, setState] = useState<SteadyHandsState>(initState);
+  // Wave 3: the GM starts the clock — no auto-start while they explain.
+  const [clockStarted, setClockStarted] = useState(false);
   const [burstSeconds, setBurstSeconds] = useState(EXTRA_HANDS_SECONDS);
 
   const fillPct = Math.min((state.currentHeight / params.targetHeight) * 100, 100);
@@ -78,7 +81,7 @@ export function SteadyHandsComponent({
         </span>
         <Timer
           seconds={params.timerSeconds}
-          running={!state.timerExpired}
+          running={clockStarted && !state.timerExpired}
           onExpire={handleTimerExpire}
           audible
         />
@@ -97,6 +100,12 @@ export function SteadyHandsComponent({
       </StatusZone>
 
       <ChallengeZone>
+        {!clockStarted && !state.timerExpired && (
+          <ClockGate
+            hint={`Brief the build: a card tower ${params.targetHeight} tiers high before the buzzer (a tier = two leaning cards capped flat). Start the clock when their hands are over the cards.`}
+            onStart={() => setClockStarted(true)}
+          />
+        )}
         <div className="sh-tower-area">
           <div className="sh-tower" data-testid="sh-tower" aria-label={`Tower: ${solidBricks} of ${totalBricks} tiers`}>
             {Array.from({ length: targetBricks }).map((_, i) => (
