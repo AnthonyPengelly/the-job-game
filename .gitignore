@@ -10,3 +10,4 @@ plans/archive/
 .DS_Store
 .playwright-mcp/
 qa-screens/
+.claude/worktrees/
