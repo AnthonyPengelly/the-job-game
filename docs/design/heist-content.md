@@ -17,6 +17,13 @@ Shorthand: Heat ↑/↓ = ±2 (small) · ⇈/⇊ = ±4 (big) · Loot +/− · **
 > (`gearDrops.bigScoreChance`) to upgrade to the +2 tier. Sell values follow
 > a **visible rule**: `perBonusPoint × points + perRoom × roomIndex`, where
 > points = magnitude (+1/+2) and a power-up is worth `powerUpPoints`.
+>
+> **Wave 3 (2026-06):** EVERY door drops gear — templates no longer carry
+> gear hints; each drop rolls power-up vs stat-boost from preset chances
+> (`gearDrops.powerUpChance` / `bigScoreChance`), crews above four roll
+> extra drops (`extraDropChancePerPlayer`, capped at `maxDrops`) so big
+> tables share more cards, and the fence pays less per card now that gear
+> is common (perBonusPoint 5000→3000).
 
 ## Stat boosts — common, stack, +1 to a lane
 
