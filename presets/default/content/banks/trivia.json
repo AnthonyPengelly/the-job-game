@@ -313,6 +313,666 @@
         "A brute-force attack that tries all passwords from a dictionary",
         "A first-day phishing campaign targeting new employees"
       ]
+    },
+    {
+      "question": "Which famous painting was stolen from the Louvre in 1911?",
+      "answer": "The Mona Lisa",
+      "tier": "easy",
+      "options": [
+        "The Mona Lisa",
+        "The Starry Night",
+        "Girl with a Pearl Earring",
+        "The Scream"
+      ]
+    },
+    {
+      "question": "In criminal slang, what does 'casing a joint' mean?",
+      "answer": "Scouting a location before a robbery",
+      "tier": "easy",
+      "options": [
+        "Scouting a location before a robbery",
+        "Bribing the staff",
+        "Hiding loot inside the walls",
+        "Changing the locks"
+      ]
+    },
+    {
+      "question": "Alcatraz, the famous island prison, sits in the bay of which US city?",
+      "answer": "San Francisco",
+      "tier": "easy",
+      "options": ["San Francisco", "New York", "Boston", "Seattle"]
+    },
+    {
+      "question": "In police slang, what is a 'stakeout'?",
+      "answer": "Covertly watching a location for a long period",
+      "tier": "easy",
+      "options": [
+        "Covertly watching a location for a long period",
+        "A high-speed pursuit",
+        "An undercover arrest",
+        "A prison head-count"
+      ]
+    },
+    {
+      "question": "Which precious metal has the chemical symbol Au?",
+      "answer": "Gold",
+      "tier": "easy",
+      "options": ["Gold", "Silver", "Copper", "Aluminium"]
+    },
+    {
+      "question": "What is Fort Knox famous for storing?",
+      "answer": "Gold bullion — much of the US gold reserve",
+      "tier": "easy",
+      "options": [
+        "Gold bullion — much of the US gold reserve",
+        "The Crown Jewels",
+        "Printing plates for dollar bills",
+        "Confiscated weapons"
+      ]
+    },
+    {
+      "question": "What does 'FBI' stand for?",
+      "answer": "Federal Bureau of Investigation",
+      "tier": "easy",
+      "options": [
+        "Federal Bureau of Investigation",
+        "Federal Board of Inquiry",
+        "Bureau of Federal Intelligence",
+        "Federal Bureau of Intelligence"
+      ]
+    },
+    {
+      "question": "What is the largest planet in the solar system?",
+      "answer": "Jupiter",
+      "tier": "easy",
+      "options": ["Jupiter", "Saturn", "Neptune", "Earth"]
+    },
+    {
+      "question": "How many strings does a standard violin have?",
+      "answer": "Four",
+      "tier": "easy",
+      "options": ["Four", "Five", "Six", "Three"]
+    },
+    {
+      "question": "What is the capital of Australia?",
+      "answer": "Canberra",
+      "tier": "easy",
+      "options": ["Canberra", "Sydney", "Melbourne", "Perth"]
+    },
+    {
+      "question": "Which is the largest ocean on Earth?",
+      "answer": "The Pacific",
+      "tier": "easy",
+      "options": ["The Pacific", "The Atlantic", "The Indian", "The Arctic"]
+    },
+    {
+      "question": "What is the only mammal capable of true, powered flight?",
+      "answer": "The bat",
+      "tier": "easy",
+      "options": [
+        "The bat",
+        "The flying squirrel",
+        "The sugar glider",
+        "The colugo"
+      ]
+    },
+    {
+      "question": "In which sport would you perform a slam dunk?",
+      "answer": "Basketball",
+      "tier": "easy",
+      "options": ["Basketball", "Volleyball", "Netball", "Handball"]
+    },
+    {
+      "question": "What is the chemical formula for table salt?",
+      "answer": "NaCl",
+      "tier": "easy",
+      "options": ["NaCl", "KCl", "NaOH", "CaCl2"]
+    },
+    {
+      "question": "Which artist painted the ceiling of the Sistine Chapel?",
+      "answer": "Michelangelo",
+      "tier": "easy",
+      "options": ["Michelangelo", "Leonardo da Vinci", "Raphael", "Botticelli"]
+    },
+    {
+      "question": "How many players does a football (soccer) team field at kick-off?",
+      "answer": "Eleven",
+      "tier": "easy",
+      "options": ["Eleven", "Ten", "Nine", "Twelve"]
+    },
+    {
+      "question": "What fruit is the main ingredient of guacamole?",
+      "answer": "Avocado",
+      "tier": "easy",
+      "options": ["Avocado", "Tomato", "Lime", "Green pepper"]
+    },
+    {
+      "question": "Which country gifted the Statue of Liberty to the United States?",
+      "answer": "France",
+      "tier": "easy",
+      "options": ["France", "United Kingdom", "Spain", "Italy"]
+    },
+    {
+      "question": "What is the longest river in South America?",
+      "answer": "The Amazon",
+      "tier": "easy",
+      "options": ["The Amazon", "The Paraná", "The Orinoco", "The Magdalena"]
+    },
+    {
+      "question": "Which language has the most native speakers in the world?",
+      "answer": "Mandarin Chinese",
+      "tier": "easy",
+      "options": ["Mandarin Chinese", "English", "Spanish", "Hindi"]
+    },
+    {
+      "question": "In the 1990 Isabella Stewart Gardner Museum heist, the thieves got inside disguised as what?",
+      "answer": "Police officers",
+      "tier": "medium",
+      "options": [
+        "Police officers",
+        "Museum cleaners",
+        "Fire inspectors",
+        "Art restorers"
+      ]
+    },
+    {
+      "question": "What is a 'skeleton key'?",
+      "answer": "A key cut down so it can open many different locks",
+      "tier": "medium",
+      "options": [
+        "A key cut down so it can open many different locks",
+        "A key that only opens antique locks",
+        "The master key kept by a building's owner",
+        "A 3D-printed copy of a stolen key"
+      ]
+    },
+    {
+      "question": "In con artistry, what is 'the long con'?",
+      "answer": "A confidence trick played out over weeks or months",
+      "tier": "medium",
+      "options": [
+        "A confidence trick played out over weeks or months",
+        "A scam that targets long-distance victims",
+        "A con run from inside a prison",
+        "A swindle involving long-term loans"
+      ]
+    },
+    {
+      "question": "Escape artist Harry Houdini was born in which country?",
+      "answer": "Hungary",
+      "tier": "medium",
+      "options": ["Hungary", "Poland", "United States", "Austria"]
+    },
+    {
+      "question": "The foiled Millennium Dome raid of 2000 in London targeted what?",
+      "answer": "A diamond exhibition, including the flawless Millennium Star",
+      "tier": "medium",
+      "options": [
+        "A diamond exhibition, including the flawless Millennium Star",
+        "A gold bullion exchange",
+        "A Fabergé egg collection",
+        "The Crown Jewels on tour"
+      ]
+    },
+    {
+      "question": "What is 'money laundering'?",
+      "answer": "Disguising illegally obtained money as legitimate income",
+      "tier": "medium",
+      "options": [
+        "Disguising illegally obtained money as legitimate income",
+        "Counterfeiting banknotes",
+        "Stealing freshly printed currency",
+        "Smuggling cash across borders"
+      ]
+    },
+    {
+      "question": "Which infamous gangster was finally convicted not of violence, but of tax evasion?",
+      "answer": "Al Capone",
+      "tier": "medium",
+      "options": ["Al Capone", "John Dillinger", "Lucky Luciano", "Bugsy Siegel"]
+    },
+    {
+      "question": "In criminal slang, what does a 'fence' do?",
+      "answer": "Buys and resells stolen goods",
+      "tier": "medium",
+      "options": [
+        "Buys and resells stolen goods",
+        "Guards the perimeter during a robbery",
+        "Forges documents for the crew",
+        "Launders money through casinos"
+      ]
+    },
+    {
+      "question": "Frank Abagnale, who inspired 'Catch Me If You Can', was most famous for what?",
+      "answer": "Forging cheques while posing as an airline pilot",
+      "tier": "medium",
+      "options": [
+        "Forging cheques while posing as an airline pilot",
+        "Counterfeiting passports for smugglers",
+        "Selling fake paintings to museums",
+        "Impersonating a bank manager to empty vaults"
+      ]
+    },
+    {
+      "question": "What is a 'honeypot' in cybersecurity?",
+      "answer": "A decoy system set up to lure and study attackers",
+      "tier": "medium",
+      "options": [
+        "A decoy system set up to lure and study attackers",
+        "A database of stolen passwords",
+        "A bribe offered to an insider",
+        "Malware that locks files until a ransom is paid"
+      ]
+    },
+    {
+      "question": "The 2015 Hatton Garden heist in London was remarkable because the burglars were what?",
+      "answer": "Mostly retirees — career criminals in their 60s and 70s",
+      "tier": "medium",
+      "options": [
+        "Mostly retirees — career criminals in their 60s and 70s",
+        "Former police officers",
+        "Teenagers recruited online",
+        "Bank employees working from the inside"
+      ]
+    },
+    {
+      "question": "In a confidence trick, what is a 'shill'?",
+      "answer": "An accomplice posing as an enthusiastic customer to draw in victims",
+      "tier": "medium",
+      "options": [
+        "An accomplice posing as an enthusiastic customer to draw in victims",
+        "The lookout who watches for police",
+        "A forged document used as bait",
+        "The intended victim of the con"
+      ]
+    },
+    {
+      "question": "What is the Mafia's traditional code of silence called?",
+      "answer": "Omertà",
+      "tier": "medium",
+      "options": ["Omertà", "Vendetta", "Cosa Nostra", "La Famiglia"]
+    },
+    {
+      "question": "What did Banksy's 'Girl with Balloon' famously do moments after selling at auction in 2018?",
+      "answer": "It shredded itself inside the frame",
+      "tier": "medium",
+      "options": [
+        "It shredded itself inside the frame",
+        "It was stolen from the auction house",
+        "It was revealed as a forgery",
+        "It burst into flames"
+      ]
+    },
+    {
+      "question": "Which country has the longest coastline in the world?",
+      "answer": "Canada",
+      "tier": "medium",
+      "options": ["Canada", "Russia", "Australia", "Indonesia"]
+    },
+    {
+      "question": "Which food, found still edible in ancient Egyptian tombs, essentially never spoils?",
+      "answer": "Honey",
+      "tier": "medium",
+      "options": ["Honey", "White rice", "Hard cheese", "Dark chocolate"]
+    },
+    {
+      "question": "How many hearts does an octopus have?",
+      "answer": "Three",
+      "tier": "medium",
+      "options": ["Three", "One", "Two", "Five"]
+    },
+    {
+      "question": "Which planet rotates on its side, with its axis tilted about 98 degrees?",
+      "answer": "Uranus",
+      "tier": "medium",
+      "options": ["Uranus", "Neptune", "Mercury", "Mars"]
+    },
+    {
+      "question": "Which country drinks the most coffee per person?",
+      "answer": "Finland",
+      "tier": "medium",
+      "options": ["Finland", "Italy", "United States", "Brazil"]
+    },
+    {
+      "question": "What does the distress signal 'SOS' actually stand for?",
+      "answer": "Nothing — it was chosen because it is simple to send in Morse code",
+      "tier": "medium",
+      "options": [
+        "Nothing — it was chosen because it is simple to send in Morse code",
+        "Save Our Souls",
+        "Save Our Ship",
+        "Send Out Support"
+      ]
+    },
+    {
+      "question": "What colour is a horseshoe crab's blood?",
+      "answer": "Blue",
+      "tier": "medium",
+      "options": ["Blue", "Red", "Green", "Clear"]
+    },
+    {
+      "question": "Which European capital city is spread across 14 islands?",
+      "answer": "Stockholm",
+      "tier": "medium",
+      "options": ["Stockholm", "Copenhagen", "Amsterdam", "Venice"]
+    },
+    {
+      "question": "What is the national animal of Scotland?",
+      "answer": "The unicorn",
+      "tier": "medium",
+      "options": ["The unicorn", "The stag", "The golden eagle", "The lion"]
+    },
+    {
+      "question": "Which spice is the most expensive in the world by weight?",
+      "answer": "Saffron",
+      "tier": "medium",
+      "options": ["Saffron", "Vanilla", "Cardamom", "Cinnamon"]
+    },
+    {
+      "question": "In which country did the croissant originate?",
+      "answer": "Austria",
+      "tier": "medium",
+      "options": ["Austria", "France", "Belgium", "Italy"]
+    },
+    {
+      "question": "What was Disney's first feature-length animated film, released in 1937?",
+      "answer": "Snow White and the Seven Dwarfs",
+      "tier": "medium",
+      "options": [
+        "Snow White and the Seven Dwarfs",
+        "Pinocchio",
+        "Fantasia",
+        "Bambi"
+      ]
+    },
+    {
+      "question": "Which sport has been played on the surface of the Moon?",
+      "answer": "Golf",
+      "tier": "medium",
+      "options": ["Golf", "Baseball", "Frisbee", "Darts"]
+    },
+    {
+      "question": "How long is a marathon?",
+      "answer": "Just over 42 kilometres",
+      "tier": "medium",
+      "options": [
+        "Just over 42 kilometres",
+        "Just over 38 kilometres",
+        "Exactly 40 kilometres",
+        "Just over 45 kilometres"
+      ]
+    },
+    {
+      "question": "Which human organ can regrow to full size from as little as a quarter of its tissue?",
+      "answer": "The liver",
+      "tier": "medium",
+      "options": ["The liver", "The kidney", "The pancreas", "The spleen"]
+    },
+    {
+      "question": "Who was the first woman to win a Nobel Prize?",
+      "answer": "Marie Curie",
+      "tier": "medium",
+      "options": [
+        "Marie Curie",
+        "Rosalind Franklin",
+        "Dorothy Hodgkin",
+        "Lise Meitner"
+      ]
+    },
+    {
+      "question": "Which of the Seven Wonders of the Ancient World is still standing?",
+      "answer": "The Great Pyramid of Giza",
+      "tier": "medium",
+      "options": [
+        "The Great Pyramid of Giza",
+        "The Hanging Gardens of Babylon",
+        "The Colossus of Rhodes",
+        "The Lighthouse of Alexandria"
+      ]
+    },
+    {
+      "question": "What is the largest desert on Earth?",
+      "answer": "Antarctica",
+      "tier": "medium",
+      "options": ["Antarctica", "The Sahara", "The Gobi", "The Arabian Desert"]
+    },
+    {
+      "question": "What is the official language of Brazil?",
+      "answer": "Portuguese",
+      "tier": "medium",
+      "options": ["Portuguese", "Spanish", "Brazilian", "Italian"]
+    },
+    {
+      "question": "What does the word 'wiki' mean in Hawaiian?",
+      "answer": "Quick",
+      "tier": "medium",
+      "options": ["Quick", "Knowledge", "Together", "Open"]
+    },
+    {
+      "question": "Which animal has fingerprints so similar to humans' they could confuse a crime scene?",
+      "answer": "The koala",
+      "tier": "medium",
+      "options": [
+        "The koala",
+        "The chimpanzee",
+        "The gorilla",
+        "The raccoon"
+      ]
+    },
+    {
+      "question": "In what year did the Titanic sink?",
+      "answer": "1912",
+      "tier": "medium",
+      "options": ["1912", "1905", "1915", "1920"]
+    },
+    {
+      "question": "Measured from its base to its summit, what is the tallest mountain on Earth?",
+      "answer": "Mauna Kea",
+      "tier": "medium",
+      "options": ["Mauna Kea", "Mount Everest", "K2", "Denali"]
+    },
+    {
+      "question": "Spelled out in English, what is the only number whose letters appear in alphabetical order?",
+      "answer": "Forty",
+      "tier": "medium",
+      "options": ["Forty", "Sixty", "Eight", "One"]
+    },
+    {
+      "question": "Which two countries share the longest international border in the world?",
+      "answer": "The United States and Canada",
+      "tier": "medium",
+      "options": [
+        "The United States and Canada",
+        "Russia and China",
+        "Argentina and Chile",
+        "Russia and Kazakhstan"
+      ]
+    },
+    {
+      "question": "The Anglo-Zanzibar War of 1896, the shortest war in history, lasted roughly how long?",
+      "answer": "About 40 minutes",
+      "tier": "medium",
+      "options": [
+        "About 40 minutes",
+        "About four hours",
+        "About four days",
+        "About two weeks"
+      ]
+    },
+    {
+      "question": "What is a 'glass relocker' in safe engineering?",
+      "answer": "A glass plate that triggers extra locking bolts if a drill shatters it",
+      "tier": "hard",
+      "options": [
+        "A glass plate that triggers extra locking bolts if a drill shatters it",
+        "A see-through panel for inspecting the bolt work",
+        "A glass vial of dye that ruins the contents if broken",
+        "A reinforced crystal cover for the combination dial"
+      ]
+    },
+    {
+      "question": "After stealing the Mona Lisa in 1911, where did Vincenzo Peruggia keep it for two years?",
+      "answer": "In a trunk in his Paris apartment",
+      "tier": "hard",
+      "options": [
+        "In a trunk in his Paris apartment",
+        "Buried in a Tuscan vineyard",
+        "Behind a false wall in a Milan gallery",
+        "In a Swiss bank vault"
+      ]
+    },
+    {
+      "question": "In the 1971 Baker Street robbery, thieves reached the bank vault by tunnelling from where?",
+      "answer": "A rented shop two doors down",
+      "tier": "hard",
+      "options": [
+        "A rented shop two doors down",
+        "The sewer system beneath the street",
+        "An abandoned Underground tunnel",
+        "The basement of the bank next door"
+      ]
+    },
+    {
+      "question": "What is 'steganography'?",
+      "answer": "Hiding a secret message inside an ordinary file or image",
+      "tier": "hard",
+      "options": [
+        "Hiding a secret message inside an ordinary file or image",
+        "Encrypting a message so only the key holder can read it",
+        "Forging a sender's identity on a message",
+        "Splitting a message across multiple couriers"
+      ]
+    },
+    {
+      "question": "What evidence helped convict the mastermind of the 2003 Antwerp diamond heist?",
+      "answer": "DNA on a half-eaten sandwich dumped near the getaway route",
+      "tier": "hard",
+      "options": [
+        "DNA on a half-eaten sandwich dumped near the getaway route",
+        "Fingerprints on the vault door",
+        "CCTV footage from a petrol station",
+        "A tracking device hidden in the diamonds"
+      ]
+    },
+    {
+      "question": "What is a 'canary trap'?",
+      "answer": "Giving each suspect a slightly different document to trace a leak",
+      "tier": "hard",
+      "options": [
+        "Giving each suspect a slightly different document to trace a leak",
+        "A silent alarm wired to a decoy safe",
+        "An informant planted inside a criminal crew",
+        "A cage of birds used to detect gas in tunnels"
+      ]
+    },
+    {
+      "question": "Rembrandt's portrait 'Jacob de Gheyn III' holds what dubious record?",
+      "answer": "It is the world's most frequently stolen painting",
+      "tier": "hard",
+      "options": [
+        "It is the world's most frequently stolen painting",
+        "It is the most expensive painting ever ransomed",
+        "It is the longest-missing artwork ever recovered",
+        "It is the most-forged painting in history"
+      ]
+    },
+    {
+      "question": "What is the only letter that does not appear in the name of any US state?",
+      "answer": "Q",
+      "tier": "hard",
+      "options": ["Q", "Z", "X", "J"]
+    },
+    {
+      "question": "On which planet does a single day last longer than its entire year?",
+      "answer": "Venus",
+      "tier": "hard",
+      "options": ["Venus", "Mercury", "Mars", "Jupiter"]
+    },
+    {
+      "question": "Bubble wrap was originally invented as what?",
+      "answer": "Wallpaper",
+      "tier": "hard",
+      "options": [
+        "Wallpaper",
+        "Greenhouse insulation",
+        "Packaging for electronics",
+        "A shower curtain liner"
+      ]
+    },
+    {
+      "question": "When the Aztec Empire was founded around 1428, which university had already been teaching for over 300 years?",
+      "answer": "Oxford",
+      "tier": "hard",
+      "options": ["Oxford", "Harvard", "Heidelberg", "The Sorbonne"]
+    },
+    {
+      "question": "Roughly how many times does the average human heart beat in a day?",
+      "answer": "About 100,000",
+      "tier": "hard",
+      "options": [
+        "About 100,000",
+        "About 10,000",
+        "About 500,000",
+        "About 1 million"
+      ]
+    },
+    {
+      "question": "Cleopatra lived closer in time to the Moon landing than to the building of what?",
+      "answer": "The Great Pyramid of Giza",
+      "tier": "hard",
+      "options": [
+        "The Great Pyramid of Giza",
+        "The Parthenon",
+        "The Colosseum",
+        "The Library of Alexandria"
+      ]
+    },
+    {
+      "question": "Which country's national flag is the only one that is not a four-sided quadrilateral?",
+      "answer": "Nepal",
+      "tier": "hard",
+      "options": ["Nepal", "Switzerland", "Qatar", "Bhutan"]
+    },
+    {
+      "question": "What is the loudest animal on Earth?",
+      "answer": "The sperm whale",
+      "tier": "hard",
+      "options": [
+        "The sperm whale",
+        "The blue whale",
+        "The howler monkey",
+        "The African elephant"
+      ]
+    },
+    {
+      "question": "What did ancient Romans commonly use as mouthwash?",
+      "answer": "Urine",
+      "tier": "hard",
+      "options": ["Urine", "Vinegar", "Olive oil", "Crushed mint and salt"]
+    },
+    {
+      "question": "Thanks to its overseas territories, which country spans the most time zones?",
+      "answer": "France",
+      "tier": "hard",
+      "options": ["France", "Russia", "United States", "United Kingdom"]
+    },
+    {
+      "question": "The word 'salary' comes from the Latin word for what?",
+      "answer": "Salt",
+      "tier": "hard",
+      "options": ["Salt", "Silver", "Grain", "Soldiers"]
+    },
+    {
+      "question": "Which planet is so light for its size that it would float in water?",
+      "answer": "Saturn",
+      "tier": "hard",
+      "options": ["Saturn", "Jupiter", "Neptune", "Mercury"]
+    },
+    {
+      "question": "What is the rarest of the eight main human blood types?",
+      "answer": "AB negative",
+      "tier": "hard",
+      "options": ["AB negative", "O negative", "B negative", "A positive"]
     }
   ]
 }
