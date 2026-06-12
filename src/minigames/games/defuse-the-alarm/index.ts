@@ -2,7 +2,7 @@ import type { MiniGame } from '@/minigames/contract';
 import type { DefuseParams } from './generate';
 import { generate } from './generate';
 import type { DefuseState } from './judge';
-import { judge, clearChannelBoost } from './judge';
+import { judge, insulatedGlovesBoost } from './judge';
 import { DefuseComponent } from './component';
 
 export type { DefuseParams, RuleClause, WireCard, WirePredicate, WireSuit } from './generate';
@@ -17,12 +17,12 @@ export const defuseTheAlarm: MiniGame<DefuseParams, DefuseState> = {
   generate,
   Component: DefuseComponent,
   judge,
-  boosts: [clearChannelBoost],
+  boosts: [insulatedGlovesBoost],
   armedInstructions:
     'Deal a row of random cards face-up — the alarm wiring. One player (the reader) gets the ' +
     'rulebook and cannot see the cards; the crew sees the cards but not the rules. They ' +
     'describe, the reader names the cuts. With a second screen the reader uses the ' +
     'player-view and you referee live; with one laptop you hand THIS machine to the reader ' +
     '(it shows only the rules and the clock) and check the row when it comes back. ' +
-    'Clear Channel allows one full spoken sentence through; shout it once.',
+    'Insulated Gloves forgives one wrong cut — shout it once, before or right after the snip.',
 };

@@ -7,7 +7,7 @@ import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import { publishSlice } from '@/platform/channel';
 import type { DefuseParams } from './generate';
-import { judge, clearChannelBoost } from './judge';
+import { judge, insulatedGlovesBoost } from './judge';
 import type { DefuseState } from './judge';
 
 function initState(): DefuseState {
@@ -16,7 +16,8 @@ function initState(): DefuseState {
     wrongCut: false,
     allClear: false,
     timerExpired: false,
-    clearChannelUsed: false,
+    glovesArmed: false,
+    wrongCutForgiven: false,
   };
 }
 
@@ -82,7 +83,12 @@ export function DefuseComponent({
 
   function handleWrongCut() {
     if (state.wrongCut || state.allClear) return;
-    setState(s => ({ ...s, wrongCut: true }));
+    setState(s =>
+      // Pre-armed Insulated Gloves absorb the first wrong cut on the spot.
+      s.glovesArmed && !s.wrongCutForgiven
+        ? { ...s, glovesArmed: false, wrongCutForgiven: true }
+        : { ...s, wrongCut: true },
+    );
   }
 
   function handleAllClear() {
@@ -182,7 +188,7 @@ export function DefuseComponent({
             <ol className="mg-setup-panel__steps">
               <li>Shuffle the pack and deal <strong>{params.wireCount} cards face-up in a row</strong> — these are the wires.</li>
               <li>Pick a <strong>reader</strong>. They get the rules; they must not see the cards. The crew describes the row; the reader names the cuts. A named wire is cut by flipping it face-down.</li>
-              <li>Only yes/no answers between crew and reader; Clear Channel buys one full sentence.</li>
+              <li>Only yes/no answers between crew and reader. Insulated Gloves (power-up shout) forgives one wrong cut.</li>
             </ol>
             <p className="mg-setup-panel__rule">
               <strong>Two ways to run it:</strong> if a second screen is connected, the reader
@@ -254,10 +260,16 @@ export function DefuseComponent({
               </div>
             )}
 
-            {state.clearChannelUsed && (
-              <div data-testid="defuse-clear-channel-active" className="dfz-manual-ref" style={{ color: 'var(--caution, #f7b84b)' }}>
+            {state.glovesArmed && (
+              <div data-testid="defuse-gloves-armed" className="dfz-manual-ref" style={{ color: 'var(--caution, #f7b84b)' }}>
                 <MessageSquare size={14} />
-                Clear Channel active — one full sentence allowed
+                Insulated Gloves armed — the next wrong cut won't trip the alarm
+              </div>
+            )}
+            {state.wrongCutForgiven && (
+              <div data-testid="defuse-gloves-used" className="dfz-manual-ref" style={{ color: 'var(--caution, #f7b84b)' }}>
+                <MessageSquare size={14} />
+                A wrong cut was absorbed — best result now: complication
               </div>
             )}
 
@@ -283,7 +295,7 @@ export function DefuseComponent({
       <RefereeZone>
         <div className="mg-boost-slot">
           <BoostButton<DefuseState, DefuseParams>
-            hook={clearChannelBoost}
+            hook={insulatedGlovesBoost}
             gameLanes={['charm', 'stealth']}
             committed={committed}
             onFire={handleBoost}

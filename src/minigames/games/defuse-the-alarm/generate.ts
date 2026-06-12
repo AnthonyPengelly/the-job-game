@@ -246,9 +246,12 @@ const ALL_SUITS: readonly WireSuit[] = ['hearts', 'diamonds', 'clubs', 'spades']
  *   - timerSeconds: less time (60..180)
  */
 export function generate(rng: Rng, dial: Difficulty): DefuseParams {
-  const wireCount = clamp(Math.round(5 + dial.level), 4, 8);
-  const complexity = clamp(Math.round(2 + dial.level * 0.5), 1, 4);
-  const timerSeconds = clamp(Math.round(120 - dial.level * 20), 60, 180);
+  // Wave 3 retune: 'two highest diamonds + two minutes' was a stroll. More
+  // wires, a 2-clause complexity floor (a count-based cut can never be the
+  // whole rulebook), and a much tighter clock.
+  const wireCount = clamp(Math.round(6 + dial.level), 5, 9);
+  const complexity = clamp(Math.round(3 + dial.level * 0.5), 2, 5);
+  const timerSeconds = clamp(Math.round(90 - dial.level * 15), 45, 120);
 
   const usedGroups = new Set<string>();
 
@@ -278,6 +281,9 @@ export function generate(rng: Rng, dial: Difficulty): DefuseParams {
     usedGroups.add('face');
     cutTops.push({ type: 'cutTop', count: 2, suit });
     budget -= 2; // count-based reads as two rules' worth of thinking
+    // Never the whole rulebook by itself (wave 3): keep one point in hand so
+    // at least one more clause always joins it.
+    if (budget === 0) budget = 1;
   } else {
     const pred = takeCutBase();
     if (pred !== undefined) cuts.push({ type: 'cut', pred });
@@ -322,6 +328,21 @@ export function generate(rng: Rng, dial: Difficulty): DefuseParams {
     if (pred === undefined) break;
     cuts.push({ type: 'cut', pred });
     budget -= 1;
+  }
+
+  // Floor: never a one-line rulebook (wave 3) — an unless rider spends budget
+  // without adding a line, so top up with a protection or positional ban.
+  if (keeps.length + cutTops.length + cuts.length < 2) {
+    if (!usedGroups.has('position')) {
+      usedGroups.add('position');
+      keeps.push({ type: 'keepPosition', pos: rng.pick(['leftmost', 'rightmost']) });
+    } else if (!usedGroups.has('face')) {
+      usedGroups.add('face');
+      keeps.push({ type: 'keep', pred: { kind: 'face' } });
+    } else {
+      const pred = takeCutBase();
+      if (pred !== undefined) cuts.push({ type: 'cut', pred });
+    }
   }
 
   // Reading order: protections first, then count-based, then cuts — the order

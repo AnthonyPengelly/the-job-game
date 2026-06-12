@@ -136,15 +136,48 @@ describe('DefuseComponent — GM rulebook', () => {
   });
 });
 
-// ── Clear Channel boost ───────────────────────────────────────────────────────
+// ── Insulated Gloves boost (wave 3) ───────────────────────────────────────────
 
-describe('DefuseComponent — Clear Channel boost', () => {
-  it('active indicator appears after the boost fires', () => {
+describe('DefuseComponent — Insulated Gloves boost', () => {
+  it('arming shows the armed banner', () => {
     renderGame({ boost: true });
     dealWires();
-    expect(screen.queryByTestId('defuse-clear-channel-active')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('defuse-gloves-armed')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-charm'));
-    expect(screen.getByTestId('defuse-clear-channel-active')).toBeInTheDocument();
+    expect(screen.getByTestId('defuse-gloves-armed')).toBeInTheDocument();
+  });
+
+  it('an armed wrong cut is absorbed: no alarm, complication suggested', () => {
+    const spy = vi.fn();
+    renderGame({ boost: true, onResolve: spy });
+    dealWires();
+    fireEvent.click(screen.getByTestId('boost-charm'));
+    fireEvent.click(screen.getByTestId('defuse-wrong-cut'));
+    // No alarm — the gloves ate it.
+    expect(screen.getByTestId('defuse-badge').textContent).not.toContain('ALARM');
+    expect(screen.getByTestId('defuse-gloves-used')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('defuse-all-clear'));
+    fireEvent.click(screen.getByTestId('btn-call-outcome'));
+    expect(spy).toHaveBeenCalledWith('complication');
+  });
+
+  it('fired AFTER a recorded wrong cut, it takes the mistake back', () => {
+    renderGame({ boost: true });
+    dealWires();
+    fireEvent.click(screen.getByTestId('defuse-wrong-cut'));
+    expect(screen.getByTestId('defuse-badge').textContent).toContain('ALARM');
+    fireEvent.click(screen.getByTestId('boost-charm'));
+    expect(screen.getByTestId('defuse-badge').textContent).not.toContain('ALARM');
+    expect(screen.getByTestId('defuse-gloves-used')).toBeInTheDocument();
+  });
+
+  it('a second wrong cut still trips the alarm (once per game)', () => {
+    renderGame({ boost: true });
+    dealWires();
+    fireEvent.click(screen.getByTestId('boost-charm'));
+    fireEvent.click(screen.getByTestId('defuse-wrong-cut')); // absorbed
+    fireEvent.click(screen.getByTestId('defuse-wrong-cut')); // trips
+    expect(screen.getByTestId('defuse-badge').textContent).toContain('ALARM');
   });
 });
 

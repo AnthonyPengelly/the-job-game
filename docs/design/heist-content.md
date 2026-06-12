@@ -54,7 +54,7 @@ There are exactly **four power-ups — one per lane: Tech, Physical, Charm, Stea
 | Safe-Crack | Tech + Stealth | **Stethoscope** — reveal one digit's position |
 | Assembly Line | Physical + Charm | **Tip-Off** — reveal which loot types are in play |
 | Steady Hands | Physical + Stealth | **Extra Hands** — 10s, everyone (benched included) helps build |
-| Defuse the Alarm | Charm + Stealth | **Clear Channel** — one full spoken sentence allowed through |
+| Defuse the Alarm | Charm + Stealth | **Insulated Gloves** — the first wrong cut doesn't trip the alarm (wave 3; *Clear Channel* retired — talking restrictions were unrefereeable, undoing a snip is a table moment) |
 
 So a Tech specialist's single power-up shows up as Reset Pin, Photographic, Narrow It Down, or Stethoscope depending on the room — one ability, many faces.
 

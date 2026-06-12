@@ -257,7 +257,7 @@ describe('MinigameHost — defuseTheAlarm seeded params stable', () => {
 // ── Boost surfacing ───────────────────────────────────────────────────────────
 
 describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
-  it('Clear Channel boost surfaces in ACTIVE when charm power-up is held', () => {
+  it('Insulated Gloves boost surfaces in ACTIVE when charm power-up is held', () => {
     const store = makeDefuseStore(1, { charmPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
@@ -268,7 +268,7 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
     expect(screen.getByTestId('boost-charm')).toBeInTheDocument();
   });
 
-  it('Clear Channel surfaces when stealth power-up is held (any-lane eligibility)', () => {
+  it('Insulated Gloves surfaces when stealth power-up is held (any-lane eligibility)', () => {
     const store = makeDefuseStore(1, { stealthPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
@@ -290,7 +290,7 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
     expect(screen.queryByTestId('boost-charm')).not.toBeInTheDocument();
   });
 
-  it('Clear Channel fires once then disables', () => {
+  it('Insulated Gloves fires once then disables', () => {
     const store = makeDefuseStore(1, { charmPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
@@ -304,7 +304,7 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
     expect(btn).toBeDisabled();
   });
 
-  it('Clear Channel shows active banner after firing', () => {
+  it('Insulated Gloves shows the armed banner after firing', () => {
     const store = makeDefuseStore(1, { charmPowerUp: true });
     render(
       <StoreContext.Provider value={store}>
@@ -313,9 +313,9 @@ describe('MinigameHost — defuseTheAlarm boost surfacing', () => {
     );
     fireEvent.click(screen.getByTestId('btn-minigame-start'));
     fireEvent.click(screen.getByTestId('defuse-dealt'));
-    expect(screen.queryByTestId('defuse-clear-channel-active')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('defuse-gloves-armed')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boost-charm'));
-    expect(screen.getByTestId('defuse-clear-channel-active')).toBeInTheDocument();
+    expect(screen.getByTestId('defuse-gloves-armed')).toBeInTheDocument();
   });
 });
 

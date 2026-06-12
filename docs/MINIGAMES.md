@@ -170,7 +170,7 @@ Steady Breath, Spare Wire) have been removed. The ten canonical abilities are:
 | Safe-Crack | **Stethoscope** |
 | Assembly Line / Negotiated | **Tip-Off** |
 | Steady Hands | **Extra Hands** |
-| Defuse the Alarm | **Clear Channel** |
+| Defuse the Alarm | **Insulated Gloves** |
 
 There are exactly **four power-ups, one per lane** (design doc; heist-content.md
 GEAR). Holding any lane's power-up means *"you're an ace at that lane's games"*:
@@ -454,7 +454,10 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
   (regardless of timer); **complication** = still defusing; **botched** = a
   wrong cut trips the alarm / timer expired first (GM's call after a handoff
   — the clock coming back at zero with an unfinished row reads botched).
-- **Boost:** **Clear Channel** (one full sentence allowed). Fires for holder of Charm or Stealth power-up.
+- **Boost:** **Insulated Gloves** (wave 3, replacing Clear Channel) — the first
+  wrong cut doesn't trip the alarm, once per game; shout it pre-emptively to arm
+  it or right after the snip to take the mistake back. A forgiven cut caps the
+  result at complication. Fires for holder of Charm or Stealth power-up.
 - **Dial levers:** simpler rulebook (clause complexity); fewer wires (fewer
   items); more time.
 - **minCommit:** **2.** **Excluded from solo** — asymmetric info collapses with
