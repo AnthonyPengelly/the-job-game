@@ -13,6 +13,7 @@ export const crackTheTumblers: MiniGame<CrackTheTumblersParams, CrackTheTumblers
   name: 'Crack the Tumblers',
   lanes: ['tech'],
   minCommit: 2,
+  fullTeam: true,
   soloVariantId: 'crackTheTumblersSolo' as import('@/engine').GameId,
   generate,
   Component: CrackTheTumblersComponent,

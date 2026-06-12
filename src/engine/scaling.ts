@@ -60,14 +60,18 @@ export function resolveGameVariant(
  * committed players, plus an optional Heat/depth context.
  *
  * Formula (from the active preset's dialCurve for gameId, or _default):
- *   base   = dialCurve.base + perLanePoint × Σ(ratings) − tightenPerExtraCrew × (commitSize − 1)
+ *   mean   = Σ(ratings) / ratings.length        (0 when nobody committed)
+ *   base   = dialCurve.base + perLanePoint × mean − tightenPerExtraCrew × (entries − 1)
  *   heatTerm = heatDial.perHeat × heat + heatDial.perRoom × roomIndex  (0 when ctx omitted)
  *   dial   = base + heatTerm
  *
- * Higher ratings lower the dial (easier); more committed crew also eases it.
- * The tightenPerExtraCrew preset field stores the magnitude of the easing-per-extra-crew
- * credit (positive value ⇒ subtracted in the formula).
- * The DialReadout renders the combined dial.level, so it is always honest.
+ * Wave 3: the rating term uses the AVERAGE committed rating, not the sum — a
+ * full-team commit must not be wildly easier than two specialists ("average
+ * player ease"). Sum-based easing also double-counted combo games (two lane
+ * entries per player). A small residual per-entry easing remains via
+ * tightenPerExtraCrew (more hands help a little); it is preset data, tuned low.
+ * Higher ratings still lower the dial (easier). The DialReadout renders the
+ * combined dial.level, so it is always honest.
  */
 export function computeDial(
   committedLaneRatings: number[],
@@ -80,9 +84,10 @@ export function computeDial(
   if (curve === undefined) {
     throw new Error(`computeDial: no dial curve for game "${gameId}" and no "_default" in preset`);
   }
+  const entries = committedLaneRatings.length;
   const sum = committedLaneRatings.reduce((acc, r) => acc + r, 0);
-  const commitSize = committedLaneRatings.length;
-  const base = curve.base + curve.perLanePoint * sum - curve.tightenPerExtraCrew * (commitSize - 1);
+  const mean = entries > 0 ? sum / entries : 0;
+  const base = curve.base + curve.perLanePoint * mean - curve.tightenPerExtraCrew * Math.max(0, entries - 1);
   if (ctx === undefined) return base;
   const hd = cfg.scaling.heatDial;
   return base + hd.perHeat * ctx.heat + hd.perRoom * ctx.roomIndex;

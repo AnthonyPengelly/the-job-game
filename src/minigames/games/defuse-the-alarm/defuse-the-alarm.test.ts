@@ -3,7 +3,7 @@ import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate, classifyWires, renderRuleLines } from './generate';
 import type { WireCard, WireSuit } from './generate';
-import { judge, clearChannelBoost } from './judge';
+import { judge, insulatedGlovesBoost } from './judge';
 import type { DefuseState } from './judge';
 import { defuseTheAlarm } from './index';
 import { getGame } from '@/minigames/registry';
@@ -49,9 +49,9 @@ describe('defuseTheAlarm registry', () => {
     expect(defuseTheAlarm.soloVariantId).toBeUndefined();
   });
 
-  it('has one boost hook (Clear Channel)', () => {
+  it('has one boost hook (Insulated Gloves)', () => {
     expect(defuseTheAlarm.boosts).toHaveLength(1);
-    expect(defuseTheAlarm.boosts[0]!.label).toBe('Clear Channel');
+    expect(defuseTheAlarm.boosts[0]!.label).toBe('Insulated Gloves');
   });
 });
 
@@ -131,19 +131,19 @@ describe('generate — first-match rulebooks over a physical deal', () => {
     expect(hard.timerSeconds).toBeLessThanOrEqual(easy.timerSeconds);
   });
 
-  it('wireCount stays within a dealable range [4, 8]', () => {
+  it('wireCount stays within a dealable range [5, 9]', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect(p.wireCount).toBeGreaterThanOrEqual(4);
-      expect(p.wireCount).toBeLessThanOrEqual(8);
+      expect(p.wireCount).toBeGreaterThanOrEqual(5);
+      expect(p.wireCount).toBeLessThanOrEqual(9);
     }
   });
 
-  it('timerSeconds is always within [60, 180]', () => {
+  it('timerSeconds is always within [45, 120]', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect(p.timerSeconds).toBeGreaterThanOrEqual(60);
-      expect(p.timerSeconds).toBeLessThanOrEqual(180);
+      expect(p.timerSeconds).toBeGreaterThanOrEqual(45);
+      expect(p.timerSeconds).toBeLessThanOrEqual(120);
     }
   });
 
@@ -275,7 +275,8 @@ function makeState(overrides: Partial<DefuseState> = {}): DefuseState {
     wrongCut: false,
     allClear: false,
     timerExpired: false,
-    clearChannelUsed: false,
+    glovesArmed: false,
+    wrongCutForgiven: false,
     ...overrides,
   };
 }
@@ -304,28 +305,66 @@ describe('judge — three tier boundaries', () => {
 
 // ── clearChannelBoost ─────────────────────────────────────────────────────────
 
-describe('clearChannelBoost (Clear Channel)', () => {
+describe('insulatedGlovesBoost (Insulated Gloves)', () => {
   const params = generate(mulberry32(1), dial(0));
 
-  it('has lane charm and label Clear Channel', () => {
-    expect(clearChannelBoost.lane).toBe('charm');
-    expect(clearChannelBoost.label).toBe('Clear Channel');
+  it('has lane charm and label Insulated Gloves', () => {
+    expect(insulatedGlovesBoost.lane).toBe('charm');
+    expect(insulatedGlovesBoost.label).toBe('Insulated Gloves');
   });
 
-  it('sets clearChannelUsed on first use', () => {
-    const next = clearChannelBoost.apply(makeState(), params);
-    expect(next.clearChannelUsed).toBe(true);
+  it('arms when no wrong cut has happened yet', () => {
+    const next = insulatedGlovesBoost.apply(makeState(), params);
+    expect(next.glovesArmed).toBe(true);
+    expect(next.wrongCutForgiven).toBe(false);
   });
 
-  it('is idempotent when already used', () => {
-    const state = makeState({ clearChannelUsed: true });
-    expect(clearChannelBoost.apply(state, params)).toBe(state);
+  it('takes back an already-recorded wrong cut', () => {
+    const next = insulatedGlovesBoost.apply(makeState({ wrongCut: true }), params);
+    expect(next.wrongCut).toBe(false);
+    expect(next.wrongCutForgiven).toBe(true);
+  });
+
+  it('is idempotent once armed or spent', () => {
+    const armed = makeState({ glovesArmed: true });
+    expect(insulatedGlovesBoost.apply(armed, params)).toBe(armed);
+    const spent = makeState({ wrongCutForgiven: true });
+    expect(insulatedGlovesBoost.apply(spent, params)).toBe(spent);
   });
 
   it('does not mutate the input state', () => {
     const state = makeState();
     const before = JSON.stringify(state);
-    clearChannelBoost.apply(state, params);
+    insulatedGlovesBoost.apply(state, params);
     expect(JSON.stringify(state)).toBe(before);
+  });
+});
+
+describe('judge — forgiven wrong cut caps at complication', () => {
+  it('all clear with a forgiven cut suggests complication, not clean', () => {
+    expect(judge(makeState({ allClear: true, wrongCutForgiven: true }))).toBe('complication');
+  });
+
+  it('all clear with no forgiveness stays clean', () => {
+    expect(judge(makeState({ allClear: true }))).toBe('clean');
+  });
+});
+
+// ── Wave 3: complexity floor ──────────────────────────────────────────────────
+
+describe('generate — wave 3 difficulty floor', () => {
+  it('every rulebook has at least 2 clauses, even at a rock-bottom dial', () => {
+    for (let seed = 1; seed <= 300; seed++) {
+      const p = generate(mulberry32(seed), dial(-3));
+      expect(p.clauses.length).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it('a count-based cut is never the entire rulebook', () => {
+    for (let seed = 1; seed <= 300; seed++) {
+      const p = generate(mulberry32(seed), dial((seed % 5) - 2));
+      const hasCutTop = p.clauses.some(c => c.type === 'cutTop');
+      if (hasCutTop) expect(p.clauses.length).toBeGreaterThanOrEqual(2);
+    }
   });
 });

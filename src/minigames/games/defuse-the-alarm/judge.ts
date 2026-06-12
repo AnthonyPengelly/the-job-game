@@ -11,8 +11,14 @@ export interface DefuseState {
   allClear: boolean;
   /** True once the countdown timer expires. */
   timerExpired: boolean;
-  /** Charm boost (Clear Channel) used flag — one full sentence allowed. */
-  clearChannelUsed: boolean;
+  /**
+   * Insulated Gloves boost (wave 3) fired — the NEXT wrong cut is absorbed
+   * instead of tripping the alarm. Armed before or shouted right after the
+   * mistake; either way it spends the once-per-game use.
+   */
+  glovesArmed: boolean;
+  /** A wrong cut was absorbed by the gloves — caps the result at complication. */
+  wrongCutForgiven: boolean;
 }
 
 /**
@@ -20,23 +26,32 @@ export interface DefuseState {
  * The cards are physical and random, so the GM is the sensor: they can see
  * both the dealt row and the rules, and record each cut.
  *
- *   clean        — GM declared all-clear with no wrong cut (regardless of timer)
- *   complication — still defusing (no wrong cut, not yet all-clear)
+ *   clean        — GM declared all-clear, no wrong cut, nothing forgiven
+ *   complication — still defusing, OR cleared with one wrong cut absorbed by
+ *                  Insulated Gloves (scraped it — the comedic middle)
  *   botched      — a wrong cut tripped the alarm, or time ran out first
  */
 export function judge(state: DefuseState): Outcome {
   if (state.wrongCut) return 'botched';
-  if (state.allClear) return 'clean';
+  if (state.allClear) return state.wrongCutForgiven ? 'complication' : 'clean';
   if (state.timerExpired) return 'botched';
   return 'complication';
 }
 
-/** Charm boost: Clear Channel — one full sentence allowed, once per game. */
-export const clearChannelBoost: BoostHook<DefuseState, DefuseParams> = {
+/**
+ * Boost (wave 3, replacing Clear Channel): Insulated Gloves — the first wrong
+ * cut doesn't trip the alarm, once per game. Shouted pre-emptively it arms;
+ * shouted right after a recorded wrong cut it undoes it on the spot.
+ */
+export const insulatedGlovesBoost: BoostHook<DefuseState, DefuseParams> = {
   lane: 'charm',
-  label: 'Clear Channel',
+  label: 'Insulated Gloves',
   apply(state): DefuseState {
-    if (state.clearChannelUsed) return state;
-    return { ...state, clearChannelUsed: true };
+    if (state.glovesArmed || state.wrongCutForgiven) return state;
+    if (state.wrongCut) {
+      // Fired after the mistake: take it back — the alarm never rang.
+      return { ...state, wrongCut: false, wrongCutForgiven: true };
+    }
+    return { ...state, glovesArmed: true };
   },
 };

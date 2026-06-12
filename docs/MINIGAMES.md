@@ -125,11 +125,14 @@ interface Difficulty {
 ```
 
 **Mapping rating → difficulty.** Each committed player passively eases the game
-in their committed lane. For a single-lane game, use the committed crew's lane
-rating (highest, or sum, per the scaling preset). For a **combo**, all committed
-lane ratings aggregate into a single scalar `dial.level` via `computeDial`
-(sum-weighted by the `perLanePoint` preset field, never hardcoded — see
-`docs/CONTENT-AND-TUNING.md`). The design calls for each lane to ease its own
+in their committed lane. All committed lane ratings aggregate into a single
+scalar `dial.level` via `computeDial`, weighted by the **average** committed
+rating (`perLanePoint` preset field × mean, never hardcoded — see
+`docs/CONTENT-AND-TUNING.md`). Wave 3 decision: the average, not the sum — a
+full-team commit must not be wildly easier than two specialists, and a weak
+tag-along drags the average (and the table sees it live on the commit-panel
+dial). A small residual per-entry easing (`tightenPerExtraCrew`) keeps "more
+hands help a little" true. The design calls for each lane to ease its own
 half of difficulty (e.g. Safe-Crack: Tech → digit count, Stealth → guess count),
 but the current implementation drives all levers from the same scalar — this is
 the **accepted E4 trade-off**; per-lane differentiation can be added in a later
@@ -170,7 +173,7 @@ Steady Breath, Spare Wire) have been removed. The ten canonical abilities are:
 | Safe-Crack | **Stethoscope** |
 | Assembly Line / Negotiated | **Tip-Off** |
 | Steady Hands | **Extra Hands** |
-| Defuse the Alarm | **Clear Channel** |
+| Defuse the Alarm | **Insulated Gloves** |
 
 There are exactly **four power-ups, one per lane** (design doc; heist-content.md
 GEAR). Holding any lane's power-up means *"you're an ace at that lane's games"*:
@@ -269,8 +272,9 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 - **Boosts (Tech):** **Reset Pin** — forgive one clash; the misplayed card goes
   back to its holder's hand and was never counted.
 - **Dial lever:** cards per player (longer silent sequence = harder).
-- **minCommit:** **1 via `soloVariantId`**, true game at **2**. Silent
-  coordination has no meaning solo, so solo loads a **separate memory variant**.
+- **minCommit:** **2**, and **full-team** since wave 3 — the whole crew plays
+  and nobody rests (silent coordination is the table's game). The solo memory
+  variant stays registered for safety but is never offered to a 2+ crew.
 - **soloVariantId:** `crack-the-tumblers-solo` — physical memory test: deal
   `cardCount` random cards face-up in a row, study under the clock, flip
   face-down in place, then flip back one at a time in ascending order. Every
@@ -454,7 +458,10 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
   (regardless of timer); **complication** = still defusing; **botched** = a
   wrong cut trips the alarm / timer expired first (GM's call after a handoff
   — the clock coming back at zero with an unfinished row reads botched).
-- **Boost:** **Clear Channel** (one full sentence allowed). Fires for holder of Charm or Stealth power-up.
+- **Boost:** **Insulated Gloves** (wave 3, replacing Clear Channel) — the first
+  wrong cut doesn't trip the alarm, once per game; shout it pre-emptively to arm
+  it or right after the snip to take the mistake back. A forgiven cut caps the
+  result at complication. Fires for holder of Charm or Stealth power-up.
 - **Dial levers:** simpler rulebook (clause complexity); fewer wires (fewer
   items); more time.
 - **minCommit:** **2.** **Excluded from solo** — asymmetric info collapses with
@@ -469,13 +476,14 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 
 ## 7. Full-team games
 
-Three games require the **whole crew** to play — no subset commits, no resting afterward:
+Four games require the **whole crew** to play — no subset commits, no resting afterward:
 
 | Game | Why full-team |
 |------|---------------|
 | **Categories** (`categories`) | Crew rattles off answers as a table — meaningful with everyone shouting |
 | **Inside Knowledge** (`insideKnowledge`) | Crew confers on trivia — the whole table brings collective knowledge |
 | **Assembly Line** (`assemblyLine` + negotiated) | Whole table trades cards — no one to trade with if benched |
+| **Crack the Tumblers** (`crackTheTumblers`) | Silent coordination is the whole table's game (wave 3) — benching spectators broke the fun; the solo memory variant remains registered but is never offered to a 2+ crew |
 
 **Contract flag.** `MiniGame.fullTeam = true` on these three games (and the
 `assemblyLineNegotiated` variant). The obstacle template in the preset also

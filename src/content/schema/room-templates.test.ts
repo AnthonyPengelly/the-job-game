@@ -4,6 +4,7 @@ import { roomTemplatesSchema } from './room-templates';
 import roomTemplatesJson from '../../../presets/default/content/roomTemplates.json';
 
 const parsed = roomTemplatesSchema.parse(roomTemplatesJson);
+const raw = roomTemplatesJson as unknown as Record<string, unknown>;
 
 // ── Schema validation ─────────────────────────────────────────────────────────
 
@@ -59,47 +60,22 @@ describe('roomTemplates pack — schema', () => {
 });
 
 // ── Gear coverage ─────────────────────────────────────────────────────────────
+// Wave 3: gear drops are rolled at generation for EVERY door — templates no
+// longer carry gear hints; the schema rejects them.
 
-describe('roomTemplates pack — gear coverage', () => {
-  const templatesWithGear = parsed.obstacles.filter(t =>
-    t.options.some(o => o.gear !== undefined),
-  );
-
-  it('a clear majority (>50%) of obstacle templates carry a gear descriptor', () => {
-    const ratio = templatesWithGear.length / parsed.obstacles.length;
-    expect(ratio).toBeGreaterThan(0.5);
-  });
-
-  it('at least one template has a Gear-only option (reward:0 + gear)', () => {
-    const hasGearOnly = parsed.obstacles.some(t =>
-      t.options.some(o => o.reward === 0 && o.gear !== undefined),
-    );
-    expect(hasGearOnly).toBe(true);
-  });
-
-  it('at least one template has a Loot+Gear option (reward>0 + gear)', () => {
-    const hasLootPlusGear = parsed.obstacles.some(t =>
-      t.options.some(o => o.reward > 0 && o.gear !== undefined),
-    );
-    expect(hasLootPlusGear).toBe(true);
-  });
-
-  it('at least one template has a Loot-only option (reward>0, no gear)', () => {
-    const hasLootOnly = parsed.obstacles.some(t =>
-      t.options.some(o => o.reward > 0 && o.gear === undefined),
-    );
-    expect(hasLootOnly).toBe(true);
-  });
-
-  it('gear descriptors specify lane or lanes (never both absent)', () => {
+describe('roomTemplates pack — no template-level gear (wave 3)', () => {
+  it('no option carries a gear field', () => {
     for (const t of parsed.obstacles) {
       for (const o of t.options) {
-        if (o.gear !== undefined) {
-          const hasLane = o.gear.lane !== undefined || (o.gear.lanes !== undefined && o.gear.lanes.length > 0);
-          expect(hasLane).toBe(true);
-        }
+        expect('gear' in o).toBe(false);
       }
     }
+  });
+
+  it('schema rejects an option with a gear hint (strict)', () => {
+    const bad = JSON.parse(JSON.stringify(raw));
+    bad.obstacles[0].options[0].gear = { kind: 'statBoost', lane: 'tech' };
+    expect(roomTemplatesSchema.safeParse(bad).success).toBe(false);
   });
 });
 

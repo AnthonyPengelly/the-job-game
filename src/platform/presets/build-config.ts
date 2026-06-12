@@ -1,5 +1,5 @@
 import type { EngineConfig, GearDef, ObstacleOptionConfig, ObstacleTemplateConfig, TriviaItemConfig, QuirkDef } from '@/engine/config';
-import type { GearGrantDescriptor, ScenarioDef } from '@/engine/types';
+import type { ScenarioDef } from '@/engine/types';
 import type { CategoriesBank, TriviaBank, ParsedGear, ParsedMeta, ParsedRoomTemplates, ParsedScaling, ParsedTuning, ParsedScenarios, ParsedQuirks } from '@/content/schema';
 
 export interface PresetBundle {
@@ -24,19 +24,10 @@ export function deepFreeze<T extends object>(obj: T): T {
   return obj;
 }
 
-function buildGearGrant(raw: ParsedRoomTemplates['obstacles'][number]['options'][number]['gear']): GearGrantDescriptor | undefined {
-  if (raw === undefined) return undefined;
-  return {
-    kind: raw.kind,
-    ...(raw.lane !== undefined && { lane: raw.lane }),
-    ...(raw.lanes !== undefined && { lanes: raw.lanes }),
-  };
-}
-
 function buildObstacleOption(o: ParsedRoomTemplates['obstacles'][number]['options'][number]): ObstacleOptionConfig {
-  const gear = buildGearGrant(o.gear);
-  return { id: o.id, greedy: o.greedy, heatCost: o.heatCost, reward: o.reward,
-    ...(gear !== undefined && { gear }) };
+  // Wave 3: gear drops are rolled at generation for every door — templates no
+  // longer carry gear hints.
+  return { id: o.id, greedy: o.greedy, heatCost: o.heatCost, reward: o.reward };
 }
 
 function buildObstacleTemplates(raw: ParsedRoomTemplates): ObstacleTemplateConfig[] {

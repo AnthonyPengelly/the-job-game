@@ -10,19 +10,61 @@
       "exhaustionRest.<class>": "rooms benched per exhaustion class after committing to an obstacle; tired=0 means no bench",
       "minCommit.<gameId>": "hard floor of committed crew before the dial is applied; the generator filters on this first",
       "variant.<gameId>": "id of a replacement game module used at certain commit sizes (silentSync collapses, no-trade, asymmetric-info)",
-      "dialCurve.<gameId>": "how committed-crew lane ratings map to difficulty; tightenPerExtra eases the dial as headcount grows"
+      "dialCurve.<gameId>": "how committed-crew lane ratings map to difficulty; tightenPerExtra eases the dial as headcount grows",
+      "dialCurve.perLanePoint": "dial-level change per point of AVERAGE committed lane rating (wave 3: mean, not sum)",
+      "dialCurve.tightenPerExtraCrew": "small residual easing per extra committed (player x lane) entry — more hands help a little"
     }
   },
-
   "profiles": {
-    "2": { "exhaustion": "tired", "crewPerOption": [1, 2], "getawayBonus": -0.04 },
-    "3": { "exhaustion": "tired", "crewPerOption": [1, 2], "getawayBonus": -0.02 },
-    "4": { "exhaustion": "light", "crewPerOption": [1, 2], "getawayBonus": 0.0 },
-    "5": { "exhaustion": "full",  "crewPerOption": [2, 3], "getawayBonus": 0.02 },
-    "6": { "exhaustion": "full",  "crewPerOption": [2, 3], "getawayBonus": 0.035 },
-    "7": { "exhaustion": "full",  "crewPerOption": [2, 3], "getawayBonus": 0.05 }
+    "2": {
+      "exhaustion": "tired",
+      "crewPerOption": [
+        1,
+        2
+      ],
+      "getawayBonus": -0.04
+    },
+    "3": {
+      "exhaustion": "tired",
+      "crewPerOption": [
+        1,
+        2
+      ],
+      "getawayBonus": -0.02
+    },
+    "4": {
+      "exhaustion": "light",
+      "crewPerOption": [
+        1,
+        2
+      ],
+      "getawayBonus": 0.0
+    },
+    "5": {
+      "exhaustion": "full",
+      "crewPerOption": [
+        2,
+        3
+      ],
+      "getawayBonus": 0.02
+    },
+    "6": {
+      "exhaustion": "full",
+      "crewPerOption": [
+        2,
+        3
+      ],
+      "getawayBonus": 0.035
+    },
+    "7": {
+      "exhaustion": "full",
+      "crewPerOption": [
+        2,
+        3
+      ],
+      "getawayBonus": 0.05
+    }
   },
-
   "minCommit": {
     "crackTheTumblers": 1,
     "beat16": 1,
@@ -35,22 +77,44 @@
     "assemblyLine": 2,
     "defuseTheAlarm": 2
   },
-
   "variant": {
-    "crackTheTumblers": { "soloVariantId": "crackTheTumblersSolo", "appliesAt": [1] },
-    "assemblyLine":     { "variantId": "assemblyLineNegotiated", "appliesAt": [2] }
+    "crackTheTumblers": {
+      "soloVariantId": "crackTheTumblersSolo",
+      "appliesAt": [
+        1
+      ]
+    },
+    "assemblyLine": {
+      "variantId": "assemblyLineNegotiated",
+      "appliesAt": [
+        2
+      ]
+    }
   },
-
-  "exhaustionRest": { "full": 1, "light": 1, "tired": 0 },
-
-  "excludedFromSolo": ["assemblyLine", "defuseTheAlarm"],
-
+  "exhaustionRest": {
+    "full": 1,
+    "light": 1,
+    "tired": 0
+  },
+  "excludedFromSolo": [
+    "assemblyLine",
+    "defuseTheAlarm"
+  ],
   "soloEligibleMinPool": 8,
-
   "dialCurve": {
-    "_default": { "base": 1.0, "perLanePoint": -0.15, "tightenPerExtraCrew": 0.1 },
-    "safeCrack":  { "base": 1.5, "perLanePoint": -0.3,  "tightenPerExtraCrew": 0.15 }
+    "_default": {
+      "base": 1.0,
+      "perLanePoint": -0.3,
+      "tightenPerExtraCrew": 0.05
+    },
+    "safeCrack": {
+      "base": 1.5,
+      "perLanePoint": -0.5,
+      "tightenPerExtraCrew": 0.05
+    }
   },
-
-  "heatDial": { "perHeat": 0.05, "perRoom": 0.05 }
+  "heatDial": {
+    "perHeat": 0.05,
+    "perRoom": 0.05
+  }
 }

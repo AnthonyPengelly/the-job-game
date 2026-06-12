@@ -17,6 +17,13 @@ Shorthand: Heat ↑/↓ = ±2 (small) · ⇈/⇊ = ±4 (big) · Loot +/− · **
 > (`gearDrops.bigScoreChance`) to upgrade to the +2 tier. Sell values follow
 > a **visible rule**: `perBonusPoint × points + perRoom × roomIndex`, where
 > points = magnitude (+1/+2) and a power-up is worth `powerUpPoints`.
+>
+> **Wave 3 (2026-06):** EVERY door drops gear — templates no longer carry
+> gear hints; each drop rolls power-up vs stat-boost from preset chances
+> (`gearDrops.powerUpChance` / `bigScoreChance`), crews above four roll
+> extra drops (`extraDropChancePerPlayer`, capped at `maxDrops`) so big
+> tables share more cards, and the fence pays less per card now that gear
+> is common (perBonusPoint 5000→3000).
 
 ## Stat boosts — common, stack, +1 to a lane
 
@@ -54,7 +61,7 @@ There are exactly **four power-ups — one per lane: Tech, Physical, Charm, Stea
 | Safe-Crack | Tech + Stealth | **Stethoscope** — reveal one digit's position |
 | Assembly Line | Physical + Charm | **Tip-Off** — reveal which loot types are in play |
 | Steady Hands | Physical + Stealth | **Extra Hands** — 10s, everyone (benched included) helps build |
-| Defuse the Alarm | Charm + Stealth | **Clear Channel** — one full spoken sentence allowed through |
+| Defuse the Alarm | Charm + Stealth | **Insulated Gloves** — the first wrong cut doesn't trip the alarm (wave 3; *Clear Channel* retired — talking restrictions were unrefereeable, undoing a snip is a table moment) |
 
 So a Tech specialist's single power-up shows up as Reset Pin, Photographic, Narrow It Down, or Stethoscope depending on the room — one ability, many faces.
 

@@ -149,8 +149,11 @@ export interface ObstacleOption {
   greedy: boolean;
   heatCost: number;
   reward: number;
-  /** Gear grant awarded on a clean outcome. Mirrors the reward field: fires only on clean. */
-  gear?: GearGrantDescriptor;
+  /**
+   * Gear drops for this door (wave 3: every door drops at least one; bigger
+   * crews can roll extras). Granted on clean AND complication; lost on botch.
+   */
+  gear?: GearGrantDescriptor[];
   /**
    * Exact crew size this option demands, drawn at generation by the seeded RNG
    * within the scaling-aware [minCrew, maxCrew] range (playtest wave 2: the

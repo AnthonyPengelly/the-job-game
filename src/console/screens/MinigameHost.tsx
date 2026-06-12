@@ -108,12 +108,13 @@ export function MinigameHost() {
       cfg.outcomeLoot.complication,
       Math.round(option.reward * cfg.outcomeLoot.complicationFraction),
     );
-    const hasGear = option.gear !== undefined;
+    const dropCount = option.gear?.length ?? 0;
     function tier(o: Outcome, loot: number, gearKept: boolean): OutcomeConsequence {
+      const plural = dropCount > 1 ? `×${dropCount} drops` : 'Drop';
       return {
         heatDelta: drip + surcharge + outcomeHeat(o, cfg),
         lootLabel: loot > 0 ? `+${formatLoot(loot)}` : formatLoot(loot),
-        ...(hasGear ? { gearNote: gearKept ? 'Drop kept' : 'Drop lost' } : {}),
+        ...(dropCount > 0 ? { gearNote: gearKept ? `${plural} kept` : `${plural} lost` } : {}),
       };
     }
     return {

@@ -90,11 +90,11 @@ export function reduce(state: RunState, event: RunEvent, cfg: EngineConfig): Run
       // night with one card. Only a botch loses the gear.
       let newEarnedGear = state.earnedGear;
       if (event.outcome !== 'botched' && option.gear !== undefined) {
-        if (option.gear.lane !== undefined) {
-          const gearId = resolveGearGrant(option.gear, cfg);
-          newEarnedGear = [...state.earnedGear, gearId];
-        } else {
-          newEarnedGear = [...state.earnedGear, option.gear];
+        for (const drop of option.gear) {
+          newEarnedGear = [
+            ...newEarnedGear,
+            drop.lane !== undefined ? resolveGearGrant(drop, cfg) : drop,
+          ];
         }
       }
 

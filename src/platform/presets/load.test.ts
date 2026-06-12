@@ -119,8 +119,9 @@ describe('loadPreset', () => {
       const def = cfg.scaling.dialCurve['_default'];
       expect(def).toBeDefined();
       expect(def?.base).toBe(1.0);
-      expect(def?.perLanePoint).toBe(-0.15);
-      expect(def?.tightenPerExtraCrew).toBe(0.1);
+      // Wave 3 retune: mean-based dial (perLanePoint applies to the AVERAGE rating).
+      expect(def?.perLanePoint).toBe(-0.3);
+      expect(def?.tightenPerExtraCrew).toBe(0.05);
     });
 
     it('new scaling fields are frozen', () => {

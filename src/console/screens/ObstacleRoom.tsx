@@ -141,11 +141,18 @@ function OptionCard({
             className="v"
             style={option.reward > 0 ? { color: 'var(--accent)' } : undefined}
           >
-            {option.gear ? (
+            {option.gear !== undefined && option.gear.length > 0 ? (
               option.reward > 0 ? (
-                <>{formatLoot(option.reward)}<span className="gpill">+ Gear</span></>
+                <>
+                  {formatLoot(option.reward)}
+                  <span className="gpill">
+                    {option.gear.length > 1 ? `+ Gear ×${option.gear.length}` : '+ Gear'}
+                  </span>
+                </>
               ) : (
-                <span className="gpill">Gear only</span>
+                <span className="gpill">
+                  {option.gear.length > 1 ? `Gear ×${option.gear.length}` : 'Gear only'}
+                </span>
               )
             ) : (
               formatLoot(option.reward)
