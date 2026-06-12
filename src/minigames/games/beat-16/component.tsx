@@ -3,6 +3,7 @@ import type { MiniGameProps, BoostHook } from '@/minigames/contract';
 import { useMetronome, useAudioClock, useScheduleBeep } from '@/minigames/primitives';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
+import { ClockGate } from '@/minigames/primitives/ClockGate';
 import type { Beat16Params } from './generate';
 import { judge, inTheBonesBoost } from './judge';
 import type { Beat16State } from './judge';
@@ -31,11 +32,19 @@ export function Beat16Component({
   onResolve,
 }: MiniGameProps<Beat16Params>): JSX.Element {
   const [state, setState] = useState<Beat16State>(initState);
+  // Wave 3: the GM begins the count — explain target/audible beats first.
+  const [counting, setCounting] = useState(false);
 
   const effectiveAudibleBeats = params.audibleBeats + (state.boostUsed ? 2 : 0);
   const clock = useAudioClock();
   const scheduleBeep = useScheduleBeep();
-  const metronome = useMetronome({ bpm: params.bpm, audibleBeats: effectiveAudibleBeats, clock, scheduleBeep });
+  const metronome = useMetronome({
+    bpm: params.bpm,
+    audibleBeats: effectiveAudibleBeats,
+    clock,
+    scheduleBeep,
+    running: counting,
+  });
 
   const [currentBeat, setCurrentBeat] = useState(0);
   const beat1TimestampRef = useRef<number | null>(null);
@@ -115,6 +124,22 @@ export function Beat16Component({
       </StatusZone>
 
       <ChallengeZone>
+        {!counting && !hasTapped && (
+          <div className="b16-brief" data-testid="b16-brief">
+            <p className="mg-clock-gate__hint" data-testid="b16-brief-text">
+              Brief the player: the metronome plays <strong>{effectiveAudibleBeats} audible
+              beats</strong>, then goes silent. They keep counting in their head and{' '}
+              <strong>slap the table on beat {params.targetBeat}</strong>. You tap the
+              console the instant you hear the slap — the app credits your reaction back.
+            </p>
+            <ClockGate
+              hint={`Tempo ${params.bpm} BPM. Count starts on your tap — no rush.`}
+              label="Begin the count"
+              onStart={() => setCounting(true)}
+            />
+          </div>
+        )}
+
         {/* Beat dots row — one dot per beat up to targetBeat */}
         <div className="b16-beatrow" data-testid="beat-dots" aria-label="Beat dots">
           {Array.from({ length: params.targetBeat }, (_, i) => {
@@ -136,7 +161,7 @@ export function Beat16Component({
 
         {/* Hero area: beat count + TAP button or feedback */}
         <div className="b16-hero">
-          {!hasTapped ? (
+          {!hasTapped && counting ? (
             <>
               <div className="b16-count" data-testid="beat-count">
                 <span className="b16-num" data-testid="current-beat-num">{currentBeat || '—'}</span>
@@ -153,7 +178,7 @@ export function Beat16Component({
                 <span className="b16-tap-sub">the instant they hit the table</span>
               </button>
             </>
-          ) : (
+          ) : hasTapped ? (
             <div className="b16-feedback-area" data-testid="tap-result">
               {state.measuredDeltaMs !== null && (
                 <div className="b16-reveal-delta" data-testid="reveal-delta">
@@ -180,7 +205,7 @@ export function Beat16Component({
                   : 'Timing unavailable'}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </ChallengeZone>
 

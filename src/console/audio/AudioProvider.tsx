@@ -93,7 +93,16 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const clockHandleRef = useRef<AudioClockHandle | null>(null);
   if (clockHandleRef.current === null) {
     clockHandleRef.current = {
-      clock: engine.clock,
+      // Lazy proxy — NOT `engine.clock` captured directly: the engine rebuilds
+      // its clock when preload() creates the AudioContext (after this first
+      // render), and a stale stuck-at-0 clock silently killed every metronome
+      // beep (wave 3: "the beats made no noise").
+      clock: {
+        now: () => engine.clock.now(),
+        scheduleAt: (time: number, cb: () => void) => engine.clock.scheduleAt(time, cb),
+        start: () => engine.clock.start(),
+        stop: () => engine.clock.stop(),
+      },
       scheduleBeep: (when: number) => engine.scheduleBeep(when),
       setTimerSoundscape: (active: boolean) => {
         timerCountRef.current = Math.max(0, timerCountRef.current + (active ? 1 : -1));

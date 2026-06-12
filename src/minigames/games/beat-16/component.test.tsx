@@ -3,6 +3,13 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 
 afterEach(cleanup);
+
+/** Wave 3: the GM begins the count — start it so the live TAP area renders. */
+function beginCountIfGated() {
+  const gate = screen.queryByTestId('mg-start-clock');
+  if (gate) fireEvent.click(gate);
+}
+
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
@@ -35,6 +42,7 @@ describe('Beat16Component — beat dots', () => {
         onResolve={() => {}}
       />,
     );
+    beginCountIfGated();
     expect(screen.getByTestId('beat-dots')).toBeInTheDocument();
     const dots = screen.queryAllByTestId(/^beat-dot-/);
     expect(dots.length).toBe(params.targetBeat);
@@ -50,6 +58,7 @@ describe('Beat16Component — beat dots', () => {
         onResolve={() => {}}
       />,
     );
+    beginCountIfGated();
     const targetDot = screen.getByTestId(`beat-dot-${params.targetBeat}`);
     expect(targetDot.classList.contains('b16-dot--target')).toBe(true);
   });
@@ -68,6 +77,7 @@ describe('Beat16Component — TAP control', () => {
         onResolve={() => {}}
       />,
     );
+    beginCountIfGated();
     expect(screen.getByTestId('btn-tap')).toBeInTheDocument();
     expect(screen.getByTestId('btn-tap')).not.toBeDisabled();
   });
@@ -82,6 +92,7 @@ describe('Beat16Component — TAP control', () => {
         onResolve={() => {}}
       />,
     );
+    beginCountIfGated();
     fireEvent.click(screen.getByTestId('btn-tap'));
     expect(screen.getByTestId('tap-result')).toBeInTheDocument();
   });
@@ -96,6 +107,7 @@ describe('Beat16Component — TAP control', () => {
         onResolve={() => {}}
       />,
     );
+    beginCountIfGated();
     fireEvent.click(screen.getByTestId('btn-tap'));
     expect(screen.queryByTestId('btn-tap')).not.toBeInTheDocument();
   });
@@ -114,6 +126,7 @@ describe('Beat16Component — audible beats display', () => {
         onResolve={() => {}}
       />,
     );
+    beginCountIfGated();
     const el = screen.getByTestId('audible-beats');
     expect(el.textContent).toContain(String(params.audibleBeats));
   });
@@ -128,6 +141,7 @@ describe('Beat16Component — audible beats display', () => {
         onResolve={() => {}}
       />,
     );
+    beginCountIfGated();
     const before = parseInt(
       screen.getByTestId('audible-beats').textContent?.replace(/\D/g, '') ?? '0',
       10,
@@ -155,6 +169,7 @@ describe('Beat16Component — onResolve', () => {
         onResolve={spy}
       />,
     );
+    beginCountIfGated();
     fireEvent.click(screen.getByTestId('btn-call-outcome'));
     expect(spy).toHaveBeenCalledWith('botched');
   });
@@ -173,6 +188,7 @@ describe('Beat16Component — boost slot', () => {
         onResolve={() => {}}
       />,
     );
+    beginCountIfGated();
     const slots = document.querySelectorAll('.mg-boost-slot');
     expect(slots.length).toBeGreaterThanOrEqual(1);
   });

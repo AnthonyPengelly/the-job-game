@@ -30,7 +30,7 @@ function clamp(n: number, lo: number, hi: number): number {
  * Dial levers (lower dial.level = easier):
  *   - targetBeat: fewer beats at lower difficulty (8..20); RNG adds ±1 variation
  *   - bpm: slower tempo at lower difficulty (60..120); RNG picks within a ±5 BPM window
- *   - audibleBeats: more audible beats at lower difficulty (targetBeat − 2 down to targetBeat − 6)
+ *   - audibleBeats: more audible beats at lower difficulty (targetBeat − 3 down to targetBeat − 10)
  *
  * cleanWindowMs and complicationWindowMs are fixed skill thresholds (not dial-driven).
  * The Physical lane drives dial.level via computeDial before generate is called.
@@ -41,8 +41,9 @@ export function generate(rng: Rng, dial: Difficulty): Beat16Params {
   const bpmBase = clamp(Math.round(80 + dial.level * 20), 60, 120);
   const bpm = clamp(bpmBase + rng.int(-5, 5), 60, 120);
 
-  // Higher dial = fewer audible beats before muting (leaves more silent beats to count)
-  const silentCount = clamp(Math.round(2 + dial.level * 2), 1, 6);
+  // Higher dial = fewer audible beats before muting (leaves more silent beats
+  // to count). Wave 3: floor raised — counting just 2 silent beats was free.
+  const silentCount = clamp(Math.round(4 + dial.level * 2), 3, 10);
   const audibleBeats = Math.max(1, targetBeat - silentCount);
 
   return {

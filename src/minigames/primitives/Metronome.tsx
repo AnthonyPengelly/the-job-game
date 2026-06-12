@@ -20,6 +20,12 @@ export interface MetronomeOptions {
    * when AudioContext is unavailable).
    */
   scheduleBeep?: ((when: number) => void) | null;
+  /**
+   * When false the scheduler never starts (no beats, no beeps) — the GM
+   * controls every clock (wave 3). Defaults to true for callers that gate
+   * mounting instead.
+   */
+  running?: boolean;
 }
 
 export interface MetronomeHandle {
@@ -84,12 +90,13 @@ export function createResilientNow(getAudioNow: () => number): {
  *
  * Returns a stable handle; the hook cleans up on unmount or when options change.
  */
-export function useMetronome({ bpm, audibleBeats, clock, scheduleBeep }: MetronomeOptions): MetronomeHandle {
+export function useMetronome({ bpm, audibleBeats, clock, scheduleBeep, running = true }: MetronomeOptions): MetronomeHandle {
   const beatCallbackRef = useRef<((n: number) => void) | null>(null);
   const mutedRef = useRef(false);
   const schedulerRef = useRef<{ stop(): void } | null>(null);
 
   useEffect(() => {
+    if (!running) return;
     mutedRef.current = false;
     const intervalSec = 60 / bpm;
 
@@ -197,7 +204,7 @@ export function useMetronome({ bpm, audibleBeats, clock, scheduleBeep }: Metrono
       schedulerRef.current?.stop();
       schedulerRef.current = null;
     };
-  }, [bpm, audibleBeats, clock, scheduleBeep]);
+  }, [bpm, audibleBeats, clock, scheduleBeep, running]);
 
   const onBeat = useCallback((cb: (n: number) => void) => {
     beatCallbackRef.current = cb;
