@@ -115,7 +115,8 @@ export function Getaway() {
   useEffect(() => {
     if (!audio) return;
     if (timerActive) {
-      // Start cue fires every time the timer goes active (fresh engine roar on resume too).
+      // A short throttle rev marks the start, then the idle loop sits under it.
+      audio.engine.play('finale-rev');
       audio.engine.play('finale-engine');
       if (!tickPlayingRef.current) {
         audio.engine.play('sfx-tick');

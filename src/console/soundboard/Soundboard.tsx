@@ -3,6 +3,7 @@ import { useGameStore } from '@/console/store';
 import { useAudio, useAudioSettings } from '@/console/audio';
 import type { ParsedSoundManifest, SoundChannel } from '@/content/schema';
 import { relevantCues } from './relevantCues';
+import './Soundboard.css';
 import type { CueGroups } from './relevantCues';
 
 // ── Channel display config ────────────────────────────────────────────────────

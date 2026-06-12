@@ -223,10 +223,9 @@
     {
       "id": "sfx-radio-chatter",
       "src": "sound/sfx-radio-chatter.wav",
-      "channel": "heistSfx",
+      "channel": "danger",
       "gain": 0.9,
       "phases": [
-        "briefing",
         "room",
         "minigame",
         "offer",
@@ -242,6 +241,42 @@
       "phases": [
         "room",
         "minigame"
+      ]
+    },
+    {
+      "id": "finale-rev",
+      "src": "sound/finale-rev.wav",
+      "channel": "finale",
+      "gain": 0.9,
+      "phases": [
+        "getaway",
+        "result"
+      ]
+    },
+    {
+      "id": "danger-siren-wail",
+      "src": "sound/danger-siren-wail.wav",
+      "channel": "danger",
+      "loop": true,
+      "gain": 0.75,
+      "phases": [
+        "room",
+        "minigame",
+        "offer",
+        "getaway"
+      ]
+    },
+    {
+      "id": "ambient-bassline",
+      "src": "sound/ambient-bassline.wav",
+      "channel": "ambient",
+      "loop": true,
+      "gain": 0.7,
+      "phases": [
+        "briefing",
+        "room",
+        "minigame",
+        "offer"
       ]
     }
   ],

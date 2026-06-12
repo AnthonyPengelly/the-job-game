@@ -363,17 +363,25 @@ console.log('\nGenerating The Job sound assets...\n');
 }
 
 // ── 17. finale-engine (1.5 s loop) — idling engine rumble ─────────────────
+// Wave 3 rework: the pure-sine idle sounded like a test tone. Firing-pulse
+// train (integer pulses per loop for a seamless join) + subharmonic + combustion
+// noise reads as an engine.
 {
   const n = Math.round(SR * 1.5);
+  const rng = makeLcg(0x0DD5EED5);
+  const rawNoise = new Float32Array(n);
+  for (let i = 0; i < n; i++) rawNoise[i] = rng();
+  lowpass(rawNoise, 240);
+
   const out = buf(n);
+  const PULSES_PER_LOOP = 33; // ~22 Hz firing rate
   for (let i = 0; i < n; i++) {
-    const lfo = 0.88 + 0.12 * Math.sin(2 * Math.PI * 6 * i / SR);
-    const freq = 100;
-    out[i] = lfo * 0.65 * (
-      0.60 * Math.sin(2 * Math.PI * freq       * i / SR) +
-      0.30 * Math.sin(2 * Math.PI * freq * 2.0 * i / SR) +
-      0.10 * Math.sin(2 * Math.PI * freq * 3.0 * i / SR)
-    );
+    const phase = (i * PULSES_PER_LOOP) / n;
+    const pulse = Math.pow(Math.max(0, Math.sin(2 * Math.PI * phase)), 4);
+    out[i] =
+      0.55 * pulse * Math.sin(2 * Math.PI * 55 * i / SR) +
+      0.20 * Math.sin(2 * Math.PI * 27.5 * i / SR) +
+      0.45 * rawNoise[i] * (0.4 + 0.6 * pulse);
   }
   normalise(out, 0.8);
   writeWav('finale-engine.wav', out);
@@ -491,6 +499,74 @@ console.log('\nGenerating The Job sound assets...\n');
   }
   normalise(out, 0.65);
   writeWav('ambient-tension.wav', out);
+}
+
+// ── 23. finale-rev (1.1 s) — short throttle blip ───────────────────────────
+{
+  const n = Math.round(SR * 1.1);
+  const rawNoise = new Float32Array(n);
+  const rng = makeLcg(0x9e3779b9);
+  for (let i = 0; i < n; i++) rawNoise[i] = rng();
+  lowpass(rawNoise, 900);
+
+  const out = buf(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / n;
+    // RPM sweeps up fast then falls back — a single rev.
+    const rpm = t < 0.45 ? 60 + 240 * (t / 0.45) : 300 - 230 * ((t - 0.45) / 0.55);
+    const env = t < 0.06 ? t / 0.06 : Math.exp(-(t - 0.06) * 2.2);
+    out[i] = env * (
+      0.50 * Math.sin(2 * Math.PI * rpm       * i / SR) +
+      0.25 * Math.sin(2 * Math.PI * rpm * 2.0 * i / SR) +
+      0.45 * rawNoise[i] * (0.5 + 0.5 * Math.min(1, rpm / 300))
+    );
+  }
+  normalise(out, 0.85);
+  writeWav('finale-rev.wav', out);
+}
+
+// ── 24. danger-siren-wail (3.2 s loop) — American rise-and-fall ───────────
+{
+  const n = Math.round(SR * 3.2);
+  const out = buf(n);
+  let phase = 0;
+  for (let i = 0; i < n; i++) {
+    // One full rise-fall per loop (integer cycles ⇒ seamless join).
+    const sweep = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / n);
+    const freq = 500 + 700 * sweep;
+    phase += (2 * Math.PI * freq) / SR;
+    out[i] = 0.6 * Math.sin(phase) + 0.2 * Math.sin(phase * 2);
+  }
+  normalise(out, 0.8);
+  writeWav('danger-siren-wail.wav', out);
+}
+
+// ── 25. ambient-bassline (2.4 s loop) — low heist groove ──────────────────
+// Alternative bed to the drone: walking minor bass (A1–C2–E2–D2) at 100 BPM
+// with soft hat ticks on the off-beats. Four beats per loop, seamless.
+{
+  const n = Math.round(SR * 2.4);
+  const rng = makeLcg(0xBA55BA55);
+  const out = buf(n);
+  const beat = n / 4;
+  const NOTES = [55.0, 65.41, 82.41, 73.42]; // A1, C2, E2, D2
+  for (let b = 0; b < 4; b++) {
+    const s0 = Math.round(b * beat);
+    const f = NOTES[b];
+    for (let i = 0; i < Math.round(beat * 0.95) && s0 + i < n; i++) {
+      const env = Math.min(1, i / (SR * 0.012)) * Math.exp(-i / (SR * 0.45));
+      out[s0 + i] +=
+        0.50 * env * Math.sin(2 * Math.PI * f * i / SR) +
+        0.18 * env * Math.sin(2 * Math.PI * f * 2 * i / SR);
+    }
+    // off-beat hat tick
+    const h0 = Math.round((b + 0.5) * beat);
+    for (let i = 0; i < Math.round(SR * 0.03) && h0 + i < n; i++) {
+      out[h0 + i] += 0.10 * rng() * expDecay(i, 0.008);
+    }
+  }
+  normalise(out, 0.7);
+  writeWav('ambient-bassline.wav', out);
 }
 
 console.log('\nAll assets written.\n');

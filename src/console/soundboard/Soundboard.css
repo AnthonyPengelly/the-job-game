@@ -1,0 +1,102 @@
+/* ============================================================
+   SOUNDBOARD — drawer styling (wave 3: it was bare buttons)
+   ============================================================ */
+
+[data-testid="soundboard"] {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-family: var(--font-body);
+}
+
+[data-testid="soundboard-controls"] {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #233028);
+  border-radius: var(--radius-md, 8px);
+  background: var(--c-surface-1, #121d23);
+}
+[data-testid="soundboard-controls"] button {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill, 999px);
+  border: 1px solid var(--border-strong, #34453b);
+  background: var(--c-surface-2, #19262d);
+  color: var(--fg, #e8f0ec);
+  cursor: pointer;
+}
+[data-testid="soundboard-controls"] button[aria-pressed="true"] {
+  border-color: var(--danger, #e5484d);
+  color: var(--danger, #e5484d);
+}
+[data-testid="soundboard-controls"] label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-data);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--fg-muted, #a4b2ad);
+  flex: 1;
+}
+[data-testid="soundboard-controls"] input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent, #1fd06e);
+}
+
+[data-testid="soundboard-groups"] {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+[data-testid^="soundboard-group-"] > h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fg-faint, #6d7a74);
+  border-bottom: 1px solid var(--border, #233028);
+  padding-bottom: 5px;
+}
+[data-testid^="soundboard-group-"] > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+[data-testid^="btn-cue-"] {
+  font-family: var(--font-data);
+  font-size: 12.5px;
+  padding: 7px 13px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-strong, #34453b);
+  background: var(--c-surface-2, #19262d);
+  color: var(--fg, #e8f0ec);
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+[data-testid^="btn-cue-"]:hover:not(:disabled) {
+  border-color: var(--accent, #1fd06e);
+}
+/* Channel accents */
+[data-testid="soundboard-group-danger"] [data-testid^="btn-cue-"] { border-color: color-mix(in srgb, var(--danger, #e5484d) 45%, transparent); }
+[data-testid="soundboard-group-sting"] [data-testid^="btn-cue-"] { border-color: color-mix(in srgb, var(--caution, #f7b84b) 45%, transparent); }
+[data-testid="soundboard-group-finale"] [data-testid^="btn-cue-"] { border-color: color-mix(in srgb, var(--accent, #1fd06e) 45%, transparent); }
+/* Live loops glow */
+[data-testid^="btn-cue-"][aria-pressed="true"] {
+  border-color: var(--accent, #1fd06e);
+  color: var(--accent, #1fd06e);
+  box-shadow: 0 0 12px -4px var(--accent, #1fd06e);
+}
+[data-testid^="btn-cue-"]:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
