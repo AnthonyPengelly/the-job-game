@@ -37,6 +37,8 @@ function makeMockEngine(available = true): AudioEngine {
     mute: vi.fn(),
     setAmbient: vi.fn(),
     scheduleBeep: vi.fn(),
+    isCuePlaying: vi.fn().mockReturnValue(false),
+    stopLoopsForPhase: vi.fn(),
     isCueAvailable: vi.fn().mockReturnValue(available),
     clock: {
       now: vi.fn().mockReturnValue(0),

@@ -29,16 +29,20 @@ function makeStorage(): StorageLike {
 }
 
 function makeMockEngine(available = true): AudioEngine {
+  // Stateful play/stop so the loop on/off glyph logic (engine-derived) works.
+  const playing = new Set<string>();
   return {
     preload: vi.fn().mockResolvedValue(undefined),
     resume: vi.fn().mockResolvedValue(undefined),
-    play: vi.fn(),
-    stop: vi.fn(),
+    play: vi.fn((id: string) => { playing.add(id); }),
+    stop: vi.fn((id: string) => { playing.delete(id); }),
     setChannelGain: vi.fn(),
     setMasterGain: vi.fn(),
     mute: vi.fn(),
     setAmbient: vi.fn(),
     scheduleBeep: vi.fn(),
+    isCuePlaying: vi.fn((id: string) => playing.has(id)),
+    stopLoopsForPhase: vi.fn(),
     isCueAvailable: vi.fn().mockReturnValue(available),
     clock: {
       now: vi.fn().mockReturnValue(0),

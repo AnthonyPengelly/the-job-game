@@ -58,7 +58,9 @@ export function Soundboard({ fullBoard = false }: SoundboardProps): JSX.Element 
   const handle = useAudio();
   const audioSettings = useAudioSettings();
   const phase = useGameStore(s => s.session.present.phase);
-  const [activeCues, setActiveCues] = useState<ReadonlySet<string>>(new Set());
+  // Loop on/off glyphs read the ENGINE's live state (loops can be auto-stopped
+  // by phase sync) — this counter just forces a re-render after each click.
+  const [, setCueVersion] = useState(0);
 
   if (!handle) return null;
 
@@ -83,17 +85,12 @@ export function Soundboard({ fullBoard = false }: SoundboardProps): JSX.Element 
 
   function handleCueClick(cueId: string, loop: boolean) {
     if (loop) {
-      if (activeCues.has(cueId)) {
+      if (engine.isCuePlaying(cueId)) {
         engine.stop(cueId);
-        setActiveCues(prev => {
-          const next = new Set(prev);
-          next.delete(cueId);
-          return next;
-        });
       } else {
         engine.play(cueId);
-        setActiveCues(prev => new Set([...prev, cueId]));
       }
+      setCueVersion(v => v + 1);
     } else {
       engine.play(cueId);
     }
@@ -132,8 +129,8 @@ export function Soundboard({ fullBoard = false }: SoundboardProps): JSX.Element 
               <h3>{CHANNEL_LABELS[channel]}</h3>
               <div>
                 {cues.map(cue => {
-                  const isActive = activeCues.has(cue.id);
                   const isLooping = cue.loop === true;
+                  const isActive = isLooping && engine.isCuePlaying(cue.id);
                   const available = engine.isCueAvailable(cue.id);
                   return (
                     <button

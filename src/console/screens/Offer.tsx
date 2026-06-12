@@ -3,6 +3,7 @@ import { Flame, Shield, Zap } from 'lucide-react';
 import { useGameStore } from '@/console/store';
 import { Teleprompter } from '@/console/teleprompter';
 import { PhaseHead, Icon } from '@/console/ui';
+import { forcedGetaway } from '@/engine';
 import type { EngineConfig } from '@/engine';
 
 // ── Heat band derivation ──────────────────────────────────────────────────────
@@ -51,7 +52,13 @@ export function Offer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // At hMax the engine forces the getaway anyway — the door is gone, so the
+  // card must not look pushable (playtest wave 3: a clickable Push On at 20
+  // heat that silently routed to the getaway read as a bug).
+  const forced = forcedGetaway(heat, cfg);
+
   function handlePushOn() {
+    if (forced) return;
     dispatch({ t: 'PUSH_ON' });
   }
 
@@ -97,18 +104,22 @@ export function Offer() {
         <div
           className="opt risk"
           role="button"
-          tabIndex={0}
+          tabIndex={forced ? -1 : 0}
+          aria-disabled={forced}
           data-testid="btn-push-on"
           onClick={handlePushOn}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handlePushOn(); }}
+          style={forced ? { opacity: 0.45, cursor: 'not-allowed', pointerEvents: 'none' } : undefined}
         >
           <span className="opt-tag">
             <Icon icon={Flame} size={14} />
-            {' '}High risk
+            {' '}{forced ? 'Heat maxed' : 'High risk'}
           </span>
           <h4>Push On</h4>
           <p className="prose muted" style={{ fontSize: 16 }}>
-            Take another room. More exposure, more reward.
+            {forced
+              ? 'The building is screaming. There is no next room — only the car.'
+              : 'Take another room. More exposure, more reward.'}
           </p>
           <div className="opt-cost">
             <div className="c">

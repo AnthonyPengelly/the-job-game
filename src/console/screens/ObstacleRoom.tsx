@@ -7,7 +7,7 @@ import { Teleprompter } from '@/console/teleprompter';
 import { useCrewRailMode } from '@/console/shell';
 import { formatLoot } from '@/content/format';
 import { buildRegistry } from '@/minigames';
-import { computeDial, restRoomsFor } from '@/engine';
+import { computeDial, restRoomsFor, obstacleDrip, greedySurcharge } from '@/engine';
 import type { ObstacleOption, Lane } from '@/engine';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -34,6 +34,12 @@ interface OptionCardProps {
   /** All lanes of the bound game (registry truth) — both lanes for a combo. */
   gameLanes: readonly string[];
   gameName: string;
+  /**
+   * The REAL heat a clean run of this door costs right now (drip at this room
+   * depth + greedy surcharge) — must match the OutcomeJudge clean tier, not
+   * the template's nominal heatCost (playtest wave 3 mismatch).
+   */
+  heatPreview: number;
   selected: boolean;
   onSelect: () => void;
   narrationLine?: string | undefined;
@@ -46,6 +52,7 @@ function OptionCard({
   option,
   gameLanes,
   gameName,
+  heatPreview,
   selected,
   onSelect,
   narrationLine,
@@ -152,7 +159,7 @@ function OptionCard({
             className="v"
             style={{ color: 'var(--danger)' }}
           >
-            {option.heatCost}
+            +{heatPreview}
           </span>
         </div>
         {option.fullTeam !== true && option.commitCount !== undefined && (
@@ -315,6 +322,11 @@ export function ObstacleRoom() {
 
   const isFullTeam = selectedOption?.fullTeam === true;
 
+  // Same maths as RESOLVE_MINIGAME's clean tier: drip at this depth + surcharge.
+  function heatPreviewFor(option: ObstacleOption): number {
+    return obstacleDrip(roomIndex, cfg) + (option.greedy ? greedySurcharge(cfg) : 0);
+  }
+
   function handleSelectOption(option: ObstacleOption) {
     setSelectedOptionId(option.id);
     if (option.fullTeam === true) {
@@ -379,6 +391,7 @@ export function ObstacleRoom() {
               option={option}
               gameLanes={gameLanes}
               gameName={resolveGameName(option.gameId)}
+              heatPreview={heatPreviewFor(option)}
               selected={false}
               onSelect={() => handleSelectOption(option)}
               narrationLine={optionLines[option.id]}
@@ -392,6 +405,7 @@ export function ObstacleRoom() {
           <OptionCard
             option={room.options.find(o => o.id === selectedOptionId)!}
             gameLanes={gameLanes}
+            heatPreview={heatPreviewFor(room.options.find(o => o.id === selectedOptionId)!)}
             gameName={resolveGameName(room.options.find(o => o.id === selectedOptionId)!.gameId)}
             selected={true}
             onSelect={() => { /* no-op: already selected */ }}

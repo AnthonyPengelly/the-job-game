@@ -69,9 +69,9 @@ describe('generate — reproducibility', () => {
     }
   });
 
-  it('always produces a 4-card grid', () => {
+  it('always produces a 6-card grid', () => {
     const p = generate(mulberry32(1), dial(0));
-    expect(p.cards).toHaveLength(4);
+    expect(p.cards).toHaveLength(6);
   });
 });
 
@@ -90,19 +90,19 @@ describe('generate — dial levers (higher dial = harder)', () => {
     expect(hard.playbackSpeedMs).toBeLessThanOrEqual(easy.playbackSpeedMs);
   });
 
-  it('targetLength is always within [3, 8]', () => {
+  it('targetLength is always within [7, 16]', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect(p.targetLength).toBeGreaterThanOrEqual(3);
-      expect(p.targetLength).toBeLessThanOrEqual(8);
+      expect(p.targetLength).toBeGreaterThanOrEqual(7);
+      expect(p.targetLength).toBeLessThanOrEqual(16);
     }
   });
 
-  it('playbackSpeedMs is always within [500, 1600]', () => {
+  it('playbackSpeedMs is always within [500, 1400]', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
       expect(p.playbackSpeedMs).toBeGreaterThanOrEqual(500);
-      expect(p.playbackSpeedMs).toBeLessThanOrEqual(1600);
+      expect(p.playbackSpeedMs).toBeLessThanOrEqual(1400);
     }
   });
 });
@@ -189,5 +189,31 @@ describe('photographicBoost', () => {
     const before = JSON.stringify(state);
     photographicBoost.apply(state, params);
     expect(JSON.stringify(state)).toBe(before);
+  });
+});
+
+// ── Wave 3: 6 pads, no degenerate runs ────────────────────────────────────────
+
+describe('generate — wave 3 sequence quality', () => {
+  it('grid has six pads A–F', () => {
+    const p = generate(mulberry32(1), dial(0));
+    expect(p.cards).toHaveLength(6);
+    expect(p.cards.map(c => c.label)).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
+  });
+
+  it('never produces three identical pads in a row (500 seeds)', () => {
+    for (let seed = 1; seed <= 500; seed++) {
+      const p = generate(mulberry32(seed), dial((seed % 5) - 1));
+      for (let i = 2; i < p.sequence.length; i++) {
+        const run3 =
+          p.sequence[i] === p.sequence[i - 1] && p.sequence[i] === p.sequence[i - 2];
+        expect(run3).toBe(false);
+      }
+    }
+  });
+
+  it('medium dial lands around 10 steps; hard dial reaches 16', () => {
+    expect(generate(mulberry32(3), dial(0)).targetLength).toBe(10);
+    expect(generate(mulberry32(3), dial(2)).targetLength).toBe(16);
   });
 });

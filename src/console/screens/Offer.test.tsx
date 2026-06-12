@@ -132,17 +132,12 @@ describe('Offer screen', () => {
     expect(store.getState().session.present.phase).toBe('getaway');
   });
 
-  it('push-on at heat=HMAX forces the engine into getaway (no dead-end)', () => {
+  it('a raw PUSH_ON at heat=HMAX still forces getaway in the engine (no dead-end)', () => {
+    // The UI now disables the button at hMax (wave 3); the reducer keeps the
+    // forced-getaway fallback so no event path can dead-end past the cap.
     const store = makeOfferStore();
-    // Override heat to HMAX (20) — engine's forcedGetaway triggers on PUSH_ON.
     store.getState().dispatch({ t: 'OVERRIDE_SET_HEAT', value: testCfg.heat.hMax });
-    render(
-      <StoreContext.Provider value={store}>
-        <Offer />
-      </StoreContext.Provider>,
-    );
-    fireEvent.click(screen.getByTestId('btn-push-on'));
-    // Engine routes to getaway instead of another room.
+    store.getState().dispatch({ t: 'PUSH_ON' });
     expect(store.getState().session.present.phase).toBe('getaway');
   });
 });
@@ -261,5 +256,30 @@ describe('Offer screen — pushRun narration', () => {
     );
     const line = screen.getByTestId('teleprompter-line').textContent ?? '';
     expect(line).toContain('Hot push run');
+  });
+});
+
+// ── Wave 3: forced getaway disables Push On ───────────────────────────────────
+
+describe('Offer — forced getaway at hMax', () => {
+  it('Push On is visibly disabled and inert at max heat', () => {
+    const store = makeOfferStore();
+    store.getState().dispatch({ t: 'OVERRIDE_SET_HEAT', value: testCfg.heat.hMax });
+    render(
+      <StoreContext.Provider value={store}>
+        <Offer />
+      </StoreContext.Provider>,
+    );
+    const push = screen.getByTestId('btn-push-on');
+    expect(push).toHaveAttribute('aria-disabled', 'true');
+    expect(push.textContent).toContain('Heat maxed');
+    fireEvent.click(push);
+    // Phase unchanged — the click is inert, no silent redirect.
+    expect(store.getState().session.present.phase).toBe('offer');
+  });
+
+  it('Push On stays live below the forced threshold', () => {
+    renderOffer();
+    expect(screen.getByTestId('btn-push-on')).not.toHaveAttribute('aria-disabled', 'true');
   });
 });

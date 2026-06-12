@@ -84,6 +84,16 @@ export interface AudioEngine {
    */
   isCueAvailable(id: string): boolean;
 
+  /** True while the cue has an active (started, not yet ended/stopped) source. */
+  isCuePlaying(id: string): boolean;
+
+  /**
+   * Stop every LOOPING cue whose manifest `phases` does not include the given
+   * phase — phase transitions must not carry sirens into the result screen
+   * (playtest wave 3). One-shots are left to finish naturally.
+   */
+  stopLoopsForPhase(phase: string): void;
+
   /** True after `preload()` completes (whether or not all cues succeeded). */
   readonly loaded: boolean;
 }
@@ -368,6 +378,20 @@ export function createAudioEngine(
     return cues.get(id)?.available ?? false;
   }
 
+  function isCuePlaying(id: string): boolean {
+    const state = cues.get(id);
+    return state !== undefined && state.activeSource !== null;
+  }
+
+  function stopLoopsForPhase(phase: string): void {
+    for (const [id, state] of cues) {
+      if (state.cue.loop !== true) continue;
+      if (state.activeSource === null) continue;
+      if (state.cue.phases.includes(phase as (typeof state.cue.phases)[number])) continue;
+      stop(id);
+    }
+  }
+
   return {
     preload,
     resume,
@@ -379,6 +403,8 @@ export function createAudioEngine(
     setAmbient,
     scheduleBeep,
     isCueAvailable,
+    isCuePlaying,
+    stopLoopsForPhase,
     get clock() {
       return clock;
     },

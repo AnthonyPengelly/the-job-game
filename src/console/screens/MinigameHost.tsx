@@ -87,13 +87,14 @@ export function MinigameHost() {
     return game.generate(rng, dial);
   }, [present.rngState, resolvedGameId, dial.level]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Boost previews: committed players holding a power-up in any of the game's lanes
+  // Boost previews: EVERY committed player holding a power-up in any of the
+  // game's lanes gets a tag — two eligible holders means two names shown
+  // (the ability still fires once per game, but either may shout it).
   const boostPreviews: BoostPreviewEntry[] = useMemo(() => {
     if (game === undefined) return [];
     return game.boosts.flatMap(boost => {
-      const holder = committed.find(p => game.lanes.some(l => p.powerUps[l] === true));
-      if (holder === undefined) return [];
-      return [{ lane: boost.lane, label: boost.label, holderName: holder.name }];
+      const holders = committed.filter(p => game.lanes.some(l => p.powerUps[l] === true));
+      return holders.map(holder => ({ lane: boost.lane, label: boost.label, holderName: holder.name }));
     });
   }, [game, committed]);
 

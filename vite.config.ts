@@ -17,6 +17,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     setupFiles: ['./src/test-setup-jsdom.ts'],
-    exclude: ['node_modules/**', 'sim/**'],
+    // .claude/** holds agent worktrees (full repo copies) — scanning them runs
+    // duplicate suites against mismatched module identities.
+    exclude: ['node_modules/**', 'sim/**', '**/.claude/**'],
   },
 });
