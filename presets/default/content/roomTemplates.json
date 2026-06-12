@@ -14,11 +14,7 @@
           "id": "tumblers-careful",
           "greedy": false,
           "heatCost": 1,
-          "reward": 25000,
-          "gear": {
-            "kind": "statBoost",
-            "lane": "tech"
-          }
+          "reward": 25000
         },
         {
           "id": "tumblers-bold",
@@ -38,11 +34,7 @@
           "id": "beat16-steady",
           "greedy": false,
           "heatCost": 1,
-          "reward": 0,
-          "gear": {
-            "kind": "statBoost",
-            "lane": "physical"
-          }
+          "reward": 0
         },
         {
           "id": "beat16-rushed",
@@ -62,11 +54,7 @@
           "id": "categories-quiet",
           "greedy": false,
           "heatCost": 1,
-          "reward": 20000,
-          "gear": {
-            "kind": "statBoost",
-            "lane": "charm"
-          }
+          "reward": 20000
         },
         {
           "id": "categories-brash",
@@ -104,11 +92,7 @@
           "id": "circuit-methodical",
           "greedy": false,
           "heatCost": 1,
-          "reward": 25000,
-          "gear": {
-            "kind": "powerUp",
-            "lane": "tech"
-          }
+          "reward": 25000
         },
         {
           "id": "circuit-shortcut",
@@ -147,11 +131,7 @@
           "id": "safe-patient",
           "greedy": false,
           "heatCost": 1,
-          "reward": 0,
-          "gear": {
-            "kind": "powerUp",
-            "lane": "tech"
-          }
+          "reward": 0
         },
         {
           "id": "safe-speedy",
@@ -176,11 +156,7 @@
           "id": "steady-daring",
           "greedy": true,
           "heatCost": 2,
-          "reward": 50000,
-          "gear": {
-            "kind": "statBoost",
-            "lane": "physical"
-          }
+          "reward": 50000
         }
       ]
     },
@@ -194,11 +170,7 @@
           "id": "assembly-quiet",
           "greedy": false,
           "heatCost": 1,
-          "reward": 20000,
-          "gear": {
-            "kind": "powerUp",
-            "lane": "physical"
-          }
+          "reward": 20000
         },
         {
           "id": "assembly-fast",

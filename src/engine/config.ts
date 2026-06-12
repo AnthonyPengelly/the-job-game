@@ -1,6 +1,6 @@
 // The frozen, parsed shape the pure engine reducer reads from the active preset.
 // Defined here so the engine never imports from the content or platform layers.
-import type { Lane, ScenarioDef, GearGrantDescriptor } from './types';
+import type { Lane, ScenarioDef } from './types';
 
 // ── Quirk types ────────────────────────────────────────────────────────────────
 
@@ -39,8 +39,6 @@ export interface ObstacleOptionConfig {
   heatCost: number;
   /** Loot reward on a clean outcome (2 if greedy, 1 if safe by convention). */
   reward: number;
-  /** Optional gear grant awarded on a clean outcome. Mirrors reward: fires only on clean. */
-  gear?: GearGrantDescriptor;
 }
 
 export interface ObstacleTemplateConfig {
@@ -164,9 +162,19 @@ export interface EngineConfig {
     powerUpPoints: number;
     perRoom: number;
   };
-  /** Obstacle gear-drop variety: chance a statBoost drop upgrades to the +2 (bigScore) tier. */
+  /**
+   * Obstacle gear-drop economy (wave 3: EVERY door drops gear).
+   *   bigScoreChance — chance a statBoost drop upgrades to the +2 tier
+   *   powerUpChance  — chance a drop is a power-up instead of a stat boost
+   *   extraDropChancePerPlayer — per crew member above 4, chance of +1 drop
+   *     in the room (bigger tables get more cards to share out)
+   *   maxDrops — hard cap on drops per option
+   */
   gearDrops: {
     bigScoreChance: number;
+    powerUpChance: number;
+    extraDropChancePerPlayer: number;
+    maxDrops: number;
   };
   /** Gear catalog keyed by gear id. Loaded from content/gear.json. */
   gear: Record<string, GearDef>;

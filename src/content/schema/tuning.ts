@@ -78,6 +78,9 @@ export const tuningSchema = z.object({
   }).strict(),
   gearDrops: z.object({
     bigScoreChance: z.number().min(0).max(1),
+    powerUpChance: z.number().min(0).max(1),
+    extraDropChancePerPlayer: z.number().min(0).max(1),
+    maxDrops: z.number().int().min(1),
   }).strict(),
 }).strict();
 

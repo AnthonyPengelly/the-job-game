@@ -40,8 +40,16 @@ export const testCfg: EngineConfig = {
   scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
   rewardScale: { perHeat: 0, perRoom: 0 },
   gearSellValue: { perBonusPoint: 1000, powerUpPoints: 2, perRoom: 500 },
-  gearDrops: { bigScoreChance: 0.2 },
-  gear: {},
+  gearDrops: { bigScoreChance: 0.2, powerUpChance: 0.15, extraDropChancePerPlayer: 0.25, maxDrops: 3 },
+  // Wave 3: every door drops gear, so resolveGearGrant needs a complete
+  // (kind, lane, magnitude) catalog even in tests.
+  gear: Object.fromEntries(
+    (['tech', 'physical', 'charm', 'stealth'] as const).flatMap(lane => [
+      [`stat-${lane}-1`, { id: `stat-${lane}-1`, kind: 'statBoost' as const, lane, magnitude: 1, name: `Test +1 ${lane}`, blurb: 'Test blurb.' }],
+      [`stat-${lane}-2`, { id: `stat-${lane}-2`, kind: 'statBoost' as const, lane, magnitude: 2, name: `Test +2 ${lane}`, blurb: 'Test blurb.' }],
+      [`powerup-${lane}`, { id: `powerup-${lane}`, kind: 'powerUp' as const, lane, name: `Test ${lane} power-up`, blurb: 'Test blurb.' }],
+    ]),
+  ),
   quirks: {
     'tech-ace': { id: 'tech-ace', name: 'Tech Ace', boosts: [{ lane: 'tech' as const, magnitude: 2 }] },
     'brute':    { id: 'brute',    name: 'Brute',    boosts: [{ lane: 'physical' as const, magnitude: 2 }] },

@@ -44,6 +44,7 @@ const obstacleOnlyCfg: EngineConfig = {
 const obstacleWithGearCfg: EngineConfig = {
   ...obstacleOnlyCfg,
   gear: {
+    ...testCfg.gear,
     'stat-tech-1': { id: 'stat-tech-1', kind: 'statBoost' as const, lane: 'tech' as const, magnitude: 1, name: 'Burner Laptop', blurb: 'Test blurb.' },
     'powerup-tech': { id: 'powerup-tech', kind: 'powerUp' as const, lane: 'tech' as const, name: 'Hackers Rig', blurb: 'Test blurb.' },
   },
@@ -160,8 +161,24 @@ describe('Spoils — rendering', () => {
     expect(screen.getByTestId('btn-spoils-continue')).toBeInTheDocument();
   });
 
-  it('does not show gear section when earnedGear is empty', () => {
+  it('shows the gear section after a clean obstacle (wave 3: every door drops gear)', () => {
     renderSpoils();
+    expect(screen.getByTestId('spoils-gear-section')).toBeInTheDocument();
+  });
+
+  it('hides the gear section when earnedGear is explicitly empty', () => {
+    const store = makeSpoilsStore();
+    store.setState(prev => ({
+      session: { ...prev.session, present: { ...prev.session.present, earnedGear: [] } },
+    }));
+    render(
+      <ActionBarSlotProvider>
+        <ActionBarSlotOutlet />
+        <StoreContext.Provider value={store}>
+          <Spoils />
+        </StoreContext.Provider>
+      </ActionBarSlotProvider>,
+    );
     expect(screen.queryByTestId('spoils-gear-section')).toBeNull();
   });
 

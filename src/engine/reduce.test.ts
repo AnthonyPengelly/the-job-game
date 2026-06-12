@@ -44,8 +44,17 @@ const cfg: EngineConfig = {
   scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
   rewardScale: { perHeat: 0, perRoom: 0 },
   gearSellValue: { perBonusPoint: 1000, powerUpPoints: 2, perRoom: 500 },
-  gearDrops: { bigScoreChance: 0.2 },
+  gearDrops: { bigScoreChance: 0.2, powerUpChance: 0.15, extraDropChancePerPlayer: 0.25, maxDrops: 3 },
+  // Wave 3: every clean/complication resolve grants gear in random lanes —
+  // the catalog must cover every (kind, lane, magnitude) combination.
   gear: {
+    ...Object.fromEntries(
+      (['tech', 'physical', 'charm', 'stealth'] as const).flatMap(lane => [
+        [`stat-${lane}-1`, { id: `stat-${lane}-1`, kind: 'statBoost' as const, lane, magnitude: 1, name: `Test +1 ${lane}`, blurb: 'Test blurb.' }],
+        [`stat-${lane}-2`, { id: `stat-${lane}-2`, kind: 'statBoost' as const, lane, magnitude: 2, name: `Test +2 ${lane}`, blurb: 'Test blurb.' }],
+        [`powerup-${lane}`, { id: `powerup-${lane}`, kind: 'powerUp' as const, lane, name: `Test ${lane} power-up`, blurb: 'Test blurb.' }],
+      ]),
+    ),
     'stat-tech-1':   { id: 'stat-tech-1',   kind: 'statBoost', lane: 'tech',     magnitude: 1, name: 'Burner Laptop', blurb: 'Test blurb.' },
     'stat-tech-2':   { id: 'stat-tech-2',   kind: 'statBoost', lane: 'tech',     magnitude: 2, name: 'Zero-Day Cache', blurb: 'Test blurb.' },
     'powerup-charm': { id: 'powerup-charm', kind: 'powerUp',  lane: 'charm', name: 'The Favor', blurb: 'Test blurb.' },
@@ -1187,7 +1196,7 @@ describe('RESOLVE_MINIGAME — single-lane gear grant', () => {
             greedy: false,
             heatCost: 1,
             reward: 1,
-            gear: singleLaneGear,
+            gear: [singleLaneGear],
           },
           { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true, heatCost: 2, reward: 2 },
         ],
@@ -1227,7 +1236,7 @@ describe('RESOLVE_MINIGAME — single-lane gear grant', () => {
             greedy: false,
             heatCost: 1,
             reward: 1,
-            gear: singleLaneGear,
+            gear: [singleLaneGear],
           },
           { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true, heatCost: 2, reward: 2 },
         ],
@@ -1255,7 +1264,7 @@ describe('RESOLVE_MINIGAME — multi-lane gear grant', () => {
             greedy: false,
             heatCost: 1,
             reward: 1,
-            gear: multiLaneGear,
+            gear: [multiLaneGear],
           },
           { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true, heatCost: 2, reward: 2 },
         ],
@@ -1297,7 +1306,7 @@ describe('RESOLVE_MINIGAME — gear-only option (reward: 0 + gear)', () => {
             greedy: false,
             heatCost: 1,
             reward: 0,
-            gear: gearDescriptor,
+            gear: [gearDescriptor],
           },
           { id: 'alpha-greedy', gameId: 'alpha' as GameId, greedy: true, heatCost: 2, reward: 2 },
         ],
@@ -1331,9 +1340,9 @@ describe('RESOLVE_MINIGAME — option without gear', () => {
 });
 
 describe('RESOLVE_MINIGAME — Zod schema: gear descriptor accepted and [greedy,safe] ordering rejected', () => {
-  it('Zod obstacleOptionSchema accepts a gear descriptor', async () => {
+  it('Zod obstacleOptionSchema REJECTS a template gear hint (wave 3: drops are rolled)', async () => {
     const { roomTemplatesSchema } = await import('@/content/schema/room-templates');
-    const valid = {
+    const withGearHint = {
       _meta: { pack: 'roomTemplates', version: 1, source: 'test' },
       obstacles: [
         {
@@ -1347,7 +1356,7 @@ describe('RESOLVE_MINIGAME — Zod schema: gear descriptor accepted and [greedy,
         },
       ],
     };
-    expect(() => roomTemplatesSchema.parse(valid)).not.toThrow();
+    expect(() => roomTemplatesSchema.parse(withGearHint)).toThrow();
   });
 
   it('Zod obstacleTemplateSchema still rejects [greedy, safe] option ordering', async () => {

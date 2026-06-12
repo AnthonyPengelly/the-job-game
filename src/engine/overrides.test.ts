@@ -45,7 +45,7 @@ const cfg: EngineConfig = {
   scenario: { dcClamp: [1, 20] as [number, number], easeDialSteps: 1, critFumble: false, heatDC: { perHeat: 0, perRoom: 0 } },
   rewardScale: { perHeat: 0, perRoom: 0 },
   gearSellValue: { perBonusPoint: 1000, powerUpPoints: 2, perRoom: 500 },
-  gearDrops: { bigScoreChance: 0.2 },
+  gearDrops: { bigScoreChance: 0.2, powerUpChance: 0.15, extraDropChancePerPlayer: 0.25, maxDrops: 3 },
   gear: {},
   quirks: {},
   banks: { categories: [], trivia: [] },
