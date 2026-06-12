@@ -5,6 +5,7 @@ import type { ParsedSoundManifest } from '@/content/schema';
 import { AudioClockContext } from '@/minigames/primitives';
 import type { AudioClockHandle } from '@/minigames/primitives';
 import { useAmbientBed } from './useAmbientBed';
+import { usePhaseAudioSync } from './usePhaseAudioSync';
 
 // ── Public handle types ───────────────────────────────────────────────────────
 
@@ -141,6 +142,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
  */
 function AmbientBedWire() {
   useAmbientBed();
+  usePhaseAudioSync();
   return null;
 }
 

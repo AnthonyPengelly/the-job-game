@@ -34,9 +34,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: var(--radius-sm, 4px);
-  background: var(--surface-1, #f0f0f0);
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--radius-pill, 999px);
+  /* NB: token is --c-surface-*, not --surface-* — the old fallback rendered
+     a near-white chip behind light text (unreadable). */
+  background: var(--c-surface-2, #19262d);
+  border: 1px solid color-mix(in srgb, var(--caution, #f7b84b) 55%, transparent);
+  color: var(--caution, #f7b84b);
+  font-family: var(--font-data);
   font-size: var(--font-size-sm, 0.875rem);
   font-weight: var(--font-weight-medium, 500);
 }
@@ -250,6 +255,34 @@
   align-items: center;
   gap: var(--space-2, 8px);
   min-height: 2.5rem;
+}
+
+/* The shout button — a power-up is a table moment, it should look like one. */
+.mg-boost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: var(--radius-pill, 999px);
+  border: 1px solid var(--caution, #f7b84b);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--caution, #f7b84b) 22%, transparent), transparent);
+  color: var(--caution, #f7b84b);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: box-shadow 120ms ease, transform 120ms ease;
+}
+.mg-boost-btn:hover:not(:disabled) {
+  box-shadow: 0 0 14px -4px var(--caution, #f7b84b);
+  transform: translateY(-1px);
+}
+.mg-boost-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
 }
 
 /* ── Crack the Tumblers — pin board ───────────────────────────────────────── */
@@ -477,9 +510,9 @@
 
 .ftc-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  max-width: 260px;
+  max-width: 400px;
 }
 
 .ftc-cell {
@@ -506,11 +539,20 @@
   box-shadow: 0 0 8px rgba(0, 188, 212, 0.3);
 }
 
-.ftc-cell--tapped {
-  background: var(--c-green-900, #0a2c1c);
-  border-color: var(--c-green-700, #0c7b40);
-  color: var(--c-green-200, #b6f7d2);
+/* Tap flash — two identical animations alternated per press so repeated taps
+   on the same pad each re-trigger a visible blink (never "stays lit"). */
+@keyframes ftcTapA {
+  0% { background: var(--c-green-900, #0a2c1c); border-color: var(--c-green-700, #0c7b40); color: var(--c-green-200, #b6f7d2); }
+  70% { background: var(--c-green-900, #0a2c1c); border-color: var(--c-green-700, #0c7b40); color: var(--c-green-200, #b6f7d2); }
+  100% { background: var(--c-surface-2, #19262d); }
 }
+@keyframes ftcTapB {
+  0% { background: var(--c-green-900, #0a2c1c); border-color: var(--c-green-700, #0c7b40); color: var(--c-green-200, #b6f7d2); }
+  70% { background: var(--c-green-900, #0a2c1c); border-color: var(--c-green-700, #0c7b40); color: var(--c-green-200, #b6f7d2); }
+  100% { background: var(--c-surface-2, #19262d); }
+}
+.ftc-cell--tap-a { animation: ftcTapA 240ms ease-out; }
+.ftc-cell--tap-b { animation: ftcTapB 240ms ease-out; }
 
 .ftc-cell--interactive {
   cursor: pointer;

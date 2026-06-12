@@ -19,6 +19,9 @@ function initState(): FollowTheCircuitState {
   };
 }
 
+/** Rounds start here, not at 1 — short opening rounds "took a while to get interesting". */
+const START_ROUND_LENGTH = 3;
+
 export function FollowTheCircuitComponent({
   params,
   committed,
@@ -27,8 +30,13 @@ export function FollowTheCircuitComponent({
   const [state, setState] = useState<FollowTheCircuitState>(initState);
   const [phase, setPhase] = useState<Phase>('watching');
   const [highlightIndex, setHighlightIndex] = useState<number | null>(null);
-  const [currentRoundLength, setCurrentRoundLength] = useState(1);
+  const [currentRoundLength, setCurrentRoundLength] = useState(() =>
+    Math.min(START_ROUND_LENGTH, params.targetLength),
+  );
   const [replayVersion, setReplayVersion] = useState(0);
+  // Transient tap feedback: {id, n} where n increments per tap so repeated
+  // taps on the same pad re-trigger the flash animation (alternating by parity).
+  const [tapFlash, setTapFlash] = useState<{ id: CardId; n: number } | null>(null);
 
   const effectiveBpm = Math.round(60000 / params.playbackSpeedMs);
   const audibleBeats = currentRoundLength;
@@ -51,6 +59,17 @@ export function FollowTheCircuitComponent({
       playbackStartBeatRef.current = null;
     }
   }, [phase, replayVersion]);
+
+  // Flash, don't hold: clear the playback highlight at ~55% of the beat so a
+  // repeated pad (D, D) reads as two distinct presses instead of one long one.
+  useEffect(() => {
+    if (phase !== 'watching' || highlightIndex === null) return;
+    const id = setTimeout(
+      () => setHighlightIndex(null),
+      Math.max(120, Math.round(params.playbackSpeedMs * 0.55)),
+    );
+    return () => clearTimeout(id);
+  }, [phase, highlightIndex, params.playbackSpeedMs]);
 
   metronome.onBeat((beatNumber: number) => {
     if (phaseRef.current !== 'watching') return;
@@ -76,6 +95,7 @@ export function FollowTheCircuitComponent({
   function handleCellTap(id: CardId) {
     if (phase !== 'inputting' || isDone) return;
 
+    setTapFlash(prev => ({ id, n: (prev?.n ?? 0) + 1 }));
     const currentSt = stateRef.current;
     const tapIndex = currentSt.tapsThisRound.length;
     const expected = params.sequence[tapIndex];
@@ -153,8 +173,6 @@ export function FollowTheCircuitComponent({
       ? params.sequence[highlightIndex]
       : null;
 
-  const tappedIds = new Set(state.tapsThisRound);
-
   return (
     <div data-testid="follow-the-circuit">
       <StatusZone>
@@ -187,13 +205,17 @@ export function FollowTheCircuitComponent({
         <div className="ftc-grid" data-testid="ftc-grid">
           {params.cards.map(card => {
             const isWatching = card.id === watchingHighlightId;
-            const isTapped = tappedIds.has(card.id);
+            // Flash per press (alternating animation classes so a repeat re-triggers).
+            const tapClass =
+              tapFlash !== null && tapFlash.id === card.id
+                ? tapFlash.n % 2 === 0 ? 'ftc-cell--tap-a' : 'ftc-cell--tap-b'
+                : '';
             const isInteractive = phase === 'inputting' && !isDone;
 
             const cellClasses = [
               'ftc-cell',
               isWatching ? 'ftc-cell--watch' : '',
-              isTapped ? 'ftc-cell--tapped' : '',
+              tapClass,
               isInteractive ? 'ftc-cell--interactive' : '',
             ].filter(Boolean).join(' ');
 

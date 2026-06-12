@@ -23,8 +23,10 @@ export function BoostButton<ChallengeState, Params>({
 }: BoostButtonProps<ChallengeState, Params>): JSX.Element | null {
   const [used, setUsed] = useState(false);
 
-  const holder = committed.find((p) => gameLanes.some((l) => p.powerUps[l] === true));
-  if (!holder) return null;
+  const holders = committed.filter((p) => gameLanes.some((l) => p.powerUps[l] === true));
+  if (holders.length === 0) return null;
+  // Any eligible holder may shout it (once per game) — name them all.
+  const holderNames = holders.map((p) => p.name).filter(Boolean).join(' or ');
 
   function handleClick() {
     if (used) return;
@@ -34,12 +36,14 @@ export function BoostButton<ChallengeState, Params>({
 
   return (
     <button
+      type="button"
+      className="mg-boost-btn"
       data-testid={`boost-${hook.lane}`}
       disabled={used}
       onClick={handleClick}
     >
       {hook.label}
-      {holder.name ? ` (${holder.name})` : ''}
+      {holderNames ? ` (${holderNames})` : ''}
     </button>
   );
 }

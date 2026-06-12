@@ -438,3 +438,48 @@ describe('AudioEngine', () => {
     });
   });
 });
+
+// ── Wave 3: phase loop sync + live play state ─────────────────────────────────
+
+describe('isCuePlaying / stopLoopsForPhase', () => {
+  it('isCuePlaying reflects play and stop', async () => {
+    const { engine } = makeEngine();
+    await engine.preload();
+    expect(engine.isCuePlaying('danger-alarm')).toBe(false);
+    engine.play('danger-alarm');
+    expect(engine.isCuePlaying('danger-alarm')).toBe(true);
+    engine.stop('danger-alarm');
+    expect(engine.isCuePlaying('danger-alarm')).toBe(false);
+  });
+
+  it('isCuePlaying is false for unknown cues', async () => {
+    const { engine } = makeEngine();
+    await engine.preload();
+    expect(engine.isCuePlaying('nope')).toBe(false);
+  });
+
+  it('stops a looping cue whose phases exclude the new phase', async () => {
+    const { engine } = makeEngine();
+    await engine.preload();
+    engine.play('danger-alarm'); // loop, phases: ['room']
+    expect(engine.isCuePlaying('danger-alarm')).toBe(true);
+    engine.stopLoopsForPhase('result');
+    expect(engine.isCuePlaying('danger-alarm')).toBe(false);
+  });
+
+  it('keeps a looping cue whose phases include the new phase', async () => {
+    const { engine } = makeEngine();
+    await engine.preload();
+    engine.play('danger-alarm');
+    engine.stopLoopsForPhase('room');
+    expect(engine.isCuePlaying('danger-alarm')).toBe(true);
+  });
+
+  it('leaves one-shot cues alone (they end naturally)', async () => {
+    const { engine } = makeEngine();
+    await engine.preload();
+    engine.play('sting-win'); // one-shot, phases: ['result']
+    engine.stopLoopsForPhase('room');
+    expect(engine.isCuePlaying('sting-win')).toBe(true);
+  });
+});
