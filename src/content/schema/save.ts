@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import type { RunEvent } from '@/engine/types';
 
-export const SAVE_VERSION = 1;
+// v2 (wave 3): generation draws changed (per-option gear rolls, commit counts)
+// — v1 event logs no longer replay against the same seed. Old saves are stale.
+export const SAVE_VERSION = 2;
 
 // ── Sub-schemas ───────────────────────────────────────────────────────────────
 

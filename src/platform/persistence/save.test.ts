@@ -142,7 +142,7 @@ describe('readSave malformed data → corrupt', () => {
 
   it('returns corrupt for valid JSON that fails the schema', () => {
     const storage = makeMemoryStorage();
-    storage.setItem('the-job:run-save', JSON.stringify({ version: 1, seed: 'not-a-number', eventLog: [] }));
+    storage.setItem('the-job:run-save', JSON.stringify({ version: SAVE_VERSION, seed: 'not-a-number', eventLog: [] }));
     const result = readSave(storage);
     expect(result.ok).toBe(false);
     if (!result.ok) {

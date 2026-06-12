@@ -292,7 +292,19 @@ export function createGameStore(options: CreateGameStoreOptions): StoreApi<GameS
       const { cfg: c } = get();
       const result = readSave(storage);
       if (result.ok) {
-        const replayed = replay(result.save.seed, result.save.eventLog, c);
+        // Replay can throw if the engine/content changed under a same-version
+        // save (e.g. an RNG-stream change regenerates different rooms than the
+        // logged events reference). A stale save must never brick the boot —
+        // clear it and fall back to a fresh start (CLAUDE.md rule 1).
+        let replayed: ReturnType<typeof replay>;
+        try {
+          replayed = replay(result.save.seed, result.save.eventLog, c);
+        } catch (err) {
+          console.warn('[store] Saved run failed to replay — clearing the save:', err);
+          clearSave(storage);
+          set({ staleSaveNotice: true });
+          return;
+        }
         set({
           session: replayed,
           eventLog: result.save.eventLog,
