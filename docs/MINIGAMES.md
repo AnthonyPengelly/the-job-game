@@ -125,11 +125,14 @@ interface Difficulty {
 ```
 
 **Mapping rating → difficulty.** Each committed player passively eases the game
-in their committed lane. For a single-lane game, use the committed crew's lane
-rating (highest, or sum, per the scaling preset). For a **combo**, all committed
-lane ratings aggregate into a single scalar `dial.level` via `computeDial`
-(sum-weighted by the `perLanePoint` preset field, never hardcoded — see
-`docs/CONTENT-AND-TUNING.md`). The design calls for each lane to ease its own
+in their committed lane. All committed lane ratings aggregate into a single
+scalar `dial.level` via `computeDial`, weighted by the **average** committed
+rating (`perLanePoint` preset field × mean, never hardcoded — see
+`docs/CONTENT-AND-TUNING.md`). Wave 3 decision: the average, not the sum — a
+full-team commit must not be wildly easier than two specialists, and a weak
+tag-along drags the average (and the table sees it live on the commit-panel
+dial). A small residual per-entry easing (`tightenPerExtraCrew`) keeps "more
+hands help a little" true. The design calls for each lane to ease its own
 half of difficulty (e.g. Safe-Crack: Tech → digit count, Stealth → guess count),
 but the current implementation drives all levers from the same scalar — this is
 the **accepted E4 trade-off**; per-lane differentiation can be added in a later

@@ -185,10 +185,26 @@ describe('computeDial', () => {
     expect(result).toBeCloseTo(0.7);
   });
 
-  it('computes correctly for 2 players with rating 2 each', () => {
-    // base(1.0) + perLanePoint(-0.15) * (2+2) - tightenPerExtraCrew(0.1) * (2-1)
-    // = 1.0 - 0.6 - 0.1 = 0.3
-    expect(computeDial([2, 2], 'anyGame', 4, cfg)).toBeCloseTo(0.3);
+  it('computes correctly for 2 players with rating 2 each (mean-based, wave 3)', () => {
+    // mean = (2+2)/2 = 2
+    // base(1.0) + perLanePoint(-0.15) * 2 - tightenPerExtraCrew(0.1) * (2-1)
+    // = 1.0 - 0.3 - 0.1 = 0.6
+    expect(computeDial([2, 2], 'anyGame', 4, cfg)).toBeCloseTo(0.6);
+  });
+
+  it('full-team commit is barely easier than two specialists at the same average (wave 3)', () => {
+    const twoSpecialists = computeDial([3, 3], 'anyGame', 5, cfg);
+    const fullTeam = computeDial([3, 3, 3, 3, 3], 'anyGame', 5, cfg);
+    // Only the small per-entry tighten term separates them — not the old sum cliff.
+    expect(fullTeam).toBeLessThan(twoSpecialists);
+    expect(twoSpecialists - fullTeam).toBeLessThanOrEqual(0.3 + 1e-9);
+  });
+
+  it('a weak tag-along now RAISES the dial (drags the average down)', () => {
+    const ace = computeDial([4], 'anyGame', 4, cfg);
+    const aceAndPassenger = computeDial([4, 0], 'anyGame', 4, cfg);
+    // mean drops 4 → 2: the game gets harder, minus the small extra-hands credit.
+    expect(aceAndPassenger).toBeGreaterThan(ace);
   });
 
   it('computes correctly for 1 player with rating 3', () => {
