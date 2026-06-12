@@ -269,8 +269,9 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 - **Boosts (Tech):** **Reset Pin** — forgive one clash; the misplayed card goes
   back to its holder's hand and was never counted.
 - **Dial lever:** cards per player (longer silent sequence = harder).
-- **minCommit:** **1 via `soloVariantId`**, true game at **2**. Silent
-  coordination has no meaning solo, so solo loads a **separate memory variant**.
+- **minCommit:** **2**, and **full-team** since wave 3 — the whole crew plays
+  and nobody rests (silent coordination is the table's game). The solo memory
+  variant stays registered for safety but is never offered to a 2+ crew.
 - **soloVariantId:** `crack-the-tumblers-solo` — physical memory test: deal
   `cardCount` random cards face-up in a row, study under the clock, flip
   face-down in place, then flip back one at a time in ascending order. Every
@@ -472,13 +473,14 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 
 ## 7. Full-team games
 
-Three games require the **whole crew** to play — no subset commits, no resting afterward:
+Four games require the **whole crew** to play — no subset commits, no resting afterward:
 
 | Game | Why full-team |
 |------|---------------|
 | **Categories** (`categories`) | Crew rattles off answers as a table — meaningful with everyone shouting |
 | **Inside Knowledge** (`insideKnowledge`) | Crew confers on trivia — the whole table brings collective knowledge |
 | **Assembly Line** (`assemblyLine` + negotiated) | Whole table trades cards — no one to trade with if benched |
+| **Crack the Tumblers** (`crackTheTumblers`) | Silent coordination is the whole table's game (wave 3) — benching spectators broke the fun; the solo memory variant remains registered but is never offered to a 2+ crew |
 
 **Contract flag.** `MiniGame.fullTeam = true` on these three games (and the
 `assemblyLineNegotiated` variant). The obstacle template in the preset also
