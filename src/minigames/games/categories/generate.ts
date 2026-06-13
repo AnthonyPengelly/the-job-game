@@ -20,7 +20,7 @@ function clamp(n: number, lo: number, hi: number): number {
  * Factory that binds the categories item bank to a generate function.
  *
  * Dial levers (lower dial.level = easier):
- *   - targetCount: lower target at easier difficulty (4..12)
+ *   - targetCount: lower target at easier difficulty (6..14; wave 4 +2)
  *   - timerSeconds: longer timer at easier difficulty (30..90 s)
  *
  * Both category and skipCategory are drawn from the RNG so the same seed
@@ -31,7 +31,7 @@ function clamp(n: number, lo: number, hi: number): number {
  */
 export function makeGenerate(items: string[]) {
   return function generate(rng: Rng, dial: Difficulty): CategoriesParams {
-    const targetCount = clamp(Math.round(8 + dial.level * 1.5), 4, 12);
+    const targetCount = clamp(Math.round(10 + dial.level * 1.5), 6, 14);
     const timerSeconds = clamp(Math.round(60 - dial.level * 10), 30, 90);
 
     const category = rng.pick(items);

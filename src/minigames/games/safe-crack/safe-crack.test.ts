@@ -80,12 +80,13 @@ describe('generate — dial levers (higher dial = harder)', () => {
     expect(generate(mulberry32(1), dial(100)).code.length).toBe(4);
   });
 
-  it('clamps guess budget to maximum 8', () => {
-    expect(generate(mulberry32(1), dial(-100)).guessBudget).toBe(8);
+  it('clamps guess budget to maximum 12 (wave 4: budget doubled)', () => {
+    expect(generate(mulberry32(1), dial(-100)).guessBudget).toBe(12);
   });
 
-  it('clamps guess budget to minimum 6', () => {
-    expect(generate(mulberry32(1), dial(100)).guessBudget).toBe(6);
+  it('clamps guess budget to the winnability floor (digits + 2) at a brutal dial', () => {
+    const p = generate(mulberry32(1), dial(100));
+    expect(p.guessBudget).toBe(p.code.length + 2);
   });
 
   it('never produces a 4-digit code with fewer than 6 guesses (winnability floor)', () => {

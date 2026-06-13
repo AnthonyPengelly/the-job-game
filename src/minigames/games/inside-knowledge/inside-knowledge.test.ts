@@ -89,9 +89,11 @@ describe('generate — reproducibility', () => {
     }
   });
 
-  it('threshold is at least ceil(questionCount * 0.6)', () => {
-    const p = makeGenerate(TEST_ITEMS)(mulberry32(42), dial(0));
-    expect(p.threshold).toBe(Math.ceil(p.questions.length * 0.6));
+  it('threshold is questionCount − 1 (wave 4: one mistake allowed)', () => {
+    for (const level of [-2, 0, 1, 2]) {
+      const p = makeGenerate(TEST_ITEMS)(mulberry32(42), dial(level));
+      expect(p.threshold).toBe(Math.max(1, p.questions.length - 1));
+    }
   });
 
   it('no repeated questions in a single draw', () => {
@@ -140,9 +142,17 @@ describe('generate — dial levers (higher dial = harder)', () => {
     }
   });
 
-  it('easy dial produces easy tier', () => {
-    const p = makeGenerate(TEST_ITEMS)(mulberry32(1), dial(-2));
-    expect(p.tier).toBe('easy');
+  it('easy band (low dial) draws from easy AND medium questions (wave 4)', () => {
+    // dial 0 is now the easy band; it should be able to surface medium items.
+    const tiersSeen = new Set<string>();
+    for (let seed = 0; seed < 40; seed++) {
+      const p = makeGenerate(TEST_ITEMS)(mulberry32(seed), dial(0));
+      expect(p.tier).toBe('easy');
+      p.questions.forEach(q => tiersSeen.add(q.tier));
+    }
+    expect(tiersSeen.has('easy')).toBe(true);
+    expect(tiersSeen.has('medium')).toBe(true);
+    expect(tiersSeen.has('hard')).toBe(false);
   });
 
   it('hard dial produces hard tier', () => {
@@ -150,8 +160,8 @@ describe('generate — dial levers (higher dial = harder)', () => {
     expect(p.tier).toBe('hard');
   });
 
-  it('mid dial produces medium tier', () => {
-    const p = makeGenerate(TEST_ITEMS)(mulberry32(1), dial(0));
+  it('mid dial (0.5–1.5) produces medium tier', () => {
+    const p = makeGenerate(TEST_ITEMS)(mulberry32(1), dial(1));
     expect(p.tier).toBe('medium');
   });
 });

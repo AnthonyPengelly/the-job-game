@@ -102,11 +102,11 @@ describe('generate — dial levers (higher dial = harder)', () => {
     expect(hard.timerSeconds).toBeLessThanOrEqual(easy.timerSeconds);
   });
 
-  it('targetCount is always within [4, 12]', () => {
+  it('targetCount is always within [6, 14] (wave 4: +2)', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = makeGenerate(TEST_ITEMS)(mulberry32(1), dial(level));
-      expect(p.targetCount).toBeGreaterThanOrEqual(4);
-      expect(p.targetCount).toBeLessThanOrEqual(12);
+      expect(p.targetCount).toBeGreaterThanOrEqual(6);
+      expect(p.targetCount).toBeLessThanOrEqual(14);
     }
   });
 
