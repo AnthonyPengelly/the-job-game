@@ -103,7 +103,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
         start: () => engine.clock.start(),
         stop: () => engine.clock.stop(),
       },
-      scheduleBeep: (when: number) => engine.scheduleBeep(when),
+      scheduleBeep: (when: number, frequency?: number) => engine.scheduleBeep(when, frequency),
       setTimerSoundscape: (active: boolean) => {
         timerCountRef.current = Math.max(0, timerCountRef.current + (active ? 1 : -1));
         if (active && timerCountRef.current === 1) {

@@ -3,11 +3,16 @@ import type { Difficulty } from '@/minigames/contract';
 
 export interface CrackTheTumblersParams {
   /**
-   * How many cards the GM deals face-down to each committed player from a
-   * shuffled standard pack. The card values are physical and random — the app
-   * never knows them; the GM records each play as in-order or a clash.
+   * Total cards the GM deals face-down across the committed crew (split as
+   * evenly as possible, every player ≥1). The card values are physical and
+   * random — the app never knows them; the GM records each play as in-order
+   * or a clash.
+   *
+   * Wave 4: this is a TOTAL, not a per-player count — two players with one
+   * card each was trivially easy, and the count now scales independently of
+   * crew size. Suit-order-on-ties (below) keeps even a half-deck hard.
    */
-  cardsPerPlayer: number;
+  totalCards: number;
 }
 
 function clamp(n: number, lo: number, hi: number): number {
@@ -17,16 +22,20 @@ function clamp(n: number, lo: number, hi: number): number {
 /**
  * Generate Crack the Tumblers parameters from the resolved dial.
  *
- * The deal is physical: shuffle the pack, deal `cardsPerPlayer` to each
- * committed player, players peek only at their own cards, then the crew must
- * play every card to the table in ascending rank order (Ace low, equal ranks
- * may follow each other) without talking. The randomness lives in the
- * physical shuffle, so the RNG is accepted per contract but not consumed.
+ * The deal is physical: shuffle the pack, deal `totalCards` across the
+ * committed crew, players peek only at their own cards, then the crew plays
+ * every card to the table in **ascending rank order, and within equal ranks
+ * in suit alphabetical order** (Clubs → Diamonds → Hearts → Spades) — no
+ * talking. The suit tiebreak means a long sequence can't be solved by just
+ * "play every number in order"; equal ranks still demand silent coordination.
+ * The randomness lives in the physical shuffle, so the RNG is accepted per
+ * contract but not consumed.
  *
  * Dial lever (higher dial.level = harder):
- *   - cardsPerPlayer: more cards each = longer silent sequence (1..3)
+ *   - totalCards: longer silent sequence. Easy ~6, medium ~12, brutal ~19+
+ *     (clamped 4..24).
  */
 export function generate(_rng: Rng, dial: Difficulty): CrackTheTumblersParams {
-  const cardsPerPlayer = clamp(Math.round(1.5 + dial.level * 0.7), 1, 3);
-  return { cardsPerPlayer };
+  const totalCards = clamp(Math.round(8 + dial.level * 5), 4, 24);
+  return { totalCards };
 }

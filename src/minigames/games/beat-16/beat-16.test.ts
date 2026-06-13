@@ -64,10 +64,10 @@ describe('generate — reproducibility', () => {
     expect(p.reactionCompensationMs).toBeLessThan(p.complicationWindowMs);
   });
 
-  it('audibleBeats is at least 1', () => {
+  it('audibleBeats is always pinned at 4 (wave 4)', () => {
     for (const level of [-5, -1, 0, 1, 5]) {
       const p = generate(mulberry32(1), dial(level));
-      expect(p.audibleBeats).toBeGreaterThanOrEqual(1);
+      expect(p.audibleBeats).toBe(4);
     }
   });
 
@@ -88,18 +88,24 @@ describe('generate — dial levers (higher dial = harder)', () => {
     expect(hard.targetBeat).toBeGreaterThanOrEqual(easy.targetBeat);
   });
 
-  it('higher dial ⇒ faster tempo (harder to track)', () => {
+  it('higher dial ⇒ SLOWER tempo (wave 4: harder to hold over a long silent count)', () => {
     const easy = generate(mulberry32(42), dial(-2));
     const hard = generate(mulberry32(42), dial(2));
-    expect(hard.bpm).toBeGreaterThanOrEqual(easy.bpm);
+    expect(hard.bpm).toBeLessThanOrEqual(easy.bpm);
   });
 
-  it('targetBeat is always within [8, 20]', () => {
+  it('targetBeat is always within [10, 20]', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect(p.targetBeat).toBeGreaterThanOrEqual(8);
+      expect(p.targetBeat).toBeGreaterThanOrEqual(10);
       expect(p.targetBeat).toBeLessThanOrEqual(20);
     }
+  });
+
+  it('hits the 10 / 15 / 20 anchors at easy / medium / brutal dials', () => {
+    expect(generate(mulberry32(1), dial(-0.5)).targetBeat).toBe(10);
+    expect(generate(mulberry32(1), dial(0.8)).targetBeat).toBe(15);
+    expect(generate(mulberry32(1), dial(2.2)).targetBeat).toBe(20);
   });
 
   it('bpm is always within [60, 120]', () => {

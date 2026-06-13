@@ -25,26 +25,25 @@ function clamp(n: number, lo: number, hi: number): number {
 }
 
 /**
- * Generate Beat 16 parameters from the seeded RNG and the resolved dial.
+ * Generate Beat 16 parameters from the resolved dial.
  *
- * Dial levers (lower dial.level = easier):
- *   - targetBeat: fewer beats at lower difficulty (8..20); RNG adds ±1 variation
- *   - bpm: slower tempo at lower difficulty (60..120); RNG picks within a ±5 BPM window
- *   - audibleBeats: more audible beats at lower difficulty (targetBeat − 3 down to targetBeat − 10)
+ * Wave 4: stripped to two levers and a fixed audible count.
+ *   - audibleBeats: ALWAYS 4 — you hear four, then count the rest in silence.
+ *   - targetBeat: the beat to land on — easy 10, medium 15, brutal 20. The
+ *     silent stretch is therefore targetBeat − 4 (6 / 11 / 16).
+ *   - bpm: REVERSED from before — easy is FAST (~115), brutal is SLOW (~70).
+ *     A slow tempo over a long silent count is harder to hold, not easier.
  *
- * cleanWindowMs and complicationWindowMs are fixed skill thresholds (not dial-driven).
- * The Physical lane drives dial.level via computeDial before generate is called.
+ * Deterministic (no RNG jitter — fewer moving parts). cleanWindowMs and
+ * complicationWindowMs are fixed skill thresholds. The Physical lane drives
+ * dial.level via computeDial before generate is called.
  */
-export function generate(rng: Rng, dial: Difficulty): Beat16Params {
-  const targetBeatBase = clamp(Math.round(12 + dial.level * 4), 8, 20);
-  const targetBeat = clamp(targetBeatBase + rng.int(-1, 1), 8, 20);
-  const bpmBase = clamp(Math.round(80 + dial.level * 20), 60, 120);
-  const bpm = clamp(bpmBase + rng.int(-5, 5), 60, 120);
+export function generate(_rng: Rng, dial: Difficulty): Beat16Params {
+  const targetBeat = clamp(Math.round(12 + dial.level * 4), 10, 20);
+  const bpm = clamp(Math.round(105 - dial.level * 16), 60, 120);
 
-  // Higher dial = fewer audible beats before muting (leaves more silent beats
-  // to count). Wave 3: floor raised — counting just 2 silent beats was free.
-  const silentCount = clamp(Math.round(4 + dial.level * 2), 3, 10);
-  const audibleBeats = Math.max(1, targetBeat - silentCount);
+  // Always hear four, then count the remainder silently.
+  const audibleBeats = Math.min(4, targetBeat - 1);
 
   return {
     targetBeat,

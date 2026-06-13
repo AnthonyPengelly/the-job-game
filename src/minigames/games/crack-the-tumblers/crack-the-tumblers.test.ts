@@ -50,18 +50,24 @@ describe('generate — physical deal parameters', () => {
     expect(generate(mulberry32(1), d)).toEqual(generate(mulberry32(9999), d));
   });
 
-  it('higher dial ⇒ more cards per player (harder)', () => {
+  it('higher dial ⇒ more total cards (harder)', () => {
     const easy = generate(mulberry32(1), dial(-2));
     const hard = generate(mulberry32(1), dial(2));
-    expect(hard.cardsPerPlayer).toBeGreaterThanOrEqual(easy.cardsPerPlayer);
+    expect(hard.totalCards).toBeGreaterThanOrEqual(easy.totalCards);
   });
 
-  it('cardsPerPlayer stays within a dealable range [1, 3]', () => {
+  it('totalCards stays within a dealable range [4, 24]', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect(p.cardsPerPlayer).toBeGreaterThanOrEqual(1);
-      expect(p.cardsPerPlayer).toBeLessThanOrEqual(3);
+      expect(p.totalCards).toBeGreaterThanOrEqual(4);
+      expect(p.totalCards).toBeLessThanOrEqual(24);
     }
+  });
+
+  it('hits ~6 / ~12 / ~19 total at easy / medium / brutal dials', () => {
+    expect(generate(mulberry32(1), dial(-0.5)).totalCards).toBe(6);
+    expect(generate(mulberry32(1), dial(0.8)).totalCards).toBe(12);
+    expect(generate(mulberry32(1), dial(2.2)).totalCards).toBe(19);
   });
 });
 

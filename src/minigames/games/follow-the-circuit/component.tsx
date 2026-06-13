@@ -41,11 +41,28 @@ export function FollowTheCircuitComponent({
   const [tapFlash, setTapFlash] = useState<{ id: CardId; n: number } | null>(null);
 
   const effectiveBpm = Math.round(60000 / params.playbackSpeedMs);
-  const audibleBeats = currentRoundLength;
 
   const clock = useAudioClock();
   const scheduleBeep = useScheduleBeep();
-  const metronome = useMetronome({ bpm: effectiveBpm, audibleBeats, clock, scheduleBeep });
+  // The metronome is a silent clock here (scheduleBeep: null) — we sound a
+  // distinct pitch per pad ourselves on each flash, and only while watching.
+  const metronome = useMetronome({
+    bpm: effectiveBpm,
+    audibleBeats: 0,
+    clock,
+    scheduleBeep: null,
+    running: phase === 'watching',
+  });
+
+  // One tone per pad (A–F) — a rising scale so the crew can follow by ear.
+  const PAD_HZ: Record<string, number> = {
+    'node-A': 392, 'node-B': 440, 'node-C': 494,
+    'node-D': 587, 'node-E': 659, 'node-F': 784,
+  };
+  function beepPad(id: CardId) {
+    if (scheduleBeep === null || clock === null) return;
+    scheduleBeep(clock.now() + 0.01, PAD_HZ[id as string] ?? 440);
+  }
 
   const phaseRef = useRef<Phase>('watching');
   phaseRef.current = phase;
@@ -85,6 +102,8 @@ export function FollowTheCircuitComponent({
 
     if (indexInRound < roundLen) {
       setHighlightIndex(indexInRound);
+      const padId = params.sequence[indexInRound];
+      if (padId !== undefined) beepPad(padId);
     } else if (indexInRound === roundLen) {
       setHighlightIndex(null);
       playbackStartBeatRef.current = null;
@@ -98,6 +117,7 @@ export function FollowTheCircuitComponent({
     if (phase !== 'inputting' || isDone) return;
 
     setTapFlash(prev => ({ id, n: (prev?.n ?? 0) + 1 }));
+    beepPad(id);
     const currentSt = stateRef.current;
     const tapIndex = currentSt.tapsThisRound.length;
     const expected = params.sequence[tapIndex];

@@ -23,7 +23,7 @@ function clamp(n: number, lo: number, hi: number): number {
  *
  * Dial levers (lower dial.level = easier):
  *   - digitCount: 3 digits normally, 4 only at high difficulty
- *   - guessBudget: more guesses at lower difficulty (digits+2..8)
+ *   - guessBudget: more guesses at lower difficulty (digits+2..12; wave 4)
  *   - timerSeconds: more time at lower difficulty (75..180)
  *
  * The digit pool is small (playtest wave 2): 1–4 for 3-digit codes, 1–5 for
@@ -47,7 +47,9 @@ export function generate(rng: Rng, dial: Difficulty): SafeCrackParams {
   const digitMax = digitCount === 3 ? 4 : 5;
   // Budget shrinks with the pool (max 8, was 10) but never below digits + 2 —
   // the winnability floor from MINIGAMES.md §6.7.
-  const guessBudget = clamp(Math.round(7 - dial.level), digitCount + 2, 8);
+  // Wave 4: budget roughly doubled — the clock keeps the pressure on, but it's
+  // hard to comprehend the feedback and form a fresh guess quickly under it.
+  const guessBudget = clamp(Math.round(11 - dial.level * 1.5), digitCount + 2, 12);
   const timerSeconds = clamp(Math.round(150 - dial.level * 25), 75, 180);
 
   const code: number[] = [];

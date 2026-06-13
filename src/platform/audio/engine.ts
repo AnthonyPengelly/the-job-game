@@ -68,11 +68,12 @@ export interface AudioEngine {
   setAmbient(intensity: number): void;
 
   /**
-   * Schedule an oscillator beep at the given audio-clock time (seconds).
-   * Used by the shared Metronome via AudioClockContext (E9.4).
+   * Schedule an oscillator beep at the given audio-clock time (seconds), at an
+   * optional frequency (default 880 Hz). Used by the shared Metronome and by
+   * games that want pitched feedback (e.g. Follow the Circuit per-pad tones).
    * No-op if no AudioContext is available.
    */
-  scheduleBeep(when: number): void;
+  scheduleBeep(when: number, frequency?: number): void;
 
   /** The precise audio-clock scheduler for metronome use. */
   readonly clock: AudioClock;
@@ -357,14 +358,14 @@ export function createAudioEngine(
 
   // ── Beep scheduler ────────────────────────────────────────────────────────
 
-  function scheduleBeep(when: number): void {
+  function scheduleBeep(when: number, frequency = 880): void {
     if (!ctx) return;
     try {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.frequency.value = 880;
+      osc.frequency.value = frequency;
       gain.gain.setValueAtTime(0.15, when);
       gain.gain.exponentialRampToValueAtTime(0.001, when + 0.05);
       osc.start(when);

@@ -50,7 +50,7 @@ function clamp(n: number, lo: number, hi: number): number {
 export function generate(rng: Rng, dial: Difficulty): OnceOverParams {
   const cardCount = 8 + rng.int(0, 2); // 8, 9, or 10
   const studySeconds = clamp(Math.round(25 - dial.level * 5), 15, 30);
-  const changeCount = clamp(Math.round(1 + dial.level * 0.5), 1, 3);
+  const changeCount = clamp(Math.round(1.5 + dial.level * 0.8), 1, 3); // wave 4: 1 / 2 / 3
 
   // Shuffle positions 1..cardCount; changes consume from the front so no
   // position is touched twice (instructions stay order-independent).

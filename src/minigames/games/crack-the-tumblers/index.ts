@@ -20,7 +20,8 @@ export const crackTheTumblers: MiniGame<CrackTheTumblersParams, CrackTheTumblers
   judge,
   boosts: [resetPinBoost],
   armedInstructions:
-    'Deal each committed player a hand from the shuffled pack. No talking: the crew plays ' +
-    'every card to the table in ascending rank order, Ace low, equals allowed back-to-back. ' +
-    'A card out of order is a clash — the alarm. Reset Pin hands one clash back.',
+    'Deal the whole pack-slice across the crew (the screen shows how many each). No talking: ' +
+    'the crew plays every card to the table in ascending rank order, Ace low. On equal ranks ' +
+    'they must go in suit order — Clubs, Diamonds, Hearts, Spades. A card out of rank OR suit ' +
+    'order is a clash — the alarm. Reset Pin hands one clash back.',
 };

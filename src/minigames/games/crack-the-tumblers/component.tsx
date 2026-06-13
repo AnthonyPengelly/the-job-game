@@ -7,12 +7,22 @@ import type { CrackTheTumblersParams } from './generate';
 import { judge, resetPinBoost } from './judge';
 import type { CrackTheTumblersState } from './judge';
 
+/** Split a total into n brackets as evenly as possible, each ≥1 (front-loaded). */
+function dealBrackets(total: number, n: number): number[] {
+  if (n <= 0) return [];
+  const safeTotal = Math.max(total, n); // everyone gets at least one card
+  const base = Math.floor(safeTotal / n);
+  const extra = safeTotal % n;
+  return Array.from({ length: n }, (_, i) => base + (i < extra ? 1 : 0));
+}
+
 export function CrackTheTumblersComponent({
   params,
   committed,
   onResolve,
 }: MiniGameProps<CrackTheTumblersParams>): JSX.Element {
-  const totalCards = committed.length * params.cardsPerPlayer;
+  const brackets = dealBrackets(params.totalCards, committed.length);
+  const totalCards = brackets.reduce((a, b) => a + b, 0);
   const [state, setState] = useState<CrackTheTumblersState>(() => ({
     totalCards,
     playsRecorded: 0,
@@ -84,15 +94,18 @@ export function CrackTheTumblersComponent({
             <ol className="mg-setup-panel__steps">
               <li>Shuffle the pack.</li>
               <li>
-                Deal <strong>{params.cardsPerPlayer} card{params.cardsPerPlayer !== 1 ? 's' : ''} face-down</strong> to
-                each of: <strong>{committed.map(p => p.name).join(', ')}</strong>.
+                Deal <strong>{totalCards} cards</strong> face-down across the crew:{' '}
+                <strong data-testid="ctb-deal-brackets">
+                  {committed.map((p, i) => `${p.name} ${brackets[i]}`).join(' · ')}
+                </strong>.
               </li>
               <li>Players peek at their own cards only. No talking, no signalling.</li>
             </ol>
             <p className="mg-setup-panel__rule">
               The crew plays every card to the table one at a time, <strong>lowest rank first,
-              ascending</strong> (Ace low, King high). Equal ranks may follow each other.
-              Record each play below — you are the referee.
+              ascending</strong> (Ace low, King high). On <strong>equal ranks</strong>, play them
+              in <strong>suit order: ♣ Clubs → ♦ Diamonds → ♥ Hearts → ♠ Spades</strong> — a tie
+              played out of suit order is a clash. Record each play below — you are the referee.
             </p>
             <button
               type="button"
@@ -107,7 +120,7 @@ export function CrackTheTumblersComponent({
           <>
             <div className={`ctb-subtext${state.alarmTripped ? ' ctb-subtext--danger' : ''}`} data-testid="ctb-status-line">
               {state.alarmTripped
-                ? 'Clash — card out of ascending order. Reset Pin forgives it once: hand the card back.'
+                ? 'Clash — card out of ascending or suit order. Reset Pin forgives it once: hand the card back.'
                 : state.playsRecorded >= state.totalCards
                   ? 'All pins set.'
                   : 'Record each card as it hits the table.'}
