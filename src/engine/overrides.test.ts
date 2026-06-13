@@ -501,6 +501,20 @@ describe('OVERRIDE_REROLL_ROOM', () => {
     const next = applyOverride(s, { t: 'OVERRIDE_REROLL_ROOM' }, cfg);
     expect(next.carried).toEqual(carried);
   });
+
+  it('resets phase to room — re-rolling mid-minigame must not strand the GM', () => {
+    // A fresh room has no committedOptionId; if phase stayed 'minigame',
+    // RESOLVE_MINIGAME would throw "committed option (none)" (no dead-ends).
+    const s = baseState({ rngState: 100, phase: 'minigame' });
+    const next = applyOverride(s, { t: 'OVERRIDE_REROLL_ROOM' }, cfg);
+    expect(next.phase).toBe('room');
+  });
+
+  it('resets phase to room when re-rolling from the offer too', () => {
+    const s = baseState({ rngState: 100, phase: 'offer' });
+    const next = applyOverride(s, { t: 'OVERRIDE_REROLL_ROOM' }, cfg);
+    expect(next.phase).toBe('room');
+  });
 });
 
 // ─── OVERRIDE_SKIP_ROOM ───────────────────────────────────────────────────────

@@ -122,7 +122,11 @@ export function applyOverride(
     case 'OVERRIDE_REROLL_ROOM': {
       // Regenerate the current room in-place, advancing rngState.
       // Preserve carried effects — reroll does not advance roomIndex, so no tick.
-      return { ...generateRoom(state, cfg), carried: state.carried };
+      // Reset phase to 'room': a freshly rolled room has no committed option, so
+      // leaving the GM mid-minigame/offer would strand them (RESOLVE_MINIGAME
+      // then throws "committed option (none)"). A re-roll is a fresh approach.
+      const next: RunState = { ...generateRoom(state, cfg), carried: state.carried, phase: 'room' };
+      return { ...next, escapeSignal: computeEscapeSignal(next, cfg) };
     }
 
     case 'OVERRIDE_SKIP_ROOM': {
