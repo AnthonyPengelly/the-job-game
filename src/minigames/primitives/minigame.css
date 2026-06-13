@@ -1602,3 +1602,36 @@
   max-width: 56ch;
   line-height: 1.5;
 }
+
+/* ── Defuse card-input solver (wave 4) ─────────────────────────────────────── */
+.dfz-solver { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.dfz-solver-head {
+  font-family: var(--font-data); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--fg-faint, #6d7a74);
+}
+.dfz-solver-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.dfz-solver-wire {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 7px; border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border, #233028); background: var(--c-surface-2, #19262d);
+}
+.dfz-solver-wire--cut { border-color: var(--danger, #e5484d); }
+.dfz-solver-wire--keep { border-color: var(--c-green-700, #0c7b40); }
+.dfz-solver-pos {
+  font-family: var(--font-data); font-size: 10px; color: var(--fg-faint, #6d7a74);
+}
+.dfz-solver-wire select {
+  font-family: var(--font-data); font-size: 14px; padding: 2px 4px;
+  background: var(--bg-input, #0e1714); color: var(--fg, #e8f0ec);
+  border: 1px solid var(--border-strong, #34453b); border-radius: 3px;
+}
+.dfz-solver-verdict {
+  font-family: var(--font-data); font-weight: 700; font-size: 10px;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.dfz-solver-wire--cut .dfz-solver-verdict { color: var(--danger, #e5484d); }
+.dfz-solver-wire--keep .dfz-solver-verdict { color: var(--c-green-300, #4fd06e); }
+.dfz-solver-answer {
+  font-family: var(--font-data); font-size: 14px; font-weight: 700;
+  color: var(--accent, #1fd06e);
+}

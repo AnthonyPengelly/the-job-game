@@ -430,7 +430,8 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 ### 10. Defuse the Alarm — `defuse-the-alarm` *(player-facing)*
 
 > **Playtest wave 2 redesign (2026-06):** one-laptop handoff flow + a
-> first-match-wins rulebook engine. Details below.
+> first-match-wins rulebook engine. **Wave 4:** harder, Murdle-style
+> deduction clauses (3–6 per book) + a GM card-input solver. Details below.
 
 - **Lanes:** Charm + Stealth. **Facing:** **Player** — one player (the
   **reader**) privately sees the **rulebook**; the rest see the cards (the
@@ -439,21 +440,34 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
   list**, see below) and the timer. All clauses reference **standard-pack
   properties** (colour, suit, face cards, value bands, position in the row),
   so any random deal is decidable — the app never needs to know the cards.
-- **The rulebook engine (wave 2).** Four clause shapes compose under one
-  reading rule — *"top to bottom: the FIRST rule that covers a wire decides
-  it; anything no rule covers stays uncut"*:
+- **The rulebook engine.** Clause shapes compose under one reading rule —
+  *"top to bottom: the FIRST rule that covers a wire decides it; anything no
+  rule covers stays uncut"*:
   - **protections** — "Never cut FACE-CARD wires."
   - **positional bans** — "Never cut the LEFTMOST wire in the row."
   - **count-based cuts** — "Cut exactly the TWO highest HEART wires — no
     other HEARTS."
   - **exceptions** — "Cut BLACK wires — UNLESS it's a face card."
-  First-match-wins makes every rulebook decidable by construction; a pure
+  - **relational (wave 4)** — "Cut any wire whose LEFT neighbour is a face
+    card" (the end wire has no such neighbour).
+  - **superlative (wave 4)** — "Cut the single HIGHEST-ranked wire in the
+    whole row (ties → the leftmost)."
+  Wave 4 raises the count to **3–6 clauses** and adds the relational and
+  superlative shapes so the table must reason about the *row* (adjacency,
+  global extremes), Murdle-style, not just read each card. First-match-wins
+  keeps every rulebook decidable by construction; a pure
   `classifyWires(clauses, deal)` proves it, **property-tested over 1000 seeds
   × random 8-card deals** (every card classifies, deterministically, no
-  throws). Exclusion groups prevent degenerate rulebooks: never both colours,
-  one value band, a protection never erases its own cut clause, face rules
-  never starve a count-based cut, at most one positional ban, and the full
-  52-card pack always has both cuttable and keepable cards.
+  throws), and over random deals a rulebook leaves both cuts and keeps on a
+  typical row. Exclusion groups prevent degenerate rulebooks: never both
+  colours, one value band, a protection never erases its own cut clause, face
+  rules never starve a count-based cut, at most one of each positional /
+  relational / superlative clause.
+- **The card-input solver (wave 4).** GM-only tool (in the live & adjudicate
+  panels, never on the reader handoff overlay): the GM types the dealt row
+  (rank + suit per wire) and the app runs `solveDeal` to show each wire's
+  CUT/keep verdict and **the cut order left-to-right** ("Cut: #2 → #5"). This
+  is how the GM checks the crew's work at the end, or settles an argument.
 - **Play — two table modes** (chosen on the setup panel):
   - **Two devices:** the reader holds the rulebook on the isolated
     player-view; the GM keeps the console and records cuts live (the

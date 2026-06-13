@@ -6,9 +6,78 @@ import { Timer } from '@/minigames/primitives/Timer';
 import { BoostButton } from '@/minigames/primitives/BoostButton';
 import { StatusZone, ChallengeZone, RefereeZone } from '@/minigames/primitives/MinigameShell';
 import { publishSlice } from '@/platform/channel';
-import type { DefuseParams } from './generate';
+import type { DefuseParams, WireCard, WireSuit } from './generate';
+import { solveDeal } from './generate';
 import { judge, insulatedGlovesBoost } from './judge';
 import type { DefuseState } from './judge';
+
+// ── GM card-input solver (wave 4) ─────────────────────────────────────────────
+// GM-only: enter the dealt row, the app names which wires to cut and in what
+// order. Used to check the crew's work at the end (and never shown on the
+// reader's handoff screen).
+
+const SOLVER_RANKS: ReadonlyArray<{ label: string; value: number }> = [
+  { label: 'A', value: 1 }, { label: '2', value: 2 }, { label: '3', value: 3 },
+  { label: '4', value: 4 }, { label: '5', value: 5 }, { label: '6', value: 6 },
+  { label: '7', value: 7 }, { label: '8', value: 8 }, { label: '9', value: 9 },
+  { label: '10', value: 10 }, { label: 'J', value: 11 }, { label: 'Q', value: 12 },
+  { label: 'K', value: 13 },
+];
+const SOLVER_SUITS: ReadonlyArray<{ label: string; value: WireSuit }> = [
+  { label: '♣', value: 'clubs' }, { label: '♦', value: 'diamonds' },
+  { label: '♥', value: 'hearts' }, { label: '♠', value: 'spades' },
+];
+
+function DefuseSolver({ params }: { params: DefuseParams }): JSX.Element {
+  const [row, setRow] = useState<WireCard[]>(() =>
+    Array.from({ length: params.wireCount }, () => ({ rank: 1, suit: 'clubs' as WireSuit })),
+  );
+
+  function setWire(i: number, patch: Partial<WireCard>) {
+    setRow(prev => prev.map((c, j) => (j === i ? { ...c, ...patch } : c)));
+  }
+
+  const { verdicts, cutOrder } = solveDeal(params.clauses, row);
+
+  return (
+    <div className="dfz-solver" data-testid="defuse-solver">
+      <div className="dfz-solver-head">
+        Enter the row to check the cuts — GM only
+      </div>
+      <div className="dfz-solver-row">
+        {row.map((card, i) => (
+          <div
+            key={i}
+            className={`dfz-solver-wire dfz-solver-wire--${verdicts[i]}`}
+            data-testid={`defuse-solver-wire-${i}`}
+          >
+            <span className="dfz-solver-pos">{i + 1}</span>
+            <select
+              data-testid={`defuse-solver-rank-${i}`}
+              value={card.rank}
+              onChange={e => setWire(i, { rank: Number(e.target.value) })}
+            >
+              {SOLVER_RANKS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
+            <select
+              data-testid={`defuse-solver-suit-${i}`}
+              value={card.suit}
+              onChange={e => setWire(i, { suit: e.target.value as WireSuit })}
+            >
+              {SOLVER_SUITS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+            <span className="dfz-solver-verdict">{verdicts[i] === 'cut' ? 'CUT' : 'keep'}</span>
+          </div>
+        ))}
+      </div>
+      <div className="dfz-solver-answer" data-testid="defuse-solver-answer">
+        {cutOrder.length === 0
+          ? 'Cut nothing — every wire is safe.'
+          : `Cut, left to right: ${cutOrder.map(p => `#${p}`).join(' → ')}`}
+      </div>
+    </div>
+  );
+}
 
 function initState(): DefuseState {
   return {
@@ -287,6 +356,14 @@ export function DefuseComponent({
                   ))}
                 </ul>
               </div>
+            </details>
+
+            {/* GM card-input solver — check the row, get the cut order. */}
+            <details style={{ marginTop: '0.75rem' }}>
+              <summary data-testid="defuse-solver-toggle" style={{ cursor: 'pointer', color: 'var(--fg-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <BookOpen size={14} /> Solver — enter the row to see the cuts
+              </summary>
+              <DefuseSolver params={params} />
             </details>
           </>
         )}

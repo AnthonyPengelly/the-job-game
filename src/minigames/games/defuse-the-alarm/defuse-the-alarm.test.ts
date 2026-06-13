@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
-import { generate, classifyWires, renderRuleLines } from './generate';
+import { generate, classifyWires, renderRuleLines, solveDeal } from './generate';
 import type { WireCard, WireSuit } from './generate';
 import { judge, insulatedGlovesBoost } from './judge';
 import type { DefuseState } from './judge';
@@ -147,18 +147,108 @@ describe('generate — first-match rulebooks over a physical deal', () => {
     }
   });
 
-  it('the richer shapes all occur across seeds (unless, positional, protection, count-based)', () => {
-    const seen = { unless: false, position: false, keep: false, cutTop: false };
-    for (let seed = 1; seed <= 400; seed++) {
+  it('every shape occurs across seeds incl. the wave-4 deduction clauses', () => {
+    const seen = {
+      unless: false, position: false, keep: false, cutTop: false,
+      neighbor: false, superlative: false,
+    };
+    for (let seed = 1; seed <= 600; seed++) {
       const p = generate(mulberry32(seed), dial(4));
       for (const c of p.clauses) {
         if (c.type === 'cut' && c.unless !== undefined) seen.unless = true;
         if (c.type === 'keepPosition') seen.position = true;
         if (c.type === 'keep') seen.keep = true;
         if (c.type === 'cutTop') seen.cutTop = true;
+        if (c.type === 'cutNeighbor') seen.neighbor = true;
+        if (c.type === 'cutSuperlative') seen.superlative = true;
       }
     }
-    expect(seen).toEqual({ unless: true, position: true, keep: true, cutTop: true });
+    expect(seen).toEqual({
+      unless: true, position: true, keep: true, cutTop: true,
+      neighbor: true, superlative: true,
+    });
+  });
+
+  it('at most one neighbour clause and one superlative clause per rulebook', () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const p = generate(mulberry32(seed), dial(4));
+      expect(p.clauses.filter(c => c.type === 'cutNeighbor').length).toBeLessThanOrEqual(1);
+      expect(p.clauses.filter(c => c.type === 'cutSuperlative').length).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('clause count rises with the dial (3 floor, up to 6)', () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      const easy = generate(mulberry32(seed), dial(-2));
+      const brutal = generate(mulberry32(seed), dial(4));
+      expect(easy.clauses.length).toBeGreaterThanOrEqual(3);
+      expect(brutal.clauses.length).toBeGreaterThanOrEqual(easy.clauses.length);
+      expect(brutal.clauses.length).toBeLessThanOrEqual(6);
+    }
+  });
+});
+
+// ── Wave 4: solveDeal + the new clause classifiers ────────────────────────────
+
+describe('solveDeal — GM enters the row, gets the cuts in order', () => {
+  it('returns per-wire verdicts and 1-based cut positions left-to-right', () => {
+    const clauses: import('./generate').RuleClause[] = [{ type: 'cut', pred: { kind: 'color', color: 'red' } }];
+    const deal: WireCard[] = [
+      { rank: 5, suit: 'spades' },   // black → keep
+      { rank: 9, suit: 'hearts' },   // red → cut (pos 2)
+      { rank: 2, suit: 'clubs' },    // black → keep
+      { rank: 12, suit: 'diamonds' },// red → cut (pos 4)
+    ];
+    const { verdicts, cutOrder } = solveDeal(clauses, deal);
+    expect(verdicts).toEqual(['keep', 'cut', 'keep', 'cut']);
+    expect(cutOrder).toEqual([2, 4]);
+  });
+
+  it('cutSuperlative cuts the single highest wire, ties broken leftmost', () => {
+    const deal: WireCard[] = [
+      { rank: 13, suit: 'hearts' },  // King — highest, leftmost of the tie → cut
+      { rank: 13, suit: 'spades' },  // King — tie, but not leftmost → keep
+      { rank: 4, suit: 'clubs' },
+    ];
+    const { cutOrder } = solveDeal([{ type: 'cutSuperlative', extreme: 'highest' }], deal);
+    expect(cutOrder).toEqual([1]);
+  });
+
+  it('cutSuperlative lowest cuts the single lowest wire (ties leftmost)', () => {
+    const deal: WireCard[] = [
+      { rank: 7, suit: 'hearts' },
+      { rank: 2, suit: 'clubs' },   // lowest → cut
+      { rank: 9, suit: 'spades' },
+    ];
+    const { cutOrder } = solveDeal([{ type: 'cutSuperlative', extreme: 'lowest' }], deal);
+    expect(cutOrder).toEqual([2]);
+  });
+
+  it('cutNeighbor (left) cuts a wire whose left neighbour matches; end wire is safe', () => {
+    const deal: WireCard[] = [
+      { rank: 11, suit: 'spades' },  // pos1: no left neighbour → keep
+      { rank: 3, suit: 'clubs' },    // pos2: left is a face (J) → cut
+      { rank: 12, suit: 'hearts' },  // pos3: left (3) not a face → keep
+      { rank: 5, suit: 'clubs' },    // pos4: left (Q) is a face → cut
+    ];
+    const { cutOrder } = solveDeal(
+      [{ type: 'cutNeighbor', side: 'left', pred: { kind: 'face' } }],
+      deal,
+    );
+    expect(cutOrder).toEqual([2, 4]);
+  });
+
+  it('first-match-wins still holds with a protection before a superlative cut', () => {
+    const deal: WireCard[] = [
+      { rank: 13, suit: 'hearts' },  // King, but a face → protected by rule 1
+      { rank: 9, suit: 'clubs' },
+    ];
+    const { cutOrder } = solveDeal(
+      [{ type: 'keep', pred: { kind: 'face' } }, { type: 'cutSuperlative', extreme: 'highest' }],
+      deal,
+    );
+    // The King is kept (protection wins), so nothing is cut.
+    expect(cutOrder).toEqual([]);
   });
 });
 
@@ -182,21 +272,26 @@ describe('classifyWires — every card classifies unambiguously for any deal', (
     }
   });
 
-  it('rulebooks never cut the entire pack (degenerate everything-cut) across 500 seeds', () => {
-    // A specific 8-card deal may legitimately be all-covered; degeneracy means
-    // the RULEBOOK cuts every card that exists. Classify the full 52-card pack.
-    const pack: WireCard[] = [];
-    for (const suit of SUITS) {
-      for (let rank = 1; rank <= 13; rank++) pack.push({ rank, suit });
-    }
-    for (let seed = 1; seed <= 500; seed++) {
+  it('rulebooks meaningfully split a typical row — not degenerate all-cut/all-keep', () => {
+    // Wave 4: relational/superlative clauses are position-dependent, so an
+    // adversarially-ordered full pack can be fully covered without the rulebook
+    // being degenerate. The honest guarantee is over RANDOM deals: a brutal
+    // rulebook leaves keeps on most rows and cuts on most rows.
+    let withKeep = 0;
+    let withCut = 0;
+    const N = 500;
+    for (let seed = 1; seed <= N; seed++) {
       const rng = mulberry32(seed);
       const params = generate(rng, dial(4));
-      const verdicts = classifyWires(params.clauses, pack);
-      expect(verdicts).toContain('keep');
-      // And never everything-keep either — there is always something to cut.
-      expect(verdicts).toContain('cut');
+      const deal = randomDeal(rng, 8);
+      const verdicts = classifyWires(params.clauses, deal);
+      if (verdicts.includes('keep')) withKeep++;
+      if (verdicts.includes('cut')) withCut++;
     }
+    // Both outcomes are common — the rulebook is neither vacuously all-cut nor
+    // all-keep across the sample.
+    expect(withKeep / N).toBeGreaterThan(0.6);
+    expect(withCut / N).toBeGreaterThan(0.6);
   });
 
   it('first-match-wins: a protection placed before a cut shields matching wires', () => {

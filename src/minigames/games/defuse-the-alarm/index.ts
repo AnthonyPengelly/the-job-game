@@ -6,7 +6,7 @@ import { judge, insulatedGlovesBoost } from './judge';
 import { DefuseComponent } from './component';
 
 export type { DefuseParams, RuleClause, WireCard, WirePredicate, WireSuit } from './generate';
-export { classifyWires, matchesPredicate, renderRuleLines, clauseText } from './generate';
+export { classifyWires, solveDeal, matchesPredicate, renderRuleLines, clauseText } from './generate';
 export type { DefuseState } from './judge';
 
 export const defuseTheAlarm: MiniGame<DefuseParams, DefuseState> = {

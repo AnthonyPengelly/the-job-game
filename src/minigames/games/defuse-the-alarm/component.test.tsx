@@ -5,6 +5,7 @@ import { mulberry32 } from '@/engine/rng';
 import type { Difficulty } from '@/minigames/contract';
 import { generate } from './generate';
 import { DefuseComponent } from './component';
+import { solveDeal } from './generate';
 import { publishSlice } from '@/platform/channel';
 
 // Suppress publishSlice broadcast in tests
@@ -282,6 +283,47 @@ describe('DefuseComponent — laptop handoff flow', () => {
       expect(screen.getByTestId('defuse-record-controls')).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
+    }
+  });
+});
+
+// ── Card-input solver (wave 4) ────────────────────────────────────────────────
+
+describe('DefuseComponent — GM card-input solver', () => {
+  it('is available once dealt, and is NOT on the reader handoff overlay', () => {
+    renderGame();
+    dealWires();
+    expect(screen.getByTestId('defuse-solver')).toBeInTheDocument();
+  });
+
+  it('the handoff reader overlay never shows the solver (GM-only)', () => {
+    renderGame();
+    fireEvent.click(screen.getByTestId('defuse-handoff'));
+    expect(screen.getByTestId('defuse-reader-overlay')).toBeInTheDocument();
+    expect(screen.queryByTestId('defuse-solver')).not.toBeInTheDocument();
+  });
+
+  it('names the correct cut order for a row the GM enters', () => {
+    const params = makeParams(1);
+    render(
+      <DefuseComponent params={params} dial={dial} committed={makeCommitted()} onResolve={() => {}} />,
+    );
+    dealWires();
+    // Drive the solver inputs and compare against the pure solver.
+    const deal = Array.from({ length: params.wireCount }, (_, i) => ({
+      rank: ((i * 3) % 13) + 1,
+      suit: (['clubs', 'diamonds', 'hearts', 'spades'] as const)[i % 4]!,
+    }));
+    for (let i = 0; i < deal.length; i++) {
+      fireEvent.change(screen.getByTestId(`defuse-solver-rank-${i}`), { target: { value: String(deal[i]!.rank) } });
+      fireEvent.change(screen.getByTestId(`defuse-solver-suit-${i}`), { target: { value: deal[i]!.suit } });
+    }
+    const { cutOrder } = solveDeal(params.clauses, deal);
+    const answer = screen.getByTestId('defuse-solver-answer').textContent ?? '';
+    if (cutOrder.length === 0) {
+      expect(answer).toContain('Cut nothing');
+    } else {
+      for (const p of cutOrder) expect(answer).toContain(`#${p}`);
     }
   });
 });

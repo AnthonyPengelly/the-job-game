@@ -33,7 +33,12 @@ export type RuleClause =
   | { type: 'keepPosition'; pos: 'leftmost' | 'rightmost' }
   | { type: 'keep'; pred: WirePredicate }
   | { type: 'cutTop'; count: number; suit: WireSuit }
-  | { type: 'cut'; pred: WirePredicate; unless?: WirePredicate };
+  | { type: 'cut'; pred: WirePredicate; unless?: WirePredicate }
+  // Wave 4 (Murdle-style deduction):
+  // relational — cut a wire by what sits NEXT to it.
+  | { type: 'cutNeighbor'; side: 'left' | 'right'; pred: WirePredicate }
+  // superlative — cut the single extreme wire of the whole row (ties → leftmost).
+  | { type: 'cutSuperlative'; extreme: 'highest' | 'lowest' };
 
 export interface DefuseParams {
   /** How many random cards the GM deals face-up in a row as the wires. */
@@ -67,6 +72,28 @@ export function matchesPredicate(pred: WirePredicate, card: WireCard): boolean {
       return _exhaustive;
     }
   }
+}
+
+/**
+ * Classify every wire in a deal against an ordered rulebook.
+ * Total and pure: every card gets exactly one verdict, first clause that
+ * covers it wins, uncovered cards default to 'keep'. This is the decidability
+ * contract the property test pins for 1000 seeds × random deals.
+ */
+/**
+ * Index of the single extreme-ranked wire (ties broken by leftmost position),
+ * or -1 for an empty deal. Defined this way so the table and the solver always
+ * agree on which wire a superlative clause means.
+ */
+function superlativeIndex(deal: readonly WireCard[], extreme: 'highest' | 'lowest'): number {
+  let best = -1;
+  for (let i = 0; i < deal.length; i++) {
+    if (best === -1) { best = i; continue; }
+    const r = deal[i]!.rank;
+    const b = deal[best]!.rank;
+    if (extreme === 'highest' ? r > b : r < b) best = i; // strict ⇒ ties keep the leftmost
+  }
+  return best;
 }
 
 /**
@@ -110,10 +137,36 @@ export function classifyWires(
           if (matchesPredicate(clause.pred, card)) return 'cut';
           break;
         }
+        case 'cutNeighbor': {
+          const neighbor = clause.side === 'left' ? deal[index - 1] : deal[index + 1];
+          // The end wire with no neighbour on that side is never covered here.
+          if (neighbor !== undefined && matchesPredicate(clause.pred, neighbor)) return 'cut';
+          break;
+        }
+        case 'cutSuperlative': {
+          if (index === superlativeIndex(deal, clause.extreme)) return 'cut';
+          break;
+        }
       }
     }
     return 'keep';
   });
+}
+
+/**
+ * Solve a dealt row against the rulebook: per-wire verdicts plus the cut
+ * positions in left-to-right order (1-based) — what the GM checks at the end
+ * by entering the cards (wave 4).
+ */
+export function solveDeal(
+  clauses: readonly RuleClause[],
+  deal: readonly WireCard[],
+): { verdicts: Array<'cut' | 'keep'>; cutOrder: number[] } {
+  const verdicts = classifyWires(clauses, deal);
+  const cutOrder = verdicts
+    .map((v, i) => (v === 'cut' ? i + 1 : -1))
+    .filter(p => p > 0);
+  return { verdicts, cutOrder };
 }
 
 // ── Rendering ─────────────────────────────────────────────────────────────────
@@ -181,6 +234,10 @@ export function clauseText(clause: RuleClause): string {
       return clause.unless !== undefined
         ? `Cut ${predText(clause.pred)} — UNLESS ${unlessText(clause.unless)}.`
         : `Cut ${predText(clause.pred)}.`;
+    case 'cutNeighbor':
+      return `Cut any wire whose ${clause.side.toUpperCase()} neighbour is ${predText(clause.pred)} — the wire at the very ${clause.side === 'left' ? 'left' : 'right'} end has no such neighbour.`;
+    case 'cutSuperlative':
+      return `Cut the single ${clause.extreme.toUpperCase()}-ranked wire in the whole row (Ace low, King high; if two tie, the LEFTMOST of them).`;
     default: {
       const _exhaustive: never = clause;
       return _exhaustive;
@@ -245,12 +302,22 @@ const ALL_SUITS: readonly WireSuit[] = ['hearts', 'diamonds', 'clubs', 'spades']
  *   - complexity: more/spicier clauses (1..4)
  *   - timerSeconds: less time (60..180)
  */
+/** Predicates a neighbour clause can test on the adjacent wire. */
+const NEIGHBOR_PREDS: WirePredicate[] = [
+  { kind: 'face' },
+  { kind: 'color', color: 'red' },
+  { kind: 'color', color: 'black' },
+  { kind: 'low' },
+  { kind: 'high' },
+];
+
 export function generate(rng: Rng, dial: Difficulty): DefuseParams {
-  // Wave 3 retune: 'two highest diamonds + two minutes' was a stroll. More
-  // wires, a 2-clause complexity floor (a count-based cut can never be the
-  // whole rulebook), and a much tighter clock.
+  // Wave 4: harder, Murdle-style. More clauses (3..6) and two deduction
+  // shapes — relational (cut by the NEIGHBOUR's property) and superlative
+  // (cut the single extreme wire) — so the table has to reason about the row,
+  // not just read each card. Still first-match-wins decidable.
   const wireCount = clamp(Math.round(6 + dial.level), 5, 9);
-  const complexity = clamp(Math.round(3 + dial.level * 0.5), 2, 5);
+  const complexity = clamp(Math.round(4 + dial.level * 0.7), 3, 6);
   const timerSeconds = clamp(Math.round(90 - dial.level * 15), 45, 120);
 
   const usedGroups = new Set<string>();
@@ -290,10 +357,10 @@ export function generate(rng: Rng, dial: Difficulty): DefuseParams {
     budget -= 1;
   }
 
-  // 2. Spend the rest on riders, protections, positional bans, extra cuts.
+  // 2. Spend the rest on riders, deduction shapes, protections, extra cuts.
   while (budget > 0) {
     const roll = rng.next();
-    if (roll < 0.3 && cuts.length > 0 && cuts[cuts.length - 1]!.type === 'cut' && (cuts[cuts.length - 1] as { unless?: WirePredicate }).unless === undefined) {
+    if (roll < 0.22 && cuts.length > 0 && cuts[cuts.length - 1]!.type === 'cut' && (cuts[cuts.length - 1] as { unless?: WirePredicate }).unless === undefined) {
       // Exception rider on the last plain cut: face, or a free band.
       const lastCut = cuts[cuts.length - 1] as { type: 'cut'; pred: WirePredicate; unless?: WirePredicate };
       const qualifiers: WirePredicate[] = [];
@@ -309,13 +376,31 @@ export function generate(rng: Rng, dial: Difficulty): DefuseParams {
         continue;
       }
     }
-    if (roll < 0.55 && !usedGroups.has('position')) {
+    if (roll < 0.42 && !usedGroups.has('superlative')) {
+      // Superlative deduction: cut the single highest/lowest wire.
+      usedGroups.add('superlative');
+      cuts.push({ type: 'cutSuperlative', extreme: rng.pick(['highest', 'lowest']) });
+      budget -= 1;
+      continue;
+    }
+    if (roll < 0.62 && !usedGroups.has('neighbor')) {
+      // Relational deduction: cut by what sits next to a wire.
+      usedGroups.add('neighbor');
+      cuts.push({
+        type: 'cutNeighbor',
+        side: rng.pick(['left', 'right']),
+        pred: rng.pick(NEIGHBOR_PREDS),
+      });
+      budget -= 1;
+      continue;
+    }
+    if (roll < 0.78 && !usedGroups.has('position')) {
       usedGroups.add('position');
       keeps.push({ type: 'keepPosition', pos: rng.pick(['leftmost', 'rightmost']) });
       budget -= 1;
       continue;
     }
-    if (roll < 0.8 && !usedGroups.has('face')) {
+    if (roll < 0.9 && !usedGroups.has('face')) {
       // Protection: never cut face cards. (Suit protections are covered by the
       // exclusion groups; face protection is the table-favourite shape.)
       usedGroups.add('face');
@@ -330,10 +415,19 @@ export function generate(rng: Rng, dial: Difficulty): DefuseParams {
     budget -= 1;
   }
 
-  // Floor: never a one-line rulebook (wave 3) — an unless rider spends budget
-  // without adding a line, so top up with a protection or positional ban.
-  if (keeps.length + cutTops.length + cuts.length < 2) {
-    if (!usedGroups.has('position')) {
+  // Floor: at least three clauses (wave 4) — riders spend budget without
+  // adding a line, so top up from any still-free shape until we reach three
+  // (or run out of legal clauses, which a standard pack never does).
+  const lineCount = () => keeps.length + cutTops.length + cuts.length;
+  let guard = 0;
+  while (lineCount() < 3 && guard++ < 12) {
+    if (!usedGroups.has('superlative')) {
+      usedGroups.add('superlative');
+      cuts.push({ type: 'cutSuperlative', extreme: rng.pick(['highest', 'lowest']) });
+    } else if (!usedGroups.has('neighbor')) {
+      usedGroups.add('neighbor');
+      cuts.push({ type: 'cutNeighbor', side: rng.pick(['left', 'right']), pred: rng.pick(NEIGHBOR_PREDS) });
+    } else if (!usedGroups.has('position')) {
       usedGroups.add('position');
       keeps.push({ type: 'keepPosition', pos: rng.pick(['leftmost', 'rightmost']) });
     } else if (!usedGroups.has('face')) {
@@ -341,7 +435,8 @@ export function generate(rng: Rng, dial: Difficulty): DefuseParams {
       keeps.push({ type: 'keep', pred: { kind: 'face' } });
     } else {
       const pred = takeCutBase();
-      if (pred !== undefined) cuts.push({ type: 'cut', pred });
+      if (pred === undefined) break;
+      cuts.push({ type: 'cut', pred });
     }
   }
 
