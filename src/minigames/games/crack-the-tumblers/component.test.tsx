@@ -56,17 +56,20 @@ describe('CrackTheTumblersComponent — setup panel', () => {
     expect(setup.textContent).toContain('Shuffle the pack');
   });
 
-  it('states the cards-per-player count from params', () => {
+  it('states the total card count and the per-player deal brackets', () => {
     const params = renderGame();
-    expect(screen.getByTestId('ctb-setup').textContent).toContain(
-      `${params.cardsPerPlayer} card`,
-    );
+    const setup = screen.getByTestId('ctb-setup').textContent ?? '';
+    expect(setup).toContain(`${params.totalCards} cards`);
+    // Brackets sum to the total across the two committed players.
+    const brackets = screen.getByTestId('ctb-deal-brackets').textContent ?? '';
+    const nums = [...brackets.matchAll(/(\d+)/g)].map(m => Number(m[1]));
+    expect(nums.reduce((a, b) => a + b, 0)).toBe(params.totalCards);
   });
 
-  it('total in the progress label is committed × cardsPerPlayer', () => {
+  it('total in the progress label equals params.totalCards', () => {
     const params = renderGame();
     expect(screen.getByTestId('card-count').textContent).toContain(
-      `0 / ${params.cardsPerPlayer * 2}`,
+      `0 / ${params.totalCards}`,
     );
   });
 
@@ -86,7 +89,7 @@ describe('CrackTheTumblersComponent — recording', () => {
     beginPlay();
     fireEvent.click(screen.getByTestId('ctb-in-order'));
     expect(screen.getByTestId('card-count').textContent).toContain(
-      `1 / ${params.cardsPerPlayer * 2}`,
+      `1 / ${params.totalCards}`,
     );
   });
 
@@ -159,7 +162,7 @@ describe('CrackTheTumblersComponent — onResolve', () => {
       />,
     );
     beginPlay();
-    const total = params.cardsPerPlayer * 2;
+    const total = params.totalCards;
     for (let i = 0; i < total; i++) {
       fireEvent.click(screen.getByTestId('ctb-in-order'));
     }

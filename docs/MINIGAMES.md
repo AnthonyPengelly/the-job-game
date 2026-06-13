@@ -259,19 +259,25 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
 ### 1. Crack the Tumblers — `crack-the-tumblers`
 
 - **Lane:** Tech. **Facing:** GM (the cards face the table).
-- **generate:** `cardsPerPlayer` (1–3 by dial). The deal is physical: shuffle,
-  deal that many face-down to each committed player; players peek at their own
-  only; no talking. The app never knows the values — the shuffle is the RNG.
+- **generate:** `totalCards` (wave 4: a **total**, 4–24 by dial, not a
+  per-player count — two players one card each was trivial). The deal is
+  physical: shuffle, deal the total across the committed crew split as evenly
+  as possible (every player ≥1; the screen shows the per-player brackets);
+  players peek at their own only; no talking. The app never knows the values —
+  the shuffle is the RNG.
 - **Play:** the crew plays every card to the table one at a time in ascending
-  rank order (Ace low, **equal ranks may follow each other**). The GM records
-  each play with ✓ in-order / ✗ clash.
+  rank order (Ace low). On **equal ranks they must play in suit alphabetical
+  order — Clubs → Diamonds → Hearts → Spades** (wave 4). The suit tiebreak
+  stops a long deal collapsing into "just play every number in order"; ties
+  still demand silent coordination. The GM records each play with ✓ in-order /
+  ✗ clash (a tie out of suit order is a clash).
 - **ChallengeState:** total cards; plays recorded; alarm tripped; boost flag.
 - **judge:** **clean** = every card recorded in order, no clash;
   **complication** = completed but one clash recovered via Reset Pin;
   **botched** = a clash tripped the alarm, or incomplete when called.
 - **Boosts (Tech):** **Reset Pin** — forgive one clash; the misplayed card goes
   back to its holder's hand and was never counted.
-- **Dial lever:** cards per player (longer silent sequence = harder).
+- **Dial lever:** total cards (longer silent sequence = harder).
 - **minCommit:** **2**, and **full-team** since wave 3 — the whole crew plays
   and nobody rests (silent coordination is the table's game). The solo memory
   variant stays registered for safety but is never offered to a 2+ crew.
