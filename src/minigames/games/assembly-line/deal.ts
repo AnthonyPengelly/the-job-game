@@ -1,10 +1,17 @@
 /**
- * Shared deal logic for the Assembly Line family (full + negotiated variant).
+ * Shared deal logic for Silence (the full-team game + its 2-player variant).
  *
- * Set types are ranks from a standard pack, so the GM can build the deck in
- * seconds: pull all four of each set rank, add one decoy card per player at
- * higher dials, shuffle, deal evenly. Every set rank is fully present, so the
- * deal is always solvable by trading; decoys are junk that sharpens Tip-Off.
+ * Wave 4: replaces the old "Assembly Line" trading game. The crew sits in a
+ * circle and, on a silent count, everyone passes ONE unwanted card to their
+ * left simultaneously — fast as they can — collecting four of a kind. Lay a
+ * set down and you're safe. Bogus cards (single ranks no one can complete)
+ * jam the circulation and someone ends up stuck with them.
+ *
+ * Set types are ranks from a standard pack, so the GM builds the deck in
+ * seconds: pull all four of one rank per player, add some single bogus cards
+ * of OTHER ranks, shuffle, deal four each (the bogus cards make some players
+ * hold five). Every set rank is fully present, so the round is always
+ * solvable; the bogus cards are pure friction (more bogus = harder).
  */
 
 export const RANK_NAMES = [
@@ -22,34 +29,35 @@ export function singularRank(rank: string): string {
   return SINGULAR[rank] ?? rank;
 }
 
-export interface AssemblyDeal {
+export interface SilenceDeal {
   /** One rank per committed player — each player's goal is four of one of these. */
   setRanks: string[];
-  /** One junk card of each of these ranks is shuffled in (one per player). */
+  /** Single bogus cards of these (distinct, non-set) ranks are shuffled in. */
   decoyRanks: string[];
-  /** Cards dealt to each player: 4 + decoysPerPlayer. */
-  handSize: number;
-  /** Total cards the GM pulls from the pack. */
+  /** How many players will be dealt a fifth (bogus) card. */
+  decoyCount: number;
+  /** Total cards the GM pulls from the pack (4 × players + bogus). */
   totalCards: number;
 }
 
 /**
- * Resolve the concrete deal for a committed headcount from the generated
- * rank order. Pure; the component calls this with committed.length.
+ * Resolve the concrete deal for a committed headcount from the generated rank
+ * order and the dial-driven decoy count. Pure; the component calls it with
+ * committed.length. The decoy count is capped at the player count so no one
+ * ever holds more than five cards (one bogus).
  */
 export function resolveDeal(
   rankOrder: readonly string[],
-  decoysPerPlayer: number,
+  decoyCount: number,
   playerCount: number,
-): AssemblyDeal {
+): SilenceDeal {
   const setRanks = rankOrder.slice(0, playerCount) as string[];
-  const decoyCount = decoysPerPlayer > 0 ? playerCount : 0;
-  const decoyRanks = rankOrder.slice(playerCount, playerCount + decoyCount) as string[];
-  const handSize = 4 + decoysPerPlayer;
+  const effectiveDecoys = Math.max(0, Math.min(decoyCount, playerCount));
+  const decoyRanks = rankOrder.slice(playerCount, playerCount + effectiveDecoys) as string[];
   return {
     setRanks,
     decoyRanks,
-    handSize,
+    decoyCount: decoyRanks.length,
     totalCards: playerCount * 4 + decoyRanks.length,
   };
 }

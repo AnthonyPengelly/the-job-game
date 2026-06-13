@@ -10,7 +10,7 @@ export type { AssemblyLineNegotiatedState } from './judge';
 
 export const assemblyLineNegotiated: MiniGame<AssemblyLineNegotiatedParams, AssemblyLineNegotiatedState> = {
   id: 'assemblyLineNegotiated' as import('@/engine').GameId,
-  name: 'Assembly Line (Negotiated)',
+  name: 'Silence',
   lanes: ['physical', 'charm'],
   minCommit: 2,
   fullTeam: true,
@@ -19,7 +19,8 @@ export const assemblyLineNegotiated: MiniGame<AssemblyLineNegotiatedParams, Asse
   judge,
   boosts: [tipOffBoost],
   armedInstructions:
-    'Two-player variant — the screen tells you exactly which ranks to pull and deal. ' +
-    'Take turns offering one card at a time: accept, counter-offer, or pass, collecting ' +
-    'four of a kind. Tell me when a set is complete. Tip-Off names the ranks in play.',
+    'Two-player Silence — build the deck as the screen says, deal four each (one holds five). ' +
+    'No talking: on a silent count you both pass one card at once, fast as you can, collecting ' +
+    'four of a kind; lay a set down to go safe. Tell me when a set is complete. Tip-Off names ' +
+    'the real ranks.',
 };

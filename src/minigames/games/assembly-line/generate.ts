@@ -5,12 +5,12 @@ import { RANK_NAMES } from './deal';
 export interface AssemblyLineParams {
   /**
    * All thirteen rank names in seeded-shuffled order. The component takes the
-   * first `committed.length` as the set ranks and (at higher dials) the next
-   * `committed.length` as decoy ranks — generate cannot know the headcount.
+   * first `committed.length` as the set ranks and the next `decoyCount` as the
+   * bogus ranks — generate cannot know the headcount.
    */
   rankOrder: string[];
-  /** Junk cards per player shuffled into the deal (0 easy, 1 hard). */
-  decoysPerPlayer: number;
+  /** Bogus single cards shuffled into the deal (the main difficulty lever). */
+  decoyCount: number;
   /** Challenge timer in seconds. */
   timerSeconds: number;
 }
@@ -20,21 +20,22 @@ function clamp(n: number, lo: number, hi: number): number {
 }
 
 /**
- * Generate Assembly Line parameters.
+ * Generate Silence parameters.
  *
- * This is a communication-speed game — open table talk is allowed (co-op
- * removes any reason to hide hands), so the squeeze comes from the clock and
- * from decoy junk, not from hidden information.
+ * Silent simultaneous card-passing: the squeeze comes from the bogus cards
+ * jamming the circulation (the main lever) and from a tight clock. Wave 4
+ * makes bogus cards common — even an easy round has one.
  *
  * Dial levers (higher dial.level = harder):
- *   - decoysPerPlayer: junk cards muddying the trade at high dial (0..1)
- *   - timerSeconds: less time (45..120 — deliberately tight)
+ *   - decoyCount: bogus cards in the deal (1 easy / 2 medium / ~4 brutal,
+ *     capped at the player count by resolveDeal so no hand exceeds five)
+ *   - timerSeconds: less time (40..100 — frantic by design)
  *
  * RNG shuffles which ranks are in play; same seed+dial = same params.
  */
 export function generate(rng: Rng, dial: Difficulty): AssemblyLineParams {
-  const decoysPerPlayer = dial.level >= 1 ? 1 : 0;
-  const timerSeconds = clamp(Math.round(90 - dial.level * 15), 45, 120);
+  const decoyCount = clamp(Math.round(1.5 + dial.level), 1, 5);
+  const timerSeconds = clamp(Math.round(75 - dial.level * 12), 40, 100);
 
   const rankOrder: string[] = [...RANK_NAMES];
   for (let i = rankOrder.length - 1; i > 0; i--) {
@@ -44,5 +45,5 @@ export function generate(rng: Rng, dial: Difficulty): AssemblyLineParams {
     rankOrder[j] = tmp;
   }
 
-  return { rankOrder, decoysPerPlayer, timerSeconds };
+  return { rankOrder, decoyCount, timerSeconds };
 }

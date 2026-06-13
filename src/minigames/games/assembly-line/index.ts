@@ -10,7 +10,7 @@ export type { AssemblyLineState } from './judge';
 
 export const assemblyLine: MiniGame<AssemblyLineParams, AssemblyLineState> = {
   id: 'assemblyLine' as import('@/engine').GameId,
-  name: 'Assembly Line',
+  name: 'Silence',
   lanes: ['physical', 'charm'],
   minCommit: 2,
   fullTeam: true,
@@ -19,7 +19,8 @@ export const assemblyLine: MiniGame<AssemblyLineParams, AssemblyLineState> = {
   judge,
   boosts: [tipOffBoost],
   armedInstructions:
-    'The whole table plays — the screen tells you exactly which ranks to pull from the pack ' +
-    'and deal. Everyone trades simultaneously (shout what you want, take what you need) to ' +
-    'collect four of a kind. Tell me every time a set is complete. Tip-Off names the ranks in play.',
+    'The whole table plays in silence. Build the deck as the screen says (all four of some ' +
+    'ranks, plus a few bogus singles), deal four each — some hold five. On a silent count ' +
+    'everyone passes one card left at once, fast as they can, collecting four of a kind; lay ' +
+    'a set down to go safe. Tell me every time a set is complete. Tip-Off names the real ranks.',
 };

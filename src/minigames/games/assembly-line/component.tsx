@@ -27,7 +27,7 @@ export function AssemblyLineComponent({
   const [state, setState] = useState<AssemblyLineState>(() => initState(committed.length));
   const [dealt, setDealt] = useState(false);
 
-  const deal = resolveDeal(params.rankOrder, params.decoysPerPlayer, committed.length);
+  const deal = resolveDeal(params.rankOrder, params.decoyCount, committed.length);
 
   const fillPct = Math.min((state.setsCompleted / state.targetSets) * 100, 100);
   const allDone = state.setsCompleted >= state.targetSets;
@@ -92,7 +92,7 @@ export function AssemblyLineComponent({
           Dial {dial.level.toFixed(1)}
         </span>
         <span className="mg-dial-inline" data-testid="al-hand-size">
-          {deal.handSize} cards each
+          {deal.decoyCount} bogus · {deal.totalCards} cards
         </span>
       </StatusZone>
 
@@ -110,15 +110,22 @@ export function AssemblyLineComponent({
               </li>
               {deal.decoyRanks.length > 0 && (
                 <li>
-                  Add decoys — <strong>one {deal.decoyRanks.map(singularRank).join(', one ')}</strong>.
+                  Add <strong>{deal.decoyCount} bogus card{deal.decoyCount !== 1 ? 's' : ''}</strong> —
+                  one {deal.decoyRanks.map(singularRank).join(', one ')}.
                 </li>
               )}
-              <li>Shuffle them together and deal <strong>{deal.handSize} cards to each player</strong>.</li>
+              <li>
+                Shuffle and deal <strong>four to each player</strong>; the {deal.decoyCount} spare
+                {deal.decoyCount !== 1 ? 's' : ''} mean <strong>{deal.decoyCount} player
+                {deal.decoyCount !== 1 ? 's' : ''} hold five</strong>. Sit the crew in a circle.
+              </li>
             </ol>
             <p className="mg-setup-panel__rule">
-              The table trades simultaneously — shout what you want, take what you need.
-              Each player collects <strong>four of a kind</strong>. Talk is allowed; the clock is the enemy.
-              {deal.decoyRanks.length > 0 ? ' Some cards are junk — Tip-Off names the real ranks.' : ''}
+              <strong>No talking.</strong> On your silent count, everyone passes <strong>one card
+              left at the same time</strong> — fast as they can. Got four of a kind? Lay it down,
+              you're safe — but if you still hold a card, keep passing. Someone ends up stuck with
+              the bogus card{deal.decoyCount !== 1 ? 's' : ''}; that's fine. The round is won when
+              <strong> every set is down</strong> before the buzzer. Tip-Off names the real ranks.
             </p>
             <button
               type="button"
@@ -126,7 +133,7 @@ export function AssemblyLineComponent({
               data-testid="al-dealt"
               onClick={() => setDealt(true)}
             >
-              Hands dealt — start the clock
+              Dealt — start the clock
             </button>
           </div>
         ) : (

@@ -148,7 +148,7 @@ Each obstacle is resolved by a short tabletop mini-game — Crystal Maze meets e
 |          | Tech | Physical | Charm | Stealth |
 |----------|------|----------|-------|---------|
 | **Tech** | Crack the Tumblers | Follow the Circuit | Inside Knowledge | Safe-Crack |
-| **Physical** | — | Beat 16 | Assembly Line | Steady Hands |
+| **Physical** | — | Beat 16 | Silence | Steady Hands |
 | **Charm** | — | — | Categories | Defuse the Alarm |
 | **Stealth** | — | — | — | The Once-Over |
 
@@ -168,7 +168,7 @@ Each obstacle is resolved by a short tabletop mini-game — Crystal Maze meets e
 
 **Safe-Crack** — *Tech + Stealth.* Deduction (Mastermind). The crew guesses at a hidden combination; the app feeds back "two digits right, one in place." They reason in over a few attempts before Heat climbs. *Replayable:* random code. *Dial:* fewer digits in play / more guesses / more time. *Boost (hold a Tech **or** Stealth power-up):* **Stethoscope** — reveal one digit's position; once per game.
 
-**Assembly Line** — *Physical + Charm.* Frantic trading (Pit-style), with a cooperative twist. Everyone holds a fixed hand (say 4 cards) and trades **one-for-one only**, so hands stay full and nobody can dump. The goal is for every player to end holding a complete set — but the deal **hides which sets are even in play**: there are exactly enough cards to solve it, yet *not necessarily one of each type*, so the crew doesn't know what they should each be collecting until they read the table and work it out together. Forces the talking, which is the Charm half. *Replayable:* random (always-solvable) deal. *Dial:* hand size / number of types in play / time. *Boost (hold a Physical **or** Charm power-up):* **Tip-Off** — reveal which loot types are actually in play; once per game.
+**Silence** — *Physical + Charm.* (Wave 4 redesign, replacing Assembly Line — frantic trading was too easy.) A **silent** simultaneous pass-the-card game (Donkey/Pig, co-op): each player holds four cards, some hold a fifth bogus card, and on a silent count everyone passes one card left at the same time, fast as they can. Collect four of a kind and lay it down to go safe; bogus cards can't complete a set, so they circulate and someone's left holding them. The no-talking rule is the tension; reading the table at speed without words is the Charm half. *Replayable:* random (always-solvable) deal. *Dial:* bogus-card count (primary) / time. *Boost (hold a Physical **or** Charm power-up):* **Tip-Off** — names the ranks actually in play so you don't hoard a bogus card; once per game.
 
 **Steady Hands** — *Physical + Stealth.* Dexterity. Build a card tower to a target height without it toppling, under a timer. Just "can you do it." *Dial:* target height / timer. *Boost (hold a Physical **or** Stealth power-up):* **Extra Hands** — shout it: 10s where everyone, benched included, helps build (the one sanctioned all-hands moment); once per game.
 
