@@ -59,7 +59,7 @@ There are exactly **four power-ups — one per lane: Tech, Physical, Charm, Stea
 | Follow the Circuit | Tech + Physical | **Photographic** — replay the whole sequence once |
 | Inside Knowledge | Tech + Charm | **Narrow It Down** — turn one question into multiple choice |
 | Safe-Crack | Tech + Stealth | **Stethoscope** — reveal one digit's position |
-| Assembly Line | Physical + Charm | **Tip-Off** — reveal which loot types are in play |
+| Silence (was Assembly Line) | Physical + Charm | **Tip-Off** — reveal which ranks are really in play (wave 4: Silence is a silent pass-the-card game; Tip-Off stops you hoarding a bogus card) |
 | Steady Hands | Physical + Stealth | **Extra Hands** — 10s, everyone (benched included) helps build |
 | Defuse the Alarm | Charm + Stealth | **Insulated Gloves** — the first wrong cut doesn't trip the alarm (wave 3; *Clear Channel* retired — talking restrictions were unrefereeable, undoing a snip is a table moment) |
 

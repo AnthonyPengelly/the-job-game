@@ -5,12 +5,12 @@ import { RANK_NAMES } from '@/minigames/games/assembly-line/deal';
 export interface AssemblyLineNegotiatedParams {
   /**
    * All thirteen rank names in seeded-shuffled order. The component takes the
-   * first `committed.length` as set ranks and (at higher dials) the next
-   * `committed.length` as decoy ranks — generate cannot know the headcount.
+   * first `committed.length` as set ranks and the next `decoyCount` as bogus
+   * ranks — generate cannot know the headcount.
    */
   rankOrder: string[];
-  /** Junk cards per player shuffled into the deal (0 easy, 1 hard). */
-  decoysPerPlayer: number;
+  /** Bogus single cards shuffled into the deal (the main difficulty lever). */
+  decoyCount: number;
   /** Challenge timer in seconds. */
   timerSeconds: number;
 }
@@ -20,21 +20,20 @@ function clamp(n: number, lo: number, hi: number): number {
 }
 
 /**
- * Generate Assembly Line (negotiated-swap variant, 2 players) parameters.
+ * Generate Silence (two-player variant) parameters.
  *
- * Same real-pack deal as the parent: ranks are the set types, decoys are junk.
- * Turn-based negotiation is slower than the free-for-all, so the clock is a
- * touch more generous than the parent's.
+ * With two players the "circle" is a straight swap — each passes one card at
+ * a time — so the clock is a touch more generous than the full-table game.
  *
  * Dial levers (higher dial.level = harder):
- *   - decoysPerPlayer: junk cards muddying the trade at high dial (0..1)
- *   - timerSeconds: less time (60..140)
+ *   - decoyCount: bogus cards in the deal (1 / 2 — capped at 2 players)
+ *   - timerSeconds: less time (50..110)
  *
  * RNG shuffles which ranks are in play; same seed+dial = same params.
  */
 export function generate(rng: Rng, dial: Difficulty): AssemblyLineNegotiatedParams {
-  const decoysPerPlayer = dial.level >= 1 ? 1 : 0;
-  const timerSeconds = clamp(Math.round(100 - dial.level * 15), 60, 140);
+  const decoyCount = clamp(Math.round(1.5 + dial.level), 1, 5);
+  const timerSeconds = clamp(Math.round(85 - dial.level * 12), 50, 110);
 
   const rankOrder: string[] = [...RANK_NAMES];
   for (let i = rankOrder.length - 1; i > 0; i--) {
@@ -44,5 +43,5 @@ export function generate(rng: Rng, dial: Difficulty): AssemblyLineNegotiatedPara
     rankOrder[j] = tmp;
   }
 
-  return { rankOrder, decoysPerPlayer, timerSeconds };
+  return { rankOrder, decoyCount, timerSeconds };
 }

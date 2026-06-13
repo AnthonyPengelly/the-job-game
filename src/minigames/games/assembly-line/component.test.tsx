@@ -46,12 +46,12 @@ function dealHands() {
 describe('AssemblyLineComponent — setup panel', () => {
   it('names one set rank per committed player, all-four pulls, and the hand size', () => {
     const params = renderGame({ count: 3 });
-    const deal = resolveDeal(params.rankOrder, params.decoysPerPlayer, 3);
+    const deal = resolveDeal(params.rankOrder, params.decoyCount, 3);
     const setup = screen.getByTestId('al-setup');
     for (const rank of deal.setRanks) {
       expect(setup.textContent).toContain(rank);
     }
-    expect(setup.textContent).toContain(`${deal.handSize} cards to each player`);
+    expect(setup.textContent).toContain('four to each player');
   });
 
   it('tally controls only appear after hands are dealt', () => {
@@ -108,7 +108,7 @@ describe('AssemblyLineComponent — Tip-Off rank strip', () => {
     dealHands();
     fireEvent.click(screen.getByTestId('boost-charm'));
     const strip = screen.getByTestId('al-types-revealed');
-    const deal = resolveDeal(params.rankOrder, params.decoysPerPlayer, 3);
+    const deal = resolveDeal(params.rankOrder, params.decoyCount, 3);
     for (const rank of deal.setRanks) {
       expect(strip.textContent).toContain(rank);
     }

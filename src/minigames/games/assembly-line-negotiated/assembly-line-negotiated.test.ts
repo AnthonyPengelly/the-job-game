@@ -52,7 +52,7 @@ describe('generate — reproducibility', () => {
     const d = dial(1);
     const p1 = generate(mulberry32(1), d);
     const p2 = generate(mulberry32(9999), d);
-    expect(p1.decoysPerPlayer).toBe(p2.decoysPerPlayer);
+    expect(p1.decoyCount).toBe(p2.decoyCount);
     expect(p1.timerSeconds).toBe(p2.timerSeconds);
     expect(p1.rankOrder.join()).not.toBe(p2.rankOrder.join());
   });
@@ -73,11 +73,10 @@ describe('generate — reproducibility', () => {
 // ── Dial lever direction ──────────────────────────────────────────────────────
 
 describe('generate — dial levers (higher dial = harder)', () => {
-  it('higher dial ⇒ decoys enter the deal', () => {
+  it('higher dial ⇒ more bogus cards', () => {
     const easy = generate(mulberry32(1), dial(-2));
     const hard = generate(mulberry32(1), dial(2));
-    expect(easy.decoysPerPlayer).toBe(0);
-    expect(hard.decoysPerPlayer).toBe(1);
+    expect(hard.decoyCount).toBeGreaterThan(easy.decoyCount);
   });
 
   it('higher dial ⇒ less or equal time', () => {
@@ -86,12 +85,13 @@ describe('generate — dial levers (higher dial = harder)', () => {
     expect(hard.timerSeconds).toBeLessThanOrEqual(easy.timerSeconds);
   });
 
-  it('all values within clamped bounds', () => {
+  it('all values within clamped bounds (2-player Silence)', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect([0, 1]).toContain(p.decoysPerPlayer);
-      expect(p.timerSeconds).toBeGreaterThanOrEqual(60);
-      expect(p.timerSeconds).toBeLessThanOrEqual(140);
+      expect(p.decoyCount).toBeGreaterThanOrEqual(1);
+      expect(p.decoyCount).toBeLessThanOrEqual(5);
+      expect(p.timerSeconds).toBeGreaterThanOrEqual(50);
+      expect(p.timerSeconds).toBeLessThanOrEqual(110);
     }
   });
 });

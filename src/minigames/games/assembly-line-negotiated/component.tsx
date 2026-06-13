@@ -27,7 +27,7 @@ export function AssemblyLineNegotiatedComponent({
   const [state, setState] = useState<AssemblyLineNegotiatedState>(() => initState(committed.length));
   const [dealt, setDealt] = useState(false);
 
-  const deal = resolveDeal(params.rankOrder, params.decoysPerPlayer, committed.length);
+  const deal = resolveDeal(params.rankOrder, params.decoyCount, committed.length);
 
   const fillPct = Math.min((state.setsCompleted / state.targetSets) * 100, 100);
   const allDone = state.setsCompleted >= state.targetSets;
@@ -59,7 +59,7 @@ export function AssemblyLineNegotiatedComponent({
       : 'mg-status-badge mg-status-badge--active';
   const badgeLabel = !dealt
     ? 'Setup'
-    : allDone ? 'DONE' : state.timerExpired ? 'TIME' : state.tipOffUsed ? 'Active · tip-off' : 'Negotiating';
+    : allDone ? 'DONE' : state.timerExpired ? 'TIME' : state.tipOffUsed ? 'Active · tip-off' : 'Passing';
 
   return (
     <div data-testid="assembly-line-negotiated">
@@ -92,7 +92,7 @@ export function AssemblyLineNegotiatedComponent({
           Dial {dial.level.toFixed(1)}
         </span>
         <span className="mg-dial-inline" data-testid="aln-hand-size">
-          {deal.handSize} cards each
+          {deal.decoyCount} bogus · {deal.totalCards} cards
         </span>
       </StatusZone>
 
@@ -110,15 +110,21 @@ export function AssemblyLineNegotiatedComponent({
               </li>
               {deal.decoyRanks.length > 0 && (
                 <li>
-                  Add decoys — <strong>one {deal.decoyRanks.map(singularRank).join(', one ')}</strong>.
+                  Add <strong>{deal.decoyCount} bogus card{deal.decoyCount !== 1 ? 's' : ''}</strong> —
+                  one {deal.decoyRanks.map(singularRank).join(', one ')}.
                 </li>
               )}
-              <li>Shuffle them together and deal <strong>{deal.handSize} cards to each player</strong>.</li>
+              <li>
+                Shuffle and deal <strong>four each</strong>; the {deal.decoyCount} spare
+                {deal.decoyCount !== 1 ? 's' : ''} mean <strong>{deal.decoyCount} player
+                {deal.decoyCount !== 1 ? 's' : ''} hold five</strong>.
+              </li>
             </ol>
             <p className="mg-setup-panel__rule">
-              Negotiated swap: take turns offering one card at a time — accept, counter-offer,
-              or pass. Each player collects <strong>four of a kind</strong>.
-              {deal.decoyRanks.length > 0 ? ' Some cards are junk — Tip-Off names the real ranks.' : ''}
+              <strong>No talking.</strong> Two-up: on a silent count you each pass <strong>one card
+              at the same time</strong>, fast as you can. Lay down four of a kind to go safe — keep
+              passing while you still hold a card. The round is won when <strong>both sets are
+              down</strong> before the buzzer. Tip-Off names the real ranks.
             </p>
             <button
               type="button"
@@ -126,7 +132,7 @@ export function AssemblyLineNegotiatedComponent({
               data-testid="aln-dealt"
               onClick={() => setDealt(true)}
             >
-              Hands dealt — start the clock
+              Dealt — start the clock
             </button>
           </div>
         ) : (

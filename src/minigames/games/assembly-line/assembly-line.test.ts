@@ -53,7 +53,7 @@ describe('generate — reproducibility', () => {
     const d = dial(0);
     const p1 = generate(mulberry32(1), d);
     const p2 = generate(mulberry32(9999), d);
-    expect(p1.decoysPerPlayer).toBe(p2.decoysPerPlayer);
+    expect(p1.decoyCount).toBe(p2.decoyCount);
     expect(p1.timerSeconds).toBe(p2.timerSeconds);
     expect(p1.rankOrder.join()).not.toBe(p2.rankOrder.join());
   });
@@ -74,11 +74,23 @@ describe('generate — reproducibility', () => {
 // ── Dial lever direction ──────────────────────────────────────────────────────
 
 describe('generate — dial levers (higher dial = harder)', () => {
-  it('higher dial ⇒ decoys enter the deal (harder)', () => {
+  it('higher dial ⇒ more bogus cards (harder)', () => {
     const easy = generate(mulberry32(1), dial(-2));
     const hard = generate(mulberry32(1), dial(2));
-    expect(easy.decoysPerPlayer).toBe(0);
-    expect(hard.decoysPerPlayer).toBe(1);
+    expect(hard.decoyCount).toBeGreaterThan(easy.decoyCount);
+  });
+
+  it('even an easy round has at least one bogus card (wave 4: more common)', () => {
+    for (const level of [-100, -2, -0.5, 0]) {
+      const p = generate(mulberry32(1), dial(level));
+      expect(p.decoyCount).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('hits ~1 / 2 / ~4 bogus at easy / medium / brutal dials', () => {
+    expect(generate(mulberry32(1), dial(-0.5)).decoyCount).toBe(1);
+    expect(generate(mulberry32(1), dial(0.8)).decoyCount).toBe(2);
+    expect(generate(mulberry32(1), dial(2.2)).decoyCount).toBe(4);
   });
 
   it('higher dial ⇒ less or equal time (harder)', () => {
@@ -87,18 +99,19 @@ describe('generate — dial levers (higher dial = harder)', () => {
     expect(hard.timerSeconds).toBeLessThanOrEqual(easy.timerSeconds);
   });
 
-  it('timerSeconds is always within [45, 120] — communication-speed game', () => {
+  it('timerSeconds is always within [40, 100] — frantic by design', () => {
     for (const level of [-100, -2, 0, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect(p.timerSeconds).toBeGreaterThanOrEqual(45);
-      expect(p.timerSeconds).toBeLessThanOrEqual(120);
+      expect(p.timerSeconds).toBeGreaterThanOrEqual(40);
+      expect(p.timerSeconds).toBeLessThanOrEqual(100);
     }
   });
 
-  it('decoysPerPlayer is only ever 0 or 1', () => {
+  it('decoyCount stays within [1, 5]', () => {
     for (const level of [-100, -2, 0, 1, 2, 100]) {
       const p = generate(mulberry32(1), dial(level));
-      expect([0, 1]).toContain(p.decoysPerPlayer);
+      expect(p.decoyCount).toBeGreaterThanOrEqual(1);
+      expect(p.decoyCount).toBeLessThanOrEqual(5);
     }
   });
 });
@@ -107,33 +120,28 @@ describe('generate — dial levers (higher dial = harder)', () => {
 
 describe('resolveDeal', () => {
   it('assigns one set rank per player, all four of each pulled', () => {
-    const p = generate(mulberry32(7), dial(0));
-    const deal = resolveDeal(p.rankOrder, p.decoysPerPlayer, 4);
+    const deal = resolveDeal(generate(mulberry32(7), dial(0)).rankOrder, 1, 4);
     expect(deal.setRanks).toHaveLength(4);
-    expect(deal.handSize).toBe(4);
-    expect(deal.totalCards).toBe(16);
-    expect(deal.decoyRanks).toHaveLength(0);
+    expect(deal.decoyCount).toBe(1);
+    expect(deal.decoyRanks).toHaveLength(1);
+    expect(deal.totalCards).toBe(17); // 4*4 + 1 bogus
   });
 
-  it('adds one decoy per player at high dial, and hand size grows to 5', () => {
-    const p = generate(mulberry32(7), dial(2));
-    const deal = resolveDeal(p.rankOrder, p.decoysPerPlayer, 3);
+  it('caps the bogus count at the player count (no hand exceeds five)', () => {
+    const deal = resolveDeal(generate(mulberry32(7), dial(2)).rankOrder, 5, 3);
     expect(deal.setRanks).toHaveLength(3);
-    expect(deal.decoyRanks).toHaveLength(3);
-    expect(deal.handSize).toBe(5);
-    expect(deal.totalCards).toBe(15);
+    expect(deal.decoyCount).toBe(3); // capped at 3 players
+    expect(deal.totalCards).toBe(15); // 3*4 + 3 bogus
   });
 
-  it('set ranks and decoy ranks never overlap', () => {
-    const p = generate(mulberry32(9), dial(3));
-    const deal = resolveDeal(p.rankOrder, p.decoysPerPlayer, 5);
+  it('set ranks and bogus ranks never overlap', () => {
+    const deal = resolveDeal(generate(mulberry32(9), dial(3)).rankOrder, 4, 5);
     const overlap = deal.setRanks.filter(r => deal.decoyRanks.includes(r));
     expect(overlap).toHaveLength(0);
   });
 
   it('deal stays within one standard pack for the full 7-player crew', () => {
-    const p = generate(mulberry32(11), dial(5));
-    const deal = resolveDeal(p.rankOrder, p.decoysPerPlayer, 7);
+    const deal = resolveDeal(generate(mulberry32(11), dial(5)).rankOrder, 5, 7);
     expect(deal.totalCards).toBeLessThanOrEqual(52);
   });
 });

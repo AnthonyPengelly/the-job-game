@@ -144,9 +144,10 @@ difficulty"):
 | Lever | Easier (high rating) | Harder (low rating) | Games it drives |
 |-------|----------------------|---------------------|-----------------|
 | **More time** | longer timer | shorter timer | Categories, Inside Knowledge, Defuse, Steady Hands, The Once-Over |
-| **Fewer items** | fewer cards/digits/questions/wires | more | Crack the Tumblers, Safe-Crack, Inside Knowledge, Assembly Line, Defuse, The Once-Over |
+| **Fewer items** | fewer cards/digits/questions/wires/bogus | more | Crack the Tumblers, Safe-Crack, Inside Knowledge, Silence, Defuse, The Once-Over |
 | **Wider tolerance** | bigger gaps, more guesses, lower target | tighter | Crack the Tumblers, Safe-Crack, Categories, Steady Hands, Follow the Circuit |
-| **Slower tempo** | slower playback / fewer beats | faster / more beats | Beat 16, Follow the Circuit |
+| **Slower tempo** | slower playback / fewer beats | faster / more beats | Follow the Circuit |
+| **Longer count (Beat 16)** | fewer beats to count, FASTER tempo | more beats, SLOWER tempo | Beat 16 (wave 4: slow tempo over a long silent count is the hard case) |
 
 The GM sees the resolved difficulty via **`DialReadout`** (GM-only). The crew
 never sees it — they feel it.
@@ -171,7 +172,7 @@ Steady Breath, Spare Wire) have been removed. The ten canonical abilities are:
 | Follow the Circuit | **Photographic** |
 | Inside Knowledge | **Narrow It Down** |
 | Safe-Crack | **Stethoscope** |
-| Assembly Line / Negotiated | **Tip-Off** |
+| Silence / two-player | **Tip-Off** |
 | Steady Hands | **Extra Hands** |
 | Defuse the Alarm | **Insulated Gloves** |
 
@@ -235,7 +236,7 @@ Three sensing classes:
 | Follow the Circuit | the taps on the grid (sensed); knows the target sequence and the break point | confirms the chain length reached; calls tier | **App-assist** |
 | Inside Knowledge | the timer; right/wrong as the GM marks each answer | GM judges spoken answers, marks each, calls tier | **App-assist** |
 | Safe-Crack | the full guess/feedback loop (guesses typed in); knows the code; computes solved/attempts-left; the timer | **fully judged** — GM confirms | **App fully judges** |
-| Assembly Line | the timer; the "sets complete" tally; the deck-build it prescribed | GM watches the physical trading, judges whose sets are complete, calls tier | **GM judges** |
+| Silence | the timer; the "sets complete" tally; the deck-build it prescribed | GM watches the silent passing, counts sets laid down, calls tier | **GM judges** |
 | Steady Hands | the timer; target height; the GM's tier tally | GM taps tiers as they stand, judges topples, calls tier | **GM judges** |
 | Defuse the Alarm | the property rules it generated; the GM's ✓ safe / ✗ wrong / all-clear taps; the timer | GM sees both the dealt row and the rules; records each cut; can forgive a misread | **GM judges** |
 
@@ -381,26 +382,35 @@ heist-content.md), dial levers, `minCommit`/variant, and facing. All games are
   unwinnable). Both lanes aggregate into one scalar — see §3.
 - **minCommit:** **1.** Dial-only solo and 2–3.
 
-### 8. Assembly Line — `assembly-line`
+### 8. Silence — `assembly-line` *(renamed wave 4; was Assembly Line)*
+
+> **Wave 4 redesign.** The old free-for-all trading game was too easy. Silence
+> is a **silent simultaneous pass-the-card** game (Donkey/Pig, co-op). The
+> gameId stays `assemblyLine` (and `assemblyLineNegotiated` for the 2-player
+> variant) to avoid a rename storm across scaling/templates/narration.
 
 - **Lanes:** Physical + Charm. **Facing:** GM.
-- **generate:** a shuffled 13-rank order + `decoysPerPlayer` (0 easy / 1 hard);
-  the timer. Set types are **ranks**: the setup panel tells the GM exactly what
-  to pull — all four of one rank per committed player, plus one decoy card per
-  player at high dial — shuffle, deal evenly. Always solvable (every set rank
-  fully present); decoys are junk that makes Tip-Off matter.
-- **Play:** open table talk allowed — co-op removes any reason to hide hands,
-  so this is a **communication-speed game** and the clock is deliberately
-  tight (45–120s; the negotiated variant gets 60–140s).
+- **generate:** a shuffled 13-rank order + `decoyCount` (1 easy / 2 medium /
+  ~4 brutal — bogus cards are the **main lever**, capped at the player count so
+  no hand exceeds five) + the timer (40–100s, frantic; the 2-player variant
+  50–110s). The setup panel tells the GM exactly what to pull — all four of one
+  rank per player, plus `decoyCount` **single bogus cards** of other ranks —
+  shuffle, deal four each (the bogus cards make that many players hold five).
+- **Play:** **no talking.** The crew sits in a circle; on a silent count
+  everyone passes one card left at the same time, fast as they can, collecting
+  four of a kind. Lay a set down and you're safe — but keep passing while you
+  still hold a card. The bogus cards can never form a set, so they circulate and
+  someone ends up stuck with them (that's fine — co-op, no loser). The round is
+  won when **every real set is down** before the buzzer.
 - **ChallengeState:** the timer; sets-complete tally; boost-used flag.
-- **judge (GM-watched):** **clean** = everyone holds four of a kind (regardless
-  of timer); **complication** = all-but-one / game in progress; **botched** =
-  timer expired unsolved.
-- **Boost:** **Tip-Off** (names the ranks in play — "no others, don't chase
-  them"). Fires for holder of Physical or Charm power-up.
-- **Dial levers:** decoys in the deal; time.
-- **minCommit:** **2.** **Excluded from solo** (no one to trade with). At **2**:
-  the **negotiated-swap variant**. At **3+**: full Pit-style. True game at 3.
+- **judge (GM-watched):** **clean** = every set laid down (regardless of timer);
+  **complication** = all-but-one / in progress; **botched** = timer expired
+  with sets unfinished.
+- **Boost:** **Tip-Off** (names the real ranks in play — so you don't hoard a
+  bogus card). Fires for holder of Physical or Charm power-up.
+- **Dial levers:** bogus-card count (primary); time.
+- **minCommit:** **2.** **Excluded from solo** (no circle of one). At **2**: the
+  two-player swap variant; at **3+**: the full circle.
 - **soloVariantId:** none — solo is *ineligible*, not variant-served (§7).
 
 ### 9. Steady Hands — `steady-hands`
@@ -488,7 +498,7 @@ Four games require the **whole crew** to play — no subset commits, no resting 
 |------|---------------|
 | **Categories** (`categories`) | Crew rattles off answers as a table — meaningful with everyone shouting |
 | **Inside Knowledge** (`insideKnowledge`) | Crew confers on trivia — the whole table brings collective knowledge |
-| **Assembly Line** (`assemblyLine` + negotiated) | Whole table trades cards — no one to trade with if benched |
+| **Silence** (`assemblyLine` + 2-player variant) | The whole circle passes cards in silence — no circle of one |
 | **Crack the Tumblers** (`crackTheTumblers`) | Silent coordination is the whole table's game (wave 3) — benching spectators broke the fun; the solo memory variant remains registered but is never offered to a 2+ crew |
 
 **Contract flag.** `MiniGame.fullTeam = true` on these three games (and the
