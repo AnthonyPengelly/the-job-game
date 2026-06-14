@@ -126,9 +126,12 @@ export function MinigameShell({
         </div>
 
         {instructions && (
-          <p className="mg-armed-instructions" data-testid="mg-armed-instructions">
-            {instructions}
-          </p>
+          <div className="mg-armed-brief" data-testid="mg-armed-brief">
+            <div className="mg-armed-brief-label">GM — read the crew the gist, then START</div>
+            <p className="mg-armed-instructions" data-testid="mg-armed-instructions">
+              {instructions}
+            </p>
+          </div>
         )}
 
         <DialReadout dial={dial} />

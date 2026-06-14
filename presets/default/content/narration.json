@@ -103,570 +103,422 @@
   "roomApproach": [
     {
       "id": "room-approach-1",
-      "text": [
-        "Room {roomNum}. Stay tight, stay quiet — {mark} has no idea we're here yet.",
-        "I've got two ways through this one on the feed. Read both doors out loud, pick one as a table, then tap in who's doing the job."
-      ]
+      "text": "Room {roomNum}. {mark} still thinks the most exciting thing in here tonight is the thermostat."
     },
     {
       "id": "room-approach-2",
-      "text": [
-        "Next room — {crew}, stack up. This is what we trained for.",
-        "Same drill as always: two doors, one call. The quiet take keeps the heat down; the greedy take pays for the holiday. Choose, then send your people."
-      ]
+      "text": "Next door, {crew}. Whatever's behind it hasn't heard a thing yet — let's keep it that way."
     },
     {
       "id": "room-approach-3",
-      "text": [
-        "Moving to room {roomNum}. The bag's getting heavier — keep your heads.",
-        "Look at the two options, weigh the heat, and commit a crew. Whoever plays this room sits the next one out, so spend your specialists wisely."
-      ],
-      "when": {
-        "restsApply": true
-      }
+      "text": "Room {roomNum}. Thick carpet, thicker wallpaper. This is a house that swallows noise. Use it."
     },
     {
       "id": "room-approach-4",
-      "text": [
-        "Here we go. {crew}, on my signal.",
-        "Doors are up. Big payout means big exposure — your call. Pick the door, pick the people, and I'll set the difficulty from who you send."
-      ]
+      "text": "Through here. The building's asleep on its feet, and you're the dream it won't remember in the morning."
     },
     {
       "id": "room-approach-5",
-      "text": [
-        "Room {roomNum}, and the floor plan says this one's interesting.",
-        "Two ways in. Talk it over — out loud, that's allowed — then commit. Remember: the right specialist makes a hard job easy. I'll show you."
-      ]
+      "text": "Room {roomNum}. I've got eyes on it from the van — looks rich, looks lazy, looks ours."
     },
     {
       "id": "room-approach-6",
-      "text": [
-        "Through here, room {roomNum}. I can hear your heartbeats from the van. I like it.",
-        "Pick your door. Then pick your players — tap them in on my console and watch the dial move. Stats matter, people."
-      ]
+      "text": "Onward, {crew}. Every door you clear is one more thing they'll be explaining to the insurer by Friday."
     },
     {
       "id": "room-approach-7",
-      "text": [
-        "Room {roomNum}. The {security} security in this place is starting to wake up, so let's be crisp.",
-        "Two doors, one decision. Greedy pays more and burns more heat. When you've chosen, name who's going in."
-      ]
+      "text": "Room {roomNum}. {security} security on the brochure; on my screen it's a man, a monitor, and a half-eaten sandwich."
     },
     {
       "id": "room-approach-8",
-      "text": [
-        "Okay — room {roomNum}. Smells like furniture polish and poor decisions in there.",
-        "Read both doors to the table. Whoever's freshest takes point; the played-out ones rest. Commit when ready."
-      ],
+      "text": "Keep it smooth. The real money in a place like this is never in the first drawer — they know that, so neither are you."
+    },
+    {
+      "id": "room-approach-cool-1",
+      "text": "Room {roomNum}. Meter's stone cold, nobody's twitched. Take your time and do this one properly.",
       "when": {
-        "restsApply": true
+        "heatBand": "cool"
       }
     },
     {
-      "id": "room-approach-9",
-      "text": [
-        "{crew} — room {roomNum} is live.",
-        "You know the rhythm by now: door, crew, job. The table does the work, I keep the score. Take your pick."
-      ]
-    },
-    {
-      "id": "room-approach-10",
-      "text": [
-        "One more door, one more payday. Room {roomNum}.",
-        "Options are on screen. Quiet or greedy — and before you choose, look at who's rested. The next room won't wait for tired hands."
-      ],
+      "id": "room-approach-cool-2",
+      "text": "No rush at all, {crew}. The night's young and the house is dreaming. Breathe, then work.",
       "when": {
-        "restsApply": true
+        "heatBand": "cool"
       }
     },
     {
-      "id": "room-approach-11",
-      "text": [
-        "Room {roomNum}. We're past the easy part — everything from here is earned.",
-        "Two takes on the table. Choose one, commit your crew, and I'll deal you the job."
-      ]
+      "id": "room-approach-cool-3",
+      "text": "Room {roomNum}. This is the easy stretch — the part of the night we'll lie about later and call hard.",
+      "when": {
+        "heatBand": "cool"
+      }
     },
     {
-      "id": "room-approach-12",
-      "text": [
-        "Slow breath. Room {roomNum}.",
-        "Here are your doors. The greedy line is shinier — it always is. Decide together, then send the right people for the lane."
-      ]
+      "id": "room-approach-warm-1",
+      "text": "Room {roomNum}. Somewhere a door you left open is bothering somebody. Nothing's moving yet, but the house is listening harder now.",
+      "when": {
+        "heatBand": "warm"
+      }
+    },
+    {
+      "id": "room-approach-warm-2",
+      "text": "Pick the tempo up, {crew}. The quiet in here's gone tense, like it knows something's off.",
+      "when": {
+        "heatBand": "warm"
+      }
+    },
+    {
+      "id": "room-approach-warm-3",
+      "text": "Room {roomNum}. Still clear, still calm — but I can hear it fraying at the edges. Don't dawdle.",
+      "when": {
+        "heatBand": "warm"
+      }
+    },
+    {
+      "id": "room-approach-hot-1",
+      "text": "Room {roomNum}, and we are well past subtle. Radios are talking. In, take it, out.",
+      "when": {
+        "heatBand": "hot"
+      }
+    },
+    {
+      "id": "room-approach-hot-2",
+      "text": "Fast now, {crew} — the building's awake and making phone calls. Make this one quick.",
+      "when": {
+        "heatBand": "hot"
+      }
+    },
+    {
+      "id": "room-approach-hot-3",
+      "text": "Room {roomNum}. No more tiptoeing; they know someone's in the house. Grab what's worth grabbing and move.",
+      "when": {
+        "heatBand": "hot"
+      }
     }
   ],
   "scenarioApproach": [
     {
       "id": "scenario-approach-1",
-      "text": [
-        "Hold up — room {roomNum} isn't a job, it's a situation. I'm seeing it on the feed.",
-        "No doors to pick here. Something's happened and the table has to decide what we do about it. Listen close."
-      ]
+      "text": "Hold up — room {roomNum} isn't a job. Something's happening in here, and it's not the kind of thing you pick a lock to solve."
     },
     {
       "id": "scenario-approach-2",
-      "text": [
-        "Room {roomNum}. Huh. That's not on the floor plan.",
-        "This one's a judgement call, not a lock. Hear it out, argue it round the table, and own whatever you choose."
-      ]
+      "text": "Room {roomNum}. Huh. That wasn't on the floor plan, and I don't like surprises on the floor plan."
     },
     {
       "id": "scenario-approach-3",
-      "text": [
-        "Easy, easy — something's moving in room {roomNum}. Nobody breathe.",
-        "It's a situation, not a job. The decision is yours and the consequences are hidden until you commit. Welcome to crime."
-      ]
+      "text": "Easy, {crew} — something's moving in room {roomNum} that the blueprints never mentioned. Nobody breathe."
     },
     {
       "id": "scenario-approach-4",
-      "text": [
-        "{crew}, eyes up. Room {roomNum} just got interesting.",
-        "There's no clean way to plan for this one. Two calls on my screen, no prices on either. Talk it out."
-      ]
+      "text": "Wait. I've got chatter on the scanner about room {roomNum}. This one's a situation, not a strongbox."
     },
     {
       "id": "scenario-approach-5",
-      "text": [
-        "Room {roomNum}. The night's throwing us a curveball.",
-        "Forget stats for a second — this is a table decision. Read it aloud, weigh it, commit together."
-      ]
+      "text": "Room {roomNum} just got interesting, and not the fun kind. The night's handing you a choice with teeth."
     },
     {
       "id": "scenario-approach-6",
-      "text": [
-        "Wait — I've got chatter on the scanner about room {roomNum}. Something's up.",
-        "Nothing to deal, nothing to time. Just a choice with teeth. Make it as a crew."
-      ]
+      "text": "Freeze. Room {roomNum} has a complication in it — the sort that turns a clean job into a story you tell for years."
     },
     {
       "id": "scenario-approach-7",
-      "text": [
-        "Room {roomNum}, and my feed says: complication.",
-        "This is the part of the job no one rehearses. Two ways to play it, both blind. Decide and live with it."
-      ]
+      "text": "Slow down at room {roomNum}. There's nothing to crack here, just a decision nobody briefed you on."
     },
     {
       "id": "scenario-approach-8",
-      "text": [
-        "Door's open on room {roomNum}. What's inside isn't a lock — it's a problem.",
-        "Judgement call. The smart move and the brave move are rarely the same one. Pick yours."
-      ]
+      "text": "Room {roomNum}. The plan met reality and reality won. Something needs deciding, and it needs deciding now."
     },
     {
       "id": "scenario-approach-9",
-      "text": [
-        "Room {roomNum}. I'd tell you what to do here, but I'm in a van and you're in the building.",
-        "Read both calls to the table, argue your case, and commit. No take-backs once you do."
-      ]
+      "text": "Heads up, {crew}. Room {roomNum} threw us a curveball — this is judgement, not technique."
     },
     {
       "id": "scenario-approach-10",
-      "text": [
-        "Heads together, crew — room {roomNum} needs a decision, not a specialist.",
-        "Whatever you pick, pick it loud and pick it as one. The consequences come after the commitment."
-      ]
+      "text": "Something's off in room {roomNum}. No safe, no sensor — just a fork in the night and your gut to read it."
     }
   ],
   "obstacleClue": [
     {
       "id": "clue-crack-tumblers-1",
+      "text": "That's a tumbler lock — old, proud, and deaf to panic. It opens for a crew that keeps its head and works in order, not the one that rushes.",
       "when": {
         "gameId": "crackTheTumblers"
-      },
-      "text": [
-        "That lock's a tumbler stack — the pins only seat in rising order, and they seat by feel, not by sight.",
-        "Table job: I'll have you deal cards to the crew going in. Nobody talks, nobody shows a hand. You play them to the table lowest to highest — one wrong drop and the whole stack screams."
-      ]
+      }
     },
     {
       "id": "clue-crack-tumblers-2",
+      "text": "Hear that silence? That's the lock telling you it won't help. This is about patience and trust — your calmest hands, moving together.",
       "when": {
         "gameId": "crackTheTumblers"
-      },
-      "text": [
-        "Hear that? Neither do I. That's the problem — this lock gives you nothing. You work it blind, together, in order.",
-        "Cards face-down to the players going in. Eyes on your own. Read the room, time your play, rising order only. Equal pins can stack — that's your one mercy."
-      ]
+      }
     },
     {
       "id": "clue-crack-tumblers-3",
+      "text": "Pretty lock, and vain with it. It yields to a slow, confident touch; loud and hasty won't crack it, steady and synced will.",
       "when": {
         "gameId": "crackTheTumblers"
-      },
-      "text": [
-        "Someone put a beautiful lock in this door, and beautiful locks are vain — they want a slow, confident touch.",
-        "Each of you gets cards only you may see. The table plays them out in ascending order without a word. Trust your gut on who's holding low."
-      ]
+      }
     },
     {
       "id": "clue-crack-tumblers-4",
+      "text": "Tumblers. The kind of lock that punishes the impatient and rewards a crew that can read each other without a word.",
       "when": {
         "gameId": "crackTheTumblers"
-      },
-      "text": [
-        "Tumblers. Old school. The kind of lock that punishes impatience and rewards a crew that can read each other.",
-        "Deal the cards, keep them private, play them rising. If two of you lock eyes and nobody moves — someone's holding the low card and doesn't know it."
-      ]
+      }
     },
     {
       "id": "clue-beat16-1",
+      "text": "There's a sensor on a timer in here, regular as a pulse. Beating it is rhythm and nerve — send your steadiest, not your loudest.",
       "when": {
         "gameId": "beat16"
-      },
-      "text": [
-        "The corridor camera sweeps on a fixed cycle. I can play you the rhythm — then it goes quiet and you carry the count in your head.",
-        "Listen to the beat, keep counting after it cuts out, and slap the table dead on the target. I'll be timing the slap to the millisecond."
-      ]
+      }
     },
     {
       "id": "clue-beat16-2",
+      "text": "A camera sweeps this corridor on a fixed cycle. Whoever takes it needs an internal clock that doesn't flinch when the room goes quiet.",
       "when": {
         "gameId": "beat16"
-      },
-      "text": [
-        "Pressure plate on a timer. The interval's regular as a heartbeat — until the sound drops and it's all internal.",
-        "One player takes this: count with the metronome, keep counting through the silence, hit the table on the number. Early is a tripwire, late is a guard."
-      ]
+      }
     },
     {
       "id": "clue-beat16-3",
+      "text": "This one's a waiting game with a sharp edge — pure timing. Your coolest head under pressure, please, not your quickest mouth.",
       "when": {
         "gameId": "beat16"
-      },
-      "text": [
-        "The guard's rounds run on the building's clock, and the building's clock ticks louder than he thinks.",
-        "I'll give you the tempo. When it mutes, the count lives in your chest. Slap the table on the target beat — I'll tell the room how close you were."
-      ]
+      }
     },
     {
       "id": "clue-beat16-4",
+      "text": "Pressure plate, ticking like a metronome. It rewards focus and a steady count; pick someone who won't lose the beat when it matters.",
       "when": {
         "gameId": "beat16"
-      },
-      "text": [
-        "Electronic lock with a timing window. Machines don't get nervous. Let's see if you do.",
-        "Count the beats — aloud at first, silent after the mute — and strike the table exactly on the mark. The van hears everything."
-      ]
+      }
     },
     {
       "id": "clue-categories-1",
+      "text": "This is a talking job, not a quiet one — it rewards a fast mouth and a wide-read crew. Put your loudest, quickest thinkers on it.",
       "when": {
         "gameId": "categories"
-      },
-      "text": [
-        "Cocktail party two rooms over, and you're about to walk straight through it. The only way past small talk is more small talk.",
-        "Whole table plays. I give you a category, you rattle off answers around the room before the clock dies. Hit the count and nobody remembers your faces."
-      ]
+      }
     },
     {
       "id": "clue-categories-2",
+      "text": "Whatever's in here gives way to speed and breadth, not finesse. The more the crew knows and the faster they shout it, the better.",
       "when": {
         "gameId": "categories"
-      },
-      "text": [
-        "There's a doorman ahead who loves a chat. We're going to drown him in charm.",
-        "Everyone in — I'll read the category, you shout answers, I'll count the good ones. Hesitate too long and the smile slips."
-      ]
+      }
     },
     {
       "id": "clue-categories-3",
+      "text": "This one's won at volume. No locks, no nerve — just rapid-fire wit. Front your chatterboxes and your trivia hoarders.",
       "when": {
         "gameId": "categories"
-      },
-      "text": [
-        "Security's doing voice checks at this door. The trick isn't sounding right — it's never stopping talking.",
-        "One category, the whole table answering in turn, against the clock. Repeats don't count. Blanks definitely don't count."
-      ]
+      }
     },
     {
       "id": "clue-categories-4",
+      "text": "Pure pace and knowledge here. The careful, quiet players will freeze; the ones who blurt and brainstorm will fly.",
       "when": {
         "gameId": "categories"
-      },
-      "text": [
-        "You'll need patter for this one. Patter, and the ability to never, ever dry up.",
-        "Table game: category drops, answers fly, I tally. Reach the target before the buzzer and we glide through."
-      ]
+      }
     },
     {
       "id": "clue-once-over-1",
+      "text": "Something in here will change while you're not looking. This rewards sharp eyes and a good memory — send your observer, not your talker.",
       "when": {
         "gameId": "theOnceOver"
-      },
-      "text": [
-        "This room is wired to notice when things move. So you're going to notice first, and notice better.",
-        "I'll have a row of cards laid out — study every detail while the clock runs. Then you look away, the room changes, and you tell me exactly what moved."
-      ]
+      }
     },
     {
       "id": "clue-once-over-2",
+      "text": "It's a spot-the-difference with stakes. Whoever takes it needs to notice what most people walk straight past.",
       "when": {
         "gameId": "theOnceOver"
-      },
-      "text": [
-        "The display cases in here get rearranged by the night staff. Tonight, the night staff is us.",
-        "Memorise the row — order, values, suits. After the screen drops, something will be different. Call out what changed. Be precise."
-      ]
+      }
     },
     {
       "id": "clue-once-over-3",
+      "text": "All about attention — what was where, and what isn't anymore. Pick the one on the crew who never misses a detail.",
       "when": {
         "gameId": "theOnceOver"
-      },
-      "text": [
-        "Trust nothing in this room. Especially not your own eyes — unless you've trained them.",
-        "Study the spread while you can. Changes are coming the moment you look away. Spot every one of them and we're ghosts."
-      ]
+      }
     },
     {
       "id": "clue-once-over-4",
+      "text": "The room's going to lie to you. Beating it takes a careful eye and a memory that holds — your most watchful crew member.",
       "when": {
         "gameId": "theOnceOver"
-      },
-      "text": [
-        "A thief's memory is a camera. Time to find out what resolution yours runs at.",
-        "Eyes on the cards until the timer ends. Then eyes shut while the room shifts. Then tell me what's wrong with the picture."
-      ]
+      }
     },
     {
       "id": "clue-circuit-1",
+      "text": "There's a panel in here that wants a sequence repeated back. It's memory under pressure — quick eyes and quicker fingers win it.",
       "when": {
         "gameId": "followTheCircuit"
-      },
-      "text": [
-        "Junction box ahead. I'm patching its keypad feed straight to my console — I'll turn the screen so you can see it.",
-        "Watch the pads light up in sequence, then tap the same sequence back. One wrong pad and the circuit bites."
-      ]
+      }
     },
     {
       "id": "clue-circuit-2",
+      "text": "This one flashes a pattern and expects it echoed. Send someone who can watch closely and copy fast, without second-guessing.",
       "when": {
         "gameId": "followTheCircuit"
-      },
-      "text": [
-        "Four relays, one safe path through them, and the path changes every time someone re-arms it.",
-        "The console will flash you the order. Hold it in your head and play it back, tap for tap. Speed matters less than certainty."
-      ]
+      }
     },
     {
       "id": "clue-circuit-3",
+      "text": "Pure recall against the clock. No talking your way through this — just a sharp memory and a steady tapping hand.",
       "when": {
         "gameId": "followTheCircuit"
-      },
-      "text": [
-        "The alarm loop in this wall is musical, in its way. It has a melody. Learn it.",
-        "Watch the pattern on my screen, then repeat it. The chain gets longer the deeper you go — break it early and we all hear about it."
-      ]
+      }
     },
     {
       "id": "clue-circuit-4",
+      "text": "A circuit that tests whether you were paying attention. It rewards focus and fast hands; the distractible need not apply.",
       "when": {
         "gameId": "followTheCircuit"
-      },
-      "text": [
-        "Whoever wired this had rhythm. Respect it.",
-        "Lit pads, in order, then you echo them back on the screen. Fingers steady. The building is listening."
-      ]
+      }
     },
     {
-      "id": "clue-inside-knowledge-1",
+      "id": "clue-inside-1",
+      "text": "This one's pure knowledge — no nerve, no nimble fingers, just what the crew carries in their heads. Put your know-it-alls up front.",
       "when": {
         "gameId": "insideKnowledge"
-      },
-      "text": [
-        "The floor manager talks shop with anyone who sounds like they belong. So tonight, you belong.",
-        "Whole table plays. I'll fire questions; you confer and answer fast. Enough right answers and the door opens itself."
-      ]
+      }
     },
     {
-      "id": "clue-inside-knowledge-2",
+      "id": "clue-inside-2",
+      "text": "Whatever's here gives way to facts, fast. The broader your crew's general knowledge, the easier this gets.",
       "when": {
         "gameId": "insideKnowledge"
-      },
-      "text": [
-        "There's a keypad here, but the real lock is the man standing next to it who likes to quiz strangers.",
-        "Rapid-fire trivia, everyone in. Argue, agree, answer — I'll mark each one. Hit the threshold before the clock."
-      ]
+      }
     },
     {
-      "id": "clue-inside-knowledge-3",
+      "id": "clue-inside-3",
+      "text": "A trivia wall, basically. No skill but the stuff you already know — so field your readers and your quiz-night regulars.",
       "when": {
         "gameId": "insideKnowledge"
-      },
-      "text": [
-        "I bought you a cover story: visiting consultants. Consultants know things. Time to know things.",
-        "Questions are coming. The table answers together. I keep the score and the room keeps its suspicions — if you're quick."
-      ]
+      }
     },
     {
-      "id": "clue-inside-knowledge-4",
+      "id": "clue-inside-4",
+      "text": "This rewards a well-stocked memory and quick recall. Quiet experts shine here; bluffers get found out.",
       "when": {
         "gameId": "insideKnowledge"
-      },
-      "text": [
-        "Knowledge is a skeleton key, and this floor runs on gossip and facts.",
-        "I read, you answer, the group mind does the work. Get enough right and we're invisible."
-      ]
+      }
     },
     {
-      "id": "clue-safe-crack-1",
+      "id": "clue-safe-1",
+      "text": "A safe is just a conversation where one side starts out lying. Beating it takes cold deduction — send a clear head that won't panic on the clock.",
       "when": {
         "gameId": "safeCrack"
-      },
-      "text": [
-        "There it is. The safe. Combination dial, feedback clicks — it tells you how close you are, if you know how to listen.",
-        "Call out your guesses digit by digit; I'll type them in and read back the clicks: how many digits right, how many in the right place. Crack it before the tries run out."
-      ]
+      }
     },
     {
-      "id": "clue-safe-crack-2",
+      "id": "clue-safe-2",
+      "text": "There's a combination in here and no key. This is logic against a timer — your calmest deducer, not your boldest gambler.",
       "when": {
         "gameId": "safeCrack"
-      },
-      "text": [
-        "This box has a tell. Every wrong combination, it confesses a little — right numbers, wrong slots.",
-        "Work the code as a team. Guess, read the feedback, narrow it down. You've got a handful of attempts and a clock with opinions."
-      ]
+      }
     },
     {
-      "id": "clue-safe-crack-3",
+      "id": "clue-safe-3",
+      "text": "This safe gives nothing but hints. Cracking it rewards patience and clean reasoning under pressure; pick someone who thinks straight when rushed.",
       "when": {
         "gameId": "safeCrack"
-      },
-      "text": [
-        "The owner chose the combination. Owners are sentimental and lazy. The safe will tell you the rest.",
-        "Shout the guesses, I'll feed them in and give you the read-back. Every attempt buys information — spend them like they're money."
-      ]
+      }
     },
     {
-      "id": "clue-safe-crack-4",
+      "id": "clue-safe-4",
+      "text": "Pure deduction here. The crew that stays methodical beats it; the one that guesses wildly burns through its chances.",
       "when": {
         "gameId": "safeCrack"
-      },
-      "text": [
-        "A safe is just a conversation where one side starts out lying.",
-        "Guesses in, feedback out — right digit, right place, or close-but-wrong. Deduce fast. The tries are limited and so is my patience."
-      ]
+      }
     },
     {
       "id": "clue-assembly-1",
+      "text": "This one's won in silence and speed. No talking, just fast hands and faster sorting — field your quickest, quietest crew.",
       "when": {
         "gameId": "assemblyLine"
-      },
-      "text": [
-        "This room's a quiet one — guard asleep down the hall, so not a sound. The loot sorts itself if you keep it moving.",
-        "Whole table, dead silent: I'll set the deck. On your count everyone slides one card left at the same time — fast. Four of a kind goes down and you're safe. Someone's left holding junk; that's just how it goes."
-      ]
+      }
     },
     {
       "id": "clue-assembly-2",
+      "text": "Whatever's here falls to wordless teamwork and pace. A crew that works as one without speaking will sail through it.",
       "when": {
         "gameId": "assemblyLine"
-      },
-      "text": [
-        "Thin walls in here. One word and the whole floor wakes up — so nobody says anything.",
-        "Everyone gets a hand, a couple of you get an extra bogus card. Pass left together, no talking, collect four of a kind and lay it down. Keep passing while you've still got a card."
-      ]
+      }
     },
     {
       "id": "clue-assembly-3",
+      "text": "A job that punishes noise. It rewards nimble fingers and a calm, synced table — bickerers will trip over themselves.",
       "when": {
         "gameId": "assemblyLine"
-      },
-      "text": [
-        "Silent job. The fun part is watching you all try to organise without a single word.",
-        "Deal as I say — some cards are pure junk, can't make a set. Pass one card left on the beat, all at once, lay down your four. Tip-Off will name the real ranks if you're drowning."
-      ]
+      }
     },
     {
       "id": "clue-assembly-4",
+      "text": "Pure silent hustle. Speed and coordination win it; pick the players who can move fast and keep their mouths shut.",
       "when": {
         "gameId": "assemblyLine"
-      },
-      "text": [
-        "Library-quiet, this one. Sorting the haul is easy; doing it without a peep is the trick.",
-        "No talking at all. On the count, one card left, everybody, every time. Four matching goes down. Beat the clock and don't be the one frozen holding the bogus card when it stops."
-      ]
+      }
     },
     {
-      "id": "clue-steady-hands-1",
+      "id": "clue-steady-1",
+      "text": "Motion sensors in the floor — the crossing needs a delicate touch. This is pure nerve and a steady hand, not boldness.",
       "when": {
         "gameId": "steadyHands"
-      },
-      "text": [
-        "Motion sensors in the floor. The crossing's possible, but the counterweights need building — gently.",
-        "Build a card house to the target height before the timer dies. A tier is two leaning cards capped flat. Breathe through your nose. Don't sneeze."
-      ]
+      }
     },
     {
-      "id": "clue-steady-hands-2",
+      "id": "clue-steady-2",
+      "text": "Something fragile has to be built in here, gently and fast. Send your calmest fingers; the jittery ones will bring it down.",
       "when": {
         "gameId": "steadyHands"
-      },
-      "text": [
-        "The shelf above the sensor needs propping, and all we've got is what's in your hands.",
-        "Card tower, target height, ticking clock. If it topples, start again — the clock won't wait. Steady beats fast."
-      ]
+      }
     },
     {
-      "id": "clue-steady-hands-3",
+      "id": "clue-steady-3",
+      "text": "This one's a test of nerve under a clock. No brute force — just patience, balance, and a hand that doesn't shake.",
       "when": {
         "gameId": "steadyHands"
-      },
-      "text": [
-        "This is surgery with playing cards. The patient is a laser grid.",
-        "Tiers up to the target before the buzzer. The table judges what's standing. Extra Hands gets everyone in for ten glorious seconds — if someone's earned the shout."
-      ]
+      }
     },
     {
-      "id": "clue-steady-hands-4",
+      "id": "clue-steady-4",
+      "text": "Delicate work ahead. It rewards a steady, unhurried touch; the player who rushes it is the player who topples it.",
       "when": {
         "gameId": "steadyHands"
-      },
-      "text": [
-        "I've seen demolition men with shakier hands than this crew. Don't make me take that back.",
-        "Build. Tier by tier, to the height I call. Standing at the buzzer is all that counts."
-      ]
+      }
     },
     {
       "id": "clue-defuse-1",
+      "text": "This is the alarm itself, and it lives or dies on clear talking. Put your best communicator on the wire and your sharpest listener reading.",
       "when": {
         "gameId": "defuseTheAlarm"
-      },
-      "text": [
-        "Alarm panel, live wires, and a manual I can only transmit to one earpiece. Of course it couldn't be simple.",
-        "One of you becomes the reader — they get the rules and must not see the cards. The rest see the wires and must not see the rules. Describe, decide, cut. Yes/no answers only between you."
-      ]
+      }
     },
     {
       "id": "clue-defuse-2",
+      "text": "Wires and rules that can't see each other. Beating it is all about precise, calm communication between the crew and the reader.",
       "when": {
         "gameId": "defuseTheAlarm"
-      },
-      "text": [
-        "The box is colour-coded, suit-coded, and booby-trapped. The disarm sheet is in my hands, and I can give it to exactly one of you.",
-        "Reader takes the manual screen and turns their back. Crew reads the row of wires out loud. The reader names the cuts; flip each named card face-down. One wrong cut ends the conversation."
-      ]
+      }
     },
     {
       "id": "clue-defuse-3",
+      "text": "This rewards a cool talker and a careful reader working in lockstep. Panic or sloppy words here, and the whole thing trips.",
       "when": {
         "gameId": "defuseTheAlarm"
-      },
-      "text": [
-        "You'll find a row of wires that look like playing cards. That's because the installer had a sense of humour. The manual doesn't.",
-        "Split duties: one reader with the rules, everyone else with eyes on the cards. Talk in card-speak — colour, suit, number. Cut everything the rules mark safe, touch nothing else."
-      ]
+      }
     },
     {
       "id": "clue-defuse-4",
+      "text": "The big one — described from one side, decided from the other. Your clearest voice and your most patient logician, together.",
       "when": {
         "gameId": "defuseTheAlarm"
-      },
-      "text": [
-        "Live alarm. Manual's encrypted to a single receiver. Pick your calmest voice to hold it.",
-        "The reader hears descriptions, applies the rules, and calls the cuts. The crew flips the named wires face-down. When every matching wire is down, tell me 'all clear' — and be right."
-      ]
+      }
     }
   ],
   "optionDescription": [
@@ -814,45 +666,35 @@
   "scenarioSetup": [
     {
       "id": "scenario-setup-1",
-      "text": [
-        "Hold on — something's changed in here. I'm seeing it on the feed.",
-        "This one's a judgement call, not a job. Read both options to the table, argue it out, pick one. The consequences stay hidden until you commit — no take-backs."
-      ]
+      "text": "Two ways to play it, and I'm not telling you the price of either — you learn what it cost once it's spent. Talk it round the table and commit."
     },
     {
       "id": "scenario-setup-2",
-      "text": [
-        "Okay, slight complication. Not a crisis — a situation.",
-        "Two ways to play it. Talk it through together and choose. Some of these need a roll from whoever attempts it, so think about who's got the stats."
-      ]
+      "text": "Read both calls to the crew and choose together. If the one you pick needs nerve, you'll send a single player in to attempt it."
     },
     {
       "id": "scenario-setup-3",
-      "text": [
-        "Live one, people. I'm watching it happen on the cameras right now.",
-        "Make a call as a crew. If the choice needs nerve, you'll pick one person to attempt it — their lane rating sweetens the roll. Choose like it matters, because it does."
-      ]
+      "text": "Both options are blind. Weigh them, argue if you must, then land on one. Some of these ask for a roll from whoever steps up."
     },
     {
       "id": "scenario-setup-4",
-      "text": [
-        "Something just landed in your lap.",
-        "Here's the decision. Both doors are blind — you'll know what it cost when it's already spent. Read them aloud and commit."
-      ]
+      "text": "Make the call as a crew. If fate wants a roll, send your strongest in that lane — and a resting player can't be the one who attempts it."
     },
     {
       "id": "scenario-setup-5",
-      "text": [
-        "Van to crew: opportunity or trap ahead. Possibly both. Usually both.",
-        "Weigh the options. If a roll is needed, send your strongest in that lane — resting crew can't attempt. Then we live with it."
-      ]
+      "text": "Here's the choice, {crew}. No dice yet, just nerve. Pick together; I'll tell you after if the night demands a roll."
     },
     {
       "id": "scenario-setup-6",
-      "text": [
-        "Freeze. Look left. You see it too?",
-        "Decision time. No dice yet, just nerve: pick an option together, then I'll tell you if fate wants a roll."
-      ]
+      "text": "Decide together — nothing here is flagged clean-and-safe, just consequences you'll meet when you're already past them."
+    },
+    {
+      "id": "scenario-setup-7",
+      "text": "Lay both options out and choose. If a roll's needed it falls to one attempter, so pick who steps forward with care."
+    },
+    {
+      "id": "scenario-setup-8",
+      "text": "Your move. Commit to one and brace — what these cost or pay only shows once the decision's made."
     }
   ],
   "outcomeQuip": [
