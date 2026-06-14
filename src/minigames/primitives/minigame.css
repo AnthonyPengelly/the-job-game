@@ -1464,6 +1464,23 @@
   line-height: 1.05;
 }
 
+.mg-armed-brief {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 56ch;
+}
+
+.mg-armed-brief-label {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--fg-muted, #a4b2ad);
+}
+
 .mg-armed-instructions {
   font-size: 1.05rem;
   line-height: 1.6;

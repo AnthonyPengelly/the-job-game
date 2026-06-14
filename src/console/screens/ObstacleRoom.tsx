@@ -7,6 +7,7 @@ import { Teleprompter } from '@/console/teleprompter';
 import { useCrewRailMode } from '@/console/shell';
 import { formatLoot } from '@/content/format';
 import { buildRegistry } from '@/minigames';
+import { deriveHeatBand } from './heatBand';
 import { computeDial, restRoomsFor, obstacleDrip, greedySurcharge } from '@/engine';
 import type { ObstacleOption, Lane } from '@/engine';
 
@@ -255,6 +256,7 @@ export function ObstacleRoom() {
       roomNum,
       crew: crewNames,
       restsApply,
+      heatBand: deriveHeatBand(heat, cfg),
       ...(laneCtx !== undefined ? { lane: laneCtx } : {}),
     };
     const clueCtx = {

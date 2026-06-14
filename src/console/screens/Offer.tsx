@@ -4,18 +4,7 @@ import { useGameStore } from '@/console/store';
 import { Teleprompter } from '@/console/teleprompter';
 import { PhaseHead, Icon } from '@/console/ui';
 import { forcedGetaway } from '@/engine';
-import type { EngineConfig } from '@/engine';
-
-// ── Heat band derivation ──────────────────────────────────────────────────────
-
-type HeatBand = 'cool' | 'warm' | 'hot';
-
-function deriveHeatBand(heat: number, cfg: EngineConfig): HeatBand {
-  const runAtThreshold = cfg.heat.hMax * cfg.heat.runAtFraction;
-  if (heat < runAtThreshold) return 'cool';
-  if (heat < cfg.heat.hMax * 0.75) return 'warm';
-  return 'hot';
-}
+import { deriveHeatBand } from './heatBand';
 
 // ── Offer screen ──────────────────────────────────────────────────────────────
 
